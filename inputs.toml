@@ -1,0 +1,44 @@
+# Group 1: Infrastructure settings
+[[group]]
+name         = "infrastructure"
+description  = "Infrastructure configuration settings"
+display_name = "Infrastructure"
+
+# Group 2: Application settings
+[[group]]
+name         = "application"
+description  = "Application-specific configuration"
+display_name = "Application"
+
+# Input 1: Cluster name (infrastructure group)
+[[input]]
+name         = "cluster_name"
+description  = "Name of the EKS cluster"
+default      = ""
+sensitive    = false
+display_name = "Cluster Name"
+group        = "infrastructure"
+required     = true
+type         = "string"
+
+# Input 2: Database password (application group)
+[[input]]
+name         = "db_password"
+description  = "Password for the application database"
+default      = ""
+sensitive    = true
+display_name = "Database Password"
+group        = "application"
+required     = true
+type         = "string"
+
+# Input 3: Enable debug mode (application group)
+[[input]]
+name         = "enable_debug"
+description  = "Enable debug mode for the application"
+default      = false
+sensitive    = false
+display_name = "Enable Debug Mode"
+group        = "application"
+required     = false
+type         = "bool"

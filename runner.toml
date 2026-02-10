@@ -1,0 +1,5 @@
+runner_type = "aws-eks"
+helm_driver = "configmap"
+
+[env_vars]
+NUON_RUNNER_TYPE = "aws-eks"
