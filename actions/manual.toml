@@ -1,0 +1,20 @@
+name    = "Manual Debug Action"
+timeout = "1m"
+role    = "sandbox_break_glass"
+break_glass_role = "{{.nuon.install.id}}-kitchen-sink-break-glass"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name = "debug-info"
+inline_contents = """
+#!/usr/bin/env sh
+set -x
+
+echo "Install ID: {{.nuon.install.id}}"
+echo "App ID: {{.nuon.app.id}}"
+echo "Org ID: {{.nuon.org.id}}"
+
+kubectl get pods -A
+"""

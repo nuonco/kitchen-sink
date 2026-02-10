@@ -1,0 +1,12 @@
+name    = "Post Provision"
+timeout = "30s"
+
+[[triggers]]
+type = "post-provision"
+
+[[steps]]
+name    = "log-complete"
+command = "echo 'Provision complete for install {{.nuon.install.id}}'"
+
+[steps.env_vars]
+INSTALL_ID = "{{.nuon.install.id}}"

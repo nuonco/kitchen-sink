@@ -1,0 +1,13 @@
+name    = "Pre Component Deploy"
+timeout = "30s"
+
+[[triggers]]
+type           = "pre-deploy-component"
+component_name = "e2e_helm"
+
+[[steps]]
+name    = "log-deploy"
+command = "echo 'Deploying component to install {{.nuon.install.id}}'"
+
+[steps.env_vars]
+INSTALL_ID = "{{.nuon.install.id}}"

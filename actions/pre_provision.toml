@@ -1,0 +1,12 @@
+name    = "Pre Provision"
+timeout = "30s"
+
+[[triggers]]
+type = "pre-provision"
+
+[[steps]]
+name    = "log-start"
+command = "echo 'Starting provision for install {{.nuon.install.id}}'"
+
+[steps.env_vars]
+INSTALL_ID = "{{.nuon.install.id}}"
