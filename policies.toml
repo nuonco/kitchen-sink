@@ -1,0 +1,13 @@
+# Terraform deploy policies
+[[policy]]
+type     = "runner_job_terraform_deploy"
+contents = "./policies/require_tags.yml"
+
+# Kubernetes cluster policies (Kyverno)
+[[policy]]
+type     = "kubernetes_cluster"
+contents = "./policies/disallow-ingress-nginx-custom-snippets.yml"
+
+[[policy]]
+type     = "kubernetes_cluster"
+contents = "https://raw.githubusercontent.com/kyverno/policies/main/best-practices/disallow-latest-tag/disallow-latest-tag.yaml"

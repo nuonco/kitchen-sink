@@ -1,0 +1,40 @@
+# Break glass roles for emergency access to customer installs
+
+[[role]]
+name                 = "{{.nuon.install.id}}-kitchen-sink-break-glass"
+description          = "Emergency access role for install {{.nuon.install.id}}."
+display_name         = "{{.nuon.install.id}} - Kitchen Sink Break Glass"
+permissions_boundary = ""
+
+# Attach AWS managed AdministratorAccess policy
+[[role.policies]]
+managed_policy_name = "AdministratorAccess"
+
+# Deny access to secrets manager for security
+[[role.policies]]
+name = "deny-secrets-manager"
+contents = """
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenySecretsManagerAccess",
+            "Effect": "Deny",
+            "Action": [
+                "secretsmanager:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+"""
+
+# Read-only break glass role (less privileged)
+[[role]]
+name                 = "{{.nuon.install.id}}-kitchen-sink-break-glass-readonly"
+description          = "Read-only emergency access role for install {{.nuon.install.id}}."
+display_name         = "{{.nuon.install.id}} - Kitchen Sink Break Glass (Read Only)"
+permissions_boundary = ""
+
+[[role.policies]]
+managed_policy_name = "ReadOnlyAccess"

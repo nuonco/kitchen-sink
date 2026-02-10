@@ -1,0 +1,80 @@
+# Maintenance role - used for ongoing operations
+[maintenance_role]
+name         = "{{.nuon.install.id}}-maintenance"
+description  = "Role for maintenance operations on install {{.nuon.install.id}}"
+display_name = "Kitchen Sink Maintenance"
+
+[[maintenance_role.policies]]
+managed_policy_name = "AdministratorAccess"
+
+[[maintenance_role.policies]]
+name = "deny-secrets-manager"
+contents = """
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenySecretsManagerAccess",
+            "Effect": "Deny",
+            "Action": [
+                "secretsmanager:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+"""
+
+# Provision role - used when provisioning new installs
+[provision_role]
+name         = "{{.nuon.install.id}}-provision"
+description  = "Role for provisioning install {{.nuon.install.id}}"
+display_name = "Kitchen Sink Provision"
+
+[[provision_role.policies]]
+managed_policy_name = "AdministratorAccess"
+
+[[provision_role.policies]]
+name = "deny-secrets-manager"
+contents = """
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenySecretsManagerAccess",
+            "Effect": "Deny",
+            "Action": [
+                "secretsmanager:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+"""
+
+# Deprovision role - used when tearing down installs
+[deprovision_role]
+name         = "{{.nuon.install.id}}-deprovision"
+description  = "Role for deprovisioning install {{.nuon.install.id}}"
+display_name = "Kitchen Sink Deprovision"
+
+[[deprovision_role.policies]]
+managed_policy_name = "AdministratorAccess"
+
+[[deprovision_role.policies]]
+name = "deny-secrets-manager"
+contents = """
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "DenySecretsManagerAccess",
+            "Effect": "Deny",
+            "Action": [
+                "secretsmanager:*"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+"""

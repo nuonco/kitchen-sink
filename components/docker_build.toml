@@ -1,0 +1,11 @@
+name = "e2e_docker_build"
+type = "docker_build"
+
+dockerfile = "Dockerfile"
+
+dependencies = ["e2e_ecr_image"]
+
+[connected_repo]
+directory = "components/go-httpbin"
+repo      = "powertoolsdev/demo"
+branch    = "main"

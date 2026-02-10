@@ -1,0 +1,33 @@
+name       = "e2e_helm"
+type       = "helm_chart"
+chart_name = "e2e-helm"
+
+namespace      = "{{.nuon.install.id}}"
+storage_driver = "configmap"
+drift_schedule = "0 * * * *"
+
+dependencies = ["e2e_docker_build"]
+
+[connected_repo]
+directory = "services/e2e/chart"
+repo      = "nuonco/mono"
+branch    = "main"
+
+[values]
+"api.ingresses.public_domain"   = "api.{{.nuon.install.public_domain}}"
+"api.ingresses.internal_domain" = "api.{{.nuon.install.internal_domain}}"
+"env.DEFAULT_VALUE"             = "set-by-terraform-provider-as-default"
+"env.NUON_APP_ID"               = "{{.nuon.app.id}}"
+"env.NUON_ORG_ID"               = "{{.nuon.org.id}}"
+"env.NUON_INSTALL_ID"           = "{{.nuon.install.id}}"
+
+# Docker build component outputs
+"env.DOCKER_BUILD_TAG"             = "{{.nuon.components.e2e_docker_build.image.tag}}"
+"env.DOCKER_BUILD_REPOSITORY_ARN"  = "{{.nuon.components.e2e_docker_build.image.repository.arn}}"
+"env.DOCKER_BUILD_REPOSITORY_NAME" = "{{.nuon.components.e2e_docker_build.image.repository.name}}"
+"env.DOCKER_BUILD_REPOSITORY_URI"  = "{{.nuon.components.e2e_docker_build.image.repository.uri}}"
+
+# Sandbox outputs
+"env.SANDBOX_TYPE"            = "{{.nuon.install.sandbox.type}}"
+"env.SANDBOX_PUBLIC_DOMAIN"   = "{{.nuon.install.public_domain}}"
+"env.SANDBOX_INTERNAL_DOMAIN" = "{{.nuon.install.internal_domain}}"

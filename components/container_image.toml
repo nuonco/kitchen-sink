@@ -1,0 +1,8 @@
+name = "e2e_external_image"
+type = "container_image"
+
+dependencies = ["e2e_infra"]
+
+[public]
+image_url = "kennethreitz/httpbin"
+tag       = "latest"

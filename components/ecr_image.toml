@@ -1,0 +1,10 @@
+name = "e2e_ecr_image"
+type = "container_image"
+
+dependencies = ["e2e_external_image"]
+
+[aws_ecr]
+image_url    = "ecr-image-repository"
+tag          = "latest"
+region       = "us-east-1"
+iam_role_arn = "ecr-access-iam-role-arn"
