@@ -24,6 +24,13 @@ post_install_markdown = """
 
 Your install with id {{.nuon.install.id}} and your app {{.nuon.app.Name}} ({{.nuon.app.id}}) is
 {{if eq .nuon.install.Status "active" }}
+
+## Access Your Dashboard
+
+🚀 **Dashboard URL:** [https://dashboard.{{.nuon.install.public_domain}}](https://dashboard.{{.nuon.install.public_domain}})
+
+📡 **API URL:** [https://api.{{.nuon.install.public_domain}}](https://api.{{.nuon.install.public_domain}})
+
 Please check our docs at {{.nuon.installer.metadata.documentation_url}}.
 {{else}}
 {{.nuon.install.Status}}.

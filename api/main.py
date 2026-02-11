@@ -57,6 +57,7 @@ SANDBOX_DESCRIPTION = "Returns SANDBOX* environment variables"
 NUON_DESCRIPTION = "Returns NUON* environment variables"
 DOCKER_BUILD_DESCRIPTION = "Returns DOCKER_BUILD* environment variables"
 EXTERNAL_IMAGE_DESCRIPTION = "Returns EXTERNAL_IMAGE* environment variables"
+METRICS_DESCRIPTION = "Returns cluster metrics (nodes, pods, CPU, memory)"
 
 
 @app.get("/", response_model=DiscoverResponse)
@@ -66,6 +67,7 @@ def discover():
         description="This API exposes introspection details of a Nuon app running in a customer's cloud account.",
         endpoints=[
             Endpoint(path="/introspect/kube", description=KUBE_DESCRIPTION),
+            Endpoint(path="/introspect/metrics", description=METRICS_DESCRIPTION),
             Endpoint(path="/introspect/namespace/{namespace}", description=KUBE_NAMESPACE_DESCRIPTION),
             Endpoint(path="/introspect/helm", description=HELM_DESCRIPTION),
             Endpoint(path="/introspect/helm-values/{namespace}/{name}", description=HELM_VALUES_DESCRIPTION),
@@ -112,6 +114,22 @@ def introspect_kube():
     except Exception as e:
         raise HTTPException(status_code=400, detail={
             "description": KUBE_DESCRIPTION,
+            "err": str(e)
+        })
+
+
+@app.get("/introspect/metrics", response_model=IntrospectResponse)
+def introspect_metrics():
+    """Returns cluster metrics (nodes, pods, CPU, memory)."""
+    try:
+        result = kube.get_cluster_metrics()
+        return IntrospectResponse(
+            description=METRICS_DESCRIPTION,
+            response=result
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail={
+            "description": METRICS_DESCRIPTION,
             "err": str(e)
         })
 

@@ -21,7 +21,7 @@
         </div>
         <div>
           <p class="stat-value font-mono" id="node-count">-</p>
-          <p class="stat-label">Nodes</p>
+          <p class="stat-label" id="node-label">Nodes</p>
         </div>
       </div>
     </div>
@@ -34,7 +34,7 @@
         </div>
         <div>
           <p class="stat-value font-mono" id="pod-count">-</p>
-          <p class="stat-label">Pods</p>
+          <p class="stat-label" id="pod-label">Pods</p>
         </div>
       </div>
     </div>
@@ -55,8 +55,8 @@
           </svg>
         </div>
         <div>
-          <p class="stat-value font-mono" id="namespace-count">-</p>
-          <p class="stat-label">Namespaces</p>
+          <p class="stat-value font-mono" id="cpu-usage">-</p>
+          <p class="stat-label" id="cpu-label">CPU</p>
         </div>
       </div>
     </div>
@@ -68,8 +68,8 @@
           </svg>
         </div>
         <div>
-          <p class="stat-value font-mono" id="service-count">-</p>
-          <p class="stat-label">Services</p>
+          <p class="stat-value font-mono" id="memory-usage">-</p>
+          <p class="stat-label" id="memory-label">Memory</p>
         </div>
       </div>
     </div>
@@ -200,17 +200,50 @@
 
   async function loadClusterData() {
     // Fetch all data in parallel
-    const [kubeData, nuonEnv, sandboxEnv] = await Promise.all([
+    const [kubeData, metricsData, nuonEnv, sandboxEnv] = await Promise.all([
       fetchData('/api/kube'),
+      fetchData('/api/metrics'),
       fetchData('/api/nuon'),
       fetchData('/api/sandbox')
     ]);
 
-    // Update namespace table and counts
+    // Update metrics stat cards
+    if (metricsData.success && metricsData.data?.response) {
+      const m = metricsData.data.response;
+      
+      // Nodes
+      document.getElementById('node-count').textContent = `${m.nodes_ready}/${m.nodes}`;
+      document.getElementById('node-label').textContent = 'Nodes · Ready';
+      
+      // Pods
+      document.getElementById('pod-count').textContent = `${m.pods_running}/${m.pods}`;
+      document.getElementById('pod-label').textContent = 'Pods · Running';
+      
+      // CPU
+      if (m.cpu_usage !== null) {
+        document.getElementById('cpu-usage').textContent = `${m.cpu_usage}%`;
+        document.getElementById('cpu-label').textContent = `CPU · ${m.cpu_capacity}`;
+      } else {
+        document.getElementById('cpu-usage').textContent = 'N/A';
+        document.getElementById('cpu-label').textContent = 'CPU · No metrics';
+      }
+      
+      // Memory
+      if (m.memory_usage !== null) {
+        document.getElementById('memory-usage').textContent = `${m.memory_usage}%`;
+        document.getElementById('memory-label').textContent = `Memory · ${m.memory_capacity}`;
+      } else {
+        document.getElementById('memory-usage').textContent = 'N/A';
+        document.getElementById('memory-label').textContent = 'Memory · No metrics';
+      }
+      
+      document.getElementById('cluster-info').textContent = `${m.nodes} nodes · ${m.pods} pods`;
+    }
+
+    // Update namespace table
     const namespacesTable = document.getElementById('namespaces-table');
     if (kubeData.success && kubeData.data?.response?.namespaces) {
       const namespaces = kubeData.data.response.namespaces;
-      document.getElementById('namespace-count').textContent = namespaces.length;
       
       if (namespaces.length === 0) {
         namespacesTable.innerHTML = '<tr><td colspan="3" class="empty-state">No namespaces found</td></tr>';
@@ -218,14 +251,11 @@
         namespacesTable.innerHTML = namespaces.map(ns => `
           <tr>
             <td>${ns.name}</td>
-            <td><span class="badge ${ns.status === 'Active' ? 'green' : 'yellow'}">${ns.status}</span></td>
+            <td><span class="badge ${ns.status?.phase === 'Active' ? 'green' : 'yellow'}">${ns.status?.phase || '-'}</span></td>
             <td class="muted">${ns.age || '-'}</td>
           </tr>
         `).join('');
       }
-
-      // Update cluster info
-      document.getElementById('cluster-info').textContent = `${namespaces.length} namespaces`;
     } else {
       namespacesTable.innerHTML = `<tr><td colspan="3" class="empty-state">Error: ${kubeData.error || 'Failed to load'}</td></tr>`;
     }
@@ -233,11 +263,6 @@
     // Render environment tables
     renderEnvTable('nuon-env-table', nuonEnv);
     renderEnvTable('sandbox-env-table', sandboxEnv);
-
-    // For now, show placeholder counts (would need additional API calls for real counts)
-    document.getElementById('node-count').textContent = '-';
-    document.getElementById('pod-count').textContent = '-';
-    document.getElementById('service-count').textContent = '-';
   }
 
   // Load data on page load

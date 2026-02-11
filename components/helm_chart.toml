@@ -16,6 +16,8 @@ branch    = "main"
 [values]
 "api.ingresses.public_domain"   = "api.{{.nuon.install.public_domain}}"
 "api.ingresses.internal_domain" = "api.{{.nuon.install.internal_domain}}"
+"ui.ingresses.public_domain"    = "dashboard.{{.nuon.install.public_domain}}"
+"ui.ingresses.internal_domain"  = "dashboard.{{.nuon.install.internal_domain}}"
 "env.DEFAULT_VALUE"             = "set-by-terraform-provider-as-default"
 "env.NUON_APP_ID"               = "{{.nuon.app.id}}"
 "env.NUON_ORG_ID"               = "{{.nuon.org.id}}"

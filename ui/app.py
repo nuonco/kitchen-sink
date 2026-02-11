@@ -74,6 +74,12 @@ def api_namespace(namespace: str):
     return jsonify(api_get(f"/introspect/namespace/{namespace}"))
 
 
+@app.route("/api/metrics")
+def api_metrics():
+    """Proxy to /introspect/metrics."""
+    return jsonify(api_get("/introspect/metrics"))
+
+
 @app.route("/api/helm")
 def api_helm():
     """Proxy to /introspect/helm."""
