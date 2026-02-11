@@ -1,11 +1,11 @@
-name = "e2e_docker_build"
+name = "kitchen_sink_docker_build"
 type = "docker_build"
 
 dockerfile = "Dockerfile"
 
-dependencies = ["e2e_ecr_image"]
+dependencies = ["kitchen_sink_ecr_image"]
 
 [connected_repo]
-directory = "components/go-httpbin"
-repo      = "powertoolsdev/demo"
+directory = ""
+repo      = "nuonco/kitchen-sink"
 branch    = "main"

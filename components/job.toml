@@ -1,7 +1,7 @@
-name = "e2e_job"
+name = "kitchen_sink_job"
 type = "job"
 
-dependencies = ["e2e_helm"]
+dependencies = ["kitchen_sink_helm"]
 
 image_url = "bitnami/kubectl"
 tag       = "1.2.6"

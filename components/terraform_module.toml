@@ -1,12 +1,12 @@
-name              = "e2e_infra"
+name              = "kitchen_sink_infra"
 type              = "terraform_module"
 terraform_version = "1.6.3"
 
 dependencies = []
 
 [connected_repo]
-directory = "services/e2e/infra"
-repo      = "nuonco/mono"
+directory = "infra"
+repo      = "nuonco/kitchen-sink"
 branch    = "main"
 
 [env_vars]

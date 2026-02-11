@@ -1,7 +1,7 @@
-name = "e2e_ecr_image"
+name = "kitchen_sink_ecr_image"
 type = "container_image"
 
-dependencies = ["e2e_external_image"]
+dependencies = ["kitchen_sink_external_image"]
 
 [aws_ecr]
 image_url    = "ecr-image-repository"

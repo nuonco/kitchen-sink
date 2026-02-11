@@ -1,7 +1,7 @@
-name = "e2e_external_image"
+name = "kitchen_sink_external_image"
 type = "container_image"
 
-dependencies = ["e2e_infra"]
+dependencies = ["kitchen_sink_infra"]
 
 [public]
 image_url = "kennethreitz/httpbin"

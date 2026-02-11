@@ -1,16 +1,16 @@
-name       = "e2e_helm"
+name       = "kitchen_sink_helm"
 type       = "helm_chart"
-chart_name = "e2e-helm"
+chart_name = "kitchen-sink"
 
 namespace      = "{{.nuon.install.id}}"
 storage_driver = "configmap"
 drift_schedule = "0 * * * *"
 
-dependencies = ["e2e_docker_build"]
+dependencies = ["kitchen_sink_docker_build"]
 
 [connected_repo]
-directory = "services/e2e/chart"
-repo      = "nuonco/mono"
+directory = "chart"
+repo      = "nuonco/kitchen-sink"
 branch    = "main"
 
 [values]
@@ -24,10 +24,10 @@ branch    = "main"
 "env.NUON_INSTALL_ID"           = "{{.nuon.install.id}}"
 
 # Docker build component outputs
-"env.DOCKER_BUILD_TAG"             = "{{.nuon.components.e2e_docker_build.image.tag}}"
-"env.DOCKER_BUILD_REPOSITORY_ARN"  = "{{.nuon.components.e2e_docker_build.image.repository.arn}}"
-"env.DOCKER_BUILD_REPOSITORY_NAME" = "{{.nuon.components.e2e_docker_build.image.repository.name}}"
-"env.DOCKER_BUILD_REPOSITORY_URI"  = "{{.nuon.components.e2e_docker_build.image.repository.uri}}"
+"env.DOCKER_BUILD_TAG"             = "{{.nuon.components.kitchen_sink_docker_build.image.tag}}"
+"env.DOCKER_BUILD_REPOSITORY_ARN"  = "{{.nuon.components.kitchen_sink_docker_build.image.repository.arn}}"
+"env.DOCKER_BUILD_REPOSITORY_NAME" = "{{.nuon.components.kitchen_sink_docker_build.image.repository.name}}"
+"env.DOCKER_BUILD_REPOSITORY_URI"  = "{{.nuon.components.kitchen_sink_docker_build.image.repository.uri}}"
 
 # Sandbox outputs
 "env.SANDBOX_TYPE"            = "{{.nuon.install.sandbox.type}}"
