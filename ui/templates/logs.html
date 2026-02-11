@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+  <div class="page-header">
+    <h1 class="page-title font-mono">Log Viewer</h1>
+    <p class="page-subtitle font-mono">View environment and configuration data</p>
+  </div>
+
+  <!-- Log Controls -->
+  <div class="log-controls">
+    <div class="select-wrapper" style="width: 100%; max-width: 20rem;">
+      <select id="log-source" class="font-mono" onchange="loadLogSource()">
+        <option value="env">All Environment</option>
+        <option value="terraform">Terraform Variables</option>
+        <option value="secrets">Secrets</option>
+        <option value="docker-build">Docker Build</option>
+        <option value="external-image">External Image</option>
+      </select>
+      <div class="select-arrow">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+    <div class="search-wrapper">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="log-filter" class="font-mono" placeholder="Filter logs..." oninput="filterLogs()">
+    </div>
+  </div>
+
+  <!-- Log Output -->
+  <div class="card">
+    <div class="card-content" style="padding: 0;">
+      <div class="log-output font-mono" id="log-output">
+        <div class="loading">
+          <div class="spinner"></div>
+          Loading...
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let allLogs = [];
+
+  async function fetchData(endpoint) {
+    try {
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching', endpoint, error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  function getLogLevel(key) {
+    const k = key.toUpperCase();
+    if (k.includes('SECRET') || k.includes('PASSWORD') || k.includes('TOKEN')) return 'WARN';
+    if (k.includes('ERROR') || k.includes('FAIL')) return 'ERROR';
+    if (k.includes('DEBUG')) return 'DEBUG';
+    return 'INFO';
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function highlightText(text, filter) {
+    if (!filter) return escapeHtml(text);
+    const escaped = escapeHtml(text);
+    const regex = new RegExp(`(${filter.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return escaped.replace(regex, '<span class="highlight">$1</span>');
+  }
+
+  function renderLogs(logs, filter = '') {
+    const output = document.getElementById('log-output');
+    const filterLower = filter.toLowerCase();
+
+    const filteredLogs = filter 
+      ? logs.filter(log => 
+          log.key.toLowerCase().includes(filterLower) || 
+          log.value.toLowerCase().includes(filterLower)
+        )
+      : logs;
+
+    if (filteredLogs.length === 0) {
+      output.innerHTML = '<div class="empty-state">No matching entries</div>';
+      return;
+    }
+
+    output.innerHTML = filteredLogs.map(log => {
+      const level = getLogLevel(log.key);
+      const timestamp = new Date().toISOString().replace('T', ' ').slice(0, 19);
+      return `
+        <div class="log-line">
+          <span class="log-timestamp">${timestamp}</span>
+          <span class="log-level ${level}">${level}</span>
+          <span class="log-message">${highlightText(log.key, filter)}=${highlightText(log.value, filter)}</span>
+        </div>
+      `;
+    }).join('');
+
+    // Scroll to bottom
+    output.scrollTop = output.scrollHeight;
+  }
+
+  function filterLogs() {
+    const filter = document.getElementById('log-filter').value;
+    renderLogs(allLogs, filter);
+  }
+
+  async function loadLogSource() {
+    const source = document.getElementById('log-source').value;
+    const output = document.getElementById('log-output');
+    
+    output.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+    const data = await fetchData(`/api/${source}`);
+
+    if (!data.success || !data.data?.response) {
+      output.innerHTML = `<div class="empty-state">Error: ${data.error || 'Failed to load'}</div>`;
+      allLogs = [];
+      return;
+    }
+
+    const env = data.data.response;
+    allLogs = Object.entries(env).map(([key, value]) => ({
+      key,
+      value: String(value)
+    }));
+
+    const filter = document.getElementById('log-filter').value;
+    renderLogs(allLogs, filter);
+  }
+
+  document.addEventListener('DOMContentLoaded', loadLogSource);
+</script>
+{% endblock %}
