@@ -1,6 +1,6 @@
 # Terraform deploy policies
 [[policy]]
-type     = "runner_job_terraform_deploy"
+type     = "terraform_module"
 contents = "policies/require_tags.yml"
 
 # Kubernetes cluster policies (Kyverno)
