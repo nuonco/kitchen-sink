@@ -6,7 +6,7 @@ namespace      = "{{.nuon.install.id}}"
 storage_driver = "configmap"
 drift_schedule = "0 * * * *"
 
-dependencies = ["kitchen_sink_docker_build"]
+dependencies = ["kitchen_sink_image"]
 
 [connected_repo]
 directory = "chart"
@@ -23,11 +23,9 @@ branch    = "main"
 "env.NUON_ORG_ID"               = "{{.nuon.org.id}}"
 "env.NUON_INSTALL_ID"           = "{{.nuon.install.id}}"
 
-# Docker build component outputs
-"env.DOCKER_BUILD_TAG"             = "{{.nuon.components.kitchen_sink_docker_build.image.tag}}"
-"env.DOCKER_BUILD_REPOSITORY_ARN"  = "{{.nuon.components.kitchen_sink_docker_build.image.repository.arn}}"
-"env.DOCKER_BUILD_REPOSITORY_NAME" = "{{.nuon.components.kitchen_sink_docker_build.image.repository.name}}"
-"env.DOCKER_BUILD_REPOSITORY_URI"  = "{{.nuon.components.kitchen_sink_docker_build.image.repository.uri}}"
+# Container image outputs
+"env.IMAGE_URL" = "{{.nuon.components.kitchen_sink_image.image.url}}"
+"env.IMAGE_TAG" = "{{.nuon.components.kitchen_sink_image.image.tag}}"
 
 # Sandbox outputs
 "env.SANDBOX_TYPE"            = "{{.nuon.install.sandbox.type}}"
