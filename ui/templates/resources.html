@@ -1,0 +1,285 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+  <div class="page-header">
+    <h1 class="page-title font-mono">Resources</h1>
+    <p class="page-subtitle font-mono">View Kubernetes resources by namespace</p>
+  </div>
+
+  <!-- Namespace Selector -->
+  <div style="margin-bottom: 1.5rem;">
+    <div class="select-wrapper" style="width: 100%; max-width: 20rem;">
+      <select id="namespace-select" class="font-mono" onchange="loadNamespaceResources()">
+        <option value="">Select a namespace...</option>
+      </select>
+      <div class="select-arrow">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs" id="resource-tabs">
+    <button class="tab font-mono active" data-tab="pods" onclick="switchTab('pods')">Pods</button>
+    <button class="tab font-mono" data-tab="services" onclick="switchTab('services')">Services</button>
+    <button class="tab font-mono" data-tab="configmaps" onclick="switchTab('configmaps')">ConfigMaps</button>
+    <button class="tab font-mono" data-tab="secrets" onclick="switchTab('secrets')">Secrets</button>
+  </div>
+
+  <!-- Pods Table -->
+  <div class="card tab-content" id="pods-content">
+    <div class="card-content" style="padding-top: 1.5rem;">
+      <div class="table-container">
+        <table class="font-mono">
+          <thead>
+            <tr>
+              <th>NAME</th>
+              <th>STATUS</th>
+              <th>READY</th>
+              <th>RESTARTS</th>
+              <th>NODE</th>
+              <th>AGE</th>
+            </tr>
+          </thead>
+          <tbody id="pods-table">
+            <tr>
+              <td colspan="6" class="empty-state">Select a namespace to view pods</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Services Table -->
+  <div class="card tab-content" id="services-content" style="display: none;">
+    <div class="card-content" style="padding-top: 1.5rem;">
+      <div class="table-container">
+        <table class="font-mono">
+          <thead>
+            <tr>
+              <th>NAME</th>
+              <th>TYPE</th>
+              <th>CLUSTER-IP</th>
+              <th>PORTS</th>
+              <th>AGE</th>
+            </tr>
+          </thead>
+          <tbody id="services-table">
+            <tr>
+              <td colspan="5" class="empty-state">Select a namespace to view services</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ConfigMaps Table -->
+  <div class="card tab-content" id="configmaps-content" style="display: none;">
+    <div class="card-content" style="padding-top: 1.5rem;">
+      <div class="table-container">
+        <table class="font-mono">
+          <thead>
+            <tr>
+              <th>NAME</th>
+              <th>DATA KEYS</th>
+              <th>AGE</th>
+            </tr>
+          </thead>
+          <tbody id="configmaps-table">
+            <tr>
+              <td colspan="3" class="empty-state">Select a namespace to view configmaps</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Secrets Table -->
+  <div class="card tab-content" id="secrets-content" style="display: none;">
+    <div class="card-content" style="padding-top: 1.5rem;">
+      <div class="table-container">
+        <table class="font-mono">
+          <thead>
+            <tr>
+              <th>NAME</th>
+              <th>TYPE</th>
+              <th>DATA KEYS</th>
+              <th>AGE</th>
+            </tr>
+          </thead>
+          <tbody id="secrets-table">
+            <tr>
+              <td colspan="4" class="empty-state">Select a namespace to view secrets</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let currentNamespace = '';
+  let currentTab = 'pods';
+  let namespaceData = null;
+
+  async function fetchData(endpoint) {
+    try {
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching', endpoint, error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  function getPodStatusClass(status) {
+    const s = (status || '').toLowerCase();
+    if (s === 'running' || s === 'succeeded') return 'green';
+    if (s === 'pending' || s === 'containercreating') return 'yellow';
+    if (s === 'failed' || s === 'crashloopbackoff' || s === 'error') return 'red';
+    return 'blue';
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    
+    // Update tab buttons
+    document.querySelectorAll('.tab').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+
+    // Update tab content visibility
+    document.querySelectorAll('.tab-content').forEach(content => {
+      content.style.display = 'none';
+    });
+    document.getElementById(`${tab}-content`).style.display = 'block';
+
+    // Re-render current tab data
+    if (namespaceData) {
+      renderTabData();
+    }
+  }
+
+  function renderTabData() {
+    if (!namespaceData || !namespaceData.success) return;
+
+    const data = namespaceData.data?.response || {};
+
+    // Render Pods
+    const podsTable = document.getElementById('pods-table');
+    const pods = data.pods || [];
+    if (pods.length === 0) {
+      podsTable.innerHTML = '<tr><td colspan="6" class="empty-state">No pods found</td></tr>';
+    } else {
+      podsTable.innerHTML = pods.map(p => `
+        <tr>
+          <td>${p.name}</td>
+          <td><span class="badge ${getPodStatusClass(p.status)}">${p.status}</span></td>
+          <td class="muted">${p.ready || '-'}</td>
+          <td class="muted">${p.restarts || 0}</td>
+          <td class="muted">${p.node || '-'}</td>
+          <td class="muted">${p.age || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Render Services
+    const servicesTable = document.getElementById('services-table');
+    const services = data.services || [];
+    if (services.length === 0) {
+      servicesTable.innerHTML = '<tr><td colspan="5" class="empty-state">No services found</td></tr>';
+    } else {
+      servicesTable.innerHTML = services.map(s => `
+        <tr>
+          <td>${s.name}</td>
+          <td class="muted">${s.type || '-'}</td>
+          <td class="muted">${s.cluster_ip || '-'}</td>
+          <td class="muted">${s.ports || '-'}</td>
+          <td class="muted">${s.age || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Render ConfigMaps
+    const configmapsTable = document.getElementById('configmaps-table');
+    const configmaps = data.configmaps || [];
+    if (configmaps.length === 0) {
+      configmapsTable.innerHTML = '<tr><td colspan="3" class="empty-state">No configmaps found</td></tr>';
+    } else {
+      configmapsTable.innerHTML = configmaps.map(c => `
+        <tr>
+          <td>${c.name}</td>
+          <td class="muted">${c.data_keys || '-'}</td>
+          <td class="muted">${c.age || '-'}</td>
+        </tr>
+      `).join('');
+    }
+
+    // Render Secrets
+    const secretsTable = document.getElementById('secrets-table');
+    const secrets = data.secrets || [];
+    if (secrets.length === 0) {
+      secretsTable.innerHTML = '<tr><td colspan="4" class="empty-state">No secrets found</td></tr>';
+    } else {
+      secretsTable.innerHTML = secrets.map(s => `
+        <tr>
+          <td>${s.name}</td>
+          <td class="muted">${s.type || '-'}</td>
+          <td class="muted">${s.data_keys || '-'}</td>
+          <td class="muted">${s.age || '-'}</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  async function loadNamespaceResources() {
+    const select = document.getElementById('namespace-select');
+    currentNamespace = select.value;
+
+    if (!currentNamespace) {
+      namespaceData = null;
+      document.getElementById('pods-table').innerHTML = '<tr><td colspan="6" class="empty-state">Select a namespace to view pods</td></tr>';
+      document.getElementById('services-table').innerHTML = '<tr><td colspan="5" class="empty-state">Select a namespace to view services</td></tr>';
+      document.getElementById('configmaps-table').innerHTML = '<tr><td colspan="3" class="empty-state">Select a namespace to view configmaps</td></tr>';
+      document.getElementById('secrets-table').innerHTML = '<tr><td colspan="4" class="empty-state">Select a namespace to view secrets</td></tr>';
+      return;
+    }
+
+    // Show loading state
+    const currentTable = document.getElementById(`${currentTab}-table`);
+    currentTable.innerHTML = '<tr><td colspan="6" class="loading"><div class="spinner"></div>Loading...</td></tr>';
+
+    namespaceData = await fetchData(`/api/namespace/${currentNamespace}`);
+    
+    if (!namespaceData.success) {
+      currentTable.innerHTML = `<tr><td colspan="6" class="empty-state">Error: ${namespaceData.error}</td></tr>`;
+      return;
+    }
+
+    renderTabData();
+  }
+
+  async function loadNamespaces() {
+    const select = document.getElementById('namespace-select');
+    const kubeData = await fetchData('/api/kube');
+
+    if (kubeData.success && kubeData.data?.response?.namespaces) {
+      const namespaces = kubeData.data.response.namespaces;
+      select.innerHTML = '<option value="">Select a namespace...</option>' +
+        namespaces.map(ns => `<option value="${ns.name}">${ns.name}</option>`).join('');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', loadNamespaces);
+</script>
+{% endblock %}

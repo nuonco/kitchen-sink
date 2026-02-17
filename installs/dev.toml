@@ -1,0 +1,9 @@
+name            = "kitchen_sink_dev"
+approval_option = "approve-all"
+
+[aws_account]
+region = "us-west-2"
+
+[[inputs]]
+cluster_name = "kitchen-sink-dev"
+enable_debug = "true"

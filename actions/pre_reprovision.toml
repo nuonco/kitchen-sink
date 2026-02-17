@@ -1,0 +1,12 @@
+name    = "Pre Reprovision"
+timeout = "30s"
+
+[[triggers]]
+type = "pre-reprovision"
+
+[[steps]]
+name    = "log-start"
+command = "echo 'Starting reprovision for install {{.nuon.install.id}}'"
+
+[steps.env_vars]
+INSTALL_ID = "{{.nuon.install.id}}"

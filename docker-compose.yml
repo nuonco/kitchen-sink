@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      # Example env vars for testing introspection endpoints
+      - NUON_APP_ID=test-app-id
+      - NUON_ORG_ID=test-org-id
+      - NUON_INSTALL_ID=test-install-id
+      - TERRAFORM_BUCKET_NAME=test-bucket
+      - SANDBOX_TYPE=aws-eks
+      - DOCKER_BUILD_TAG=latest
+      - EXTERNAL_IMAGE_TAG=v1.0.0
+      - DEFAULT_VALUE=test-default
+      - SECRET_API_KEY=test-secret
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/livez"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    depends_on:
+      - api

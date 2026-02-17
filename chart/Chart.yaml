@@ -1,0 +1,9 @@
+---
+apiVersion: v2
+name: kitchen-sink
+description: A helm chart for deploying the kitchen-sink worker + api + ui
+type: application
+version: v0.0.1
+appVersion: "0.0.1"
+
+dependencies: []

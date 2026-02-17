@@ -1,0 +1,59 @@
+---
+env:
+  NUON_DESC: env vars with NUON_ will be returned by /introspect/nuon
+  DEFAULT_DESC: env vars with DEFAULT_ will be returned by /introspect/defaults
+  SECRET_DESC: env vars with SECRET_ will be returned by /introspect/secrets
+  TERRAFORM_DESC: env vars with TERRAFORM__ will be returned by /introspect/terraform
+  SANDBOX_DESC: env vars with SANDBOX_ will be returned by /introspect/sandbox
+  DOCKER_BUILD_DESC: env vars with DOCKER_BUILD_ will be returned by /introspect/docker-build
+  EXTERNAL_IMAGE_DESC: env vars with DOCKER_BUILD_ will be returned by /introspect/external-image
+
+image:
+  repository: public.ecr.aws/p7e3r5y0/kitchen-sink
+  tag: latest
+
+serviceAccount:
+  name: kitchen-sink
+  annotations: {}
+
+worker:
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+
+api:
+  port: 8080
+  liveness_probe: /livez
+  readiness_probe: /readyz
+
+  ingresses:
+    public_domain: api.INSTALL_PUBLIC_DOMAIN
+    internal_domain: api.internal.INSTALL_INTERNAL_DOMAIN
+
+  nlbs:
+    public_domain: nlb.INSTALL_PUBLIC_DOMAIN
+    internal_domain: nlb.internal.INSTALL_INTERNAL_DOMAIN
+    public_domain_certificate: nbl.PUBLIC_DOMAIN_CERTIFICATE
+
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+
+ui:
+  port: 5000
+  liveness_probe: /
+  readiness_probe: /
+
+  ingresses:
+    public_domain: dashboard.INSTALL_PUBLIC_DOMAIN
+    internal_domain: dashboard.internal.INSTALL_INTERNAL_DOMAIN
+
+  autoscaling:
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50

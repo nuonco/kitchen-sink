@@ -1,0 +1,14 @@
+name = "kitchen_sink_job"
+type = "job"
+
+dependencies = ["kitchen_sink_helm"]
+
+image_url = "bitnami/kubectl"
+tag       = "1.2.6"
+cmd       = ["kubectl"]
+args      = ["get", "pods", "-A"]
+
+[env_vars]
+NUON_APP_ID     = "{{.nuon.app.id}}"
+NUON_ORG_ID     = "{{.nuon.org.id}}"
+NUON_INSTALL_ID = "{{.nuon.install.id}}"

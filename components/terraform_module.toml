@@ -1,0 +1,20 @@
+name              = "kitchen_sink_infra"
+type              = "terraform_module"
+terraform_version = "1.6.3"
+
+dependencies = []
+
+[connected_repo]
+directory = "infra"
+repo      = "nuonco/kitchen-sink"
+branch    = "main"
+
+[env_vars]
+install_id = "{{.nuon.install.id}}"
+AWS_REGION = "{{.nuon.install.sandbox.outputs.account.region}}"
+
+[vars]
+install_id          = "{{.nuon.install.id}}"
+region              = "{{.nuon.install.sandbox.outputs.account.region}}"
+public_domain       = "{{.nuon.install.public_domain}}"
+public_domain_zone_id = "{{.nuon.install.sandbox.outputs.public_domain.zone_id}}"

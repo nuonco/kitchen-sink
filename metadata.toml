@@ -1,0 +1,6 @@
+version = "v2"
+
+description = "Kitchen Sink test app - comprehensive example with all component types"
+display_name = "Kitchen Sink"
+readme = "./README.md"
+slack_webhook_url = "slack webhook url"

@@ -1,0 +1,16 @@
+version: v1
+kind: TerraformPolicy
+metadata:
+  name: require-tags
+spec:
+  validationFailureAction: Enforce
+  rules:
+    - name: require-environment-tag
+      match:
+        resources:
+          - aws_*
+      validate:
+        message: "All AWS resources must have an 'environment' tag"
+        pattern:
+          tags:
+            environment: "?*"

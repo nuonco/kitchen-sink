@@ -1,0 +1,12 @@
+name    = "Pre Deprovision"
+timeout = "30s"
+
+[[triggers]]
+type = "pre-deprovision"
+
+[[steps]]
+name    = "log-start"
+command = "echo 'Starting deprovision for install {{.nuon.install.id}}'"
+
+[steps.env_vars]
+INSTALL_ID = "{{.nuon.install.id}}"

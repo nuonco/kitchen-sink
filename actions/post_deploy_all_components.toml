@@ -1,0 +1,12 @@
+name    = "Post Deploy All Components"
+timeout = "30s"
+
+[[triggers]]
+type = "post-deploy-all-components"
+
+[[steps]]
+name    = "log-complete"
+command = "echo 'All components deployed for install {{.nuon.install.id}}'"
+
+[steps.env_vars]
+INSTALL_ID = "{{.nuon.install.id}}"

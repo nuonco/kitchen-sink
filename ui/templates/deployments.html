@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+  <div class="page-header">
+    <h1 class="page-title font-mono">Deployments</h1>
+    <p class="page-subtitle font-mono" id="deployments-info">Loading helm releases...</p>
+  </div>
+
+  <!-- Helm Releases Table -->
+  <div class="card">
+    <div class="card-content" style="padding-top: 1.5rem;">
+      <div class="table-container">
+        <table class="font-mono">
+          <thead>
+            <tr>
+              <th>NAME</th>
+              <th>NAMESPACE</th>
+              <th>REVISION</th>
+              <th>STATUS</th>
+              <th>CHART</th>
+              <th>APP VERSION</th>
+              <th>UPDATED</th>
+            </tr>
+          </thead>
+          <tbody id="helm-table">
+            <tr>
+              <td colspan="7" class="loading">
+                <div class="spinner"></div>
+                Loading helm releases...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Helm Values (shown when a release is selected) -->
+  <div class="card" style="margin-top: 1.5rem; display: none;" id="helm-values-card">
+    <div class="card-header">
+      <h2 class="card-title font-mono">Helm Values: <span id="selected-release">-</span></h2>
+    </div>
+    <div class="card-content">
+      <div class="log-output" id="helm-values" style="height: 300px;">
+        <pre class="font-mono" style="font-size: 0.75rem; color: var(--foreground);"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  async function fetchData(endpoint) {
+    try {
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Error fetching', endpoint, error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  function getStatusBadgeClass(status) {
+    const s = (status || '').toLowerCase();
+    if (s.includes('deployed') || s.includes('running')) return 'green';
+    if (s.includes('pending') || s.includes('installing')) return 'yellow';
+    if (s.includes('failed') || s.includes('error')) return 'red';
+    return 'blue';
+  }
+
+  async function showHelmValues(namespace, name) {
+    const card = document.getElementById('helm-values-card');
+    const pre = document.querySelector('#helm-values pre');
+    const selectedRelease = document.getElementById('selected-release');
+    
+    card.style.display = 'block';
+    selectedRelease.textContent = `${namespace}/${name}`;
+    pre.textContent = 'Loading values...';
+
+    const data = await fetchData(`/api/helm-values/${namespace}/${name}`);
+    
+    if (data.success && data.data?.response) {
+      pre.textContent = JSON.stringify(data.data.response, null, 2);
+    } else {
+      pre.textContent = `Error: ${data.error || 'Failed to load values'}`;
+    }
+  }
+
+  async function loadDeployments() {
+    const helmData = await fetchData('/api/helm');
+    const tbody = document.getElementById('helm-table');
+
+    if (!helmData.success || !helmData.data?.response?.releases) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty-state">Error: ${helmData.error || 'Failed to load'}</td></tr>`;
+      document.getElementById('deployments-info').textContent = 'Error loading releases';
+      return;
+    }
+
+    const releases = helmData.data.response.releases;
+    document.getElementById('deployments-info').textContent = `${releases.length} helm releases`;
+
+    if (releases.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No helm releases found</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = releases.map(r => `
+      <tr style="cursor: pointer;" onclick="showHelmValues('${r.namespace}', '${r.name}')">
+        <td>${r.name}</td>
+        <td class="muted">${r.namespace}</td>
+        <td class="muted">${r.revision || '-'}</td>
+        <td><span class="badge ${getStatusBadgeClass(r.status)}">${r.status}</span></td>
+        <td class="muted">${r.chart || '-'}</td>
+        <td class="muted">${r.app_version || '-'}</td>
+        <td class="muted">${r.updated || '-'}</td>
+      </tr>
+    `).join('');
+  }
+
+  document.addEventListener('DOMContentLoaded', loadDeployments);
+  setInterval(loadDeployments, 30000);
+</script>
+{% endblock %}

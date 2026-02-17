@@ -1,0 +1,8 @@
+name = "kitchen_sink_image"
+type = "container_image"
+
+dependencies = ["kitchen_sink_infra"]
+
+[public]
+image_url = "ca8ey/kitchen-sink"
+tag       = "latest"
