@@ -1,12 +1,12 @@
 # Terraform deploy policies
 [[policy]]
 type     = "terraform_module"
-contents = "./policies/require_tags.yml"
+contents = "./require_tags.yml"
 
 # Kubernetes cluster policies (Kyverno)
 [[policy]]
 type     = "kubernetes_cluster"
-contents = "./policies/disallow-ingress-nginx-custom-snippets.yml"
+contents = "./disallow-ingress-nginx-custom-snippets.yml"
 
 [[policy]]
 type     = "kubernetes_cluster"
