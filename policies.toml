@@ -1,6 +1,7 @@
 # Terraform deploy policies
 [[policy]]
 type     = "terraform_module"
+engine   = "opa"
 contents = "./require_tags.yml"
 
 # Kubernetes cluster policies (Kyverno)
