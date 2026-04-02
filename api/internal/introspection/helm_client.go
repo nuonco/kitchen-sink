@@ -1,0 +1,71 @@
+package introspection
+
+import (
+	"context"
+	"fmt"
+
+	"helm.sh/helm/v3/pkg/action"
+	"k8s.io/apimachinery/pkg/api/meta"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/client-go/discovery"
+	memcached "k8s.io/client-go/discovery/cached/memory"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/restmapper"
+	"k8s.io/client-go/tools/clientcmd"
+)
+
+func (s *svc) getHelmCfg(ctx context.Context, namespace string) (*action.Configuration, error) {
+	kubeCfg, err := s.getKubeConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get kube config: %w", err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(kubeCfg)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get kube config: %w", err)
+	}
+
+	rcg := &RestClientGetter{RestConfig: kubeCfg, Clientset: clientset}
+	actionCfg := new(action.Configuration)
+	err = actionCfg.Init(rcg, namespace, "secret", func(format string, v ...interface{}) {})
+	if err != nil {
+		return nil, fmt.Errorf("unable to initialize action config: %w", err)
+	}
+
+	return actionCfg, nil
+}
+
+// RestClientGetter is an interface that helm requires to interact with it.
+type RestClientGetter struct {
+	RestConfig *rest.Config
+	Clientset  kubernetes.Interface
+}
+
+var _ genericclioptions.RESTClientGetter = (*RestClientGetter)(nil)
+
+func (k *RestClientGetter) ToRESTConfig() (*rest.Config, error) {
+	return k.RestConfig, nil
+}
+
+func (k *RestClientGetter) ToDiscoveryClient() (discovery.CachedDiscoveryInterface, error) {
+	return memcached.NewMemCacheClient(k.Clientset.Discovery()), nil
+}
+
+func (k *RestClientGetter) ToRESTMapper() (meta.RESTMapper, error) {
+	discoveryClient, err := k.ToDiscoveryClient()
+	if err != nil {
+		return nil, err
+	}
+
+	mapper := restmapper.NewDeferredDiscoveryRESTMapper(discoveryClient)
+	expander := restmapper.NewShortcutExpander(mapper, discoveryClient, nil)
+	return expander, nil
+}
+
+func (k *RestClientGetter) ToRawKubeConfigLoader() clientcmd.ClientConfig {
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		clientcmd.NewDefaultClientConfigLoadingRules(),
+		&clientcmd.ConfigOverrides{},
+	)
+}

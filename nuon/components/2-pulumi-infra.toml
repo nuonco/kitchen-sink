@@ -1,0 +1,16 @@
+# pulumi
+name    = "pulumi_infra"
+type    = "pulumi"
+runtime = "go"
+
+[public_repo]
+repo      = "nuonco/kitchen-sink-app"
+directory = "pulumi"
+branch    = "main"
+
+[config]
+"aws:region"                 = "{{.nuon.install_stack.outputs.region}}"
+"kitchen-sink:install_id"    = "{{.nuon.install.id}}"
+
+[env_vars]
+PULUMI_SKIP_UPDATE_CHECK = "true"

@@ -1,0 +1,21 @@
+[[group]]
+name         = "compute"
+display_name = "Kubernetes Nodes"
+
+[[input]]
+name         = "instance_type"
+default      = "t3a.medium"
+display_name = "Node Instance Size"
+description  = "EC2 instance type for EKS worker nodes"
+group        = "compute"
+
+[[group]]
+name         = "dns"
+display_name = "DNS"
+
+[[input]]
+name         = "domain"
+default      = "nuon.run"
+display_name = "Root Domain"
+description  = "Root domain for DNS records"
+group        = "dns"

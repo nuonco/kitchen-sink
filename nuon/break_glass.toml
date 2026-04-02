@@ -1,0 +1,21 @@
+[[role]]
+name        = "{{.nuon.install.id}}-app-break-glass"
+description = "grants admin access for emergencies"
+
+[[role.policies]]
+managed_policy_name = "AdministratorAccess"
+
+[[role.policies]]
+name     = "remove-secrets-manager"
+contents = """
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Deny",
+            "Action": "secretsmanager:*",
+            "Resource": "*"
+        }
+    ]
+}
+"""

@@ -1,0 +1,22 @@
+type         = "custom"
+name         = "{{.nuon.install.id}}-actions"
+description  = "execute actions (healthchecks, debug, cron jobs)"
+display_name = "actions role"
+
+[[policies]]
+name = "{{.nuon.install.id}}-actions-eks-access"
+contents = """
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "EKSAuth",
+            "Effect": "Allow",
+            "Action": [
+                "eks:DescribeCluster"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+"""

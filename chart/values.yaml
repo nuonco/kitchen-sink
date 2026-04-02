@@ -1,0 +1,65 @@
+namespace: kitchen-sink
+serviceAccount: kitchen-sink
+
+api:
+  image: public.ecr.aws/p7e3r5y0/kitchen-sink-api:latest
+  port: 8080
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+  ingress:
+    internalHost: api.internal.INSTALL_INTERNAL_DOMAIN
+
+ui:
+  image: public.ecr.aws/p7e3r5y0/kitchen-sink-ui:latest
+  port: 3000
+  replicas: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+  ingress:
+    publicHost: app.INSTALL_PUBLIC_DOMAIN
+  env:
+    API_URL: http://kitchen-sink-api:8080
+
+worker:
+  image: public.ecr.aws/p7e3r5y0/kitchen-sink-api:latest
+  replicas: 1
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPUUtilizationPercentage: 50
+    targetMemoryUtilizationPercentage: 50
+
+probes:
+  liveness: /livez
+  readiness: /readyz

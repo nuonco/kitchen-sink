@@ -1,0 +1,8 @@
+type                 = "custom"
+name                 = "{{.nuon.install.id}}-setup"
+description          = "initial component deployment and configuration"
+display_name         = "setup role"
+permissions_boundary = "./provision_boundary.json"
+
+[[policies]]
+managed_policy_name = "AdministratorAccess"

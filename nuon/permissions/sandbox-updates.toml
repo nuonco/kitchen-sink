@@ -1,0 +1,8 @@
+type                 = "custom"
+name                 = "{{.nuon.install.id}}-sandbox-updates"
+description          = "update and maintain sandbox infrastructure"
+display_name         = "sandbox updates"
+permissions_boundary = "./provision_boundary.json"
+
+[[policies]]
+managed_policy_name = "AdministratorAccess"

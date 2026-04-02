@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go mod tidy)",
+      "Bash(chmod +x /Users/jonmorehouse/nuon/kitchen-sink-app/scripts/push-to-ecr.sh)",
+      "Bash(go build ./...)",
+      "Bash(npm install)",
+      "Bash(GONOSUMCHECK=\"*\" go get github.com/gabriel-vasile/mimetype@v1.4.3)",
+      "Bash(GONOSUMCHECK=\"*\" GOFLAGS=\"-mod=mod\" GOPROXY=direct go get github.com/gabriel-vasile/mimetype@v1.4.3 github.com/klauspost/compress@v1.16.7)",
+      "Bash(GOPROXY=https://proxy.golang.org,direct go mod download github.com/gabriel-vasile/mimetype@v1.4.3)",
+      "Bash(go get github.com/gabriel-vasile/mimetype@v1.4.7 github.com/klauspost/compress@v1.17.11)",
+      "Bash(grep -r \"PublicRepoConfig\\\\|ConnectedRepoConfig\" /Users/jonmorehouse/nuon/worktrees/pulumi/pkg/config/*.go)",
+      "Bash(grep -n \"PublicRepoConfig\\\\|ConnectedRepoConfig\" /Users/jonmorehouse/nuon/worktrees/pulumi/pkg/config/*.go)",
+      "Bash(grep -r \"PulumiComponentType\" /Users/jonmorehouse/nuon/worktrees/pulumi/pkg/config/*.go)"
+    ]
+  }
+}
