@@ -1,0 +1,44 @@
+[[group]]
+name         = "compute"
+display_name = "Kubernetes Nodes"
+
+[[input]]
+name              = "instance_type"
+display_name      = "Node Instance Size"
+description       = "EC2 instance type for EKS worker nodes"
+group             = "compute"
+default           = "t3a.medium"
+type              = "string"
+required          = false
+user_configurable = true
+
+[[group]]
+name         = "dns"
+display_name = "DNS"
+
+[[input]]
+name         = "domain"
+display_name = "Root Domain"
+description  = "Root domain for DNS records"
+group        = "dns"
+default      = "nuon.run"
+type         = "string"
+required     = true
+
+[[input]]
+name         = "api_token"
+display_name = "API Token"
+description  = "Token for external API integration"
+group        = "compute"
+type         = "string"
+required     = false
+sensitive    = true
+
+[[input]]
+name         = "debug_mode"
+display_name = "Debug Mode"
+description  = "Enable verbose logging (internal only)"
+group        = "compute"
+type         = "bool"
+default      = "false"
+internal     = true

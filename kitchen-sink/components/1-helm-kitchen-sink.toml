@@ -13,3 +13,11 @@ branch    = "main"
 
 [[values_file]]
 contents = "./values/kitchen-sink.yaml"
+
+[[operation_roles]]
+operation = "deploy"
+role      = "setup"
+
+[[operation_roles]]
+operation = "teardown"
+role      = "maintenance"

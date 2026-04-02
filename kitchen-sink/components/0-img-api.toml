@@ -1,5 +1,6 @@
-name = "img_api"
-type = "container_image"
+name     = "img_api"
+type     = "container_image"
+var_name = "img_api"
 
 [aws_ecr]
 image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-app"

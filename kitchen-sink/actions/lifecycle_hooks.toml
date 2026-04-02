@@ -1,0 +1,40 @@
+name         = "lifecycle_hooks"
+timeout      = "1m"
+dependencies = ["kitchen_sink"]
+
+[[triggers]]
+type = "manual"
+
+[[triggers]]
+type = "post-provision"
+
+[[triggers]]
+type           = "post-deploy-component"
+component_name = "kitchen_sink"
+
+[[triggers]]
+type           = "pre-deploy-component"
+component_name = "kitchen_sink"
+
+[[triggers]]
+type = "post-sandbox-run"
+
+[[triggers]]
+type           = "post-deploy-action"
+component_name = "healthcheck"
+
+[[triggers]]
+type = "post-provision-all-components"
+
+[[steps]]
+name = "log-lifecycle-hook"
+inline_contents = """
+#!/usr/bin/env sh
+set -euo pipefail
+echo "lifecycle hook fired: trigger=${NUON_TRIGGER_TYPE:-unknown}" >> $NUON_ACTIONS_OUTPUT_FILEPATH
+echo "install_id=${NUON_INSTALL_ID:-unknown}" >> $NUON_ACTIONS_OUTPUT_FILEPATH
+echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $NUON_ACTIONS_OUTPUT_FILEPATH
+"""
+
+[steps.env_vars]
+HOOK_VERSION = "v1"

@@ -11,3 +11,13 @@ type       = "helm_chart"
 engine     = "opa"
 components = ["kitchen_sink"]
 contents   = "./policies/deny-public-api-ingress.rego"
+
+[[policy]]
+type     = "sandbox"
+engine   = "opa"
+contents = "./policies/sandbox-limits.rego"
+
+[[policy]]
+type     = "kubernetes_cluster"
+engine   = "opa"
+contents = "./policies/cluster-requirements.rego"
