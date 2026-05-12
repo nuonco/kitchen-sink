@@ -49,6 +49,26 @@ resource "aws_ssm_parameter" "app_metadata" {
   }
 }
 
+resource "aws_s3_bucket" "test_bucket" {
+  bucket = "nuon-kitchen-sink-${var.install_id}"
+
+  tags = {
+    "nuon:install-id" = var.install_id
+    "nuon:app"        = var.app_name
+  }
+}
+
+resource "aws_s3_object" "test_object" {
+  bucket  = aws_s3_bucket.test_bucket.id
+  key     = "test/${var.install_id}/canary.txt"
+  content = "kitchen-sink failure mode test"
+
+  tags = {
+    "nuon:install-id" = var.install_id
+    "nuon:app"        = var.app_name
+  }
+}
+
 output "metadata_parameter_name" {
   value = aws_ssm_parameter.app_metadata.name
 }

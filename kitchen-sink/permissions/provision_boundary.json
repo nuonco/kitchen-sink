@@ -10,6 +10,11 @@
             "Effect": "Deny",
             "Action": "secretsmanager:*",
             "Resource": "*"
+        },
+        {
+            "Effect": "Deny",
+            "Action": "s3:PutObject",
+            "Resource": "*"
         }
     ]
 }
