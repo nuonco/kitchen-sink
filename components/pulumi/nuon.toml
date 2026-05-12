@@ -3,9 +3,9 @@ name    = "pulumi_infra"
 type    = "pulumi"
 runtime = "go"
 
-[public_repo]
-repo      = "nuonco/kitchen-sink-app"
-directory = "pulumi"
+[connected_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "components/pulumi"
 branch    = "main"
 
 [config]

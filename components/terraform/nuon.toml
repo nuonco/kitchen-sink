@@ -4,8 +4,8 @@ terraform_version = "1.9.0"
 drift_schedule    = "0 0 * * *"
 dependencies      = ["pulumi_infra"]
 
-[public_repo]
-repo      = "nuonco/kitchen-sink-app"
+[connected_repo]
+repo      = "nuonco/kitchen-sink"
 directory = "terraform"
 branch    = "main"
 
