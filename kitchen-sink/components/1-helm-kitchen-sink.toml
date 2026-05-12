@@ -21,3 +21,6 @@ role      = "setup"
 [[operation_roles]]
 operation = "teardown"
 role      = "maintenance"
+
+[labels]
+helm = "true"

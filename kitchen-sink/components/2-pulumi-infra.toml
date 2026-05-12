@@ -14,3 +14,6 @@ branch    = "main"
 
 [env_vars]
 PULUMI_SKIP_UPDATE_CHECK = "true"
+
+[labels]
+custom_component_type = "pulumi"

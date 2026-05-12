@@ -8,3 +8,6 @@ dependencies = ["img_api"]
 repo      = "nuonco/kitchen-sink-app"
 directory = "."
 branch    = "main"
+
+[labels]
+is_image = "true"

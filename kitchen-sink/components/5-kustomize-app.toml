@@ -12,3 +12,6 @@ branch    = "master"
 path        = "./kustomize-guestbook"
 patches     = []
 enable_helm = false
+
+[labels]
+custom_component_type = "kustomize"

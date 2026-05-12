@@ -19,3 +19,6 @@ contents = "./components/values/terraform-tags.tfvars"
 
 [env_vars]
 TF_LOG = "INFO"
+
+[labels]
+custom_component_type = "terraform"
