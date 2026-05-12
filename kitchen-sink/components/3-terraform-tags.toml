@@ -4,7 +4,7 @@ terraform_version = "1.9.0"
 drift_schedule    = "0 0 * * *"
 dependencies      = ["pulumi_infra"]
 
-[connected_repo]
+[public_repo]
 repo      = "nuonco/kitchen-sink-app"
 directory = "terraform"
 branch    = "main"
@@ -15,7 +15,7 @@ app_name   = "kitchen-sink"
 region     = "{{.nuon.install_stack.outputs.region}}"
 
 [[var_file]]
-contents = "./components/values/terraform-tags.tfvars"
+contents = "./values/terraform-tags.tfvars"
 
 [env_vars]
 TF_LOG = "INFO"

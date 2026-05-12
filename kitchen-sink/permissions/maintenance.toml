@@ -1,4 +1,4 @@
-type                 = "custom"
+type                 = "maintenance"
 name                 = "{{.nuon.install.id}}-maintenance"
 description          = "operate and remediate components"
 display_name         = "maintenance role"

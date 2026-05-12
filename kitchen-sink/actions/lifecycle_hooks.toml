@@ -16,16 +16,6 @@ component_name = "kitchen_sink"
 type           = "pre-deploy-component"
 component_name = "kitchen_sink"
 
-[[triggers]]
-type = "post-sandbox-run"
-
-[[triggers]]
-type           = "post-deploy-action"
-component_name = "healthcheck"
-
-[[triggers]]
-type = "post-provision-all-components"
-
 [[steps]]
 name = "log-lifecycle-hook"
 inline_contents = """
