@@ -1,7 +1,0 @@
-name     = "img_ui"
-type     = "container_image"
-var_name = "img_ui"
-
-[public]
-image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-ui"
-tag       = "latest"

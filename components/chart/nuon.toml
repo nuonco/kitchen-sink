@@ -1,0 +1,26 @@
+# helm
+name           = "kitchen_sink"
+type           = "helm_chart"
+chart_name     = "kitchen-sink"
+namespace      = "kitchen-sink"
+storage_driver = "configmap"
+dependencies   = ["img_api", "img_ui"]
+
+[connected_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "components/chart"
+branch    = "main"
+
+[[values_file]]
+contents = "./values/kitchen-sink.yaml"
+
+[[operation_roles]]
+operation = "deploy"
+role      = "setup"
+
+[[operation_roles]]
+operation = "teardown"
+role      = "maintenance"
+
+[labels]
+helm = "true"

@@ -1,0 +1,14 @@
+# action
+name    = "healthcheck"
+timeout = "30s"
+
+[[triggers]]
+type          = "cron"
+cron_schedule = "*/5 * * * *"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "api-healthcheck"
+inline_contents = "./healthcheck/script.sh"

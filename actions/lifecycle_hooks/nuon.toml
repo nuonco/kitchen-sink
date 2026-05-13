@@ -1,0 +1,24 @@
+name         = "lifecycle_hooks"
+timeout      = "1m"
+dependencies = ["kitchen_sink"]
+
+[[triggers]]
+type = "manual"
+
+[[triggers]]
+type = "post-provision"
+
+[[triggers]]
+type           = "post-deploy-component"
+component_name = "kitchen_sink"
+
+[[triggers]]
+type           = "pre-deploy-component"
+component_name = "kitchen_sink"
+
+[[steps]]
+name            = "log-lifecycle-hook"
+inline_contents = "./lifecycle_hooks/script.sh"
+
+[steps.env_vars]
+HOOK_VERSION = "v1"

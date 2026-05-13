@@ -1,0 +1,15 @@
+type        = "aws-cloudformation"
+name        = "nuon-kitchen-sink-{{.nuon.install.id}}"
+description = "CloudFormation stack for Kitchen Sink app: Install {{.nuon.install.id}}"
+
+vpc_nested_template_url    = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/vpc/eks/default/stack.yaml"
+runner_nested_template_url = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/runner/asg/stack.yaml"
+
+#[[custom_nested_stacks]]
+#name         = "monitoring"
+#template_url = "https://nuon-sandbox-assets.s3.us-west-2.amazonaws.com/monitoring/v0.1.0/template.yaml"
+#index        = 1
+
+#[custom_nested_stacks.parameters]
+#EnableCloudWatch = "true"
+#RetentionDays    = "30"
