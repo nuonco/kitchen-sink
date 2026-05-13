@@ -1,17 +1,3 @@
-# action
-name    = "cron_status"
-timeout = "1m"
-
-[[triggers]]
-type          = "cron"
-cron_schedule = "0 * * * *"
-
-[[triggers]]
-type = "manual"
-
-[[steps]]
-name            = "collect-status"
-inline_contents = """
 #!/usr/bin/env sh
 set -euo pipefail
 echo "=== Nodes ===" >> $NUON_ACTIONS_OUTPUT_FILEPATH
@@ -22,7 +8,3 @@ echo "=== Services ===" >> $NUON_ACTIONS_OUTPUT_FILEPATH
 kubectl get svc -n kitchen-sink -o wide >> $NUON_ACTIONS_OUTPUT_FILEPATH
 echo "=== Ingresses ===" >> $NUON_ACTIONS_OUTPUT_FILEPATH
 kubectl get ingress -n kitchen-sink -o wide >> $NUON_ACTIONS_OUTPUT_FILEPATH
-"""
-
-[labels]
-is_health_check = "true"

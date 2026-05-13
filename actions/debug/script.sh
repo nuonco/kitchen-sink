@@ -1,13 +1,3 @@
-# action
-name    = "debug"
-timeout = "2m"
-
-[[triggers]]
-type = "manual"
-
-[[steps]]
-name            = "debug-info"
-inline_contents = """
 #!/usr/bin/env sh
 set -euo pipefail
 echo "=== Pods ===" >> $NUON_ACTIONS_OUTPUT_FILEPATH
@@ -20,4 +10,3 @@ echo "=== Logs (API) ===" >> $NUON_ACTIONS_OUTPUT_FILEPATH
 kubectl logs -n kitchen-sink -l app.kubernetes.io/component=api --tail=100 >> $NUON_ACTIONS_OUTPUT_FILEPATH 2>&1 || true
 echo "=== Logs (UI) ===" >> $NUON_ACTIONS_OUTPUT_FILEPATH
 kubectl logs -n kitchen-sink -l app.kubernetes.io/component=ui --tail=100 >> $NUON_ACTIONS_OUTPUT_FILEPATH 2>&1 || true
-"""

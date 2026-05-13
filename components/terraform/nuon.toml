@@ -6,7 +6,7 @@ dependencies      = ["pulumi_infra"]
 
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
-directory = "terraform"
+directory = "components/terraform"
 branch    = "main"
 
 [vars]

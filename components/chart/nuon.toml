@@ -8,7 +8,7 @@ dependencies   = ["img_api", "img_ui"]
 
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
-directory = "chart"
+directory = "components/chart"
 branch    = "main"
 
 [[values_file]]
