@@ -2,7 +2,6 @@ name              = "terraform_tags"
 type              = "terraform_module"
 terraform_version = "1.9.0"
 drift_schedule    = "0 0 * * *"
-dependencies      = ["pulumi_infra"]
 
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
@@ -16,9 +15,6 @@ region     = "{{.nuon.install_stack.outputs.region}}"
 
 [[var_file]]
 contents = "./values/terraform-tags.tfvars"
-
-[env_vars]
-TF_LOG = "INFO"
 
 [labels]
 custom_component_type = "terraform"
