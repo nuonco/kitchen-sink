@@ -1,9 +1,12 @@
-name              = "terraform_tags"
-type              = "terraform_module"
-terraform_version = "1.9.0"
-drift_schedule    = "0 0 * * *"
+name                              = "terraform_tags"
+type                              = "terraform_module"
+terraform_version                 = "1.9.0"
+drift_schedule                    = "0 0 * * *"
+max_auto_retries                  = 3
+skip_noops                        = true
+auto_approve_on_policies_passing  = true
 
-[connected_repo]
+[public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "components/terraform"
 branch    = "main"

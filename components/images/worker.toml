@@ -4,7 +4,7 @@ var_name     = "img_worker"
 dockerfile   = "api/Dockerfile"
 dependencies = ["img_api"]
 
-[connected_repo]
+[public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
 branch    = "main"

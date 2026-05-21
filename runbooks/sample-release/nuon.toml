@@ -1,0 +1,26 @@
+name = "sample-release"
+description = "Standard release procedure for the Kitchen Sink application"
+readme = "./README.md"
+
+[labels]
+team = "platform"
+environment = "production"
+cadence = "weekly"
+
+[[steps]]
+name = "sync-api-image"
+type = "deploy"
+component_name = "img_api"
+
+[[steps]]
+name = "deploy-terraform"
+type = "deploy"
+component_name = "terraform_tags"
+
+[[steps]]
+name = "run-healthcheck"
+type = "action"
+action_name = "healthcheck"
+
+[steps.env_vars]
+CHECK_ENDPOINT = "http://kitchen-sink-api.kitchen-sink.svc.cluster.local:8080/readyz"

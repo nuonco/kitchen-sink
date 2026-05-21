@@ -6,7 +6,7 @@ namespace      = "kitchen-sink"
 storage_driver = "configmap"
 dependencies   = ["img_api", "img_ui"]
 
-[connected_repo]
+[public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "components/chart"
 branch    = "main"

@@ -1,4 +1,7 @@
-terraform_version = "1.11.3"
+terraform_version                 = "1.11.3"
+max_auto_retries                  = 3
+skip_noops                        = true
+auto_approve_on_policies_passing  = true
 
 [public_repo]
 directory = "."
