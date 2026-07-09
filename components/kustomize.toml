@@ -1,7 +1,7 @@
 name = "kustomizeapp"
 type = "kubernetes_manifest"
 
-namespace = "{{.nuon.install.id}}"
+namespace = "{{.nuon.install.id}}-dne"
 
 [public_repo]
 directory = "."
