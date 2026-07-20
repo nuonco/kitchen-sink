@@ -1,0 +1,14 @@
+name            = "nuon-test-003"
+approval_option = "prompt"
+
+[labels]
+env    = "production"
+region = "eu-west-1"
+tier   = "enterprise"
+
+[aws_account]
+region = "eu-west-1"
+
+[[inputs]]
+instance_type = "t3a.large"
+debug_mode    = "false"
