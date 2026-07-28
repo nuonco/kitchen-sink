@@ -1,0 +1,18 @@
+name            = "jm-test-002"
+approval_option = "approve-all"
+
+[labels]
+env    = "production"
+region = "us-east-1"
+
+[aws_account]
+region = "us-east-1"
+
+# input.group: compute
+[[inputs]]
+instance_type = "t3a.medium"
+debug_mode    = "false"
+
+# input.group: dns
+[[inputs]]
+domain = "jm-test-002.nuon.run"

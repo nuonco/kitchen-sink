@@ -1,0 +1,18 @@
+name            = "jm-test-003"
+approval_option = "prompt"
+
+[labels]
+env    = "production"
+region = "eu-west-1"
+
+[aws_account]
+region = "eu-west-1"
+
+# input.group: compute
+[[inputs]]
+instance_type = "t3a.large"
+debug_mode    = "false"
+
+# input.group: dns
+[[inputs]]
+domain = "jm-test-003.nuon.run"
