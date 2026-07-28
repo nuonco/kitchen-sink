@@ -3,10 +3,11 @@ approval_option = "approve-all"
 
 [labels]
 env    = "staging"
-region = "us-west-2"
+region = "us-east-1"
+foo = "bar"
 
 [aws_account]
-region = "us-west-2"
+region = "us-east-1"
 
 # input.group: compute
 [[inputs]]
