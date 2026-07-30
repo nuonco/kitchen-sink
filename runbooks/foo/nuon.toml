@@ -1,4 +1,4 @@
-name = "diff-test-1"
+name = "diff-test-2"
 description = "Example runbook"
 
 [[steps]]
