@@ -20,5 +20,12 @@ spec:
         - name: worker
           image: {{ .Values.worker.image }}
           command: ["/bin/worker"]
+          env:
+            - name: HEALTH_ADDR
+              value: ":{{ .Values.worker.port }}"
+          ports:
+            - name: health
+              containerPort: {{ .Values.worker.port }}
+              protocol: TCP
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
