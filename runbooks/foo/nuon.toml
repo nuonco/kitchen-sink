@@ -1,4 +1,4 @@
-name = "bar"
+name = "bar-test"
 description = "Example runbook"
 
 [[steps]]
