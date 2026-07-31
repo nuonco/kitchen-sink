@@ -1,5 +1,5 @@
 # helm
-name           = "kitchen_sink"
+name           = "kitchen_sink_1"
 type           = "helm_chart"
 chart_name     = "kitchen-sink"
 namespace      = "kitchen-sink"

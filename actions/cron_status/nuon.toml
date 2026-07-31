@@ -1,5 +1,5 @@
 # action
-name    = "cron_status"
+name    = "cron_status_1"
 timeout = "1m"
 
 [[triggers]]
