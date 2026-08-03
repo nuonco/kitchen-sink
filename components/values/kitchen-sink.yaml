@@ -45,6 +45,7 @@ ui:
 
 worker:
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
+  port: 8090
   replicas: 1
   resources:
     requests:

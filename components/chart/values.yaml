@@ -45,6 +45,7 @@ ui:
 
 worker:
   image: public.ecr.aws/p7e3r5y0/kitchen-sink-api:latest
+  port: 8090
   replicas: 1
   resources:
     requests:
