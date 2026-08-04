@@ -1,0 +1,23 @@
+[[rules]]
+name = "component-health-ja-health-checks-002"
+trigger = "kitchen-sink-health"
+event_types = ["component.health"]
+
+[[rules.filters]]
+from = "payload"
+op = "eq"
+path = "$.install"
+value = "inlz5m4r5ax8bv0u4dq63p1evt"
+
+[rules.target]
+type = "runbook"
+runbook = "report-health"
+install = "ja-health-checks-002"
+
+[rules.target.inputs]
+install = "$.install"
+component = "$.component"
+check = "$.check"
+status = "$.status"
+message = "$.message"
+details = "$.details"
