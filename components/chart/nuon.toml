@@ -32,7 +32,7 @@ role = "maintenance"
 # --check name the reporter pushes.
 [health]
 block_deploy = true
-stabilization_window = "10s"
+stabilization_window = "3m"
 required_checks = ["custom-healthcheck"]
 
 [labels]
