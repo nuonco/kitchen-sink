@@ -1,15 +1,15 @@
 # helm
-name           = "kitchen_sink"
-type           = "helm_chart"
-chart_name     = "kitchen-sink"
-namespace      = "kitchen-sink"
+name = "kitchen_sink"
+type = "helm_chart"
+chart_name = "kitchen-sink"
+namespace = "kitchen-sink"
 storage_driver = "configmap"
-dependencies   = ["img_api", "img_ui"]
+dependencies = ["img_api", "img_ui"]
 
 [connected_repo]
-repo      = "nuonco/kitchen-sink"
+repo = "nuonco/kitchen-sink"
 directory = "components/chart"
-branch    = "main"
+branch = "main"
 
 [[values_file]]
 # Path resolves relative to the `components/` directory. This is the chart's
@@ -19,15 +19,21 @@ contents = "./chart/values.yaml"
 
 [[operation_roles]]
 operation = "deploy"
-role      = "setup"
+role = "setup"
 
 [[operation_roles]]
 operation = "teardown"
-role      = "maintenance"
+role = "maintenance"
 
-# Health checking is left to the built-in automatic workload assessment. The
-# custom-health-check demo pushes checks via the CLI extension, so no [health]
-# block (probes / block_deploy) is configured here.
+# Block deploys on a custom health check pushed via the CLI extension
+# (nuon-ext-healthcheck). The deploy waits for the "datadog-metric" check to
+# report healthy within the stabilization window; if it stays unhealthy (or is
+# never reported), block_deploy fails the deploy. required_checks must match the
+# --check name the reporter pushes.
+[health]
+block_deploy = true
+stabilization_window = "10s"
+required_checks = ["datadog-metric"]
 
 [labels]
 helm = "true"
