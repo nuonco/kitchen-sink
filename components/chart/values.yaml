@@ -2,7 +2,7 @@ namespace: kitchen-sink
 serviceAccount: kitchen-sink
 
 api:
-  image: public.ecr.aws/p7e3r5y0/kitchen-sink-api:latest
+  image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
   port: 8080
   replicas: 1
   resources:
@@ -18,11 +18,13 @@ api:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
-  ingress:
-    internalHost: api.internal.INSTALL_INTERNAL_DOMAIN
+  # No internal ingress: the UI reaches the API via the in-cluster service
+  # (see ui.env.API_URL). An internal ingress here never converges (no cert/DNS
+  # for its host), which would keep the component health from ever going green.
+  ingress: {}
 
 ui:
-  image: public.ecr.aws/p7e3r5y0/kitchen-sink-ui:latest
+  image: "{{.nuon.components.img_ui.outputs.image.repository}}:{{.nuon.components.img_ui.outputs.image.tag}}"
   port: 3000
   replicas: 1
   resources:
@@ -39,12 +41,12 @@ ui:
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
   ingress:
-    publicHost: app.INSTALL_PUBLIC_DOMAIN
+    publicHost: "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
   env:
-    API_URL: http://kitchen-sink-api:8080
+    API_URL: "http://kitchen-sink-api:8080"
 
 worker:
-  image: public.ecr.aws/p7e3r5y0/kitchen-sink-api:latest
+  image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
   port: 8090
   replicas: 1
   resources:

@@ -1,8 +1,8 @@
 # runner
-runner_type     = "aws"
-helm_driver     = "configmap"
-init_script_url = "https://raw.githubusercontent.com/nuonco/runner/refs/tags/aws-v0.1.0/scripts/aws/init-mng.sh"
+runner_type = "aws"
+helm_driver = "configmap"
+init_script_url = "https://raw.githubusercontent.com/nuonco/runner/refs/tags/aws-v0.1.4/scripts/aws/init-mng.sh"
 
 [env_vars]
 HELM_MAX_HISTORY = "10"
-RUNNER_AUTH_METHOD    = "iid"
+RUNNER_AUTH_METHOD = "iid"
