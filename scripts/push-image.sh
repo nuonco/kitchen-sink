@@ -4,7 +4,10 @@
 # Creates the ECR repository if it does not already exist. IAM pull-role setup
 # for Nuon is handled separately (see components/scripts/push-to-ecr.sh).
 #
-# Usage: scripts/push-image.sh [--region R] [--profile P] [--tag TAG] [--repo-name NAME]
+# Usage: scripts/push-image.sh [--region R] [--profile P] [--tag TAG] [--repo-name NAME] [--stamp-config TOML]
+#
+# --stamp-config: after pushing, rewrite the `tag = "..."` line in the given
+#   image component toml (e.g. components/images/api.toml) to the pushed tag.
 #
 set -euo pipefail
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lib.sh"
@@ -45,3 +48,9 @@ docker tag "${LOCAL_IMAGE}:${TAG}" "${FULL_REPO}:${TAG}"
 docker push "${FULL_REPO}:${TAG}"
 
 echo "Pushed ${FULL_REPO}:${TAG}"
+
+# Keep the image component's source tag in lockstep with what we pushed, so the
+# mirrored (and therefore deployed) image ref changes on every build.
+if [[ -n "${STAMP_CONFIG}" ]]; then
+  stamp_image_tag "${STAMP_CONFIG}" "${TAG}"
+fi
