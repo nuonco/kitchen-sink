@@ -11,8 +11,10 @@ set -euo pipefail
 : "${NUON_ORG_ID:?NUON_ORG_ID required}"
 
 # The install to report for comes from the event payload (mapped to a runbook
-# input), NOT {{.nuon.install.id}} — the runbook runs on a fixed "reporter"
-# install but writes health for whichever install the event names.
+# input), NOT the runbook's own install id — the runbook runs on a fixed
+# "reporter" install but writes health for whichever install the event names.
+# (Do not put Go-template syntax in comments here: inline_contents is rendered
+# as a template, so even a commented-out reference is evaluated and can fail.)
 install='{{.runbook_inputs.install}}'
 component='{{.runbook_inputs.component}}'
 check='{{.runbook_inputs.check}}'

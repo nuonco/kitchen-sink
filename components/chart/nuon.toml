@@ -33,7 +33,7 @@ role = "maintenance"
 [health]
 block_deploy = true
 stabilization_window = "10s"
-required_checks = ["datadog-metric"]
+required_checks = ["custom-healthcheck"]
 
 [labels]
 helm = "true"
