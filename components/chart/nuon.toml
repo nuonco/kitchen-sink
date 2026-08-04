@@ -25,29 +25,9 @@ role      = "setup"
 operation = "teardown"
 role      = "maintenance"
 
-# Health reporting is disabled for now. There's no runner-reachable endpoint to
-# probe cleanly: the internal api ingress publishes no DNS record
-# (api.<internal_domain> is NXDOMAIN) and the public ingress serves the default
-# `ingress.local` cert (so an HTTPS probe fails cert verification). Re-enable
-# with the ui-public probe once the public ingress presents a valid cert for
-# app.<public_domain>, and add api-internal back once that host has DNS.
-[health]
-enabled              = false
-stabilization_window = "5m"
-# Report health, but do NOT gate the deploy on it. Probes run from the RUNNER,
-# which uses VPC DNS and CANNOT resolve in-cluster *.svc.cluster.local names —
-# only ingress hostnames are reachable. block_deploy = true with unreachable
-# probes hangs the stabilization window and fails every deploy.
-block_deploy         = false
-
-# UI — public ingress, end-to-end (public DNS + ALB + TLS). This is the health
-# signal. (An api-internal probe was dropped: the internal api ingress doesn't
-# publish a DNS record — api.internal.<domain> is NXDOMAIN — so it can't be
-# probed from the runner. Revisit if/when the internal ingress publishes DNS.)
-[[health.probes]]
-type = "http"
-name = "ui-public"
-url  = "https://app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}/livez"
+# Health checking is left to the built-in automatic workload assessment. The
+# custom-health-check demo pushes checks via the CLI extension, so no [health]
+# block (probes / block_deploy) is configured here.
 
 [labels]
 helm = "true"

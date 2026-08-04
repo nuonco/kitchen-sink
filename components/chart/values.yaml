@@ -18,8 +18,10 @@ api:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
-  ingress:
-    internalHost: "api.{{.nuon.install.sandbox.outputs.nuon_dns.internal_domain.name}}"
+  # No internal ingress: the UI reaches the API via the in-cluster service
+  # (see ui.env.API_URL). An internal ingress here never converges (no cert/DNS
+  # for its host), which would keep the component health from ever going green.
+  ingress: {}
 
 ui:
   image: "{{.nuon.components.img_ui.outputs.image.repository}}:{{.nuon.components.img_ui.outputs.image.tag}}"
