@@ -1,0 +1,16 @@
+name = "main"
+
+[connected_repo]
+repo = "nuonco/kitchen-sink"
+branch = "ja/app-branch"
+directory = "."
+
+[[install_groups]]
+name           = "stage"
+order          = 0
+label_selector = { env = "stage" }
+
+[[install_groups]]
+name           = "prod"
+order          = 1
+label_selector = { env = "prod" }
