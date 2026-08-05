@@ -2,7 +2,7 @@ name = "main"
 
 [connected_repo]
 repo = "nuonco/kitchen-sink"
-branch = "main"
+branch = "ja/app-branch"
 directory = "."
 
 [[install_groups]]
