@@ -1,11 +1,16 @@
-name = "demo"
+name = "main"
 
 [connected_repo]
-repo      = "nuonco/kitchen-sink"
-branch    = "main"
+repo = "nuonco/kitchen-sink"
+branch = "main"
 directory = "."
 
 [[install_groups]]
-name          = "demo"
-order         = 0
-install_names = ["healthcheck-demo-001"]
+name = "stage"
+order = 0
+labels = { "env" = "stage" }
+
+[[install_groups]]
+name = "prod"
+order = 0
+labels = { "env" = "prod" }

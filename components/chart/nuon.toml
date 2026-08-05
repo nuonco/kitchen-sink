@@ -40,4 +40,4 @@ helm = "true"
 # Bump to force a component-config change so a branch run redeploys this
 # component (the config diff keys off the component checksum, which does not
 # fold in values.yaml/chart-file contents). Increment to trigger a deploy.
-demo_rev = "1"
+demo_rev = "1785961476"
