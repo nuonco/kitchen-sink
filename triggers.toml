@@ -93,3 +93,27 @@ check = "$.check"
 status = "$.status"
 message = "$.message"
 details = "$.details"
+
+[[rules]]
+name = "component-health-healthcheck-demo-001"
+trigger = "kitchen-sink-health"
+event_types = ["component.health"]
+
+[[rules.filters]]
+from = "payload"
+op = "eq"
+path = "$.install"
+value = "inl7p3o9xdz6n16pbbjbjkmzuj"
+
+[rules.target]
+type = "runbook"
+runbook = "report-health"
+install = "healthcheck-demo-001"
+
+[rules.target.inputs]
+install = "$.install"
+component = "$.component"
+check = "$.check"
+status = "$.status"
+message = "$.message"
+details = "$.details"

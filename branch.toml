@@ -1,0 +1,10 @@
+name = "demo"
+
+[connected_repo]
+repo   = "nuonco/kitchen-sink"
+branch = "main"
+
+[[install_groups]]
+name          = "demo"
+order         = 0
+install_names = ["healthcheck-demo-001"]
