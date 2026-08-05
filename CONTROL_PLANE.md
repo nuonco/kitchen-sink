@@ -33,7 +33,6 @@ Uses [`aws-eks-sandbox`](https://github.com/nuonco/aws-eks-sandbox) to provision
 | `img_worker` | `docker_build` | `connected_repo` | Worker image built from API Dockerfile |
 | `kitchen_sink` | `helm_chart` | `chart/` | API (internal), UI (public), Worker — with operation_roles |
 | `pulumi_infra` | `pulumi` | `pulumi/` | S3 bucket with encryption and versioning |
-| `terraform_tags` | `terraform_module` | `terraform/` | SSM parameter + tags — drift_schedule, vars, var_file, env_vars |
 | `seed_job` | `job` | — | One-shot seed job with cmd/args/env_vars |
 
 ## Source Code

@@ -21,3 +21,75 @@ check = "$.check"
 status = "$.status"
 message = "$.message"
 details = "$.details"
+
+[[rules]]
+name = "component-health-ja-healthchecks-010"
+trigger = "kitchen-sink-health"
+event_types = ["component.health"]
+
+[[rules.filters]]
+from = "payload"
+op = "eq"
+path = "$.install"
+value = "inluq5ttjv6z8il8wu4611grfh"
+
+[rules.target]
+type = "runbook"
+runbook = "report-health"
+install = "ja-healthchecks-010"
+
+[rules.target.inputs]
+install = "$.install"
+component = "$.component"
+check = "$.check"
+status = "$.status"
+message = "$.message"
+details = "$.details"
+
+[[rules]]
+name = "component-health-external-healthcheck-demo"
+trigger = "kitchen-sink-health"
+event_types = ["component.health"]
+
+[[rules.filters]]
+from = "payload"
+op = "eq"
+path = "$.install"
+value = "inlcnavxavusz1lkwd7s6pbx7e"
+
+[rules.target]
+type = "runbook"
+runbook = "report-health"
+install = "external-healthcheck-demo"
+
+[rules.target.inputs]
+install = "$.install"
+component = "$.component"
+check = "$.check"
+status = "$.status"
+message = "$.message"
+details = "$.details"
+
+[[rules]]
+name = "component-health-healthcheck-demo"
+trigger = "kitchen-sink-health"
+event_types = ["component.health"]
+
+[[rules.filters]]
+from = "payload"
+op = "eq"
+path = "$.install"
+value = "inl4r9jjr1ptz2c0c20a3tucxp"
+
+[rules.target]
+type = "runbook"
+runbook = "report-health"
+install = "healthcheck-demo"
+
+[rules.target.inputs]
+install = "$.install"
+component = "$.component"
+check = "$.check"
+status = "$.status"
+message = "$.message"
+details = "$.details"
