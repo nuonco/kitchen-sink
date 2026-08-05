@@ -9,7 +9,7 @@ dependencies = ["img_api", "img_ui"]
 [connected_repo]
 repo = "nuonco/kitchen-sink"
 directory = "components/chart"
-branch = "main"
+branch = "ja/app-branch"
 
 [[values_file]]
 # Path resolves relative to the `components/` directory. This is the chart's
@@ -40,4 +40,4 @@ helm = "true"
 # Bump to force a component-config change so a branch run redeploys this
 # component (the config diff keys off the component checksum, which does not
 # fold in values.yaml/chart-file contents). Increment to trigger a deploy.
-demo_rev = "1785961682"
+demo_rev = "1785966488"
