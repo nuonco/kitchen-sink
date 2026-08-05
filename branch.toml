@@ -1,8 +1,9 @@
 name = "demo"
 
 [connected_repo]
-repo   = "nuonco/kitchen-sink"
-branch = "main"
+repo      = "nuonco/kitchen-sink"
+branch    = "main"
+directory = "."
 
 [[install_groups]]
 name          = "demo"
