@@ -2,4 +2,4 @@ version = "v2"
 
 display_name = "Kitchen Sink"
 description  = "A comprehensive test app showcasing the full Nuon platform: API, UI, Helm chart, actions, roles, policies, and container images."
-readme       = "CONTROL_PLANE.md"
+readme       = "./README.md"
