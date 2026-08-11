@@ -12,6 +12,10 @@ A test application showcasing all features of the Nuon platform including Helm c
 | **Actions** | Automated health checks, debugging, and lifecycle hooks |
 | **Policies** | OPA policies for security and compliance |
 
+## Sandbox
+
+Deploys to AWS EKS using the [`aws-eks-sandbox`](https://github.com/nuonco/aws-eks-sandbox).
+
 &nbsp;
 
 For more information on Nuon platform features, see the [documentation](https://docs.nuon.co/get-started/introduction).
