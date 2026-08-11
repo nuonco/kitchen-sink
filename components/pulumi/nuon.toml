@@ -3,7 +3,7 @@ name    = "pulumi_infra"
 type    = "pulumi"
 runtime = "go"
 
-[connected_repo]
+[public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "components/pulumi"
 branch    = "main"
