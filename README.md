@@ -1,137 +1,229 @@
-# Kitchen Sink App — Control Plane Guide
+# Kitchen Sink
 
-This document covers developing, building, deploying, and managing the Kitchen Sink App through the Nuon control plane.
+{{ $accountId := dig "account_id" "000000000000" .nuon.install_stack.outputs }}
+{{ $region := .nuon.cloud_account.aws.region }}
+{{ $vpcId := dig "vpc_id" "vpc-000000" .nuon.install_stack.outputs }}
 
-## Overview
+<nuon-tabs>
 
-The Kitchen Sink App exercises the full breadth of the Nuon platform:
+<nuon-tab name="about">
 
-- **Helm chart** deploying API, UI, and Worker to EKS
-- **Pulumi component** creating an S3 bucket with encryption and public access blocked
-- **Terraform module** creating SSM parameter with resource tags and drift detection
-- **Docker build** component for the Worker image
-- **Job** component for one-shot seed task
-- **Private ECR image** (API) and **public container image** (UI)
-- **OPA policies** across all 4 policy types (terraform_module, helm_chart, sandbox, kubernetes_cluster)
-- **Custom roles** for sandbox updates, setup, maintenance, and actions
-- **Actions** for health checks (cron), debugging (manual), status collection (hourly cron), and lifecycle hooks (all trigger types)
-- **Secrets** with auto-generation and Kubernetes sync
-- **Inputs** exercising all field types (required, sensitive, internal, user_configurable)
-- **Installer** with full branding and markdown configuration
-- **Custom nested stacks** in CloudFormation
+<div style="padding-top:1rem;"></div>
 
-## Sandbox
+A test application showcasing all features of the Nuon platform including Helm charts, Pulumi infrastructure, container images, actions, roles, and policies.
 
-Uses [`aws-eks-sandbox`](https://github.com/nuonco/aws-eks-sandbox) to provision an EKS cluster.
+## What Gets Deployed
 
-## Components
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Helm Chart</strong></td>
+      <td>Deploys API, UI, and Worker pods to EKS</td>
+    </tr>
+    <tr>
+      <td><strong>Pulumi Infrastructure</strong></td>
+      <td>Creates an S3 bucket with encryption and versioning</td>
+    </tr>
+    <tr>
+      <td><strong>Container Images</strong></td>
+      <td>Pre-built images from private ECR</td>
+    </tr>
+    <tr>
+      <td><strong>Actions</strong></td>
+      <td>Automated health checks, debugging, and lifecycle hooks</td>
+    </tr>
+    <tr>
+      <td><strong>Policies</strong></td>
+      <td>OPA policies for security and compliance</td>
+    </tr>
+  </tbody>
+</table>
 
-| Component | Type | Source | Description |
-|-----------|------|--------|-------------|
-| `img_api` | `container_image` | Private ECR | API + Worker image (var_name) |
-| `img_ui` | `container_image` | Public ECR | UI / BFF image (var_name) |
-| `img_worker` | `docker_build` | `connected_repo` | Worker image built from API Dockerfile |
-| `kitchen_sink` | `helm_chart` | `chart/` | API (internal), UI (public), Worker — with operation_roles |
-| `pulumi_infra` | `pulumi` | `pulumi/` | S3 bucket with encryption and versioning |
-| `seed_job` | `job` | — | One-shot seed job with cmd/args/env_vars |
+## About this App Config
 
-## Source Code
+The full source code can be referenced [here](https://github.com/nuonco/kitchen-sink). For more information on Nuon platform features, see the [documentation](https://docs.nuon.co/get-started/introduction).
 
-- **API** (`api/`) — Go introspection API (Gin). 13 endpoints exposing K8s, Helm, Terraform, and environment data.
-- **Worker** (`api/cmd/worker/`) — Background process logging on a 5-second interval.
-- **UI** (`ui/`) — React + Vite + TypeScript dashboard. Go BFF serves static files and proxies `/api/*` to the API.
-- **Pulumi** (`pulumi/`) — Go Pulumi program creating a private, encrypted, versioned S3 bucket.
-- **Terraform** (`terraform/`) — Terraform module creating SSM parameter with resource tags.
-- **Helm Chart** (`chart/`) — Deploys API (internal ingress), UI (public ingress), and Worker.
+</nuon-tab>
 
-## Actions
+<nuon-tab name="health">
 
-| Action | Trigger | Description |
-|--------|---------|-------------|
-| `healthcheck` | Cron (`*/5 * * * *`) + Manual | Curls API `/readyz` |
-| `debug` | Manual | Dumps pods, events, helm releases, and logs |
-| `cron_status` | Cron (`0 * * * *`) + Manual | Collects node, pod, service, and ingress status |
-| `lifecycle_hooks` | All lifecycle triggers + Manual | Logs hook type, install ID, and timestamp |
+<div style="padding-top:1rem;"></div>
 
-### Lifecycle Hook Trigger Types
+## Deployment Status
 
-The `lifecycle_hooks` action exercises every trigger type:
-- `manual` — run from dashboard/CLI
-- `post-provision` — after install provisioning
-- `post-deploy-component` — after `kitchen_sink` deploys
-- `pre-deploy-component` — before `kitchen_sink` deploys
-- `post-sandbox-run` — after sandbox Terraform runs
-- `post-deploy-action` — after `healthcheck` action deploys
-- `post-provision-all-components` — after all components deploy
+{{ $helmComponent := .nuon.components.kitchen_sink }}
+{{ $helmStatus := dig "status" "unknown" $helmComponent }}
+{{ $pulumiComponent := .nuon.components.pulumi_infra }}
+{{ $pulumiStatus := dig "status" "unknown" $pulumiComponent }}
+{{ $apiComponent := .nuon.components.img_api }}
+{{ $apiStatus := dig "status" "unknown" $apiComponent }}
+{{ $uiComponent := .nuon.components.img_ui }}
+{{ $uiStatus := dig "status" "unknown" $uiComponent }}
 
-## Roles
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Status</th>
+      <th>Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>kitchen_sink</strong></td>
+      <td><nuon-status status="{{ $helmStatus }}" variant="badge"></nuon-status></td>
+      <td>helm_chart</td>
+    </tr>
+    <tr>
+      <td><strong>pulumi_infra</strong></td>
+      <td><nuon-status status="{{ $pulumiStatus }}" variant="badge"></nuon-status></td>
+      <td>pulumi</td>
+    </tr>
+    <tr>
+      <td><strong>img_api</strong></td>
+      <td><nuon-status status="{{ $apiStatus }}" variant="badge"></nuon-status></td>
+      <td>container_image</td>
+    </tr>
+    <tr>
+      <td><strong>img_ui</strong></td>
+      <td><nuon-status status="{{ $uiStatus }}" variant="badge"></nuon-status></td>
+      <td>container_image</td>
+    </tr>
+  </tbody>
+</table>
 
-| Role | Type | Purpose |
-|------|------|---------|
-| `provision` | provision | Provision sandbox and components |
-| `deprovision` | deprovision | Tear down sandbox and components |
-| `sandbox-updates` | custom | Update and maintain sandbox infrastructure |
-| `setup` | custom | Initial component deployment |
-| `maintenance` | custom | Operate and remediate components |
-| `actions` | custom | Execute actions (EKS access only) |
+</nuon-tab>
 
-## Policies
+<nuon-tab name="debug">
 
-| Policy | Type | Engine | Scope |
-|--------|------|--------|-------|
-| `deny-public-s3-bucket` | `terraform_module` | OPA | All — S3 buckets must block public access |
-| `deny-public-api-ingress` | `helm_chart` | OPA | `kitchen_sink` — API must use internal ingress |
-| `sandbox-limits` | `sandbox` | OPA | EKS cluster version must be 1.x |
-| `cluster-requirements` | `kubernetes_cluster` | OPA | No custom workloads in kube-system namespace |
+<div style="padding-top:1rem;"></div>
 
-## Deploy with Nuon
+## Recent Actions
 
-```bash
-nuon auth login
-nuon apps create --name kitchen-sink
-cd nuon && nuon apps sync
-```
+{{ $workflows := dict }}
+{{ with .nuon.actions }}{{ $workflows = default dict .workflows }}{{ end }}
+{{ if $workflows }}
 
-Then go to the [Nuon dashboard](https://app.nuon.co), select the app, and click "Install".
+<table>
+  <thead>
+    <tr>
+      <th>Action</th>
+      <th>Status</th>
+      <th>Details</th>
+    </tr>
+  </thead>
+  <tbody>
+  {{ range $name, $workflow := $workflows }}
+    {{ $status := dig "status" "unknown" $workflow }}
+    <tr>
+      <td><code>{{ $name }}</code></td>
+      <td><nuon-status status="{{ $status }}" variant="badge"></nuon-status></td>
+      <td>
+        <nuon-panel heading="Action: {{ $name }}" trigger="View" size="3/4">
+          <table>
+            <thead><tr><th>Field</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr><td>Name</td><td><code>{{ $name }}</code></td></tr>
+              <tr><td>Status</td><td><nuon-status status="{{ $status }}" variant="badge"></nuon-status></td></tr>
+              <tr><td>ID</td><td><code>{{ dig "id" "—" $workflow }}</code></td></tr>
+            </tbody>
+          </table>
+        </nuon-panel>
+      </td>
+    </tr>
+  {{ end }}
+  </tbody>
+</table>
 
-## Local Development
+{{ else }}
 
-```bash
-# API (port 8080)
-cd api && go run .
+<nuon-banner theme="info">No actions have run yet.</nuon-banner>
 
-# Worker
-cd api && go run ./cmd/worker
+{{ end }}
 
-# UI frontend (dev mode, proxies to localhost:8080)
-cd ui/frontend && npm install && npm run dev
+</nuon-tab>
 
-# UI BFF server (port 3000, proxies to API)
-cd ui && go run .
-```
+<nuon-tab name="infrastructure">
 
-## Docker
+<div style="padding-top:1rem;"></div>
 
-```bash
-docker build -t kitchen-sink-api api/
-docker build -t kitchen-sink-ui ui/
-```
+<div style="display:flex;gap:1.5rem;align-items:flex-start;">
+  <div style="flex:1;min-width:0;">
 
-## Push to Private ECR
+<div style="display:flex;align-items:baseline;gap:0.75rem;"><h3 style="margin:0;">AWS Sandbox</h3></div>
 
-The script creates the ECR repo and Nuon pull access IAM role if they don't exist.
+{{ $sandboxStatus := dig "status" "" .nuon.install_stack }}
 
-```bash
-# Defaults: us-west-2, repo=kitchen-sink-app
-./scripts/push-to-ecr.sh --tag v0.0.1
+<table>
+  <thead>
+    <tr><th>Field</th><th>Value</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Status</td><td>{{ if $sandboxStatus }}<nuon-status status="{{ $sandboxStatus }}" variant="badge"></nuon-status>{{ else }}—{{ end }}</td></tr>
+    <tr><td>Account</td><td><code>{{ $accountId }}</code></td></tr>
+    <tr><td>Region</td><td><code>{{ $region }}</code></td></tr>
+    <tr><td>VPC</td><td><code>{{ $vpcId }}</code></td></tr>
+  </tbody>
+</table>
 
-# With a specific profile and region
-./scripts/push-to-ecr.sh --profile my-profile --region eu-west-1 --tag v0.0.1
-```
+  </div>
+  <div style="flex:1;min-width:0;">
 
-## Resources
+<div style="display:flex;align-items:baseline;gap:0.75rem;"><h3 style="margin:0;">Components</h3></div>
 
-- [Nuon Docs](https://docs.nuon.co)
-- [AWS EKS Sandbox](https://github.com/nuonco/aws-eks-sandbox)
-- [Nuon ECR Access Terraform Module](https://registry.terraform.io/modules/nuonco/ecr-access/aws)
-- [Example App Configs](https://github.com/nuonco/example-app-configs)
+<table style="width:100%;">
+  <thead>
+    <tr><th style="width:40%;">Name</th><th style="width:30%;">Type</th><th style="width:30%;">Status</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>kitchen_sink</code></td>
+      <td>helm_chart</td>
+      <td><nuon-status status="{{ $helmStatus }}" variant="badge"></nuon-status></td>
+    </tr>
+    <tr>
+      <td><code>pulumi_infra</code></td>
+      <td>pulumi</td>
+      <td><nuon-status status="{{ $pulumiStatus }}" variant="badge"></nuon-status></td>
+    </tr>
+    <tr>
+      <td><code>img_api</code></td>
+      <td>container_image</td>
+      <td><nuon-status status="{{ $apiStatus }}" variant="badge"></nuon-status></td>
+    </tr>
+    <tr>
+      <td><code>img_ui</code></td>
+      <td>container_image</td>
+      <td><nuon-status status="{{ $uiStatus }}" variant="badge"></nuon-status></td>
+    </tr>
+  </tbody>
+</table>
+
+  </div>
+</div>
+
+<div style="margin-top:1.5rem;">
+
+<div style="display:flex;align-items:baseline;gap:0.75rem;"><h3 style="margin:0;">Install Information</h3></div>
+
+<table>
+  <thead>
+    <tr><th>Field</th><th>Value</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Install ID</td><td><code>{{ .nuon.install.id }}</code></td></tr>
+    <tr><td>Install Name</td><td>{{ dig "name" "—" .nuon.install }}</td></tr>
+  </tbody>
+</table>
+
+</div>
+
+</nuon-tab>
+
+</nuon-tabs>
