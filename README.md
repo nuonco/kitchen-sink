@@ -1,63 +1,23 @@
-<center>
-<h1>Kitchen Sink App</h1>
+# Kitchen Sink
 
-A comprehensive test application showcasing the full Nuon platform.
+A test application showcasing all features of the Nuon platform including Helm charts, Pulumi infrastructure, container images, actions, roles, and policies.
 
-Nuon Install Id: {{ .nuon.install.id }}
+## What Gets Deployed
 
-AWS Region: {{ .nuon.install_stack.outputs.region }}
+| Feature | Description |
+|---------|-------------|
+| **Helm Chart** | Deploys API, UI, and Worker pods to EKS |
+| **Pulumi Infrastructure** | Creates an S3 bucket with encryption and versioning |
+| **Container Images** | Pre-built images from private ECR |
+| **Actions** | Automated health checks, debugging, and lifecycle hooks |
+| **Policies** | OPA policies for security and compliance |
 
-</center>
+## Sandbox
 
-## What is this?
+Deploys to AWS EKS using the [`aws-eks-sandbox`](https://github.com/nuonco/aws-eks-sandbox).
 
-The Kitchen Sink App is an introspection and debugging tool that runs inside a customer's cloud account. It exposes details about the Kubernetes cluster, Helm releases, Terraform state, environment variables, and Nuon-specific configuration — all through a web UI and a REST API.
+## Resources
 
-## Architecture
+For more information on Nuon platform features, see the [documentation](https://docs.nuon.co/get-started/introduction).
 
-```mermaid
-graph TD
-    subgraph VPC["Customer Cloud VPC (AWS)"]
-        S3["S3 Bucket"]
-
-        subgraph EKS["EKS Cluster"]
-            UI["UI / BFF (public)"]
-            API["Introspection API (internal)"]
-            Worker["Background Worker"]
-        end
-    end
-
-    UI -->|proxies /api/*| API
-    Browser["Web Browser"] -->|HTTPS| UI
-```
-
-**UI** — public-facing React dashboard at `https://app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}`
-
-**API** — internal-only introspection API at `https://api.internal.{{.nuon.install.sandbox.outputs.nuon_dns.internal_domain.name}}`
-
-## Endpoints
-
-| Path | Description |
-|------|-------------|
-| `/` | Discover all endpoints |
-| `/livez` | Liveness probe |
-| `/readyz` | Readiness probe |
-| `/introspect/kube` | Kubernetes cluster details |
-| `/introspect/namespace/:ns` | Namespace details (pods, services, secrets) |
-| `/introspect/helm` | Installed Helm charts |
-| `/introspect/helm-values/:ns/:name` | Helm release values |
-| `/introspect/helm-rendered/:ns/:name` | Rendered Helm manifests |
-| `/introspect/env` | Full environment |
-| `/introspect/terraform` | Terraform component outputs |
-| `/introspect/secrets` | Secret values |
-| `/introspect/defaults` | Default values |
-| `/introspect/sandbox` | Sandbox details |
-| `/introspect/nuon` | Nuon built-in values |
-| `/introspect/docker-build` | Docker build component details |
-| `/introspect/external-image` | External image component details |
-
-## Testing
-
-```bash
-curl https://app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}/api/introspect/nuon
-```
+For questions or support with this app config, reach out to us in our [Slack community](https://join.slack.com/t/nuon-byoc/shared_invite/zt-46l24847a-4HNYaF7670x3CIrYEBamNQ).
