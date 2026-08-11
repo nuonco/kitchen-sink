@@ -25,15 +25,5 @@ role = "setup"
 operation = "teardown"
 role = "maintenance"
 
-# Block deploys on a custom health check pushed via the CLI extension
-# (nuon-ext-healthcheck). The deploy waits for the "datadog-metric" check to
-# report healthy within the stabilization window; if it stays unhealthy (or is
-# never reported), block_deploy fails the deploy. required_checks must match the
-# --check name the reporter pushes.
-[health]
-block_deploy = true
-stabilization_window = "3m"
-required_checks = ["custom-healthcheck"]
-
 [labels]
 helm = "true"
