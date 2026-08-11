@@ -10,7 +10,7 @@
 
 <div style="padding-top:1rem;"></div>
 
-A test application showcasing all features of the Nuon platform including Helm charts, Pulumi infrastructure, container images, actions, roles, and policies. 1234alsdfkj
+A test application showcasing all features of the Nuon platform including Helm charts, Pulumi infrastructure, container images, actions, roles, and policies.
 
 ## What Gets Deployed
 
