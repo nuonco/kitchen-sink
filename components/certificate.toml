@@ -1,0 +1,21 @@
+# terraform
+# Wildcard ACM certificate for *.<install domain>, DNS-validated against the
+# install's public Route53 zone. Consumed by the application_load_balancer
+# component to terminate HTTPS.
+name              = "certificate"
+type              = "terraform_module"
+terraform_version = "1.11.3"
+
+[public_repo]
+repo      = "nuonco/example-app-configs"
+directory = "eks-simple/src/components/certificate"
+branch    = "main"
+
+[vars]
+install_id  = "{{ .nuon.install.id }}"
+region      = "{{ .nuon.install_stack.outputs.region }}"
+zone_id     = "{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.zone_id }}"
+domain_name = "*.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}"
+
+[labels]
+custom_component_type = "terraform"

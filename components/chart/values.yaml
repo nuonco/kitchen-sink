@@ -40,8 +40,12 @@ ui:
     maxReplicas: 3
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
-  ingress:
-    publicHost: "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
+  # No nginx ingress: the sandbox's ingress-nginx sits behind an internal-scheme
+  # NLB (the AWS Load Balancer Controller default), so a host published through
+  # it is unreachable from the internet. Public HTTPS access comes from the
+  # application_load_balancer component instead (internet-facing ALB + ACM cert
+  # on app.<install domain>, terminating TLS in front of kitchen-sink-ui).
+  ingress: {}
   env:
     API_URL: "http://kitchen-sink-api:8080"
 

@@ -1,3 +1,4 @@
+{{- if and .Values.ui.ingress .Values.ui.ingress.publicHost }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -19,3 +20,4 @@ spec:
                 name: {{ include "kitchen-sink.ui.name" . }}
                 port:
                   number: {{ .Values.ui.port }}
+{{- end }}
