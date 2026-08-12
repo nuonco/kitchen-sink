@@ -1,5 +1,8 @@
 # helm
-
+# Internet-facing application load balancer for the UI. The sandbox's
+# ingress-nginx sits behind an internal-scheme NLB, so this ALB (plus the ACM
+# cert from the certificate component) is what makes the app reachable at
+# https://app.<install domain>.
 name         = "application_load_balancer"
 type         = "helm_chart"
 chart_name   = "application-load-balancer"
