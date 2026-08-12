@@ -9,7 +9,7 @@ dependencies = ["img_api", "img_ui"]
 [public_repo]
 repo = "nuonco/kitchen-sink"
 directory = "components/chart"
-branch = "main"
+branch = "cb/reconfigure-ui"
 
 [[values_file]]
 # Path resolves relative to the `components/` directory. This is the chart's
