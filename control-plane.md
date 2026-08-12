@@ -30,13 +30,13 @@
 {{- $checkedAt := dig "checked_at" "" $hcOut -}}
 {{- $healthOk := and (gt $pt 0) (ge $pr $pt) -}}
 
-**BYOC assembly reference.** This install is a real application, deployed by Nuon from [one config repo](https://github.com/nuonco/kitchen-sink) into AWS account `{{ $accountId }}`. Like any good manual, it starts with the parts. Kitchen Sink deliberately uses every part type on Nuon's shelf, so a DevOps engineer can map each one onto what *their* product needs to ship Bring Your Own Cloud (BYOC).
+**This install is a working tour of Nuon.** A real application, deployed from [one config repo](https://github.com/nuonco/kitchen-sink) into AWS account `{{ $accountId }}`. Kitchen Sink deliberately uses every primitive on Nuon's platform, so a DevOps engineer can map each one onto what *their* product needs to ship Bring Your Own Cloud (BYOC).
 
 ## Parts
 
-Check that all parts are present before you begin. This page checks for you — the status on each part is read live from this install.
+Everything this install is made of. The status on each part is read live from the install — a complete inventory, checked for you.
 
-<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">A &nbsp;·&nbsp; YOUR PRODUCT — the thing being assembled, in the formats you already ship</div>
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">A &nbsp;·&nbsp; YOUR PRODUCT — your application, in the formats you already ship</div>
 <div style="display:flex;flex-wrap:wrap;gap:12px;">
 <div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">A1</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $imgsOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $imgsOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if $imgsOk }}active{{ else }}check{{ end }}</span></div>
@@ -48,7 +48,7 @@ Check that all parts are present before you begin. This page checks for you — 
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">A2</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if eq $sChart "active" }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if eq $sChart "active" }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if eq $sChart "active" }}active{{ else }}check{{ end }}</span></div>
 <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">helm_chart</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
 <div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">kitchen_sink</div>
-<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">How the app mounts to the cluster: UI, API, and worker, with services, autoscaling, and role-based access control.</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">How the app deploys to the cluster: UI, API, and worker, with services, autoscaling, and role-based access control.</div>
 </div>
 <div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">A3</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $kustOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $kustOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if $kustOk }}active{{ else }}check{{ end }}</span></div>
@@ -64,19 +64,19 @@ Check that all parts are present before you begin. This page checks for you — 
 </div>
 </div>
 
-<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">B &nbsp;·&nbsp; MOUNTING HARDWARE — what fixes your product to the customer's cloud</div>
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">B &nbsp;·&nbsp; INFRASTRUCTURE — everything between an empty customer account and your running app</div>
 <div style="display:flex;flex-wrap:wrap;gap:12px;">
 <div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">B1</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $sandboxOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $sandboxOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if $sandboxOk }}active{{ else }}check{{ end }}</span></div>
 <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">sandbox</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
 <div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">aws-eks-sandbox</div>
-<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The frame everything mounts to: an EKS cluster, dedicated VPC, DNS zones, and cluster essentials, Terraform-provisioned per install.</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The foundation layer every component lands on: an EKS cluster, dedicated VPC, DNS zones, and cluster essentials, Terraform-provisioned per install.</div>
 </div>
 <div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">B2</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $stackOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $stackOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if $stackOk }}active{{ else }}check{{ end }}</span></div>
 <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">stack</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
 <div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">aws-cloudformation</div>
-<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The anchor point: one CloudFormation stack the customer runs to bootstrap the VPC and runner. It's the only thing they set up.</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">One CloudFormation stack the customer runs to bootstrap the VPC and runner — the only setup step on their side.</div>
 </div>
 <div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">B3</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if eq $sCert "active" }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if eq $sCert "active" }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if eq $sCert "active" }}active{{ else }}check{{ end }}</span></div>
@@ -88,21 +88,21 @@ Check that all parts are present before you begin. This page checks for you — 
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">B4</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if eq $sAlb "active" }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if eq $sAlb "active" }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if eq $sAlb "active" }}active{{ else }}check{{ end }}</span></div>
 <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">helm_chart</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
 <div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">application_load_balancer</div>
-<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The front door: an internet-facing load balancer terminating HTTPS in front of the UI, health-checked on <code>/livez</code>.</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The public entry point: an internet-facing load balancer terminating HTTPS in front of the UI, health-checked on <code>/livez</code>.</div>
 </div>
 </div>
 
-<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">C &nbsp;·&nbsp; THE INCLUDED TOOL — no tools required from the customer</div>
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">C &nbsp;·&nbsp; EXECUTION — the compute that does the work, inside the customer's account</div>
 <div style="display:flex;flex-wrap:wrap;gap:12px;">
 <div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
-<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">C1</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">in the box</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">C1</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">declared in config</span></div>
 <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">runner</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
 <div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">EC2 Auto Scaling group</div>
-<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The tool comes in the box: a small compute group <em>inside the customer's account</em> performs every build, deploy, and action itself. It only ever calls out — <strong>Nuon never needs inbound access to the account</strong>. This is the heart of the security story.</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">A small compute group <em>inside the customer's account</em> performs every build, deploy, and action itself. It only ever calls out — <strong>Nuon never needs inbound access to the account</strong>. This is the heart of the security story.</div>
 </div>
 </div>
 
-<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">D &nbsp;·&nbsp; ADJUSTMENTS — per-customer settings, declared once</div>
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">D &nbsp;·&nbsp; CONFIGURATION — per-customer settings, declared once</div>
 <div style="display:flex;flex-wrap:wrap;gap:12px;">
 <div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">D1</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">declared in config</span></div>
@@ -118,7 +118,7 @@ Check that all parts are present before you begin. This page checks for you — 
 </div>
 </div>
 
-<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">E &nbsp;·&nbsp; SAFETY HARDWARE — what the assembly is allowed to do, in reviewable files</div>
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">E &nbsp;·&nbsp; GUARDRAILS — what the platform is allowed to do, in reviewable files</div>
 <div style="display:flex;flex-wrap:wrap;gap:12px;">
 <div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">E1</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">declared in config</span></div>
@@ -140,7 +140,7 @@ Check that all parts are present before you begin. This page checks for you — 
 </div>
 </div>
 
-<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">F &nbsp;·&nbsp; CARE INSTRUCTIONS — how it's maintained after assembly</div>
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">F &nbsp;·&nbsp; OPERATIONS — how the install is maintained after deploy</div>
 <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
 <div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
 <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">F1</span>{{ if gt $pt 0 }}<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $healthOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $healthOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ $pr }}/{{ $pt }} pods ready</span>{{ else }}<span style="font-size:0.78em;font-weight:600;opacity:0.5;">not run yet</span>{{ end }}</div>
@@ -150,29 +150,29 @@ Check that all parts are present before you begin. This page checks for you — 
 </div>
 </div>
 
-## Assembly
+## What just happened?
 
-This unit ships pre-assembled — creating the install performed every step below. The checks are live.
+Creating this install performed every step below, in order. The checkmarks are live.
 
 <div style="display:flex;flex-direction:column;gap:10px;margin:18px 0 8px;">
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
 <span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">1</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Bolt the frame to the account: provision <strong>B1</strong> and <strong>B2</strong> in <code>{{ $accountId }}</code> ({{ $region }}) — cluster, VPC <code>{{ $vpcId }}</code>, DNS, and the runner <strong>C1</strong>.</div>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Provision the infrastructure (<strong>B1</strong>, <strong>B2</strong>) in <code>{{ $accountId }}</code> ({{ $region }}) — cluster, VPC <code>{{ $vpcId }}</code>, DNS, and the runner (<strong>C1</strong>).</div>
 <span style="font-weight:800;flex:none;color:{{ if and $sandboxOk $stackOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if and $sandboxOk $stackOk }}✓{{ else }}…{{ end }}</span>
 </div>
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
 <span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">2</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Attach your product: build parts <strong>A1–A4</strong> and deploy them in dependency order ({{ $cR }}/{{ $cT }} components active).</div>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Build your application's components (<strong>A1–A4</strong>) and deploy them in dependency order ({{ $cR }}/{{ $cT }} components active).</div>
 <span style="font-weight:800;flex:none;color:{{ if $allCompsOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if $allCompsOk }}✓{{ else }}…{{ end }}</span>
 </div>
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
 <span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">3</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Fit the front door: <strong>B3</strong> + <strong>B4</strong>. {{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }}Your unit is ready to use: <a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/"><strong>app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }} ↗</strong></a>{{ else }}The public URL appears here once the sandbox is provisioned.{{ end }}</div>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Issue the TLS certificate and stand up the public endpoint (<strong>B3</strong>, <strong>B4</strong>). {{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }}The app is live: <a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/"><strong>app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }} ↗</strong></a>{{ else }}The public URL appears here once the sandbox is provisioned.{{ end }}</div>
 <span style="font-weight:800;flex:none;color:{{ if eq $sAlb "active" }}#16a34a{{ else }}#64748b{{ end }};">{{ if eq $sAlb "active" }}✓{{ else }}…{{ end }}</span>
 </div>
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
 <span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">4</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Begin scheduled care: <strong>F1</strong> checks every pod hourly{{ if gt $pt 0 }} — currently <strong>{{ $pr }}/{{ $pt }} ready</strong>{{ if ne $checkedAt "" }}, last run <nuon-time time="{{ $checkedAt }}" format="relative"></nuon-time>{{ end }}{{ end }}.</div>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Start scheduled health checks (<strong>F1</strong>): every pod, every hour{{ if gt $pt 0 }} — currently <strong>{{ $pr }}/{{ $pt }} ready</strong>{{ if ne $checkedAt "" }}, last run <nuon-time time="{{ $checkedAt }}" format="relative"></nuon-time>{{ end }}{{ end }}.</div>
 <span style="font-weight:800;flex:none;color:{{ if $healthOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if $healthOk }}✓{{ else }}…{{ end }}</span>
 </div>
 </div>
@@ -187,13 +187,13 @@ Kitchen Sink is a stand-in for **your product**. If your enterprise customers wa
 
 **Release day.** You merge v2. A `nuon apps sync` picks up the change and builds new component versions; you roll them out install by install, or across the fleet, with every deploy versioned and logged. *Try it: open the **Components** tab and click `kitchen_sink` — this install has already taken multiple chart deploys, and you can read each one's history.*
 
-**A support ticket lands: "it's acting weird."** Normally this means a week of screenshare archaeology, because you have no access to the customer's environment. Here, you open **Actions** and run `debug` — it executes *inside the customer's boundary* and streams pod status, recent events, and application logs back to this dashboard. No credentials handed out, no VPN. The hourly `cron_status` check (part **F1**, assembly step 4) is the same idea on a schedule.
+**A support ticket lands: "it's acting weird."** Normally this means a week of screenshare archaeology, because you have no access to the customer's environment. Here, you open **Actions** and run `debug` — it executes *inside the customer's boundary* and streams pod status, recent events, and application logs back to this dashboard. No credentials handed out, no VPN. The hourly `cron_status` check (part **F1**, step 4 above) is the same idea on a schedule.
 
 **The customer's platform team wants changes.** Bigger nodes, their own domain. That's what **inputs** (part **D1**) are for: `instance_type` and `domain` are declared once in the config with sane defaults, surfaced per install, and flow into infrastructure and components as template variables. Some inputs are for your eyes only (`debug_mode` is internal), and some are secret by design (`api_token` is marked sensitive). *Try it: **Current inputs**, top right of this page.*
 
 **Something changed under you.** Someone in the customer's account hand-edited the infrastructure. The **Drift detection** indicator in this page's header catches the divergence, and a reprovision re-applies the desired state — the config repo, not the cloud account, stays the source of truth.
 
-**The security review asks: "what exactly can you touch?"** You answer with files instead of promises: the safety hardware (parts **E1–E3**) is all config — scoped Identity and Access Management (IAM) roles with permissions boundaries, Open Policy Agent policies that gate deploys, and a pre-declared, fully recorded break-glass role. All of it is in the **guardrails** tab below.
+**The security review asks: "what exactly can you touch?"** You answer with files instead of promises: the guardrails (parts **E1–E3**) are all config — scoped Identity and Access Management (IAM) roles with permissions boundaries, Open Policy Agent policies that gate deploys, and a pre-declared, fully recorded break-glass role. All of it is in the **guardrails** tab below.
 
 ## Under the hood
 
@@ -288,7 +288,7 @@ Kitchen Sink deliberately uses **every component type Nuon supports**, so you ca
       <td><code>application_load_balancer</code></td>
       <td>helm_chart</td>
       <td><code>nuonco/example-app-configs</code></td>
-      <td>The public HTTPS front door: an internet-facing Application Load Balancer terminating TLS in front of the UI.</td>
+      <td>The public HTTPS entry point: an internet-facing Application Load Balancer terminating TLS in front of the UI.</td>
     </tr>
   </tbody>
 </table>
