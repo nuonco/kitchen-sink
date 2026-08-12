@@ -5,67 +5,179 @@
 {{ $vpcId := dig "vpc_id" "vpc-000000" .nuon.install_stack.outputs }}
 {{- $comps := default dict .nuon.components -}}
 {{- $workflows := dict -}}{{- if .nuon.actions }}{{ $workflows = default dict .nuon.actions.workflows }}{{ end -}}
-
-**This install is a working tour of Nuon.** A real web application (UI + API + worker), the AWS infrastructure it runs on, and the automation around it — all deployed from [one config repo](https://github.com/nuonco/kitchen-sink) into account `{{ $accountId }}`. The tiles below are live: they re-render from this install's actual state every time you open this page.
-
-<div style="display:flex;flex-wrap:wrap;gap:14px;margin:22px 0 30px;">
-{{- $col := "#64748b" -}}{{- $glow := "rgba(100,116,139,0.18)" -}}{{- $tint := "rgba(100,116,139,0.05)" -}}{{- $gly := "–" -}}{{- $lab := "" -}}
-{{- /* tile 1: the application */ -}}
-{{- $ks := default dict (index $comps "kitchen_sink") -}}
-{{- $ksS := dig "status" "" $ks -}}
-{{- if eq $ksS "active" }}{{ $col = "#16a34a" }}{{ $glow = "rgba(22,163,74,0.22)" }}{{ $tint = "rgba(22,163,74,0.07)" }}{{ $gly = "✓" }}{{ $lab = "RUNNING" }}{{ else if eq $ksS "error" }}{{ $col = "#dc2626" }}{{ $glow = "rgba(220,38,38,0.22)" }}{{ $tint = "rgba(220,38,38,0.07)" }}{{ $gly = "✗" }}{{ $lab = "ERROR" }}{{ else }}{{ $col = "#64748b" }}{{ $glow = "rgba(100,116,139,0.18)" }}{{ $tint = "rgba(100,116,139,0.05)" }}{{ $gly = "–" }}{{ $lab = "PENDING" }}{{ end -}}
-<div style="flex:1 1 240px;min-width:240px;border:1px solid rgba(127,127,127,0.18);border-left:6px solid {{ $col }};border-radius:12px;padding:18px 20px;background:{{ $tint }};">
-<div style="font-size:1.2em;font-weight:800;line-height:1.2;margin-bottom:12px;">Your application</div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:{{ $col }};color:#fff;font-size:14px;font-weight:900;line-height:1;box-shadow:0 0 0 5px {{ $glow }};flex:none;">{{ $gly }}</span>
-<span style="font-size:1.18em;font-weight:800;letter-spacing:0.03em;color:{{ $col }};">{{ $lab }}</span>
-</div>
-<div style="font-size:0.86em;opacity:0.72;line-height:1.35;margin-bottom:8px;">UI + API + worker on EKS, deployed by the <code>kitchen_sink</code> Helm chart</div>
-{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }}<div style="font-size:0.82em;line-height:1.35;"><a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/">app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }} ↗</a></div>{{ else }}<div style="font-size:0.82em;opacity:0.6;line-height:1.35;">URL appears once the sandbox is provisioned</div>{{ end }}
-</div>
-{{- /* tile 2: components */ -}}
-{{- $cR := 0 -}}{{- $cE := 0 -}}{{- range $n, $c := $comps }}{{ if eq (dig "status" "" $c) "active" }}{{ $cR = add $cR 1 }}{{ else if eq (dig "status" "" $c) "error" }}{{ $cE = add $cE 1 }}{{ end }}{{ end -}}
+{{- /* per-part live statuses */ -}}
+{{- $sImgApi := dig "status" "" (default dict (index $comps "img_api")) -}}
+{{- $sImgApi2 := dig "status" "" (default dict (index $comps "img_api_two")) -}}
+{{- $sImgUi := dig "status" "" (default dict (index $comps "img_ui")) -}}
+{{- $sChart := dig "status" "" (default dict (index $comps "kitchen_sink")) -}}
+{{- $sKustNs := dig "status" "" (default dict (index $comps "kustomize_namespace")) -}}
+{{- $sKustApp := dig "status" "" (default dict (index $comps "kustomizeapp")) -}}
+{{- $sPulumi := dig "status" "" (default dict (index $comps "pulumi_infra")) -}}
+{{- $sCert := dig "status" "" (default dict (index $comps "certificate")) -}}
+{{- $sAlb := dig "status" "" (default dict (index $comps "application_load_balancer")) -}}
+{{- $sSandbox := dig "status" "" (default dict .nuon.sandbox) -}}
+{{- $sStack := dig "status" "" .nuon.install_stack -}}
+{{- $imgsOk := and (eq $sImgApi "active") (eq $sImgApi2 "active") (eq $sImgUi "active") -}}
+{{- $kustOk := and (eq $sKustNs "active") (eq $sKustApp "active") -}}
+{{- $sandboxOk := or (eq $sSandbox "active") (eq $sSandbox "healthy") (eq $sSandbox "finished") -}}
+{{- $stackOk := or (eq $sStack "active") (eq $sStack "healthy") (eq $sStack "finished") -}}
+{{- $cR := 0 -}}{{- range $n, $c := $comps }}{{ if eq (dig "status" "" $c) "active" }}{{ $cR = add $cR 1 }}{{ end }}{{ end -}}
 {{- $cT := len $comps -}}
-{{- if gt $cE 0 }}{{ $col = "#dc2626" }}{{ $glow = "rgba(220,38,38,0.22)" }}{{ $tint = "rgba(220,38,38,0.07)" }}{{ $gly = "✗" }}{{ $lab = "ISSUES" }}{{ else if and (gt $cT 0) (ge $cR $cT) }}{{ $col = "#16a34a" }}{{ $glow = "rgba(22,163,74,0.22)" }}{{ $tint = "rgba(22,163,74,0.07)" }}{{ $gly = "✓" }}{{ $lab = "ALL ACTIVE" }}{{ else }}{{ $col = "#64748b" }}{{ $glow = "rgba(100,116,139,0.18)" }}{{ $tint = "rgba(100,116,139,0.05)" }}{{ $gly = "–" }}{{ $lab = "WORKING" }}{{ end -}}
-<div style="flex:1 1 240px;min-width:240px;border:1px solid rgba(127,127,127,0.18);border-left:6px solid {{ $col }};border-radius:12px;padding:18px 20px;background:{{ $tint }};">
-<div style="font-size:1.2em;font-weight:800;line-height:1.2;margin-bottom:12px;">Components</div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:{{ $col }};color:#fff;font-size:14px;font-weight:900;line-height:1;box-shadow:0 0 0 5px {{ $glow }};flex:none;">{{ $gly }}</span>
-<span style="font-size:1.18em;font-weight:800;letter-spacing:0.03em;color:{{ $col }};">{{ $lab }}</span>
-</div>
-{{ if gt $cT 0 }}<div style="display:flex;flex-wrap:wrap;gap:6px;">{{ range $n, $c := $comps }}{{ $ok := eq (dig "status" "" $c) "active" }}<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.8em;font-weight:600;padding:3px 9px;border-radius:999px;border:1px solid {{ if $ok }}rgba(22,163,74,0.30){{ else }}rgba(220,38,38,0.30){{ end }};background:{{ if $ok }}rgba(22,163,74,0.10){{ else }}rgba(220,38,38,0.10){{ end }};color:{{ if $ok }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:7px;height:7px;border-radius:50%;flex:none;background:{{ if $ok }}#16a34a{{ else }}#dc2626{{ end }};"></span>{{ $n }}</span>{{ end }}</div>{{ else }}<div style="font-size:0.86em;opacity:0.72;line-height:1.35;">Components appear after the first sync</div>{{ end }}
-</div>
-{{- /* tile 3: infrastructure */ -}}
-{{- $sb := default dict .nuon.sandbox -}}{{- $ss := dig "status" "" $sb -}}
-{{- if or (eq $ss "active") (eq $ss "healthy") (eq $ss "finished") }}{{ $col = "#16a34a" }}{{ $glow = "rgba(22,163,74,0.22)" }}{{ $tint = "rgba(22,163,74,0.07)" }}{{ $gly = "✓" }}{{ $lab = "IN SYNC" }}{{ else if ne $ss "" }}{{ $col = "#dc2626" }}{{ $glow = "rgba(220,38,38,0.22)" }}{{ $tint = "rgba(220,38,38,0.07)" }}{{ $gly = "✗" }}{{ $lab = "ATTENTION" }}{{ else }}{{ $col = "#64748b" }}{{ $glow = "rgba(100,116,139,0.18)" }}{{ $tint = "rgba(100,116,139,0.05)" }}{{ $gly = "–" }}{{ $lab = "UNKNOWN" }}{{ end -}}
-<div style="flex:1 1 240px;min-width:240px;border:1px solid rgba(127,127,127,0.18);border-left:6px solid {{ $col }};border-radius:12px;padding:18px 20px;background:{{ $tint }};">
-<div style="font-size:1.2em;font-weight:800;line-height:1.2;margin-bottom:12px;">Infrastructure</div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:{{ $col }};color:#fff;font-size:14px;font-weight:900;line-height:1;box-shadow:0 0 0 5px {{ $glow }};flex:none;">{{ $gly }}</span>
-<span style="font-size:1.18em;font-weight:800;letter-spacing:0.03em;color:{{ $col }};">{{ $lab }}</span>
-</div>
-<div style="font-size:0.86em;opacity:0.72;line-height:1.35;">EKS + VPC + DNS + TLS, Terraform-provisioned in <code>{{ $accountId }}</code> ({{ $region }})</div>
-</div>
-{{- /* tile 4: health pulse (hourly cron_status action) */ -}}
+{{- $allCompsOk := and (gt $cT 0) (ge $cR $cT) -}}
 {{- $hc := default dict (index $workflows "cron_status") -}}
 {{- $hcOut := default dict (dig "outputs" dict $hc) -}}
 {{- $pr := int (dig "pods_ready" 0 $hcOut) -}}{{- $pt := int (dig "pods_total" 0 $hcOut) -}}
 {{- $checkedAt := dig "checked_at" "" $hcOut -}}
-{{- if and (gt $pt 0) (ge $pr $pt) }}{{ $col = "#16a34a" }}{{ $glow = "rgba(22,163,74,0.22)" }}{{ $tint = "rgba(22,163,74,0.07)" }}{{ $gly = "✓" }}{{ $lab = "PASSING" }}{{ else if gt $pt 0 }}{{ $col = "#dc2626" }}{{ $glow = "rgba(220,38,38,0.22)" }}{{ $tint = "rgba(220,38,38,0.07)" }}{{ $gly = "✗" }}{{ $lab = "DEGRADED" }}{{ else }}{{ $col = "#64748b" }}{{ $glow = "rgba(100,116,139,0.18)" }}{{ $tint = "rgba(100,116,139,0.05)" }}{{ $gly = "–" }}{{ $lab = "NOT RUN" }}{{ end -}}
-<div style="flex:1 1 240px;min-width:240px;border:1px solid rgba(127,127,127,0.18);border-left:6px solid {{ $col }};border-radius:12px;padding:18px 20px;background:{{ $tint }};">
-<div style="font-size:1.2em;font-weight:800;line-height:1.2;margin-bottom:12px;">Health pulse</div>
-<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:{{ $col }};color:#fff;font-size:14px;font-weight:900;line-height:1;box-shadow:0 0 0 5px {{ $glow }};flex:none;">{{ $gly }}</span>
-<span style="font-size:1.18em;font-weight:800;letter-spacing:0.03em;color:{{ $col }};">{{ $lab }}</span>
+{{- $healthOk := and (gt $pt 0) (ge $pr $pt) -}}
+
+**BYOC assembly reference.** This install is a real application, deployed by Nuon from [one config repo](https://github.com/nuonco/kitchen-sink) into AWS account `{{ $accountId }}`. Like any good manual, it starts with the parts. Kitchen Sink deliberately uses every part type on Nuon's shelf, so a DevOps engineer can map each one onto what *their* product needs to ship Bring Your Own Cloud (BYOC).
+
+## Parts
+
+Check that all parts are present before you begin. This page checks for you — the status on each part is read live from this install.
+
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">A &nbsp;·&nbsp; YOUR PRODUCT — the thing being assembled, in the formats you already ship</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;">
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">A1</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $imgsOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $imgsOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if $imgsOk }}active{{ else }}check{{ end }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">container_image</span><span style="font-weight:800;opacity:0.7;">×3</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">img_api · img_api_two · img_ui</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">Pre-built pieces of your software, delivered from your private registry into the customer's account. No public images required.</div>
 </div>
-{{ if gt $pt 0 }}<div style="font-size:0.86em;opacity:0.72;line-height:1.35;margin-bottom:8px;">{{ $pr }}/{{ $pt }} pods ready in <code>kitchen-sink</code></div>{{ else }}<div style="font-size:0.86em;opacity:0.72;line-height:1.35;margin-bottom:8px;">Checks every pod in the app namespace</div>{{ end }}
-<div style="font-size:0.8em;opacity:0.6;">{{ if ne $checkedAt "" }}Last run <nuon-time time="{{ $checkedAt }}" format="relative"></nuon-time>{{ else }}Runs hourly — or run <code>cron_status</code> from the Actions tab{{ end }}</div>
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">A2</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if eq $sChart "active" }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if eq $sChart "active" }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if eq $sChart "active" }}active{{ else }}check{{ end }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">helm_chart</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">kitchen_sink</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">How the app mounts to the cluster: UI, API, and worker, with services, autoscaling, and role-based access control.</div>
+</div>
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">A3</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $kustOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $kustOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if $kustOk }}active{{ else }}check{{ end }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">kubernetes_manifest</span><span style="font-weight:800;opacity:0.7;">×2</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">kustomize_namespace · kustomizeapp</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">Raw Kubernetes objects and third-party kustomize bases — for the parts of a stack that aren't Helm.</div>
+</div>
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">A4</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if eq $sPulumi "active" }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if eq $sPulumi "active" }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if eq $sPulumi "active" }}active{{ else }}check{{ end }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">pulumi</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">pulumi_infra</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">Cloud infrastructure your app owns, created per install — here, an encrypted and versioned S3 bucket. Terraform modules work the same way.</div>
 </div>
 </div>
 
-## What just happened?
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">B &nbsp;·&nbsp; MOUNTING HARDWARE — what fixes your product to the customer's cloud</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;">
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">B1</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $sandboxOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $sandboxOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if $sandboxOk }}active{{ else }}check{{ end }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">sandbox</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">aws-eks-sandbox</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The frame everything mounts to: an EKS cluster, dedicated VPC, DNS zones, and cluster essentials, Terraform-provisioned per install.</div>
+</div>
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">B2</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $stackOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $stackOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if $stackOk }}active{{ else }}check{{ end }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">stack</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">aws-cloudformation</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The anchor point: one CloudFormation stack the customer runs to bootstrap the VPC and runner. It's the only thing they set up.</div>
+</div>
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">B3</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if eq $sCert "active" }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if eq $sCert "active" }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if eq $sCert "active" }}active{{ else }}check{{ end }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">terraform_module</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">certificate</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">A wildcard TLS certificate from AWS Certificate Manager, DNS-validated against the install's own zone.</div>
+</div>
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">B4</span><span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if eq $sAlb "active" }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if eq $sAlb "active" }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ if eq $sAlb "active" }}active{{ else }}check{{ end }}</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">helm_chart</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">application_load_balancer</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The front door: an internet-facing load balancer terminating HTTPS in front of the UI, health-checked on <code>/livez</code>.</div>
+</div>
+</div>
 
-You (or whoever created this install) pointed Nuon at an AWS account, and Nuon did the rest: it provisioned dedicated infrastructure in that account, built every piece of the application, deployed it all in dependency order, and started watching it. The four tiles above **are** that story, live — the infrastructure, the components, the running app, and the health check keeping an eye on it. Nobody SSH'd into anything, and the whole thing repeats identically for the next account.
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">C &nbsp;·&nbsp; THE INCLUDED TOOL — no tools required from the customer</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;">
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">C1</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">in the box</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">runner</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">EC2 Auto Scaling group</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The tool comes in the box: a small compute group <em>inside the customer's account</em> performs every build, deploy, and action itself. It only ever calls out — <strong>Nuon never needs inbound access to the account</strong>. This is the heart of the security story.</div>
+</div>
+</div>
+
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">D &nbsp;·&nbsp; ADJUSTMENTS — per-customer settings, declared once</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;">
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">D1</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">declared in config</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">inputs</span><span style="font-weight:800;opacity:0.7;">×4</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">domain · instance_type · debug_mode · api_token</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">The knobs each install exposes: node sizing, root domain — plus one internal-only flag and one sensitive value. Set per customer, templated everywhere.</div>
+</div>
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">D2</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">declared in config</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">secrets</span><span style="font-weight:800;opacity:0.7;">×2</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">db_password · api_key</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">Materialized per install (one auto-generated, one vendor-supplied) and synced into the cluster as Kubernetes Secrets — never committed anywhere.</div>
+</div>
+</div>
+
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">E &nbsp;·&nbsp; SAFETY HARDWARE — what the assembly is allowed to do, in reviewable files</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;">
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">E1</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">declared in config</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">IAM roles</span><span style="font-weight:800;opacity:0.7;">×6</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">provision · setup · maintenance · sandbox-updates · actions · deprovision</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">One scoped Identity and Access Management (IAM) role per operation, each capped by a permissions boundary the customer can read before installing.</div>
+</div>
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">E2</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">declared in config</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">OPA policies</span><span style="font-weight:800;opacity:0.7;">×4</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">cluster-requirements · sandbox-limits · deny-public-api-ingress · deny-public-s3-bucket</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">Open Policy Agent rules evaluated <em>before</em> any change applies. A failing policy blocks the operation.</div>
+</div>
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">E3</span><span style="font-size:0.78em;font-weight:600;opacity:0.5;">declared in config</span></div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">break-glass role</span><span style="font-weight:800;opacity:0.7;">×1</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">break_glass.toml</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">Pre-declared, fully recorded emergency access: administrator minus an explicit deny on Secrets Manager. Agreed to before the emergency.</div>
+</div>
+</div>
+
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin:26px 0 10px;">F &nbsp;·&nbsp; CARE INSTRUCTIONS — how it's maintained after assembly</div>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:6px;">
+<div style="flex:1 1 210px;min-width:200px;border:1px solid rgba(127,127,127,0.28);border-radius:8px;padding:14px 16px;">
+<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;"><span style="font-family:monospace;font-weight:800;opacity:0.5;letter-spacing:0.05em;">F1</span>{{ if gt $pt 0 }}<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78em;font-weight:600;color:{{ if $healthOk }}#15803d{{ else }}#b91c1c{{ end }};"><span style="width:8px;height:8px;border-radius:50%;background:{{ if $healthOk }}#16a34a{{ else }}#dc2626{{ end }};display:inline-block;"></span>{{ $pr }}/{{ $pt }} pods ready</span>{{ else }}<span style="font-size:0.78em;font-weight:600;opacity:0.5;">not run yet</span>{{ end }}</div>
+<div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:800;">actions</span><span style="font-weight:800;opacity:0.7;">×3</span></div>
+<div style="font-family:monospace;font-size:0.72em;opacity:0.55;margin:2px 0 8px;">cron_status · debug · lifecycle_hooks</div>
+<div style="font-size:0.84em;line-height:1.4;opacity:0.8;">Scheduled checks, on-demand diagnostics, and lifecycle hooks that run inside the install. {{ if ne $checkedAt "" }}Last check <nuon-time time="{{ $checkedAt }}" format="relative"></nuon-time>.{{ else }}The hourly check hasn't run yet — trigger <code>cron_status</code> from the Actions tab.{{ end }}</div>
+</div>
+</div>
+
+## Assembly
+
+This unit ships pre-assembled — creating the install performed every step below. The checks are live.
+
+<div style="display:flex;flex-direction:column;gap:10px;margin:18px 0 8px;">
+<div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
+<span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">1</span>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Bolt the frame to the account: provision <strong>B1</strong> and <strong>B2</strong> in <code>{{ $accountId }}</code> ({{ $region }}) — cluster, VPC <code>{{ $vpcId }}</code>, DNS, and the runner <strong>C1</strong>.</div>
+<span style="font-weight:800;flex:none;color:{{ if and $sandboxOk $stackOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if and $sandboxOk $stackOk }}✓{{ else }}…{{ end }}</span>
+</div>
+<div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
+<span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">2</span>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Attach your product: build parts <strong>A1–A4</strong> and deploy them in dependency order ({{ $cR }}/{{ $cT }} components active).</div>
+<span style="font-weight:800;flex:none;color:{{ if $allCompsOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if $allCompsOk }}✓{{ else }}…{{ end }}</span>
+</div>
+<div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
+<span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">3</span>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Fit the front door: <strong>B3</strong> + <strong>B4</strong>. {{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }}Your unit is ready to use: <a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/"><strong>app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }} ↗</strong></a>{{ else }}The public URL appears here once the sandbox is provisioned.{{ end }}</div>
+<span style="font-weight:800;flex:none;color:{{ if eq $sAlb "active" }}#16a34a{{ else }}#64748b{{ end }};">{{ if eq $sAlb "active" }}✓{{ else }}…{{ end }}</span>
+</div>
+<div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
+<span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">4</span>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Begin scheduled care: <strong>F1</strong> checks every pod hourly{{ if gt $pt 0 }} — currently <strong>{{ $pr }}/{{ $pt }} ready</strong>{{ if ne $checkedAt "" }}, last run <nuon-time time="{{ $checkedAt }}" format="relative"></nuon-time>{{ end }}{{ end }}.</div>
+<span style="font-weight:800;flex:none;color:{{ if $healthOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if $healthOk }}✓{{ else }}…{{ end }}</span>
+</div>
+</div>
+
+Nobody SSH'd into anything, and the whole sequence repeats identically for the next customer account.
 
 ## What would this look like for *your* app?
 
@@ -73,15 +185,15 @@ Kitchen Sink is a stand-in for **your product**. If your enterprise customers wa
 
 **A new enterprise customer signs.** Their security team won't approve the shared-SaaS version; the deal depends on running in their AWS account. This install *is* that motion: connect the account, create an install, and Nuon stamps out the full stack from the config repo. Customer number two is the same motion again — installs are reproduced from config, not hand-built by your best infrastructure engineer.
 
-**Release day.** You merge v2. A `nuon apps sync` picks up the change and builds new component versions; you roll them out install by install, or across the fleet, with every deploy versioned and logged. *Try it: open the **Components** tab and click `kitchen_sink` — this install has already taken multiple chart deploys today, and you can read each one's history.*
+**Release day.** You merge v2. A `nuon apps sync` picks up the change and builds new component versions; you roll them out install by install, or across the fleet, with every deploy versioned and logged. *Try it: open the **Components** tab and click `kitchen_sink` — this install has already taken multiple chart deploys, and you can read each one's history.*
 
-**A support ticket lands: "it's acting weird."** Normally this means a week of screenshare archaeology, because you have no access to the customer's environment. Here, you open **Actions** and run `debug` — it executes *inside the customer's boundary* and streams pod status, recent events, and application logs back to this dashboard. No credentials handed out, no VPN. The **Health pulse** tile above is the same idea on a schedule: `cron_status` checks every pod, every hour.
+**A support ticket lands: "it's acting weird."** Normally this means a week of screenshare archaeology, because you have no access to the customer's environment. Here, you open **Actions** and run `debug` — it executes *inside the customer's boundary* and streams pod status, recent events, and application logs back to this dashboard. No credentials handed out, no VPN. The hourly `cron_status` check (part **F1**, assembly step 4) is the same idea on a schedule.
 
-**The customer's platform team wants changes.** Bigger nodes, their own domain. That's what **inputs** are for: `instance_type` and `domain` are declared once in the config with sane defaults, surfaced per install, and flow into infrastructure and components as template variables. Some inputs are for your eyes only (`debug_mode` is internal), and some are secret by design (`api_token` is marked sensitive). *Try it: **Current inputs**, top right of this page.*
+**The customer's platform team wants changes.** Bigger nodes, their own domain. That's what **inputs** (part **D1**) are for: `instance_type` and `domain` are declared once in the config with sane defaults, surfaced per install, and flow into infrastructure and components as template variables. Some inputs are for your eyes only (`debug_mode` is internal), and some are secret by design (`api_token` is marked sensitive). *Try it: **Current inputs**, top right of this page.*
 
 **Something changed under you.** Someone in the customer's account hand-edited the infrastructure. The **Drift detection** indicator in this page's header catches the divergence, and a reprovision re-applies the desired state — the config repo, not the cloud account, stays the source of truth.
 
-**The security review asks: "what exactly can you touch?"** You answer with files instead of promises: every operation runs under its own scoped Identity and Access Management (IAM) role with a permissions boundary, Open Policy Agent policies gate what's allowed to deploy, and emergency access is a pre-declared, fully recorded break-glass role. All of it is in the **guardrails** tab below.
+**The security review asks: "what exactly can you touch?"** You answer with files instead of promises: the safety hardware (parts **E1–E3**) is all config — scoped Identity and Access Management (IAM) roles with permissions boundaries, Open Policy Agent policies that gate deploys, and a pre-declared, fully recorded break-glass role. All of it is in the **guardrails** tab below.
 
 ## Under the hood
 
@@ -100,16 +212,16 @@ This is the real dependency graph of this install — components deploy in this 
 ### How a request reaches the app
 
 1. A browser hits {{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }}<code>https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}</code>{{ else }}<code>https://app.&lt;install domain&gt;</code>{{ end }} — a record in this install's public Route53 zone, managed by external-dns.
-2. It lands on an **internet-facing Application Load Balancer** (the `application_load_balancer` component), which terminates TLS using a wildcard certificate from AWS Certificate Manager (the `certificate` component) and health-checks the app on `/livez`.
+2. It lands on an **internet-facing Application Load Balancer** (part B4), which terminates TLS using the wildcard certificate from AWS Certificate Manager (part B3) and health-checks the app on `/livez`.
 3. The load balancer forwards to the `kitchen-sink-ui` service on port 3000; the UI calls the API over the in-cluster service (`http://kitchen-sink-api:8080`), and the worker runs alongside. None of the API or worker traffic ever leaves the cluster.
 
 ### What the sandbox provides
 
-The **sandbox** is the platform layer every component lands on, defined in [`sandbox.toml`](https://github.com/nuonco/kitchen-sink/blob/main/sandbox.toml) and sourced from [`nuonco/aws-eks-sandbox`](https://github.com/nuonco/aws-eks-sandbox): an EKS 1.34 cluster (`n-{{ .nuon.install.id }}`), a dedicated VPC (`{{ $vpcId }}`), public and internal Route53 zones, plus in-cluster essentials — cert-manager, external-dns, ingress-nginx, and the AWS Load Balancer Controller.
+The **sandbox** (part B1) is the platform layer every component lands on, defined in [`sandbox.toml`](https://github.com/nuonco/kitchen-sink/blob/main/sandbox.toml) and sourced from [`nuonco/aws-eks-sandbox`](https://github.com/nuonco/aws-eks-sandbox): an EKS 1.34 cluster (`n-{{ .nuon.install.id }}`), a dedicated VPC (`{{ $vpcId }}`), public and internal Route53 zones, plus in-cluster essentials — cert-manager, external-dns, ingress-nginx, and the AWS Load Balancer Controller.
 
 ### Who does the work: the runner
 
-Every build, deploy, and action for this install executes on the **runner** — an EC2 Auto Scaling group *inside* account `{{ $accountId }}`, stood up by the CloudFormation stack `nuon-kitchen-sink-{{ .nuon.install.id }}` ([`stack.toml`](https://github.com/nuonco/kitchen-sink/blob/main/stack.toml), [`runner.toml`](https://github.com/nuonco/kitchen-sink/blob/main/runner.toml)). It authenticates outbound using its instance identity and polls for work — **Nuon never needs inbound access to the customer's account**. That asymmetry is the heart of the security story.
+Every build, deploy, and action for this install executes on the **runner** (part C1) — an EC2 Auto Scaling group *inside* account `{{ $accountId }}`, stood up by the CloudFormation stack `nuon-kitchen-sink-{{ .nuon.install.id }}` ([`stack.toml`](https://github.com/nuonco/kitchen-sink/blob/main/stack.toml), [`runner.toml`](https://github.com/nuonco/kitchen-sink/blob/main/runner.toml)). It authenticates outbound using its instance identity and polls for work — **Nuon never needs inbound access to the customer's account**. That asymmetry is the heart of the security story.
 
 </nuon-tab>
 
@@ -199,7 +311,7 @@ Actions are scripts that run **on the runner, inside the install's boundary**, w
     <tr>
       <td><code>cron_status</code></td>
       <td>Hourly cron + manual</td>
-      <td>Collects node, pod, service, and ingress state; emits <code>pods_ready</code>/<code>pods_total</code>/<code>checked_at</code> as structured outputs — which is exactly what feeds the <strong>Health pulse</strong> tile at the top of this page.</td>
+      <td>Collects node, pod, service, and ingress state; emits <code>pods_ready</code>/<code>pods_total</code>/<code>checked_at</code> as structured outputs — which is exactly what feeds part <strong>F1</strong>'s live check in the parts list above.</td>
     </tr>
     <tr>
       <td><code>debug</code></td>
@@ -263,7 +375,7 @@ Recent runs on this install:
 
 <div style="padding-top:1rem;"></div>
 
-**Inputs** are the knobs a vendor exposes per install. Each is declared in [`inputs/`](https://github.com/nuonco/kitchen-sink/tree/main/inputs), grouped for the UI, and referenced anywhere in the config as a template variable — the sandbox, for example, builds this install's DNS zone from the `domain` input.
+**Inputs** (part D1) are the knobs a vendor exposes per install. Each is declared in [`inputs/`](https://github.com/nuonco/kitchen-sink/tree/main/inputs), grouped for the UI, and referenced anywhere in the config as a template variable — the sandbox, for example, builds this install's DNS zone from the `domain` input.
 
 <table>
   <thead>
@@ -301,7 +413,7 @@ Recent runs on this install:
   </tbody>
 </table>
 
-**Secrets** ([`secrets.toml`](https://github.com/nuonco/kitchen-sink/blob/main/secrets.toml)) are first-class: declared in config, materialized per install, and synced into the cluster as Kubernetes Secrets — never committed anywhere.
+**Secrets** (part D2, [`secrets.toml`](https://github.com/nuonco/kitchen-sink/blob/main/secrets.toml)) are first-class: declared in config, materialized per install, and synced into the cluster as Kubernetes Secrets — never committed anywhere.
 
 <table>
   <thead>
@@ -327,7 +439,7 @@ Recent runs on this install:
 
 <div style="padding-top:1rem;"></div>
 
-The answer to "what exactly can Nuon touch in our account?" — as config files, all reviewable in the repo.
+The answer to "what exactly can Nuon touch in our account?" — as config files, all reviewable in the repo. These are parts E1–E3.
 
 ### One IAM role per operation
 
@@ -418,4 +530,4 @@ Every operation type gets its **own IAM role**, declared in [`permissions/`](htt
 
 ---
 
-Every tile, table, and behavior on this page came from [nuonco/kitchen-sink](https://github.com/nuonco/kitchen-sink) — including this page itself ([`control-plane.md`](https://github.com/nuonco/kitchen-sink/blob/main/control-plane.md) is a template rendered against the install's live state). To go deeper, start with the [Nuon documentation](https://docs.nuon.co/get-started/introduction).
+Every part, table, and behavior on this page came from [nuonco/kitchen-sink](https://github.com/nuonco/kitchen-sink) — including this page itself ([`control-plane.md`](https://github.com/nuonco/kitchen-sink/blob/main/control-plane.md) is a template rendered against the install's live state). To go deeper, start with the [Nuon documentation](https://docs.nuon.co/get-started/introduction).
