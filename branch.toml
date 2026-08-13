@@ -1,0 +1,51 @@
+# app branch
+# Connects one git branch to this app: a push fetches the config at that commit,
+# builds what changed, then rolls it across the install groups below in order,
+# pausing for an approval on each group's plan.
+#
+# `name` is the branch's identity in Nuon and is what `nuon sync --branch` and
+# triggers.toml refer to. It is deliberately stable ("main") while `branch`
+# below tracks whichever git ref is currently mainline — when
+# ms/onboarding-edit merges, change only `branch` and nothing downstream moves.
+name = "main"
+
+# Runs on each install after its deploy succeeds, in order. The health check is
+# read-only, so a fleet rollout leaves a per-install health transcript behind
+# without applying anything extra.
+post_deploy_runbooks = ["full-health-check"]
+
+# Same repo the components build from, connected through the Nuon GitHub App
+# (installs.toml already reads install configs from this connection). The app
+# config is at the repo root, hence directory = ".".
+[connected_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "."
+branch    = "ms/onboarding-edit"
+
+# Groups match the labels already set in install-configs/*.toml. Selectors are
+# preferred over install_names: they re-evaluate on every run, so a new customer
+# install joins the right wave the moment it is labelled.
+[[install_groups]]
+name  = "staging"
+order = 1
+# Plan-only preview runs plan against staging rather than a customer group.
+use_for_previews = true
+
+[install_groups.label_selector]
+env = "staging"
+
+[[install_groups]]
+name  = "customers"
+order = 2
+
+[install_groups.label_selector]
+env  = "production"
+tier = "customer"
+
+[[install_groups]]
+name  = "enterprise"
+order = 3
+
+[install_groups.label_selector]
+env  = "production"
+tier = "enterprise"

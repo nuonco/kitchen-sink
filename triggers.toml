@@ -1,0 +1,127 @@
+# triggers
+# Rules that turn external events into Nuon runs. A trigger (its ingress URL and
+# authentication) is created with the CLI, not here; these rules only reference
+# one by name.
+#
+# `github-events` already exists in this org — a GitHub-preset, HMAC-signed
+# trigger that is live and receiving deliveries:
+#
+#   nuon triggers list
+#   nuon triggers reveal-ingress-url trg6p1bjh899ee2en78zkzhvyi
+#   nuon triggers events tail --trigger trg6p1bjh899ee2en78zkzhvyi
+#
+# It is shared across the org's demo apps, so every rule below filters on
+# `$.repository.full_name` to only act on this repo's events.
+#
+# Both rules target the app branch declared in branch.toml. A push to the tracked
+# branch already starts a run by itself, so neither rule duplicates that — they
+# cover the two ship signals that are not a commit on that branch.
+
+# Cutting a GitHub release is the deliberate "ship this to customers" signal, as
+# opposed to every commit on the tracked branch. Each install group still holds
+# for approval, so this starts the rollout without deciding it.
+[[rules]]
+name        = "github-release-published"
+trigger     = "github-events"
+event_types = ["release"]
+
+[[rules.filters]]
+from  = "payload"
+op    = "eq"
+path  = "$.action"
+value = "published"
+
+[[rules.filters]]
+from  = "payload"
+op    = "eq"
+path  = "$.repository.full_name"
+value = "nuonco/kitchen-sink"
+
+[rules.target]
+type       = "app_branch_run"
+app_branch = "main"
+
+# A version tag is the other ship signal. Tag pushes do not match the tracked
+# branch, so they start no run on their own — this makes `git push --tags` roll
+# the fleet, which is how a release-tag workflow drives Nuon without an API token.
+[[rules]]
+name        = "github-version-tag"
+trigger     = "github-events"
+event_types = ["push"]
+
+[[rules.filters]]
+from  = "payload"
+op    = "prefix"
+path  = "$.ref"
+value = "refs/tags/v"
+
+[[rules.filters]]
+from  = "payload"
+op    = "eq"
+path  = "$.repository.full_name"
+value = "nuonco/kitchen-sink"
+
+[rules.target]
+type       = "app_branch_run"
+app_branch = "main"
+
+# Two more patterns, left commented out because each needs a resource that does
+# not exist yet and a rule referencing a missing resource fails the sync.
+#
+# 1. A new image in ECR is what actually changes for this app most of the time:
+#    components/images/*.toml pin tags in
+#    431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-app, and a build
+#    there is not a config commit. Needs an EventBridge trigger first:
+#
+#      nuon triggers create kitchen-sink-ecr --preset aws-eventbridge \
+#        --description "ECR image actions for kitchen-sink-app"
+#
+#    then an EventBridge rule on source aws.ecr, detail-type "ECR Image Action",
+#    with an API destination pointing at the trigger's ingress URL.
+#
+# [[rules]]
+# name        = "ecr-image-push"
+# trigger     = "kitchen-sink-ecr"
+# event_types = ["ECR Image Action"]
+#
+# [[rules.filters]]
+# from  = "payload"
+# op    = "eq"
+# path  = '$.detail["action-type"]'
+# value = "PUSH"
+#
+# [[rules.filters]]
+# from  = "payload"
+# op    = "eq"
+# path  = "$.detail.result"
+# value = "SUCCESS"
+#
+# [[rules.filters]]
+# from  = "payload"
+# op    = "eq"
+# path  = '$.detail["repository-name"]'
+# value = "kitchen-sink-app"
+#
+# [rules.target]
+# type       = "app_branch_run"
+# app_branch = "main"
+#
+# 2. A `runbook` target runs on one named install rather than a branch, which is
+#    how an alert becomes a diagnostic bundle. `install` must name an install
+#    that already exists, and this app has none yet.
+#
+# [[rules]]
+# name        = "alert-collect-debug-bundle"
+# trigger     = "kitchen-sink-datadog"
+# event_types = ["alert"]
+#
+# [[rules.filters]]
+# from  = "payload"
+# op    = "eq"
+# path  = "$.alert_transition"
+# value = "Triggered"
+#
+# [rules.target]
+# type    = "runbook"
+# runbook = "debug-bundle"
+# install = "nuon-test-001"
