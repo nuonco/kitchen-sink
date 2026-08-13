@@ -23,10 +23,15 @@ spec:
             - containerPort: {{ .Values.ui.port }}
               protocol: TCP
           env:
-            - name: API_URL
-              value: {{ .Values.ui.env.API_URL }}
             - name: LISTEN_ADDR
               value: ":{{ .Values.ui.port }}"
+            # Everything under ui.env, so adding a value there is enough to get
+            # it into the container. API_URL comes through here; the NUON_* vars
+            # are what /api/ui-config serves to the frontend.
+            {{- range $name, $value := .Values.ui.env }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ .Values.probes.liveness }}
