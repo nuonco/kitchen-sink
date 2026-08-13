@@ -1,22 +1,18 @@
-# docker-build
-# The UI is built from this repo rather than pulled from Nuon's ECR, so an edit
-# under components/ui ships on the next deploy. Outputs are the same shape a
-# container_image component emits, which is what keeps
-# {{.nuon.components.img_ui.outputs.image.repository}} resolving in the chart's
-# values file.
+# container-image
+# Pre-built image from Nuon's ECR. The UI source lives in components/ui in this
+# repo; docker_build components are deprecated (the control plane rejects them
+# on sync), so shipping a UI change means building and pushing a new image and
+# stamping the tag here — `scripts/build-ui-image.sh` + `scripts/push-ui-image.sh`
+# (or build-and-push-all.sh) do all three.
 name     = "img_ui"
-type     = "docker_build"
+type     = "container_image"
 var_name = "img_ui"
 
-dockerfile    = "Dockerfile"
-build_timeout = "30m"
-
-[public_repo]
-repo      = "nuonco/kitchen-sink"
-directory = "components/ui"
-# Match components/chart/nuon.toml: flip back to "main" when
-# ms/onboarding-edit merges.
-branch    = "ms/onboarding-edit"
+[aws_ecr]
+image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-ui"
+tag          = "2ab4b6587ee5-wip20260804004838"
+region       = "us-west-2"
+iam_role_arn = "arn:aws:iam::431927561584:role/nuon-ecr-access"
 
 [labels]
 is_image = "true"
