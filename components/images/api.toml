@@ -1,28 +1,21 @@
-# docker-build
-# The API is built from this repo rather than pulled from Nuon's ECR, so an edit
-# under components/api ships on the next deploy. Outputs are the same shape a
-# container_image component emits, which is what keeps
-# {{.nuon.components.img_api.outputs.image.repository}} resolving in the chart's
-# values file -- for the api deployment and the worker deployment, which run
-# /bin/api and /bin/worker out of this one image.
+# container-image
+# Pre-built image from Nuon's ECR, containing BOTH /bin/api and /bin/worker
+# (the api and worker deployments run different entrypoints out of this one
+# image). The source lives in components/api in this repo; docker_build
+# components are deprecated (the control plane rejects them on sync), so
+# shipping an API change means building and pushing a new image and stamping
+# the tag here — `scripts/build-and-push.sh` does all three.
 #
-# img_api_two is still a container_image on purpose: it stays as the app's
-# private-ECR example.
+# img_api_two stays as the untouched private-ECR example.
 name     = "img_api"
-type     = "docker_build"
+type     = "container_image"
 var_name = "img_api"
 
-dockerfile = "Dockerfile"
-# The dependency tree here is large (client-go plus Helm) and the Dockerfile
-# wipes the module cache on purpose, so give the build room.
-build_timeout = "45m"
-
-[public_repo]
-repo      = "nuonco/kitchen-sink"
-directory = "components/api"
-# Match components/chart/nuon.toml: flip back to "main" when
-# ms/onboarding-edit merges.
-branch    = "ms/onboarding-edit"
+[aws_ecr]
+image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-app"
+tag          = "2ab4b6587ee5-wip20260804004838"
+region       = "us-west-2"
+iam_role_arn = "arn:aws:iam::431927561584:role/nuon-ecr-access"
 
 [labels]
 is_image = "true"
