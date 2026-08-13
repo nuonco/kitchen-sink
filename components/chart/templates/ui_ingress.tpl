@@ -1,4 +1,4 @@
-{{- if and .Values.ui.ingress .Values.ui.ingress.publicHost }}
+{{- if .Values.ui.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

@@ -6,11 +6,12 @@
 name         = "application_load_balancer"
 type         = "helm_chart"
 chart_name   = "application-load-balancer"
-dependencies = ["kitchen_sink", "certificate"]
+dependencies = ["certificate", "kitchen_sink"]
+max_auto_retries = 5
 
 [public_repo]
-repo      = "nuonco/example-app-configs"
-directory = "eks-simple/src/components/alb"
+repo      = "nuonco/kitchen-sink"
+directory = "src/components/alb"
 branch    = "main"
 
 [values]
@@ -22,6 +23,3 @@ service_port       = "3000"
 install_name       = "{{.nuon.install.id}}"
 namespace          = "kitchen-sink"
 healthcheck_path   = "/livez"
-
-[labels]
-helm = "true"
