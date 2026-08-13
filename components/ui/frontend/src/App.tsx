@@ -1,73 +1,74 @@
-import { useEffect, useState } from 'react'
+import { useUIConfig } from './lib/api'
+import { segments, useNavigate, useRoute } from './lib/router'
+import { Icon, NuonMark, OutLink } from './ui/Primitives'
+import { DayTwo } from './views/DayTwo'
+import { Deployed } from './views/Deployed'
+import { Landing } from './views/Landing'
+import { Mapping } from './views/Mapping'
 
-interface IntrospectData {
-  description: string
-  response: Record<string, unknown>
-}
-
-const endpoints = [
-  { name: 'Environment', path: '/api/introspect/env' },
-  { name: 'Kubernetes', path: '/api/introspect/kube' },
-  { name: 'Helm Charts', path: '/api/introspect/helm' },
-  { name: 'Terraform', path: '/api/introspect/terraform' },
-  { name: 'Secrets', path: '/api/introspect/secrets' },
-  { name: 'Defaults', path: '/api/introspect/defaults' },
-  { name: 'Sandbox', path: '/api/introspect/sandbox' },
-  { name: 'Nuon', path: '/api/introspect/nuon' },
-  { name: 'Docker Build', path: '/api/introspect/docker-build' },
-  { name: 'External Image', path: '/api/introspect/external-image' },
-]
-
-function App() {
-  const [selected, setSelected] = useState(endpoints[0].path)
-  const [data, setData] = useState<IntrospectData | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    setLoading(true)
-    setError(null)
-    fetch(selected)
-      .then((res) => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`)
-        return res.json()
-      })
-      .then((d) => setData(d))
-      .catch((e) => setError(e.message))
-      .finally(() => setLoading(false))
-  }, [selected])
+function TopBar({
+  installID,
+  dashboardURL,
+}: {
+  installID?: string
+  dashboardURL?: string
+}) {
+  const navigate = useNavigate()
 
   return (
-    <div className="app">
-      <header>
-        <h1>Kitchen Sink App</h1>
-        <p>Nuon Platform Introspection Dashboard</p>
-      </header>
-      <div className="layout">
-        <nav>
-          {endpoints.map((ep) => (
-            <button
-              key={ep.path}
-              className={selected === ep.path ? 'active' : ''}
-              onClick={() => setSelected(ep.path)}
-            >
-              {ep.name}
-            </button>
-          ))}
-        </nav>
-        <main>
-          {loading && <p className="status">Loading...</p>}
-          {error && <p className="status error">Error: {error}</p>}
-          {data && !loading && (
-            <div>
-              <h2>{data.description}</h2>
-              <pre>{JSON.stringify(data.response, null, 2)}</pre>
-            </div>
-          )}
-        </main>
-      </div>
-    </div>
+    <header className="topbar">
+      <button className="topbar__brand" onClick={() => navigate('/')}>
+        <NuonMark />
+        <span className="topbar__brand-name">Kitchen sink</span>
+      </button>
+      {installID && (
+        <>
+          <span className="topbar__divider" />
+          <span className="topbar__meta" title={installID}>
+            <Icon name="cube" />
+            {installID}
+          </span>
+        </>
+      )}
+      <span className="topbar__spacer" />
+      <OutLink href={dashboardURL} variant="secondary">
+        Open in Nuon
+      </OutLink>
+    </header>
   )
 }
 
-export default App
+export default function App() {
+  const config = useUIConfig()
+  const path = useRoute()
+  const parts = segments(path)
+
+  let view = <Landing config={config} />
+  if (parts[0] === 'deployed') {
+    view = <Deployed config={config} />
+  } else if (parts[0] === 'map') {
+    view = <Mapping config={config} />
+  } else if (parts[0] === 'day2') {
+    view = <DayTwo config={config} feature={parts[1]} />
+  }
+
+  return (
+    <div className="shell">
+      <TopBar installID={config.install_id} dashboardURL={config.links.install} />
+      <main className="main">{view}</main>
+      <footer className="footer">
+        <div className="footer__inner">
+          <span className="mono">nuonco/kitchen-sink</span>
+          <span className="topbar__divider" />
+          <span>
+            This app and the Nuon dashboard are two halves of the same tour.
+          </span>
+          <span className="topbar__spacer" />
+          <OutLink href="https://docs.nuon.co" variant="plain">
+            docs.nuon.co
+          </OutLink>
+        </div>
+      </footer>
+    </div>
+  )
+}

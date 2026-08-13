@@ -51,6 +51,18 @@ ui:
     publicHost: "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
   env:
     API_URL: "http://kitchen-sink-api:8080"
+    # Runtime config for the UI, served back to the browser at /api/ui-config.
+    # These are the only way the frontend can know which install it is running
+    # in, which is what its deep links into the Nuon dashboard are built from.
+    # Any value that does not resolve is dropped by the server, so the UI simply
+    # hides the fact or the link rather than showing a broken one.
+    NUON_INSTALL_ID: "{{.nuon.install.id}}"
+    NUON_ORG_ID: "{{.nuon.org.id}}"
+    NUON_APP_ID: "{{.nuon.app.id}}"
+    NUON_REGION: "{{.nuon.install_stack.outputs.region}}"
+    NUON_PUBLIC_DOMAIN: "{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
+    # Mirrors cluster_name in sandbox.toml.
+    NUON_CLUSTER_NAME: "n-{{.nuon.install.id}}"
 
 worker:
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
