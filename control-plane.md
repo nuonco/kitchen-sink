@@ -10,7 +10,7 @@
 
 <div style="padding-top:1rem;"></div>
 
-A test application showcasing all features of the Nuon platform including Helm charts, Pulumi infrastructure, container images, actions, roles, and policies.
+A test application showcasing all features of the Nuon platform including Helm charts, Pulumi infrastructure, container images, actions, roles, and policies. Access your app here: [https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}](https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }})
 
 ## What Gets Deployed
 

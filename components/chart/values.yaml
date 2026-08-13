@@ -41,6 +41,7 @@ ui:
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
   ingress:
+    enabled: false  # Disabled in favor of ALB component for internet-facing access
     publicHost: "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
   env:
     API_URL: "http://kitchen-sink-api:8080"
