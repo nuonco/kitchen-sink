@@ -1,0 +1,54 @@
+name        = "debug-bundle"
+description = "Something's gone wrong — collect a read-only diagnostic bundle: pod state, events, logs, restart reasons, and a verbose endpoint probe."
+readme      = "./runbooks/debug-bundle.md"
+
+[labels]
+team = "platform"
+kind = "debug"
+
+[[steps]]
+name        = "collect-diagnostics"
+type        = "action"
+action_name = "debug"
+
+[[steps]]
+name    = "workload-detail"
+type    = "action"
+timeout = "4m"
+inline_contents = """
+#!/usr/bin/env sh
+set -uo pipefail
+
+echo "=== Deployments ==="
+kubectl describe deploy -n kitchen-sink 2>&1 || true
+echo "=== Pods (restart counts and termination reasons) ==="
+kubectl get pods -n kitchen-sink -o wide 2>&1 || true
+kubectl get pods -n kitchen-sink \
+  -o custom-columns='NAME:.metadata.name,RESTARTS:.status.containerStatuses[*].restartCount,LASTSTATE:.status.containerStatuses[*].lastState.terminated.reason' 2>&1 || true
+echo "=== Pod detail ==="
+kubectl describe pods -n kitchen-sink 2>&1 || true
+"""
+
+[[steps]]
+name    = "ingress-and-secrets"
+type    = "action"
+timeout = "3m"
+inline_contents = """
+#!/usr/bin/env sh
+set -uo pipefail
+
+echo "=== Services and ingresses ==="
+kubectl get svc,ingress -n kitchen-sink -o wide 2>&1 || true
+echo "=== ALB ingress detail ==="
+kubectl describe ingress kitchen-sink-alb -n kitchen-sink 2>&1 || true
+echo "=== Synced secrets present (names only, never values) ==="
+kubectl get secret db-password api-key -n kitchen-sink 2>&1 || true
+echo "=== Config map ==="
+kubectl get configmap -n kitchen-sink 2>&1 || true
+"""
+
+[[steps]]
+name    = "endpoint-probe"
+type    = "action"
+timeout = "2m"
+command = 'curl -sS -o /dev/null -w "livez: HTTP %{http_code} in %{time_total}s\n" https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}/livez || true'

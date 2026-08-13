@@ -16,3 +16,10 @@ enable_helm = false
 
 [labels]
 custom_component_type = "kustomize"
+
+# Kubernetes manifest components are health-checked automatically. This one is an
+# upstream example (argoproj/argocd-example-apps) kept as a kustomize test
+# fixture, not part of the product path, so it is opted out — otherwise a fixture
+# flapping drags the install-level health rollup down with it.
+[health]
+enabled = false
