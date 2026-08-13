@@ -107,8 +107,11 @@ app_branch = "main"
 # app_branch = "main"
 #
 # 2. A `runbook` target runs on one named install rather than a branch, which is
-#    how an alert becomes a diagnostic bundle. `install` must name an install
-#    that already exists, and this app has none yet.
+#    how an alert becomes a diagnostic bundle. The `install` below is real
+#    ("Onboarding demo", inlpveun7eotfjad96chbu1vq7); what is missing is the
+#    trigger, so create it first and then uncomment:
+#
+#      nuon triggers create kitchen-sink-datadog --preset datadog
 #
 # [[rules]]
 # name        = "alert-collect-debug-bundle"
@@ -124,4 +127,4 @@ app_branch = "main"
 # [rules.target]
 # type    = "runbook"
 # runbook = "debug-bundle"
-# install = "nuon-test-001"
+# install = "Onboarding demo"
