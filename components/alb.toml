@@ -9,7 +9,7 @@ max_auto_retries = 5
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "src/components/alb"
-branch    = "cb/reconfigure-ui"
+branch    = "main"
 
 [values]
 domain_certificate = "{{.nuon.components.certificate.outputs.public_domain_certificate_arn}}"
