@@ -1,0 +1,119 @@
+/* ============================================================
+   Nuon Stratus tokens, dark-first subset.
+   Values come from the Stratus design system (tokens/colors.css,
+   typography.css, spacing.css). Purple is deliberately absent: the live
+   brand ships zero purple, and Nuon Cyan #4CC9F0 is the working accent.
+   ============================================================ */
+
+:root {
+  color-scheme: dark;
+
+  /* Families. Inter + Hack load from CDN in index.html; the stacks below are
+     the fallbacks if that fetch fails. */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Hack", ui-monospace, "SF Mono", Menlo, Monaco, "Cascadia Code",
+    monospace;
+
+  /* Exactly three weights, exactly two tracking values. */
+  --weight-regular: 400;
+  --weight-strong: 500;
+  --weight-stronger: 600;
+  --tracking-normal: -0.2px;
+  --tracking-tight: -0.65px;
+  --tracking-wide: 0.08em; /* mono eyebrows only */
+
+  /* Type ramp */
+  --text-display: 34px;
+  --text-display-line: 40px;
+  --text-title: 24px;
+  --text-title-line: 30px;
+  --text-heading: 18px;
+  --text-heading-line: 27px;
+  --text-base: 16px;
+  --text-base-line: 24px;
+  --text-body: 14px;
+  --text-body-line: 21px;
+  --text-subtext: 12px;
+  --text-subtext-line: 17px;
+  --text-tiny: 11px;
+  --text-tiny-line: 14px;
+
+  /* Display ramp (marketing scale, used for the landing headline) */
+  --display-md: 36px;
+  --display-lg: 48px;
+
+  /* 4px spacing grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 64px;
+  --space-16: 80px;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-full: 99px;
+
+  --topbar-height: 56px;
+  --content-max: 1080px;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --duration-fast: 120ms;
+  --duration-base: 180ms;
+
+  /* ---------- Accent: Nuon Cyan and its teal family ---------- */
+  --cyan-50: #e3f8ff;
+  --cyan-400: #79dcfa;
+  --cyan-500: #4cc9f0;
+  --cyan-700: #3187a2;
+  --cyan-900: #1c4653;
+  --teal-dark: #1a3a4a;
+  --accent: var(--cyan-500);
+  --accent-hover: var(--cyan-400);
+  --accent-dim: var(--cyan-700);
+  --accent-wash: rgba(76, 201, 240, 0.08);
+  --accent-wash-strong: rgba(76, 201, 240, 0.16);
+  --accent-ring: rgba(76, 201, 240, 0.4);
+
+  /* ---------- Surfaces: near-black, dark-first ---------- */
+  --surface-page: #020708;
+  --surface-sunken: #050c0f;
+  --surface-card: #0b1215;
+  --surface-raised: #10191d;
+  --surface-hover: rgba(255, 255, 255, 0.04);
+  --surface-active: rgba(255, 255, 255, 0.08);
+
+  /* ---------- Text ---------- */
+  --text-primary: #f7f7f7;
+  --text-secondary: #b6c2c7;
+  --text-tertiary: #7c8b91;
+  --text-inverted: #020708;
+
+  /* ---------- Borders: hairline, low contrast ---------- */
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-default: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.2);
+
+  /* ---------- Status ---------- */
+  --green-400: #6ce9a6;
+  --green-700: #027a48;
+  --red-400: #fda29b;
+  --red-700: #b42318;
+  --orange-400: #feb273;
+  --orange-700: #b54708;
+  --status-positive: var(--green-400);
+  --status-negative: var(--red-400);
+  --status-warning: var(--orange-400);
+
+  --shadow-01: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-03: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 32px -10px rgba(0, 0, 0, 0.6);
+  --shadow-focus: 0 0 0 3px var(--accent-ring);
+}

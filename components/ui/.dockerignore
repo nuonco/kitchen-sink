@@ -1,0 +1,6 @@
+# Never ship build output or installed dependencies into the build context. The
+# Dockerfile also wipes these, because kaniko builds on the runner have been
+# seen reusing a polluted filesystem -- see the comment at the top of it.
+frontend/node_modules
+frontend/dist
+**/.DS_Store
