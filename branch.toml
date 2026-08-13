@@ -14,10 +14,18 @@ name = "main"
 # without applying anything extra.
 post_deploy_runbooks = ["full-health-check"]
 
-# Same repo the components build from, connected through the Nuon GitHub App
-# (installs.toml already reads install configs from this connection). The app
-# config is at the repo root, hence directory = ".".
-[connected_repo]
+# Same repo, same form the components use. `[public_repo]` rather than
+# `[connected_repo]`: the control plane resolves nuonco/kitchen-sink as a public
+# repo, and declaring it as connected fails the sync with "can not use a public
+# repo with a connected_repo config".
+#
+# This costs nothing. Pull request previews depend on the org having the Nuon
+# GitHub App connected for the repository's *owner* (nuonco), not on which repo
+# block the branch uses — a public_repo branch gets previews just like a
+# connected one. See https://docs.nuon.co/concepts/app-branches#pull-request-previews
+#
+# directory = "." because the app config lives at the repo root.
+[public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
 branch    = "ms/onboarding-edit"
