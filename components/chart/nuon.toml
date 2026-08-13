@@ -32,31 +32,19 @@ helm = "true"
 
 # Live health, independent of deploy status. Deployments, pods, services,
 # ingresses and the Helm release itself are assessed automatically; this block
-# only tunes that and adds probes.
+# tunes that assessment.
+#
+# No probes here on purpose: the probe executor runs on the RUNNER, outside the
+# cluster, and the VPC resolver cannot resolve *.svc.cluster.local names —
+# in-cluster HTTP/TCP probes fail with "no such host" (confirmed on install
+# inlf71nem1j…, Aug 2026). In-cluster serving is asserted by the pods' own
+# readiness probes (values.yaml `probes:`), which the automatic assessment
+# already rolls up; the public endpoint is probed on application_load_balancer.
 #
 # `block_deploy` is off, so the deploy step records what health did without
-# gating on it. Flip it to `true` once the probes below are confirmed green on a
-# real install and every kitchen_sink deploy grows a `verify health` step that
-# fails if the chart does not hold healthy for the stabilization window.
+# gating on it. Flip it to `true` once health is confirmed green on a real
+# install and every kitchen_sink deploy grows a `verify health` step.
 [health]
 enabled              = true
 stabilization_window = "3m"
 block_deploy         = false
-
-# Probes assert the app is serving, above the level of "the pod is Ready".
-# Each targets an in-cluster service this chart itself creates, per the guide's
-# rule that a component's probes must assert what that component provides — the
-# public endpoint is probed on application_load_balancer instead.
-[[health.probes]]
-type = "http"
-url  = "http://kitchen-sink-api.kitchen-sink.svc.cluster.local:8080/readyz"
-
-[[health.probes]]
-type = "http"
-url  = "http://kitchen-sink-ui.kitchen-sink.svc.cluster.local:3000/livez"
-
-# The worker serves its health port but is not fronted by an HTTP route, so
-# assert the port accepts connections.
-[[health.probes]]
-type = "tcp"
-url  = "kitchen-sink-worker.kitchen-sink.svc.cluster.local:8090"
