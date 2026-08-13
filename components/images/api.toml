@@ -13,7 +13,7 @@ var_name = "img_api"
 
 [aws_ecr]
 image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-app"
-tag          = "2ab4b6587ee5-wip20260804004838"
+tag          = "f4f68dd47af8"
 region       = "us-west-2"
 iam_role_arn = "arn:aws:iam::431927561584:role/nuon-ecr-access"
 
