@@ -11,6 +11,10 @@ A test application showcasing all features of the Nuon platform including Helm c
 | **Container Images** | Pre-built images from private ECR |
 | **Actions** | Automated health checks, debugging, and lifecycle hooks |
 | **Policies** | OPA policies for security and compliance |
+| **Runbooks** | Multi-step operational procedures — see [`runbooks/`](./runbooks/README.md) |
+| **Component Health** | Live per-component health with probes — `[health]` in `components/chart/nuon.toml` and `components/alb.toml` |
+| **App Branch** | Staged fleet rollouts from a git push — [`branch.toml`](./branch.toml) |
+| **Triggers** | External events that start a rollout — [`triggers.toml`](./triggers.toml) |
 
 ## Sandbox
 
