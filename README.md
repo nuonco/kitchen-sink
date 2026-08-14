@@ -25,3 +25,5 @@ Deploys to AWS EKS using the [`aws-eks-sandbox`](https://github.com/nuonco/aws-e
 For more information on Nuon platform features, see the [documentation](https://docs.nuon.co/get-started/introduction).
 
 For questions or support with this app config, reach out to us in our [Slack community](https://join.slack.com/t/nuon-byoc/shared_invite/zt-46l24847a-4HNYaF7670x3CIrYEBamNQ).
+
+<!-- sync test 2026-08-14 -->
