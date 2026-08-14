@@ -20,11 +20,13 @@ deploys as the app itself.
 ## Hard-won rules (violations fail at sync time, not validate time)
 
 1. **`docker_build` components are deprecated** — the control plane rejects them
-   on sync even though `nuon apps validate` passes. Images are pre-built and
-   pushed to ECR with `scripts/build-and-push-all.sh` (needs docker + AWS creds
-   for the ECR account), which also stamps the `tag =` lines in
-   `components/images/*.toml`. A source change under `components/ui` or
-   `components/api` ships ONLY via that script + a config sync.
+   on sync even though `nuon apps validate` passes. Images are pre-built:
+   pushes touching `components/ui` or `components/api` are built and published
+   to Nuon's public ECR gallery by `.github/workflows/build-images.yaml`
+   (shared org OIDC role — no secrets), which then stamps the `tag =` lines in
+   `components/images/*.toml`; that stamp commit starts the staged rollout.
+   `scripts/build-and-push*.sh` remain as the manual fallback (need docker +
+   AWS creds).
 2. **Component health probes run on the RUNNER, outside the cluster.**
    `*.svc.cluster.local` URLs fail with "no such host". Probe only
    runner-resolvable endpoints (e.g. the public ALB URL). In-cluster serving is

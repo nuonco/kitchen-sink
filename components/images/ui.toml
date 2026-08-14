@@ -1,18 +1,17 @@
 # container-image
-# Pre-built image from Nuon's ECR. The UI source lives in components/ui in this
-# repo; docker_build components are deprecated (the control plane rejects them
-# on sync), so shipping a UI change means building and pushing a new image and
-# stamping the tag here — `scripts/build-ui-image.sh` + `scripts/push-ui-image.sh`
-# (or build-and-push-all.sh) do all three.
+# Pre-built image from Nuon's public ECR gallery. Source lives in
+# components/ui; pushes touching it are built and published by
+# .github/workflows/build-images.yaml, which then stamps the tag below — that
+# stamp commit is what starts the staged rollout.
 name     = "img_ui"
 type     = "container_image"
 var_name = "img_ui"
 
-[aws_ecr]
-image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-ui"
-tag          = "f4f68dd47af8"
-region       = "us-west-2"
-iam_role_arn = "arn:aws:iam::431927561584:role/nuon-ecr-access"
+max_auto_retries = 5
+
+[public]
+image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-ui"
+tag       = "f4f68dd47af8"
 
 [labels]
 is_image = "true"
