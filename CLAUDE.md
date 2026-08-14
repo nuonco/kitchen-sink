@@ -50,6 +50,12 @@ deploys as the app itself.
 - The UI's `/api/` proxy (`components/ui/apifilter.go`) is a security boundary
   on a public load balancer — never widen its allowlist or move redaction
   client-side (see `components/ui/README.md`).
-- Control-plane operations (sync, deploys, branch runs, install management)
-  are done by maintainers with an authenticated CLI — not from CI or chat
-  agents. Never request or embed Nuon API tokens in the repo.
+- Control-plane operations: agents explicitly granted Nuon API access by a
+  maintainer may validate and sync this app config and read app/install state.
+  Use the public API (https://api.nuon.co/docs) — e.g. config sync is
+  `POST /v1/apps/{app_id}/configs/{config_id}/sync`; requests need the API
+  token and an `X-Nuon-Org-ID` header. Heavier operations — deploys, branch-run
+  approvals, install create/deprovision/delete — still need an explicit
+  human go-ahead in the task at hand, per operation. Never commit tokens or
+  org/app IDs-with-credentials to this (public) repo; credentials live only
+  in the agent's provisioned connector.
