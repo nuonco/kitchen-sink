@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   countReady,
   useIntrospect,
@@ -59,8 +59,13 @@ const paths = [
   },
 ]
 
+type PartKey = 'sandbox' | 'components' | 'runner'
+
 export function Landing({ config }: { config: UIConfig }) {
   const navigate = useNavigate()
+  const [openPart, setOpenPart] = useState<PartKey | null>(null)
+  const togglePart = (key: PartKey) =>
+    setOpenPart((current) => (current === key ? null : key))
   const namespace = config.namespace ?? 'kitchen-sink'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
   const ns = useIntrospect<NamespaceResponse>(
@@ -114,39 +119,120 @@ export function Landing({ config }: { config: UIConfig }) {
       <section className="golden">
         <Eyebrow>The golden path</Eyebrow>
         <h2 className="golden__title">A shippable Nuon app is three parts.</h2>
-        <div className="golden__parts">
-          <div>
-            <div className="part__num">01</div>
-            <div className="part__name">A sandbox</div>
-            <p className="part__body">
-              The footprint Nuon creates in your customer&rsquo;s cloud account. Here
-              it&rsquo;s <span className="mono">aws-eks-sandbox</span>: a VPC, an EKS
-              cluster, and a public DNS zone.
-            </p>
+        <div className="arch">
+          <div
+            className={
+              openPart === 'sandbox'
+                ? 'arch__sandbox arch__sandbox--active'
+                : 'arch__sandbox'
+            }
+          >
+            <button
+              type="button"
+              className="arch__boundary"
+              aria-expanded={openPart === 'sandbox'}
+              aria-controls="golden-detail"
+              onClick={() => togglePart('sandbox')}
+            >
+              <span className="arch__num">01</span>
+              <span className="arch__name">Sandbox</span>
+              <span className="arch__hint">VPC · EKS · DNS</span>
+            </button>
+            <div className="arch__nodes">
+              <button
+                type="button"
+                className={
+                  openPart === 'components'
+                    ? 'arch__node arch__node--active'
+                    : 'arch__node'
+                }
+                aria-expanded={openPart === 'components'}
+                aria-controls="golden-detail"
+                onClick={() => togglePart('components')}
+              >
+                <span className="arch__num">02</span>
+                <span className="arch__name">Components</span>
+                <span className="arch__hint">kitchen_sink chart</span>
+              </button>
+              <div className="arch__edge" aria-hidden="true">
+                <span className="arch__edge-label">deploys</span>
+                <span className="arch__edge-line" />
+              </div>
+              <button
+                type="button"
+                className={
+                  openPart === 'runner'
+                    ? 'arch__node arch__node--active'
+                    : 'arch__node'
+                }
+                aria-expanded={openPart === 'runner'}
+                aria-controls="golden-detail"
+                onClick={() => togglePart('runner')}
+              >
+                <span className="arch__num">03</span>
+                <span className="arch__name">Runner</span>
+                <span className="arch__hint">builds &amp; deploys here</span>
+              </button>
+            </div>
           </div>
-          <div>
-            <div className="part__num">02</div>
-            <div className="part__name">A component</div>
-            <p className="part__body">
-              One deployable piece of your product. Here the{' '}
-              <span className="mono">kitchen_sink</span> Helm chart deploys the
-              API, the worker, and the UI you&rsquo;re reading.
-            </p>
-          </div>
-          <div>
-            <div className="part__num">03</div>
-            <div className="part__name">The runner</div>
-            <p className="part__body">
-              An agent Nuon runs inside the account. Every build and deploy
-              happens from in there, so your customer&rsquo;s credentials never leave
-              their cloud.
-            </p>
-          </div>
+
+          {openPart && (
+            <div id="golden-detail" className="arch__panel" role="region">
+              {openPart === 'sandbox' && (
+                <>
+                  <div className="arch__panel-label">01 · Sandbox</div>
+                  <p className="arch__panel-body">
+                    The footprint Nuon creates in your customer&rsquo;s cloud
+                    account — it&rsquo;s the boundary everything else lives
+                    inside. Here it&rsquo;s{' '}
+                    <span className="mono">aws-eks-sandbox</span>: a VPC, an EKS
+                    cluster, and a public DNS zone.
+                  </p>
+                  {config.cluster_name && (
+                    <div className="row" style={{ marginTop: 12 }}>
+                      <span className="chip">cluster {config.cluster_name}</span>
+                      {config.region && (
+                        <span className="chip">{config.region}</span>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+              {openPart === 'components' && (
+                <>
+                  <div className="arch__panel-label">02 · Components</div>
+                  <p className="arch__panel-body">
+                    One deployable piece of your product. Here the{' '}
+                    <span className="mono">kitchen_sink</span> Helm chart deploys
+                    the API, the worker, and the UI you&rsquo;re reading.
+                  </p>
+                  {podSummary && (
+                    <div className="row" style={{ marginTop: 12 }}>
+                      <span className="chip">
+                        {podSummary} pods ready in {namespace}
+                      </span>
+                    </div>
+                  )}
+                </>
+              )}
+              {openPart === 'runner' && (
+                <>
+                  <div className="arch__panel-label">03 · Runner</div>
+                  <p className="arch__panel-body">
+                    An agent Nuon runs inside the account. Every build and deploy
+                    happens from in there, so your customer&rsquo;s credentials
+                    never leave their cloud.
+                  </p>
+                </>
+              )}
+            </div>
+          )}
         </div>
+
         <p className="golden__aside">
-          Everything else this app config demonstrates — inputs, policies,
-          secrets, actions, break-glass roles, the other component types — is
-          optional. Add each one when a customer asks for it, not before.
+          Everything else — inputs, policies, secrets, actions, break-glass
+          roles, the other component types — is optional. Added when a customer
+          asks, not before.
         </p>
       </section>
 

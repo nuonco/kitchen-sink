@@ -555,30 +555,183 @@ body::before {
   margin: var(--space-2) 0 var(--space-5);
 }
 
-.golden__parts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-5);
+/* The three-part architecture diagram: the sandbox drawn as the containing
+   boundary, the components and the runner as nodes inside it. Each element is
+   a button; clicking one opens its detail panel below the diagram. */
+
+.arch__sandbox {
+  border: 1px dashed var(--accent-dim);
+  border-radius: var(--radius-lg);
+  background: rgba(2, 7, 8, 0.35);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  transition: border-color var(--duration-base) var(--ease-standard);
 }
 
-.part__num {
+.arch__sandbox--active {
+  border-color: var(--accent);
+}
+
+.arch__boundary {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  margin-left: calc(-1 * var(--space-2));
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.arch__boundary:hover {
+  background: var(--surface-hover);
+}
+
+.arch__num {
   font-family: var(--font-mono);
   font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
   letter-spacing: var(--tracking-wide);
   color: var(--accent);
 }
 
-.part__name {
-  margin-top: var(--space-2);
+.arch__name {
   font-size: var(--text-body);
+  line-height: var(--text-body-line);
   font-weight: var(--weight-strong);
+  color: var(--text-primary);
 }
 
-.part__body {
-  margin-top: var(--space-1);
+.arch__hint {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: 0;
+  color: var(--text-tertiary);
+}
+
+.arch__nodes {
+  margin-top: var(--space-3);
+  display: flex;
+  align-items: stretch;
+}
+
+.arch__node {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  text-align: left;
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-standard),
+    background var(--duration-base) var(--ease-standard);
+}
+
+.arch__node:hover {
+  border-color: var(--accent-dim);
+  background: var(--surface-raised);
+}
+
+.arch__node--active {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.arch__edge {
+  flex: none;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 96px;
+  padding: 0 var(--space-3);
+}
+
+.arch__edge-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.arch__edge-line {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.arch__edge-line::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: -3px;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  border-right: 5px solid var(--border-strong);
+}
+
+.arch__panel {
+  margin-top: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--accent-dim);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.arch__panel-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: var(--space-2);
+}
+
+.arch__panel-body {
   font-size: var(--text-body);
   line-height: var(--text-body-line);
   color: var(--text-secondary);
+  max-width: 72ch;
+}
+
+@media (max-width: 640px) {
+  .arch__nodes {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .arch__edge {
+    align-self: center;
+    min-width: 0;
+    padding: var(--space-2) 0;
+  }
+
+  .arch__edge-line {
+    width: 1px;
+    height: 24px;
+  }
+
+  .arch__edge-line::before {
+    left: -3px;
+    top: 0;
+    border-top: none;
+    border-left: 3.5px solid transparent;
+    border-right: 3.5px solid transparent;
+    border-bottom: 5px solid var(--border-strong);
+  }
 }
 
 .golden__aside {
