@@ -32,21 +32,15 @@
 </div>
 {{ end }}
 
-This app was deployed into AWS account `{{ $accountId }}` ({{ $region }}) by Nuon, from [one config repo](https://github.com/nuonco/kitchen-sink).
+Deployed into AWS account `{{ $accountId }}` ({{ $region }}) by Nuon, from [one config repo](https://github.com/nuonco/kitchen-sink).
 
-## A shippable Nuon app is three parts
+<nuon-tabs>
 
-**Everything else on this page is optional until a customer makes it necessary.** Kitchen Sink happens to use a lot of the platform, because it exists to demo it — but you do not need any of that to ship. You need three things:
+<nuon-tab name="status">
 
-**A sandbox — where it runs.** One Terraform-provisioned foundation, created fresh in each customer's account: here an EKS cluster and a dedicated VPC (`{{ $vpcId }}`) in `{{ $accountId }}`. You pick a sandbox; you don't write one.
+<div style="padding-top:1rem;"></div>
 
-**At least one component — the thing you ship.** A component is a piece of your software in a format you already build: a container image, a Helm chart, Kubernetes manifests, a Terraform module. Declare what it needs, and Nuon works out build and deploy order. This install has {{ $cT }}{{ if gt $cT 0 }} ({{ $cR }} active){{ end }}. One is a legitimate app.
-
-**The runner — what does the work.** A small compute group inside the customer's account performs every build, deploy, and action itself. It authenticates outbound and polls for work, so **Nuon never needs inbound access to their account**. That asymmetry is the whole security story, and you get it by default.
-
-## What just happened
-
-Creating this install ran the steps below, in order. The checkmarks are live.
+Creating this install ran these steps, in order. The checkmarks are live.
 
 <div style="display:flex;flex-direction:column;gap:10px;margin:18px 0 8px;">
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
@@ -73,21 +67,45 @@ Creating this install ran the steps below, in order. The checkmarks are live.
 
 Nobody logged into a server, and the same sequence repeats identically for the next customer account.
 
+</nuon-tab>
+
+<nuon-tab name="how it works">
+
+<div style="padding-top:1rem;"></div>
+
+## A shippable Nuon app is three parts
+
+Kitchen Sink uses a lot of the platform because it exists to demo it. You don't need any of that to ship — you need three things:
+
+**A sandbox — where it runs.** One Terraform-provisioned foundation, created fresh in each customer's account: here an EKS cluster and a dedicated VPC (`{{ $vpcId }}`) in `{{ $accountId }}`. You pick a sandbox; you don't write one.
+
+**At least one component — the thing you ship.** A piece of your software in a format you already build: container image, Helm chart, Kubernetes manifests, Terraform module. Declare what it needs, and Nuon works out build and deploy order. This install has {{ $cT }}{{ if gt $cT 0 }} ({{ $cR }} active){{ end }}. One is a legitimate app.
+
+**The runner — what does the work.** A small compute group inside the customer's account performs every build, deploy, and action itself. It authenticates outbound and polls for work, so **Nuon never needs inbound access to their account**. That asymmetry is the whole security story, and you get it by default.
+
+Everything on the next tab is optional until a customer makes it necessary.
+
+</nuon-tab>
+
+<nuon-tab name="going further">
+
+<div style="padding-top:1rem;"></div>
+
 ## When a customer asks for more
 
-Reach for these when a real request makes them necessary — not before. Each one is a few lines of config in the same repo.
+Reach for these when a real request makes them necessary — not before. Each is a few lines of config in the same repo.
 
 <!-- Dashboard deep links below hard-code the org id (orgohjjpdu41iaej96eusl2lfq) because Kitchen Sink is a single-org demo app. Update them if this config is ever installed under a different org. -->
 
-**"Our platform team needs bigger nodes and our own domain."** Those are [inputs](https://github.com/nuonco/kitchen-sink/tree/main/inputs) — knobs declared once with defaults, set per install, and templated into infrastructure and components. This install's values are under **Current inputs**, top right.
+**"Our platform team needs bigger nodes and our own domain."** [Inputs](https://github.com/nuonco/kitchen-sink/tree/main/inputs): knobs declared once with defaults, set per install, templated into infrastructure and components. This install's values are under **Current inputs**, top right.
 
-**"Where does the database password come from?"** [Secrets](https://github.com/nuonco/kitchen-sink/blob/main/secrets.toml) are declared in config, generated or supplied per install, and synced into the cluster. Nothing sensitive lives in git.
+**"Where does the database password come from?"** [Secrets](https://github.com/nuonco/kitchen-sink/blob/main/secrets.toml): declared in config, generated or supplied per install, synced into the cluster. Nothing sensitive lives in git.
 
-**"Something's acting weird — can you look?"** [Actions](https://app.nuon.co/orgohjjpdu41iaej96eusl2lfq/installs/{{ .nuon.install.id }}/actions) are scripts that run on the runner, inside the customer's boundary, and stream results back here. No credentials handed out, no VPN, no screenshare.
+**"Something's acting weird — can you look?"** [Actions](https://app.nuon.co/orgohjjpdu41iaej96eusl2lfq/installs/{{ .nuon.install.id }}/actions): scripts that run on the runner, inside the customer's boundary, and stream results back here. No credentials handed out, no VPN, no screenshare.
 
 **"What exactly can you touch in our account?"** Answer with files: a scoped IAM role per operation with [permissions boundaries](https://github.com/nuonco/kitchen-sink/tree/main/permissions), [policies](https://github.com/nuonco/kitchen-sink/tree/main/policies) that block a deploy before it applies, and a pre-declared [break-glass role](https://github.com/nuonco/kitchen-sink/blob/main/break_glass.toml) with an audit trail — agreed to before the emergency.
 
-**"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/orgohjjpdu41iaej96eusl2lfq/installs/{{ .nuon.install.id }}/runbooks) turn an operational procedure into a reviewable, repeatable, parameterized workflow anyone on the team can run against an install.
+**"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/orgohjjpdu41iaej96eusl2lfq/installs/{{ .nuon.install.id }}/runbooks): an operational procedure as a reviewable, repeatable, parameterized workflow anyone on the team can run against an install.
 
 **"Do we have to click a button every time?"** Triggers run actions and runbooks on a schedule or off lifecycle events — post-provision, before and after a deploy — so routine operations just happen.
 
@@ -96,3 +114,7 @@ Reach for these when a real request makes them necessary — not before. Each on
 ---
 
 This page is itself part of the config: [`control-plane.md`](https://github.com/nuonco/kitchen-sink/blob/main/control-plane.md) in [nuonco/kitchen-sink](https://github.com/nuonco/kitchen-sink), a template rendered against this install's live state. To build your own, start with the [Nuon documentation](https://docs.nuon.co/get-started/introduction).
+
+</nuon-tab>
+
+</nuon-tabs>
