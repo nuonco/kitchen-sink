@@ -13,9 +13,36 @@
 # It is shared across the org's demo apps, so every rule below filters on
 # `$.repository.full_name` to only act on this repo's events.
 #
-# Both rules target the app branch declared in branch.toml. A push to the tracked
-# branch already starts a run by itself, so neither rule duplicates that — they
-# cover the two ship signals that are not a commit on that branch.
+# All rules target the app branch declared in branch.toml. NOTE (verified
+# Aug 14): a push to the tracked branch does NOT start a run by itself for a
+# [public_repo] branch — the branch-tracking push rule below is what makes
+# pushes roll out. The repo's webhook (push + release events) was created
+# pointing at this trigger's ingress URL.
+
+# Every push to the tracked branch fetches the config at that commit and starts
+# a staged rollout (each install group still holds for approval). This is how
+# agents and CI drive Nuon with no API token: git push is the whole interface.
+[[rules]]
+name        = "github-push-tracked-branch"
+trigger     = "github-events"
+event_types = ["push"]
+
+[[rules.filters]]
+from  = "payload"
+op    = "eq"
+path  = "$.ref"
+# Flip to "refs/heads/main" when ms/onboarding-edit merges (match branch.toml).
+value = "refs/heads/ms/onboarding-edit"
+
+[[rules.filters]]
+from  = "payload"
+op    = "eq"
+path  = "$.repository.full_name"
+value = "nuonco/kitchen-sink"
+
+[rules.target]
+type       = "app_branch_run"
+app_branch = "main"
 
 # Cutting a GitHub release is the deliberate "ship this to customers" signal, as
 # opposed to every commit on the tracked branch. Each install group still holds
