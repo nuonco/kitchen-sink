@@ -50,12 +50,15 @@ deploys as the app itself.
 - The UI's `/api/` proxy (`components/ui/apifilter.go`) is a security boundary
   on a public load balancer — never widen its allowlist or move redaction
   client-side (see `components/ui/README.md`).
-- Control-plane operations: agents explicitly granted Nuon API access by a
-  maintainer may validate and sync this app config and read app/install state.
-  Use the public API (https://api.nuon.co/docs) — e.g. config sync is
-  `POST /v1/apps/{app_id}/configs/{config_id}/sync`; requests need the API
-  token and an `X-Nuon-Org-ID` header. Heavier operations — deploys, branch-run
-  approvals, install create/deprovision/delete — still need an explicit
-  human go-ahead in the task at hand, per operation. Never commit tokens or
-  org/app IDs-with-credentials to this (public) repo; credentials live only
-  in the agent's provisioned connector.
+- Shipping config changes: **push to the tracked branch — that's the whole
+  interface.** The repo's webhook + the `github-push-tracked-branch` rule in
+  `triggers.toml` turn every push to the tracked branch into a staged branch
+  run (Nuon fetches the config at that commit, builds, and rolls out with an
+  approval hold per install group). Agents and CI never need a Nuon API token
+  to ship. Router lag between webhook delivery and the run appearing is
+  ~1–2 minutes — don't retry or replay before then.
+- Nuon API access (optional, read-oriented): agents with a provisioned token
+  may read app/install state via https://api.nuon.co/docs (requests need an
+  `X-Nuon-Org-ID` header). Deploys, branch-run approvals, and install
+  create/deprovision/delete always need an explicit human go-ahead per task.
+  Never commit tokens to this (public) repo.
