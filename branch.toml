@@ -4,10 +4,13 @@
 # pausing for an approval on each group's plan.
 #
 # `name` is the branch's identity in Nuon and is what `nuon sync --branch` and
-# triggers.toml refer to. It is deliberately stable ("main") while `branch`
-# below tracks whichever git ref is currently mainline — when
-# ms/onboarding-edit merges, change only `branch` and nothing downstream moves.
-name = "main"
+# triggers.toml refer to. Named after the git branch it tracks (Matt renamed it
+# in the dashboard Aug 17 — a Nuon branch named "main" tracking a different git
+# branch confused everyone). Branches upsert by name, so this file must always
+# match the dashboard name or a sync resurrects the old one. When
+# ms/onboarding-edit merges to git main: update `name`, `branch` below, and
+# every `app_branch` in triggers.toml together.
+name = "ms/onboarding-edit"
 
 # Runs on each install after its deploy succeeds, in order. The health check is
 # read-only, so a fleet rollout leaves a per-install health transcript behind
