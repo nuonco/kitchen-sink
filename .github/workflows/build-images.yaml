@@ -26,7 +26,9 @@ permissions:
 env:
   AWS_REGION: us-east-1
   ECR_PUBLIC_REGISTRY: public.ecr.aws/p7e3r5y0
-  ROLE_ARN: arn:aws:iam::410635945163:role/github/actions/gha-artifacts
+  # Scoped role trusted only by this repo's branches; see the shared
+  # gha-artifacts role for the org-wide pattern this should eventually join.
+  ROLE_ARN: arn:aws:iam::410635945163:role/github/actions/gha-kitchen-sink-images
 
 jobs:
   build:
