@@ -15,7 +15,7 @@ Resources:
     Properties:
       DBInstanceIdentifier: !Sub 'kitchen-sink-${NuonInstallID}-db'
       Engine: postgres
-      EngineVersion: '15.4'
+      EngineVersion: '16.14'
       DBInstanceClass: db.t3.micro
       AllocatedStorage: 20
       MasterUsername: kitchensink
