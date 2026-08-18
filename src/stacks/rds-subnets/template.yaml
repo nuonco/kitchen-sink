@@ -6,10 +6,8 @@ Parameters:
     Type: String
   VPC:
     Type: String
-  PrivateSubnet1:
-    Type: String
-  PrivateSubnet2:
-    Type: String
+  PrivateSubnets:
+    Type: CommaDelimitedList
 
 Resources:
   DBSubnetGroup:
@@ -17,9 +15,7 @@ Resources:
     Properties:
       DBSubnetGroupName: !Sub 'kitchen-sink-${NuonInstallID}-db-subnets'
       DBSubnetGroupDescription: Database subnet group for Kitchen Sink
-      SubnetIds:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
+      SubnetIds: !Ref PrivateSubnets
       Tags:
         - Key: nuon:install-id
           Value: !Ref NuonInstallID
