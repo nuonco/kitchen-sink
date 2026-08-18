@@ -21,7 +21,7 @@ Resources:
       MasterUsername: kitchensink
       MasterUserPassword: temp-password-123
       DBSubnetGroupName: !Ref DBSubnetGroupName
-      VPCSecurityGroupIds:
+      VPCSecurityGroups:
         - !Ref DBSecurityGroupId
       Tags:
         - Key: nuon:install-id
