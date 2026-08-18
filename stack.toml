@@ -5,11 +5,12 @@ description = "CloudFormation stack for Kitchen Sink app: Install {{.nuon.instal
 vpc_nested_template_url    = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/vpc/eks/default/stack.yaml"
 runner_nested_template_url = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/runner/asg/stack.yaml"
 
-#[[custom_nested_stacks]]
-#name         = "monitoring"
-#template_url = "https://nuon-sandbox-assets.s3.us-west-2.amazonaws.com/monitoring/v0.1.0/template.yaml"
-#index        = 1
+[[custom_nested_stacks]]
+name = "rds_subnets"
+template_url = "PLACEHOLDER-S3-URL-FOR-RDS-SUBNETS"
+index = 1
 
-#[custom_nested_stacks.parameters]
-#EnableCloudWatch = "true"
-#RetentionDays    = "30"
+[[custom_nested_stacks]]
+name = "rds_instance"
+template_url = "PLACEHOLDER-S3-URL-FOR-RDS-INSTANCE"
+index = 2
