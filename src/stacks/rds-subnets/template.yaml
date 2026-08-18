@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Parameters:
+  NuonInstallID:
+    Type: String
+  VPC:
+    Type: String
+  PrivateSubnet1:
+    Type: String
+  PrivateSubnet2:
+    Type: String
+
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: !Sub 'kitchen-sink-${NuonInstallID}-db-subnets'
+      DBSubnetGroupDescription: Database subnet group for Kitchen Sink
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Tags:
+        - Key: nuon:install-id
+          Value: !Ref NuonInstallID
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub 'kitchen-sink-${NuonInstallID}-db-sg'
+      GroupDescription: Security group for Kitchen Sink RDS
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          CidrIp: 10.0.0.0/8
+      Tags:
+        - Key: nuon:install-id
+          Value: !Ref NuonInstallID
+
+Outputs:
+  DBSubnetGroupName:
+    Value: !Ref DBSubnetGroup
+  DBSecurityGroupId:
+    Value: !Ref DBSecurityGroup
