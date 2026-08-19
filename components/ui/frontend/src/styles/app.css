@@ -744,6 +744,416 @@ body::before {
   max-width: 76ch;
 }
 
+/* ============================================================
+   Guided tour (the landing walkthrough)
+   ============================================================ */
+
+.tour__step {
+  animation: tour-in 480ms var(--ease-standard) both;
+}
+
+@keyframes tour-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tour__topline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-10);
+}
+
+.tour__progress {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.tour__dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tour__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-full);
+  background: var(--border-strong);
+}
+
+.tour__dot--done {
+  background: var(--accent-dim);
+}
+
+.tour__dot--active {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-ring);
+}
+
+.tour__skip {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+}
+
+.tour__skip:hover {
+  color: var(--text-primary);
+}
+
+.tour__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-10);
+}
+
+.tour__aside {
+  margin-top: var(--space-6);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-tertiary);
+  max-width: 64ch;
+}
+
+/* The arrival moment */
+
+.arrive {
+  min-height: 52vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.arrive h1 {
+  font-size: var(--display-lg);
+  line-height: 1.08;
+  margin: var(--space-4) 0 var(--space-5);
+  max-width: 18ch;
+}
+
+.arrive__lede {
+  font-size: var(--text-base);
+  line-height: 26px;
+  color: var(--text-secondary);
+  max-width: 58ch;
+}
+
+.arrive__chips {
+  margin-top: var(--space-6);
+}
+
+.arrive__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  margin-top: var(--space-8);
+}
+
+.arrive__actions .tour__skip {
+  margin-left: 0;
+}
+
+@media (max-width: 720px) {
+  .arrive h1 {
+    font-size: var(--display-md);
+  }
+}
+
+/* Step headers */
+
+.step-header {
+  margin-bottom: var(--space-8);
+}
+
+.step-header h2 {
+  font-size: var(--text-display);
+  line-height: var(--text-display-line);
+  margin: var(--space-3) 0 var(--space-4);
+  letter-spacing: var(--tracking-tight);
+}
+
+.step-header__lede {
+  font-size: var(--text-base);
+  line-height: 26px;
+  color: var(--text-secondary);
+  max-width: 64ch;
+}
+
+/* Diagram parts the tour has not reached yet */
+
+.arch__node--ghost {
+  opacity: 0.35;
+  border-style: dashed;
+  cursor: default;
+}
+
+.arch__node--ghost:hover {
+  border-color: var(--border-default);
+  background: var(--surface-card);
+}
+
+.arch__edge--ghost {
+  opacity: 0.35;
+}
+
+/* Staggered reveal for the live facts */
+
+.fact--in {
+  animation: fact-in 560ms var(--ease-standard) both;
+}
+
+@keyframes fact-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The end-of-tour CTA block on the deployed step */
+
+.cta-block {
+  margin-top: var(--space-8);
+  padding: var(--space-6);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--accent-dim);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    100deg,
+    var(--accent-wash) 0%,
+    rgba(11, 18, 21, 0) 60%
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.cta-block__kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.btn--xl {
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
+  border-radius: var(--radius-lg);
+}
+
+/* The live toggle switch (drawn, not interactive) */
+
+.switch {
+  position: relative;
+  flex: none;
+  margin-left: auto;
+  width: 44px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-sunken);
+}
+
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  background: var(--text-tertiary);
+  transition: left var(--duration-base) var(--ease-standard),
+    background var(--duration-base) var(--ease-standard);
+}
+
+.switch--on {
+  border-color: var(--accent);
+  background: var(--accent-wash-strong);
+}
+
+.switch--on::after {
+  left: 23px;
+  background: var(--accent);
+}
+
+/* Small variant, used as the "Enable custom features" tile icon */
+
+.switch--sm {
+  width: 28px;
+  height: 16px;
+  margin-left: 0;
+}
+
+.switch--sm::after {
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+}
+
+.switch--sm.switch--on::after {
+  left: 14px;
+}
+
+/* ============================================================
+   Customize-page action tiles. Hover treatment ported from
+   nuon.co/product's PixelCard (nuonco/mono, services/website,
+   components/common/ui/PixelCard.astro + PixelArrow.astro): the card
+   lifts by (-4,-4), a 2px cyan border snaps on with a steps() timing
+   function, a dithered checkerboard shadow appears offset bottom-right,
+   and the title turns cyan with a pixel arrow sliding in from the left.
+   Square corners are part of the borrowed pixel look.
+   ============================================================ */
+
+.actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+}
+
+.action {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  text-align: left;
+  padding: var(--space-6);
+  border: 2px solid var(--border-subtle);
+  background: var(--surface-card);
+  cursor: pointer;
+  transition: transform 0.1s steps(2), border-color 0.1s steps(2),
+    background-color 0.1s steps(2);
+}
+
+.action:hover {
+  transform: translate(-4px, -4px);
+  border-color: var(--accent);
+  background: rgba(76, 201, 240, 0.03);
+}
+
+.action__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--accent-wash-strong);
+  background: var(--accent-wash);
+  color: var(--accent);
+  font-size: 20px;
+}
+
+.action__title {
+  display: flex;
+  align-items: center;
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
+  font-weight: var(--weight-stronger);
+  color: var(--text-primary);
+  transition: color 300ms var(--ease-standard);
+}
+
+.action:hover .action__title {
+  color: var(--accent-hover);
+}
+
+.action__arrow {
+  display: flex;
+  align-items: center;
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: width 300ms var(--ease-standard),
+    opacity 300ms var(--ease-standard);
+}
+
+.action:hover .action__arrow {
+  width: 20px;
+  opacity: 1;
+}
+
+.action__desc {
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+}
+
+/* Dithered checkerboard shadow, from PixelCard's dark-mode treatment */
+
+.action__shadow {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.05s steps(1);
+  color: var(--accent);
+  background-image: linear-gradient(45deg, currentColor 25%, transparent 25%),
+    linear-gradient(-45deg, currentColor 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, currentColor 75%),
+    linear-gradient(-45deg, transparent 75%, currentColor 75%);
+  background-size: 4px 4px;
+  background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+}
+
+.action__shadow--right {
+  top: 4px;
+  right: -6px;
+  width: 6px;
+  bottom: -2px;
+}
+
+.action__shadow--bottom {
+  left: 4px;
+  bottom: -6px;
+  height: 6px;
+  right: -2px;
+}
+
+.action__shadow--corner {
+  right: -6px;
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  background-size: 3px 3px;
+}
+
+.action:hover .action__shadow--right,
+.action:hover .action__shadow--bottom {
+  opacity: 0.6;
+}
+
+.action:hover .action__shadow--corner {
+  opacity: 0.45;
+}
+
 /* Path cards */
 
 .paths {
@@ -1341,22 +1751,35 @@ pre.raw {
   animation: loading-fade-up 900ms var(--ease-standard) 1000ms both;
 }
 
+/* The centered lockup: the white Nuon wordmark over a big mono
+   "Kitchen Sink". */
+
+.loading__mark {
+  display: block;
+  margin: 0 auto;
+  width: 216px;
+  height: auto;
+}
+
 .loading__title {
-  font-size: var(--display-md);
-  line-height: 1.15;
+  margin-top: var(--space-10);
+  font-family: var(--font-mono);
+  font-size: 76px;
+  line-height: 1.05;
   font-weight: var(--weight-stronger);
-  letter-spacing: var(--tracking-tight);
+  letter-spacing: 0;
   color: var(--text-primary);
 }
 
-.loading__sub {
-  margin-top: var(--space-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
+@media (max-width: 720px) {
+  .loading__mark {
+    width: 150px;
+  }
+
+  .loading__title {
+    margin-top: var(--space-8);
+    font-size: var(--display-lg);
+  }
 }
 
 /* The rotating 3D mark, off to the side when the viewport allows. */
@@ -1442,6 +1865,150 @@ pre.raw {
   }
 
   .loading__logo {
+    animation: none;
+    transform: rotateX(-8deg) rotateY(24deg);
+  }
+}
+
+/* ============================================================
+   Customize setup-flow stubs
+   ============================================================ */
+
+.demo-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px dashed rgba(254, 178, 115, 0.35);
+  border-radius: var(--radius-md);
+  background: rgba(254, 178, 115, 0.05);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+  max-width: 76ch;
+}
+
+.demo-banner .badge {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* Staged-rollout pipeline in the branches flow */
+
+.groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.group-card {
+  padding: var(--space-5);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  transition: opacity var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard);
+}
+
+.group-card--waiting {
+  opacity: 0.55;
+  border-style: dashed;
+}
+
+.group-card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.group-card__name {
+  font-size: var(--text-body);
+  font-weight: var(--weight-strong);
+  margin-right: auto;
+}
+
+.group-card__selector {
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-tertiary);
+}
+
+.group-card__note {
+  margin-top: var(--space-1);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+}
+
+/* Simulated action log */
+
+pre.sim-log {
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  max-height: 280px;
+}
+
+/* Clickable table rows in the roles flow */
+
+tr.row-select {
+  cursor: pointer;
+}
+
+tr.row-select:hover td {
+  background: var(--surface-hover);
+}
+
+tr.row-select--active td {
+  background: var(--accent-wash);
+}
+
+/* ============================================================
+   Ambient mark: the overlay's rotating 3D Nuon mark, docked on the right
+   of the app itself. Decorative only: it paints behind the content layer,
+   ignores the pointer, hides on narrow viewports, and freezes when the
+   visitor prefers reduced motion. Slower than the boot overlay's spin (42s,
+   the labs.nuon.co pace) because it is on screen indefinitely.
+   ============================================================ */
+
+.ambient {
+  position: fixed;
+  top: 50%;
+  right: clamp(8px, 2.5vw, 72px);
+  width: 176px;
+  height: 244px;
+  transform: translateY(-50%);
+  perspective: 1100px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+.ambient__logo {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  animation: loading-logo-spin 42s linear infinite;
+}
+
+.ambient__slice {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 5px rgba(1, 108, 255, 0.25));
+}
+
+@media (max-width: 1200px) {
+  .ambient {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient__logo {
     animation: none;
     transform: rotateX(-8deg) rotateY(24deg);
   }
