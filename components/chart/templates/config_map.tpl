@@ -11,6 +11,10 @@ metadata:
     # the ConfigMap because its health is "not applicable" -- no pods roll and
     # nothing has to re-stabilize just to defeat the noop check.
     nuon.co/roll: {{ .Release.Revision | quote }}
+    # The CI image stamp, set from the component's inline `image_stamp` value
+    # (see components/chart/nuon.toml). Carrying it in the release makes the
+    # tag-bump-forces-chart-redeploy cascade observable in the cluster.
+    nuon.co/image-stamp: {{ .Values.image_stamp | default "" | quote }}
 data:
   API_PORT: "{{ .Values.api.port }}"
   UI_PORT: "{{ .Values.ui.port }}"
