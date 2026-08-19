@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   countReady,
   hasTicTacToe,
@@ -10,20 +10,77 @@ import {
 import { useNavigate } from '../lib/router'
 import { Eyebrow, Icon, OutLink } from '../ui/Primitives'
 
+/* ============================================================
+   The landing is a guided walkthrough. A first-time visitor has just
+   installed and lands on the arrival moment; each step puts one idea on
+   screen and hands them a single "next". The tour ends on the deployed
+   step's big CTA into the customize page ('explore'), which is also what
+   returning visitors get: progress is remembered in localStorage, and
+   "Skip the tour" jumps straight there.
+   ============================================================ */
+
+const steps = [
+  'arrive',
+  'sandbox',
+  'components',
+  'runner',
+  'deployed',
+  'explore',
+] as const
+
+type Step = (typeof steps)[number]
+
+const TOUR_KEY = 'kitchen-sink-tour'
+
+function storedStep(): Step {
+  try {
+    const value = window.localStorage.getItem(TOUR_KEY)
+    // Older tours had dedicated toggle and day-2 steps; those beats now live
+    // on the customize page, so resume there.
+    if (value === 'toggle' || value === 'day2') return 'explore'
+    if (value && (steps as readonly string[]).includes(value)) {
+      return value as Step
+    }
+  } catch {
+    // Storage can be unavailable (private mode); the tour just starts over.
+  }
+  return 'arrive'
+}
+
+function rememberStep(step: Step) {
+  try {
+    window.localStorage.setItem(TOUR_KEY, step)
+  } catch {
+    // Same story: without storage the tour still works, it just forgets.
+  }
+}
+
 function Fact({
   label,
   value,
   note,
   numeric = false,
+  delay,
 }: {
   label: string
   value: ReactNode
   note?: string
   numeric?: boolean
+  delay?: number
 }) {
   const pending = value === null || value === undefined || value === ''
+  const cls = [
+    'fact',
+    pending ? 'fact--pending' : '',
+    delay === undefined ? '' : 'fact--in',
+  ]
+    .filter(Boolean)
+    .join(' ')
   return (
-    <div className={pending ? 'fact fact--pending' : 'fact'}>
+    <div
+      className={cls}
+      style={delay === undefined ? undefined : { animationDelay: `${delay}ms` }}
+    >
       <div className="fact__label">{label}</div>
       <div className={numeric ? 'fact__value fact__value--num' : 'fact__value'}>
         {pending ? '—' : value}
@@ -33,40 +90,163 @@ function Fact({
   )
 }
 
-const paths = [
+/* ============================================================
+   The golden-path diagram, revealed one part at a time. Parts the tour has
+   not reached yet render as ghosts, so each step stays one idea while still
+   hinting at the shape of the whole. Revealed parts are clickable and jump
+   the tour to that part's step.
+   ============================================================ */
+
+type PartKey = 'sandbox' | 'components' | 'runner'
+
+const partOrder: PartKey[] = ['sandbox', 'components', 'runner']
+
+function GoldenPath({
+  stage,
+  onPick,
+}: {
+  stage: PartKey
+  onPick: (part: PartKey) => void
+}) {
+  const revealed = partOrder.indexOf(stage)
+
+  const nodeClass = (part: PartKey) => {
+    const i = partOrder.indexOf(part)
+    if (i > revealed) return 'arch__node arch__node--ghost'
+    if (part === stage) return 'arch__node arch__node--active'
+    return 'arch__node'
+  }
+
+  return (
+    <div className="arch">
+      <div
+        className={
+          stage === 'sandbox' ? 'arch__sandbox arch__sandbox--active' : 'arch__sandbox'
+        }
+      >
+        <button
+          type="button"
+          className="arch__boundary"
+          onClick={() => onPick('sandbox')}
+        >
+          <span className="arch__num">01</span>
+          <span className="arch__name">Sandbox</span>
+          <span className="arch__hint">VPC · EKS · DNS</span>
+        </button>
+        <div className="arch__nodes">
+          <button
+            type="button"
+            className={nodeClass('components')}
+            disabled={revealed < 1}
+            onClick={() => onPick('components')}
+          >
+            <span className="arch__num">02</span>
+            <span className="arch__name">Components</span>
+            <span className="arch__hint">kitchen_sink chart</span>
+          </button>
+          <div
+            className={revealed < 2 ? 'arch__edge arch__edge--ghost' : 'arch__edge'}
+            aria-hidden="true"
+          >
+            <span className="arch__edge-label">deploys</span>
+            <span className="arch__edge-line" />
+          </div>
+          <button
+            type="button"
+            className={nodeClass('runner')}
+            disabled={revealed < 2}
+            onClick={() => onPick('runner')}
+          >
+            <span className="arch__num">03</span>
+            <span className="arch__name">Runner</span>
+            <span className="arch__hint">builds &amp; deploys here</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/* ============================================================
+   The customize page: the tour's destination, and the returning-visitor
+   front door. Every tile is an action against this install. The hover
+   treatment is ported from nuon.co/product's PixelCard: the card lifts,
+   a cyan border snaps on, a dithered checkerboard shadow appears offset
+   bottom-right, and the title turns cyan with a pixel arrow sliding in.
+   ============================================================ */
+
+/** nuon.co's pixel arrow (PixelArrow.astro, direction "right"). */
+function PixelArrow() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 15 15" fill="none" aria-hidden="true">
+      <rect x="0" y="0" width="3" height="3" fill="currentColor" />
+      <rect x="3" y="3" width="3" height="3" fill="currentColor" />
+      <rect x="6" y="6" width="3" height="3" fill="currentColor" />
+      <rect x="3" y="9" width="3" height="3" fill="currentColor" />
+      <rect x="0" y="12" width="3" height="3" fill="currentColor" />
+    </svg>
+  )
+}
+
+const actions = [
   {
     to: '/deployed',
     icon: 'magnifying-glass',
-    question: 'What did Nuon actually deploy?',
-    body:
-      'Read the live cluster: namespaces, pods, services, Helm releases, and the environment this app can see. Readable summaries first, the raw JSON one click behind each one.',
-    cta: 'Read the install',
+    title: 'Read your live install',
+    desc: 'Inspect the namespaces, pods, services, and secrets Nuon deployed here.',
   },
   {
     to: '/map',
     icon: 'puzzle-piece',
-    question: 'How does my product map onto this?',
-    body:
-      'The component types you can build an app config from, each shown with the real thing this app uses it for — a Helm chart, prebuilt images, Terraform, Pulumi, raw manifests.',
-    cta: 'See the component types',
+    title: 'Map your product onto components',
+    desc: 'Match the five component types to the pieces you already ship.',
+  },
+  {
+    to: '/tictactoe',
+    icon: 'toggle',
+    title: 'Enable custom features',
+    desc: 'Flip on the toggleable tictactoe component and watch it deploy.',
+  },
+  {
+    to: '/customize/branches',
+    icon: 'git-branch',
+    title: 'Set up an app branch',
+    desc: 'Walk the staged rollout that ships changes group by group.',
+  },
+  {
+    to: '/customize/runbooks',
+    icon: 'book-open',
+    title: 'Configure runbooks',
+    desc: 'Step through the four runbooks this app ships; simulate one.',
+  },
+  {
+    to: '/customize/actions',
+    icon: 'lightning',
+    title: 'Run an adhoc action',
+    desc: 'Fire a manual action on the runner and watch the log.',
+  },
+  {
+    to: '/customize/roles',
+    icon: 'lock',
+    title: 'Set up operation roles',
+    desc: 'See the scoped IAM role behind every operation Nuon performs.',
   },
   {
     to: '/day2',
     icon: 'gauge',
-    question: 'How do I operate 50 of these?',
-    body:
-      'The day-2 story: app branches, runbooks, triggers, and component health — what each one is for, grounded in this install, with a link into the dashboard.',
-    cta: 'See the day-2 tools',
+    title: 'Learn the day-2 story',
+    desc: 'Why branches, runbooks, triggers, and health matter at fifty installs.',
   },
 ]
 
-type PartKey = 'sandbox' | 'components' | 'runner'
-
 export function Landing({ config }: { config: UIConfig }) {
   const navigate = useNavigate()
-  const [openPart, setOpenPart] = useState<PartKey | null>(null)
-  const togglePart = (key: PartKey) =>
-    setOpenPart((current) => (current === key ? null : key))
+  const [step, setStep] = useState<Step>(storedStep)
+
+  useEffect(() => {
+    rememberStep(step)
+  }, [step])
+
   const namespace = config.namespace ?? 'kitchen-sink'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
   const ns = useIntrospect<NamespaceResponse>(
@@ -81,240 +261,318 @@ export function Landing({ config }: { config: UIConfig }) {
   const tictactoe =
     ns.state === 'ok' && hasTicTacToe(ns.value.response.services ?? [])
 
-  return (
-    <>
-      <header className="hero">
-        <Eyebrow>Kitchen sink &middot; live install</Eyebrow>
-        <h1>You&rsquo;re inside a BYOC install.</h1>
-        <p className="hero__lede">
-          This page is served by a container running in an EKS cluster, in an AWS
-          account, that Nuon provisioned and deploys into. Nothing here is a
-          mock: the facts below are read live from that cluster through the app&rsquo;s
-          own introspection API.
-        </p>
-      </header>
+  const idx = steps.indexOf(step)
+  const go = (next: Step) => {
+    setStep(next)
+    window.scrollTo({ top: 0 })
+  }
+  const next = () => go(steps[Math.min(idx + 1, steps.length - 1)])
+  const back = () => go(steps[Math.max(idx - 1, 0)])
+  const skip = () => go('explore')
 
-      <div className="facts">
-        <Fact
-          label="Install"
-          value={config.install_id}
-          note="The tenant this app belongs to"
-        />
-        <Fact
-          label="Cluster"
-          value={config.cluster_name}
-          note={config.region ? `EKS in ${config.region}` : 'EKS'}
-        />
-        <Fact
-          label="Namespaces"
-          value={namespaceCount}
-          note="Read from the Kubernetes API"
-          numeric
-        />
-        <Fact
-          label={`Pods ready in ${namespace}`}
-          value={podSummary}
-          note="api, ui, worker"
-          numeric
-        />
-      </div>
+  /* ---------- Arrival ---------- */
 
-      <section className="golden">
-        <Eyebrow>The golden path</Eyebrow>
-        <h2 className="golden__title">A shippable Nuon app is three parts.</h2>
-        <div className="arch">
-          <div
-            className={
-              openPart === 'sandbox'
-                ? 'arch__sandbox arch__sandbox--active'
-                : 'arch__sandbox'
-            }
-          >
-            <button
-              type="button"
-              className="arch__boundary"
-              aria-expanded={openPart === 'sandbox'}
-              aria-controls="golden-detail"
-              onClick={() => togglePart('sandbox')}
-            >
-              <span className="arch__num">01</span>
-              <span className="arch__name">Sandbox</span>
-              <span className="arch__hint">VPC · EKS · DNS</span>
-            </button>
-            <div className="arch__nodes">
-              <button
-                type="button"
-                className={
-                  openPart === 'components'
-                    ? 'arch__node arch__node--active'
-                    : 'arch__node'
-                }
-                aria-expanded={openPart === 'components'}
-                aria-controls="golden-detail"
-                onClick={() => togglePart('components')}
-              >
-                <span className="arch__num">02</span>
-                <span className="arch__name">Components</span>
-                <span className="arch__hint">kitchen_sink chart</span>
-              </button>
-              <div className="arch__edge" aria-hidden="true">
-                <span className="arch__edge-label">deploys</span>
-                <span className="arch__edge-line" />
-              </div>
-              <button
-                type="button"
-                className={
-                  openPart === 'runner'
-                    ? 'arch__node arch__node--active'
-                    : 'arch__node'
-                }
-                aria-expanded={openPart === 'runner'}
-                aria-controls="golden-detail"
-                onClick={() => togglePart('runner')}
-              >
-                <span className="arch__num">03</span>
-                <span className="arch__name">Runner</span>
-                <span className="arch__hint">builds &amp; deploys here</span>
-              </button>
-            </div>
-          </div>
-
-          {openPart && (
-            <div id="golden-detail" className="arch__panel" role="region">
-              {openPart === 'sandbox' && (
-                <>
-                  <div className="arch__panel-label">01 · Sandbox</div>
-                  <p className="arch__panel-body">
-                    The footprint Nuon creates in your customer&rsquo;s cloud
-                    account — it&rsquo;s the boundary everything else lives
-                    inside. Here it&rsquo;s{' '}
-                    <span className="mono">aws-eks-sandbox</span>: a VPC, an EKS
-                    cluster, and a public DNS zone.
-                  </p>
-                  {config.cluster_name && (
-                    <div className="row" style={{ marginTop: 12 }}>
-                      <span className="chip">cluster {config.cluster_name}</span>
-                      {config.region && (
-                        <span className="chip">{config.region}</span>
-                      )}
-                    </div>
-                  )}
-                </>
+  if (step === 'arrive') {
+    return (
+      <div className="tour__step" key="arrive">
+        <div className="arrive">
+          <Eyebrow>Kitchen sink &middot; live install</Eyebrow>
+          <h1>You&rsquo;re inside a BYOC install.</h1>
+          <p className="arrive__lede">
+            This page is served by a container in an EKS cluster, in an AWS
+            account, that Nuon provisioned and deployed into when you
+            installed. It went in a few minutes ago. Take the short tour and
+            see what you got.
+          </p>
+          {(config.install_id || config.cluster_name) && (
+            <div className="row arrive__chips">
+              {config.install_id && (
+                <span className="chip">install {config.install_id}</span>
               )}
-              {openPart === 'components' && (
-                <>
-                  <div className="arch__panel-label">02 · Components</div>
-                  <p className="arch__panel-body">
-                    One deployable piece of your product. Here the{' '}
-                    <span className="mono">kitchen_sink</span> Helm chart deploys
-                    the API, the worker, and the UI you&rsquo;re reading.
-                  </p>
-                  {podSummary && (
-                    <div className="row" style={{ marginTop: 12 }}>
-                      <span className="chip">
-                        {podSummary} pods ready in {namespace}
-                      </span>
-                    </div>
-                  )}
-                </>
-              )}
-              {openPart === 'runner' && (
-                <>
-                  <div className="arch__panel-label">03 · Runner</div>
-                  <p className="arch__panel-body">
-                    An agent Nuon runs inside the account. Every build and deploy
-                    happens from in there, so your customer&rsquo;s credentials
-                    never leave their cloud.
-                  </p>
-                </>
+              {config.cluster_name && (
+                <span className="chip">cluster {config.cluster_name}</span>
               )}
             </div>
           )}
+          <div className="arrive__actions">
+            <button className="btn btn--primary" onClick={next}>
+              Show me around <Icon name="arrow-right" />
+            </button>
+            <button className="tour__skip" onClick={skip}>
+              Skip the tour <Icon name="arrow-up-right" />
+            </button>
+          </div>
         </div>
+      </div>
+    )
+  }
 
-        <p className="golden__aside">
-          Everything else — inputs, policies, secrets, actions, break-glass
-          roles, the other component types — is optional. Added when a customer
-          asks, not before.
-        </p>
-      </section>
+  /* ---------- Explore (the finish state, and the returning-visitor state) ---------- */
 
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Pick a question</h2>
-          <div className="subtext muted">Three paths, each self-contained</div>
-        </div>
-        <div className="paths">
-          {paths.map((path) => (
+  if (step === 'explore') {
+    return (
+      <div className="tour__step" key="explore">
+        <header className="hero">
+          <Eyebrow>Kitchen sink &middot; live install</Eyebrow>
+          <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
+          <p className="hero__lede">
+            Every action below works against this live install, and each page
+            explains itself as you go. Pick any order.
+          </p>
+          <div className="row" style={{ marginTop: 20 }}>
             <button
-              key={path.to}
-              className="path"
-              onClick={() => navigate(path.to)}
+              className="tour__skip"
+              style={{ marginLeft: 0 }}
+              onClick={() => go('arrive')}
             >
-              <span className="path__icon">
-                <Icon name={path.icon} />
+              <Icon name="arrow-left" /> Replay the tour
+            </button>
+          </div>
+        </header>
+
+        <div className="actions" style={{ marginTop: 32 }}>
+          {actions.map((action) => (
+            <button
+              key={action.to}
+              className="action"
+              onClick={() => navigate(action.to)}
+            >
+              <span className="action__icon">
+                {action.icon === 'toggle' ? (
+                  <span
+                    className={
+                      tictactoe ? 'switch switch--sm switch--on' : 'switch switch--sm'
+                    }
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Icon name={action.icon} />
+                )}
               </span>
-              <span className="path__q">{path.question}</span>
-              <span className="path__body">{path.body}</span>
-              <span className="path__cta">
-                {path.cta} <Icon name="arrow-right" />
+              <span className="action__title">
+                <span className="action__arrow" aria-hidden="true">
+                  <PixelArrow />
+                </span>
+                {action.title}
               </span>
+              <span className="action__desc">{action.desc}</span>
+              <span className="action__shadow action__shadow--right" aria-hidden="true" />
+              <span className="action__shadow action__shadow--bottom" aria-hidden="true" />
+              <span className="action__shadow action__shadow--corner" aria-hidden="true" />
             </button>
           ))}
-          <button
-            className={tictactoe ? 'path' : 'path path--locked'}
-            onClick={() => navigate('/tictactoe')}
-          >
-            <span className="path__icon">
-              <Icon name={tictactoe ? 'grid-four' : 'lock'} />
-            </span>
-            <span className="path__q">How do optional features ship?</span>
-            <span className="path__body">
-              A toggleable component: in the config for every install, deployed
-              only where it&rsquo;s switched on. Here the feature is a game of
-              tic-tac-toe, and this tile is read from the cluster like
-              everything else.
-            </span>
-            {tictactoe ? (
-              <span className="path__cta">
-                Play tic-tac-toe <Icon name="arrow-right" />
-              </span>
-            ) : (
-              <span className="path__lock">
-                <Icon name="lock" /> Not included in this install. Enable the
-                tictactoe component to unlock it.
-              </span>
-            )}
-          </button>
         </div>
-      </section>
 
-      {config.links.install && (
-        <section className="section">
-          <div className="card">
-            <div className="card__header">
-              <div className="card__title">The other half of the tour</div>
+        {config.links.install && (
+          <section className="section">
+            <div className="card">
+              <div className="card__header">
+                <div className="card__title">The other half of the tour</div>
+              </div>
+              <p className="small muted" style={{ maxWidth: '70ch' }}>
+                This app shows you the install from the inside. The Nuon
+                dashboard shows you the same install from the outside: its
+                components, actions, runbooks and deploy history. It is also
+                where you operate every other install.
+              </p>
+              <div className="row" style={{ marginTop: 20 }}>
+                <OutLink href={config.links.install}>
+                  Open this install in Nuon
+                </OutLink>
+                <OutLink
+                  href="https://docs.nuon.co/get-started/introduction"
+                  variant="secondary"
+                >
+                  Read the docs
+                </OutLink>
+              </div>
             </div>
-            <p className="small muted" style={{ maxWidth: '70ch' }}>
-              This app shows you the install from the inside. The Nuon dashboard
-              shows you the same install from the outside — its components,
-              actions, runbooks and deploy history — and it&rsquo;s where you operate
-              every other install too.
-            </p>
-            <div className="row" style={{ marginTop: 20 }}>
-              <OutLink href={config.links.install}>
-                Open this install in Nuon
-              </OutLink>
-              <OutLink
-                href="https://docs.nuon.co/get-started/introduction"
-                variant="secondary"
-              >
-                Read the docs
-              </OutLink>
+          </section>
+        )}
+      </div>
+    )
+  }
+
+  /* ---------- The six tour steps between arrival and explore ---------- */
+
+  const tourSteps = steps.slice(1, -1) as Step[]
+  const tourIdx = tourSteps.indexOf(step)
+
+  const chrome = (
+    <div className="tour__topline">
+      <span className="tour__progress">
+        step {tourIdx + 1} of {tourSteps.length}
+      </span>
+      <span className="tour__dots" aria-hidden="true">
+        {tourSteps.map((s, i) => (
+          <span
+            key={s}
+            className={
+              i === tourIdx
+                ? 'tour__dot tour__dot--active'
+                : i < tourIdx
+                  ? 'tour__dot tour__dot--done'
+                  : 'tour__dot'
+            }
+          />
+        ))}
+      </span>
+      <button className="tour__skip" onClick={skip}>
+        Skip the tour <Icon name="arrow-up-right" />
+      </button>
+    </div>
+  )
+
+  const stepActions = () => (
+    <div className="tour__actions">
+      <button className="btn btn--ghost" onClick={back}>
+        <Icon name="arrow-left" /> Back
+      </button>
+      <button className="btn btn--primary" onClick={next}>
+        Next <Icon name="arrow-right" />
+      </button>
+    </div>
+  )
+
+  const goldenHeader = (num: string, title: string, lede: ReactNode) => (
+    <header className="step-header">
+      <Eyebrow>The golden path &middot; {num}</Eyebrow>
+      <h2>{title}</h2>
+      <p className="step-header__lede">{lede}</p>
+    </header>
+  )
+
+  return (
+    <div className="tour__step" key={step}>
+      {chrome}
+
+      {step === 'sandbox' && (
+        <>
+          {goldenHeader(
+            '01 of 03',
+            'It starts with a sandbox.',
+            <>
+              A shippable Nuon app is three parts, and this is the first: the
+              footprint Nuon creates in your customer&rsquo;s cloud account.
+              Everything else lives inside this boundary. Here it&rsquo;s{' '}
+              <span className="mono">aws-eks-sandbox</span>: a VPC, an EKS
+              cluster, and a public DNS zone.
+            </>,
+          )}
+          <GoldenPath stage="sandbox" onPick={(p) => go(p)} />
+          {config.cluster_name && (
+            <div className="row" style={{ marginTop: 16 }}>
+              <span className="chip">cluster {config.cluster_name}</span>
+              {config.region && <span className="chip">{config.region}</span>}
             </div>
-          </div>
-        </section>
+          )}
+          {stepActions()}
+        </>
       )}
-    </>
+
+      {step === 'components' && (
+        <>
+          {goldenHeader(
+            '02 of 03',
+            'Components are your product.',
+            <>
+              One component is one deployable piece of your product. Here the{' '}
+              <span className="mono">kitchen_sink</span> Helm chart deploys the
+              API, the worker, and the UI you&rsquo;re reading.
+            </>,
+          )}
+          <GoldenPath stage="components" onPick={(p) => go(p)} />
+          {podSummary && (
+            <div className="row" style={{ marginTop: 16 }}>
+              <span className="chip">
+                {podSummary} pods ready in {namespace}
+              </span>
+            </div>
+          )}
+          {stepActions()}
+        </>
+      )}
+
+      {step === 'runner' && (
+        <>
+          {goldenHeader(
+            '03 of 03',
+            'The runner does the deploying.',
+            <>
+              An agent Nuon runs inside the account. Every build and deploy
+              happens from in there, so your customer&rsquo;s credentials never
+              leave their cloud.
+            </>,
+          )}
+          <GoldenPath stage="runner" onPick={(p) => go(p)} />
+          <p className="golden__aside">
+            That&rsquo;s the whole golden path. Everything else is optional:
+            inputs, policies, secrets, actions, break-glass roles, the other
+            component types. You add them when a customer asks.
+          </p>
+          {stepActions()}
+        </>
+      )}
+
+      {step === 'deployed' && (
+        <>
+          <header className="step-header">
+            <Eyebrow>This install &middot; read live</Eyebrow>
+            <h2>Here&rsquo;s what Nuon deployed.</h2>
+            <p className="step-header__lede">
+              Nothing here is a mock. Every value below is read from the
+              cluster, right now, through the app&rsquo;s own introspection
+              API.
+            </p>
+          </header>
+          <div className="facts">
+            <Fact
+              label="Install"
+              value={config.install_id}
+              note="The tenant this app belongs to"
+              delay={0}
+            />
+            <Fact
+              label="Cluster"
+              value={config.cluster_name}
+              note={config.region ? `EKS in ${config.region}` : 'EKS'}
+              delay={140}
+            />
+            <Fact
+              label="Namespaces"
+              value={namespaceCount}
+              note="Read from the Kubernetes API"
+              numeric
+              delay={280}
+            />
+            <Fact
+              label={`Pods ready in ${namespace}`}
+              value={podSummary}
+              note="api, ui, worker"
+              numeric
+              delay={420}
+            />
+          </div>
+          <p className="tour__aside">
+            The full picture lives one page deeper: pods, services, Helm
+            releases, the pod environment, and the raw JSON behind each
+            summary.
+          </p>
+          <div className="cta-block">
+            <div className="cta-block__kicker">
+              What it takes to operate BYOC with real customers
+            </div>
+            <button className="btn btn--primary btn--xl" onClick={next}>
+              Customize the Kitchen Sink <Icon name="arrow-right" />
+            </button>
+          </div>
+          <div className="tour__actions" style={{ marginTop: 24 }}>
+            <button className="btn btn--ghost" onClick={back}>
+              <Icon name="arrow-left" /> Back
+            </button>
+          </div>
+        </>
+      )}
+    </div>
   )
 }

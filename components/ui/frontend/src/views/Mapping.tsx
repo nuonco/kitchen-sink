@@ -27,7 +27,7 @@ const types: ComponentType[] = [
     what:
       'Deploys a Helm chart into the install cluster. Nuon interpolates your values file first, so image tags and sandbox outputs are filled in per install.',
     here:
-      'kitchen_sink — the API, the worker, and this UI. One chart, three deployments.',
+      'kitchen_sink: the API, the worker, and this UI. One chart, three deployments.',
     file: 'components/chart/nuon.toml',
     toml: `name = "kitchen_sink"
 type = "helm_chart"
@@ -49,7 +49,7 @@ contents = "./chart/values.yaml"`,
     what:
       'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
     here:
-      'img_ui (this page) and img_api (the introspection API) — CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_api_two shows the private-registry variant, pulled with an IAM role Nuon assumes.',
+      'img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_api_two shows the private-registry variant, pulled with an IAM role Nuon assumes.',
     file: 'components/images/ui.toml',
     toml: `name     = "img_ui"
 type     = "container_image"
@@ -65,7 +65,7 @@ tag       = "sha-…"`,
     what:
       'Runs a Terraform module. The runner holds the state and the credentials, so your customer keeps both.',
     here:
-      'certificate — a DNS-validated wildcard ACM certificate for *.<install domain>, which the load balancer then terminates HTTPS with.',
+      'certificate: a DNS-validated wildcard ACM certificate for *.<install domain>, which the load balancer then terminates HTTPS with.',
     file: 'components/certificate.toml',
     toml: `name              = "certificate"
 type              = "terraform_module"
@@ -85,9 +85,9 @@ domain_name = "*.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}
   {
     type: 'pulumi',
     what:
-      'Runs a Pulumi program in Go, TypeScript or Python. Same contract as Terraform — your code, the customer’s account, the runner in between.',
+      'Runs a Pulumi program in Go, TypeScript or Python. Same contract as Terraform: your code, the customer’s account, the runner in between.',
     here:
-      'pulumi_infra — an S3 bucket with encryption and versioning, named from the install id.',
+      'pulumi_infra: an S3 bucket with encryption and versioning, named from the install id.',
     file: 'components/pulumi/nuon.toml',
     toml: `name    = "pulumi_infra"
 type    = "pulumi"
@@ -107,7 +107,7 @@ branch    = "main"
     what:
       'Applies raw YAML or a kustomize overlay. The escape hatch for anything that is not packaged as a chart.',
     here:
-      'kustomizeapp — the Argo CD guestbook example, applied straight from a public repo into its own namespace.',
+      'kustomizeapp: the Argo CD guestbook example, applied straight from a public repo into its own namespace.',
     file: 'components/kustomize.toml',
     toml: `name = "kustomizeapp"
 type = "kubernetes_manifest"
@@ -129,14 +129,14 @@ enable_helm = false`,
 export function Mapping({ config }: { config: UIConfig }) {
   return (
     <>
-      <BackLink to="/">All paths</BackLink>
+      <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
-        <Eyebrow>Path 02</Eyebrow>
+        <Eyebrow>Deep dive</Eyebrow>
         <h1>How does my product map onto this?</h1>
         <p className="lede">
           A component is one deployable piece of your product, described by a
           small TOML file in your repo. There are five kinds in play in this
-          install. You almost certainly need one or two of them.
+          install. You need one or two of them.
         </p>
       </header>
 
@@ -158,9 +158,9 @@ export function Mapping({ config }: { config: UIConfig }) {
       <Section title="How they find each other" aside="Outputs and dependencies">
         <div className="prose">
           <p>
-            Components are not islands. Each one publishes outputs, and any other
-            component can interpolate them. That is the whole wiring model —
-            there is no service mesh to configure and no registry to run.
+            Every component publishes outputs, and any other component can
+            interpolate them. That is the whole wiring model: no service mesh
+            to configure, no registry to run.
           </p>
           <p>
             The Helm values file for this app names the two image components
@@ -189,10 +189,10 @@ ui:
         </div>
         <Callout label="The three-part rule, applied">
           Of the five component types here, a first app config needs exactly one.
-          Pick the type that matches how you already ship — a chart, a
-          pre-built image, a Terraform module — write the sandbox, and the runner
-          does the rest. The other four are here because this app exists to show
-          them, not because you need them.
+          Pick the type that matches how you already ship (a chart, a prebuilt
+          image, a Terraform module), write the sandbox, and the runner
+          does the rest. The other four are here because this app exists to
+          show them.
         </Callout>
         {config.links.components && (
           <div className="row" style={{ marginTop: 24 }}>

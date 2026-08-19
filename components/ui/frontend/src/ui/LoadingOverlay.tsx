@@ -1,6 +1,9 @@
 import { useEffect, useState, useSyncExternalStore } from 'react'
 import { bootSettled, endBoot, subscribeBoot } from '../lib/boot'
 import { nuonMarkPath } from './Primitives'
+// The white Nuon wordmark PNG, transparent padding trimmed. Vite inlines it
+// as a data URI (see assetsInlineLimit in vite.config.ts).
+import logoWhite from './nuon-logo-white.png'
 
 /* ============================================================
    Boot loading overlay, ported from labs.nuon.co (nuonco/mono,
@@ -24,7 +27,20 @@ const FADE_MS = 700
 const SLICES = 14
 const SLICE_GAP = 3.2
 
-function LogoSlices() {
+/**
+ * The CSS-3D dot-matrix rendition of the Nuon mark: one dot-pattern SVG per
+ * slice, fanned out along Z. Shared between the boot overlay and the ambient
+ * mark docked on the right of the app itself, so the art exists once. The
+ * pattern id is a parameter because both can be mounted at the same time
+ * during boot.
+ */
+export function MarkStack({
+  patternId,
+  sliceClassName,
+}: {
+  patternId: string
+  sliceClassName: string
+}) {
   const slices = []
   for (let i = 0; i < SLICES; i++) {
     const z = (i - (SLICES - 1) / 2) * SLICE_GAP
@@ -32,21 +48,39 @@ function LogoSlices() {
     slices.push(
       <svg
         key={i}
-        className="loading__slice"
+        className={sliceClassName}
         viewBox="0 0 23.119 32"
         style={{ transform: `translateZ(${z}px)` }}
         aria-hidden="true"
       >
         <path
           d={nuonMarkPath}
-          fill="url(#loading-dots)"
+          fill={`url(#${patternId})`}
           fillRule="nonzero"
           opacity={face ? 1 : 0.3}
         />
       </svg>,
     )
   }
-  return <>{slices}</>
+
+  return (
+    <>
+      {/* Dot-matrix fill shared by every slice. */}
+      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
+        <defs>
+          <pattern
+            id={patternId}
+            width="0.55"
+            height="0.55"
+            patternUnits="userSpaceOnUse"
+          >
+            <circle cx="0.275" cy="0.275" r="0.16" fill="#4c9fff" />
+          </pattern>
+        </defs>
+      </svg>
+      {slices}
+    </>
+  )
 }
 
 export function LoadingOverlay() {
@@ -87,27 +121,14 @@ export function LoadingOverlay() {
     >
       <div className="loading__glow" />
       <div className="loading__grain" />
-      {/* Dot-matrix fill shared by every logo slice. */}
-      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
-        <defs>
-          <pattern
-            id="loading-dots"
-            width="0.55"
-            height="0.55"
-            patternUnits="userSpaceOnUse"
-          >
-            <circle cx="0.275" cy="0.275" r="0.16" fill="#4c9fff" />
-          </pattern>
-        </defs>
-      </svg>
       <div className="loading__stage">
         <div className="loading__logo">
-          <LogoSlices />
+          <MarkStack patternId="loading-dots" sliceClassName="loading__slice" />
         </div>
       </div>
       <div className="loading__center">
-        <div className="loading__title">Kitchen sink</div>
-        <div className="loading__sub">Reading the live install</div>
+        <img className="loading__mark" src={logoWhite} alt="Nuon" />
+        <div className="loading__title">Kitchen Sink</div>
       </div>
     </div>
   )

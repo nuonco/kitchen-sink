@@ -1,7 +1,9 @@
 import { useUIConfig } from './lib/api'
 import { segments, useNavigate, useRoute } from './lib/router'
+import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { Icon, NuonMark, OutLink } from './ui/Primitives'
+import { Customize } from './views/Customize'
 import { DayTwo } from './views/DayTwo'
 import { Deployed } from './views/Deployed'
 import { Landing } from './views/Landing'
@@ -54,11 +56,14 @@ export default function App() {
     view = <DayTwo config={config} feature={parts[1]} />
   } else if (parts[0] === 'tictactoe') {
     view = <TicTacToe config={config} />
+  } else if (parts[0] === 'customize') {
+    view = <Customize config={config} flow={parts[1]} />
   }
 
   return (
     <div className="shell">
       <LoadingOverlay />
+      <AmbientMark />
       <TopBar installID={config.install_id} dashboardURL={config.links.install} />
       <main className="main">{view}</main>
       <footer className="footer">
