@@ -147,10 +147,10 @@ export function TicTacToe({ config }: { config: UIConfig }) {
 
   return (
     <>
-      <BackLink to="/">All paths</BackLink>
+      <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
         <Eyebrow>Toggleable component</Eyebrow>
-        <h1>One config, not every install runs all of it.</h1>
+        <h1>One config, per-install features.</h1>
         <p className="lede">
           The <span className="mono">tictactoe</span> component is deployed only
           where it has been switched on. This page reads the live cluster to

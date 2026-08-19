@@ -226,7 +226,7 @@ export function LoadState({
           <p className="small">
             The introspection API answered with an error. Its handlers surface
             the underlying failure directly, so the detail below is the real
-            cause — usually a missing Kubernetes permission.
+            cause, usually a missing Kubernetes permission.
           </p>
         )}
         <p className="status__detail" style={{ marginTop: 8 }}>

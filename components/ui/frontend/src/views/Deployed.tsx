@@ -227,7 +227,7 @@ function ThisNamespace({ config }: { config: UIConfig }) {
             </div>
             <Callout label="Where the secret values went">
               This endpoint returns whole Kubernetes Secret objects, values
-              included, and the introspection API has no authentication — while
+              included, and the introspection API has no authentication, while
               this page is published on the install&rsquo;s internet-facing load
               balancer. So the server behind this UI strips every secret value
               out of the response before it reaches your browser, and forwards
@@ -310,7 +310,7 @@ function HelmReleases({ config }: { config: UIConfig }) {
           {!hasThisApp && (
             <Callout label="Why this app is missing from the list">
               This app&rsquo;s own release is stored with Helm&rsquo;s{' '}
-              <code>configmap</code> driver —{' '}
+              <code>configmap</code> driver:{' '}
               <span className="mono">components/chart/nuon.toml</span> sets{' '}
               <span className="mono">storage_driver = &quot;configmap&quot;</span>, and{' '}
               <span className="mono">runner.toml</span> sets{' '}
@@ -350,7 +350,7 @@ function PodEnvironment() {
     <Section title="What the pod actually sees" aside="GET /introspect/env">
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
         The API pod&rsquo;s own environment. This is the honest answer to &ldquo;what does
-        Nuon inject into my container?&rdquo; — and the answer is: exactly what your
+        Nuon inject into my container?&rdquo; The answer: exactly what your
         chart passes it, and nothing else. Any value whose name looks like a
         credential is replaced before the response leaves the cluster.
       </p>
@@ -379,12 +379,12 @@ function PodEnvironment() {
             <h3 style={{ marginBottom: 12 }}>Nuon values forwarded into the pod</h3>
             {nuonKeys.length === 0 ? (
               <Callout label="Empty, and that is the lesson">
-                Nuon interpolates install values —{' '}
-                <span className="mono">{'{{.nuon.install.id}}'}</span>,{' '}
+                Nuon interpolates install values, like{' '}
+                <span className="mono">{'{{.nuon.install.id}}'}</span> and{' '}
                 <span className="mono">
                   {'{{.nuon.install.sandbox.outputs...}}'}
-                </span>{' '}
-                — into your Helm values file at deploy time. Getting them into a
+                </span>
+                , into your Helm values file at deploy time. Getting them into a
                 container is still your chart&rsquo;s job. This app&rsquo;s API deployment
                 forwards none of them, so its environment has none. The UI you&rsquo;re
                 reading does forward them, which is how this page knows which
@@ -426,9 +426,9 @@ function PodEnvironment() {
 export function Deployed({ config }: { config: UIConfig }) {
   return (
     <>
-      <BackLink to="/">All paths</BackLink>
+      <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
-        <Eyebrow>Path 01</Eyebrow>
+        <Eyebrow>Deep dive</Eyebrow>
         <h1>What did Nuon actually deploy?</h1>
         <p className="lede">
           Four live reads against this install. Each one is a summary of what the
