@@ -45,40 +45,20 @@ branch = "ms/onboarding-edit"
 contents = "./chart/values.yaml"`,
   },
   {
-    type: 'docker_build',
-    what:
-      'Builds a container image from a Dockerfile in your repo, inside the customer account, and pushes it to a registry Nuon manages there. No image ever crosses accounts.',
-    here:
-      'img_ui — this page. The build runs on every deploy from components/ui, so editing the frontend is enough to ship a new UI.',
-    file: 'components/images/ui.toml',
-    toml: `name     = "img_ui"
-type     = "docker_build"
-var_name = "img_ui"
-
-dockerfile    = "Dockerfile"
-build_timeout = "30m"
-
-[public_repo]
-repo      = "nuonco/kitchen-sink"
-directory = "components/ui"
-branch    = "ms/onboarding-edit"`,
-  },
-  {
     type: 'container_image',
     what:
       'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
     here:
-      'img_api — the introspection API, pulled from a private ECR repository using an IAM role Nuon assumes.',
-    file: 'components/images/api.toml',
-    toml: `name     = "img_api"
+      'img_ui (this page) and img_api (the introspection API) — CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_api_two shows the private-registry variant, pulled with an IAM role Nuon assumes.',
+    file: 'components/images/ui.toml',
+    toml: `name     = "img_ui"
 type     = "container_image"
-var_name = "img_api"
+var_name = "img_ui"
 
-[aws_ecr]
-image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-app"
-tag          = "2ab4b6587ee5-wip20260804004838"
-region       = "us-west-2"
-iam_role_arn = "arn:aws:iam::431927561584:role/nuon-ecr-access"`,
+[public]
+image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-ui"
+# CI stamps the pinned tag on every image build
+tag       = "sha-…"`,
   },
   {
     type: 'terraform_module',
@@ -155,12 +135,12 @@ export function Mapping({ config }: { config: UIConfig }) {
         <h1>How does my product map onto this?</h1>
         <p className="lede">
           A component is one deployable piece of your product, described by a
-          small TOML file in your repo. There are six kinds in play in this
+          small TOML file in your repo. There are five kinds in play in this
           install. You almost certainly need one or two of them.
         </p>
       </header>
 
-      <Section title="The component types" aside="Six of them, in this app">
+      <Section title="The component types" aside="Five of them, in this app">
         <div className="maps">
           {types.map((t) => (
             <article className="card" key={t.type}>
@@ -184,8 +164,8 @@ export function Mapping({ config }: { config: UIConfig }) {
           </p>
           <p>
             The Helm values file for this app names the two image components
-            directly, and Nuon fills in the repository and tag that the build
-            produced in <em>this</em> customer&rsquo;s account:
+            directly, and Nuon fills in the repository and tag of the
+            CI-published image it synced into <em>this</em> install:
           </p>
         </div>
         <CodeBlock
@@ -202,17 +182,17 @@ ui:
         <div className="prose" style={{ marginTop: 24 }}>
           <p>
             <code>dependencies = ["img_api", "img_ui"]</code> in the chart&rsquo;s TOML
-            is what makes the ordering safe: the images build before the chart
+            is what makes the ordering safe: the images sync before the chart
             deploys. The load balancer component depends on the chart, the
             certificate on nothing, and Nuon works out the rest.
           </p>
         </div>
         <Callout label="The three-part rule, applied">
-          Of the six component types here, a first app config needs exactly one.
+          Of the five component types here, a first app config needs exactly one.
           Pick the type that matches how you already ship — a chart, a
-          Dockerfile, a Terraform module — write the sandbox, and the runner does
-          the rest. The other five are here because this app exists to show them,
-          not because you need them.
+          pre-built image, a Terraform module — write the sandbox, and the runner
+          does the rest. The other four are here because this app exists to show
+          them, not because you need them.
         </Callout>
         {config.links.components && (
           <div className="row" style={{ marginTop: 24 }}>

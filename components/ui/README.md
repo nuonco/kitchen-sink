@@ -52,8 +52,10 @@ above the install facts and dashboard links are simply absent.
 
 ## Deploying
 
-`components/images/ui.toml` is a `docker_build` component pointing at this
-directory, so an edit here ships on the next deploy. Read the comment at the top
-of the `Dockerfile` before changing it: the runner builds with kaniko, which has
-been seen reusing a polluted filesystem, so every stage wipes the directory it
-owns before writing to it.
+`components/images/ui.toml` is a `container_image` component pulling a
+CI-published image from Nuon's public ECR gallery. Pushes touching this
+directory are built and published by `.github/workflows/build-images.yaml`,
+which then stamps the new tag into `components/images/ui.toml`; that stamp
+commit is what starts the staged rollout. Read the comment at the top of the
+`Dockerfile` before changing it: it is written defensively against cache reuse,
+so every stage wipes the directory it owns before writing to it.

@@ -47,7 +47,7 @@ const paths = [
     icon: 'puzzle-piece',
     question: 'How does my product map onto this?',
     body:
-      'The component types you can build an app config from, each shown with the real thing this app uses it for — a Helm chart, a Docker build, a prebuilt image, Terraform, Pulumi, raw manifests.',
+      'The component types you can build an app config from, each shown with the real thing this app uses it for — a Helm chart, prebuilt images, Terraform, Pulumi, raw manifests.',
     cta: 'See the component types',
   },
   {
