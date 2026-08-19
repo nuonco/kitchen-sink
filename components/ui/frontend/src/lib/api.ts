@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { trackBoot } from './boot'
 
 /** Every introspection endpoint wraps its payload the same way. */
 export interface Envelope<T> {
@@ -55,7 +56,7 @@ export function useIntrospect<T>(path: string): Loadable<Envelope<T>> {
     let live = true
     setResult({ state: 'loading' })
 
-    get<T>(path)
+    trackBoot(get<T>(path))
       .then((value) => {
         if (live) setResult({ state: 'ok', value })
       })
@@ -171,7 +172,7 @@ export function useUIConfig(): UIConfig {
 
   useEffect(() => {
     let live = true
-    fetch('/api/ui-config', { headers: { Accept: 'application/json' } })
+    trackBoot(fetch('/api/ui-config', { headers: { Accept: 'application/json' } }))
       .then((res) => (res.ok ? res.json() : emptyConfig))
       .then((value: UIConfig) => {
         if (live) setConfig({ ...value, links: value.links ?? {} })
