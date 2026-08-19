@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import {
   countReady,
+  hasTicTacToe,
   useIntrospect,
   type KubeResponse,
   type NamespaceResponse,
@@ -77,6 +78,8 @@ export function Landing({ config }: { config: UIConfig }) {
   const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
   const podSummary =
     ns.state === 'ok' ? `${countReady(pods)} / ${pods.length}` : undefined
+  const tictactoe =
+    ns.state === 'ok' && hasTicTacToe(ns.value.response.services ?? [])
 
   return (
     <>
@@ -258,6 +261,31 @@ export function Landing({ config }: { config: UIConfig }) {
               </span>
             </button>
           ))}
+          <button
+            className={tictactoe ? 'path' : 'path path--locked'}
+            onClick={() => navigate('/tictactoe')}
+          >
+            <span className="path__icon">
+              <Icon name={tictactoe ? 'grid-four' : 'lock'} />
+            </span>
+            <span className="path__q">How do optional features ship?</span>
+            <span className="path__body">
+              A toggleable component: in the config for every install, deployed
+              only where it&rsquo;s switched on. Here the feature is a game of
+              tic-tac-toe, and this tile is read from the cluster like
+              everything else.
+            </span>
+            {tictactoe ? (
+              <span className="path__cta">
+                Play tic-tac-toe <Icon name="arrow-right" />
+              </span>
+            ) : (
+              <span className="path__lock">
+                <Icon name="lock" /> Not included in this install. Enable the
+                tictactoe component to unlock it.
+              </span>
+            )}
+          </button>
         </div>
       </section>
 

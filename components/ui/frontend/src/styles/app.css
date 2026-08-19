@@ -1155,6 +1155,138 @@ pre.raw {
 }
 
 /* ============================================================
+   Tic-tac-toe (the toggleable component demo)
+   ============================================================ */
+
+/* The landing tile's locked state: still clickable (it leads to the pitch),
+   but visibly not part of the install. */
+.path--locked {
+  border-style: dashed;
+  background: var(--surface-sunken);
+}
+
+.path--locked:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-sunken);
+}
+
+.path--locked .path__icon {
+  border-color: var(--border-subtle);
+  background: var(--surface-hover);
+  color: var(--text-tertiary);
+}
+
+.path--locked .path__q,
+.path--locked .path__body {
+  color: var(--text-tertiary);
+}
+
+.path__lock {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+}
+
+.path__lock .icon {
+  flex: none;
+  font-size: 14px;
+  margin-top: 1px;
+}
+
+.ttt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-8) var(--space-6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+
+.ttt__status {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.ttt__board {
+  display: grid;
+  grid-template-columns: repeat(3, 88px);
+  gap: var(--space-2);
+}
+
+.ttt__cell {
+  height: 88px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: var(--text-title);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard);
+}
+
+.ttt__cell:hover:not(:disabled) {
+  border-color: var(--accent-dim);
+  background: var(--surface-raised);
+}
+
+.ttt__cell:disabled {
+  cursor: default;
+}
+
+.ttt__cell--win {
+  border-color: var(--accent-dim);
+  background: var(--accent-wash-strong);
+  color: var(--accent);
+}
+
+/* The upsell shown at #/tictactoe while the component is disabled */
+.ttt-locked {
+  padding: var(--space-8) var(--space-6);
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+
+.ttt-locked__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-hover);
+  color: var(--text-tertiary);
+  font-size: 20px;
+  margin-bottom: var(--space-4);
+}
+
+.ttt-locked__title {
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
+  font-weight: var(--weight-stronger);
+  letter-spacing: var(--tracking-normal);
+  margin-bottom: var(--space-2);
+}
+
+.ttt-locked__body {
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+  max-width: 68ch;
+}
+
+/* ============================================================
    Responsive
    ============================================================ */
 

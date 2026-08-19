@@ -188,6 +188,15 @@ export function useUIConfig(): UIConfig {
   return config
 }
 
+/**
+ * The marker Service the toggleable `tictactoe` component deploys. Its
+ * presence in the namespace is how the UI knows that component is enabled on
+ * this install.
+ */
+export function hasTicTacToe(services: ServiceSummary[]): boolean {
+  return services.some((svc) => svc.metadata?.name === 'kitchen-sink-tictactoe')
+}
+
 export function countReady(pods: PodSummary[]): number {
   return pods.filter((pod) => {
     const statuses = pod.status?.containerStatuses ?? []
