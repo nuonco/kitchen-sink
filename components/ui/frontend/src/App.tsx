@@ -1,5 +1,6 @@
 import { useUIConfig } from './lib/api'
 import { segments, useNavigate, useRoute } from './lib/router'
+import { LoadingOverlay } from './ui/LoadingOverlay'
 import { Icon, NuonMark, OutLink } from './ui/Primitives'
 import { DayTwo } from './views/DayTwo'
 import { Deployed } from './views/Deployed'
@@ -57,6 +58,7 @@ export default function App() {
 
   return (
     <div className="shell">
+      <LoadingOverlay />
       <TopBar installID={config.install_id} dashboardURL={config.links.install} />
       <main className="main">{view}</main>
       <footer className="footer">
