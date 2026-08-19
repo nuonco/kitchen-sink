@@ -19,6 +19,15 @@ branch = "ms/onboarding-edit"
 # and layers it over the chart defaults, so there's a single values file.
 contents = "./chart/values.yaml"
 
+[values]
+# CI's stamp commit (build-images.yaml) bumps this in the same commit that
+# stamps components/images/*.toml, so an image-tag bump changes THIS
+# component's config too and the rollout redeploys the chart. Without it the
+# chart is classified "unchanged" and skipped, leaving installs on the old
+# baked-in tags — `dependencies` above only orders deploys, it never cascades
+# them. Surfaced as the nuon.co/image-stamp annotation on the ConfigMap.
+image_stamp = "sha-060f0ff"
+
 [[operation_roles]]
 operation = "deploy"
 role = "setup"
