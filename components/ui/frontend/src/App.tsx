@@ -5,6 +5,7 @@ import { DayTwo } from './views/DayTwo'
 import { Deployed } from './views/Deployed'
 import { Landing } from './views/Landing'
 import { Mapping } from './views/Mapping'
+import { TicTacToe } from './views/TicTacToe'
 
 function TopBar({
   installID,
@@ -50,6 +51,8 @@ export default function App() {
     view = <Mapping config={config} />
   } else if (parts[0] === 'day2') {
     view = <DayTwo config={config} feature={parts[1]} />
+  } else if (parts[0] === 'tictactoe') {
+    view = <TicTacToe config={config} />
   }
 
   return (
