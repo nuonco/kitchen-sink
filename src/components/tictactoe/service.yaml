@@ -1,0 +1,23 @@
+# Marker Service for the toggleable tictactoe component. The UI checks the
+# kitchen-sink namespace for a Service with this name and unlocks the game when
+# it exists. It selects the UI pods (the game is client-side, served by the UI
+# image already running) so the Service has real endpoints.
+apiVersion: v1
+kind: Service
+metadata:
+  name: kitchen-sink-tictactoe
+  labels:
+    app.kubernetes.io/name: kitchen-sink-tictactoe
+    app.kubernetes.io/part-of: kitchen-sink
+    nuon.co/purpose: feature-flag-marker
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: kitchen-sink-ui
+    app.kubernetes.io/component: ui
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: kitchen-sink
