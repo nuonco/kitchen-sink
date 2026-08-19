@@ -3,10 +3,14 @@ name: Build and publish images
 # Same pattern as nuonco/uptime-monitor's build-images.yaml: build on source
 # changes, publish to Nuon's public ECR gallery via the shared org OIDC role.
 # One addition: a stamp job pins the new immutable tag in
-# components/images/*.toml and pushes that commit — which is what triggers the
-# staged Nuon rollout (see triggers.toml). The stamp commit only touches
-# components/images/, which is outside this workflow's path filters, so it
-# cannot retrigger this workflow.
+# components/images/*.toml — plus the chart's `image_stamp` value, so the
+# chart component's config changes too and the rollout redeploys it (the
+# chart bakes image tags at render time; without this it's classified
+# "unchanged" and skipped, serving stale images) — and pushes that commit,
+# which is what triggers the staged Nuon rollout (see triggers.toml). The
+# stamp commit only touches components/images/ and components/chart/nuon.toml,
+# both outside this workflow's path filters, so it cannot retrigger this
+# workflow.
 
 on:
   push:
@@ -85,9 +89,10 @@ jobs:
         run: |
           TAG="sha-${GITHUB_SHA::7}"
           sed -i "s/^tag       = \".*\"/tag       = \"${TAG}\"/" components/images/api.toml components/images/ui.toml
+          sed -i "s/^image_stamp = \".*\"/image_stamp = \"${TAG}\"/" components/chart/nuon.toml
           git diff --quiet && echo "tags unchanged" && exit 0
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add components/images/api.toml components/images/ui.toml
+          git add components/images/api.toml components/images/ui.toml components/chart/nuon.toml
           git commit -m "chore: stamp image tags to ${TAG}"
           git push
