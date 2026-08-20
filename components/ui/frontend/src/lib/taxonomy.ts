@@ -5,13 +5,13 @@
  *
  * `mode` is what a tile's badge says before anyone clicks in:
  * - live: the page reads this install, right now
- * - simulation: the page walks the flow in the browser; nothing real runs
- * - guide: the page explains real config; there is nothing to run
- * The simulation badges are transitional scaffolding: they go away when the
- * simulated flows are replaced with real ones.
+ * - guide: the page explains real config; there is nothing to read live
+ * Nothing in this app is a mock or a rehearsal: the day-2 pages hand you the
+ * real CLI commands (with this install's own ids filled in) and show the
+ * cluster-side evidence live where the operation has one.
  */
 
-export type Mode = 'live' | 'simulation' | 'guide'
+export type Mode = 'live' | 'guide'
 
 export interface Capability {
   to: string
@@ -69,8 +69,8 @@ export const categories: Category[] = [
         to: '/customize/branches',
         icon: 'git-branch',
         title: 'Ship through app branches',
-        desc: 'Walk the staged rollout that ships changes group by group, and the rollback.',
-        mode: 'simulation',
+        desc: 'Run a real staged rollout from your terminal and watch the image tags move here.',
+        mode: 'live',
       },
     ],
   },
@@ -84,15 +84,15 @@ export const categories: Category[] = [
         to: '/customize/runbooks',
         icon: 'book-open',
         title: 'Run runbooks',
-        desc: 'Step through the four runbooks this app ships and see which ones apply changes.',
-        mode: 'simulation',
+        desc: 'Run the four real runbooks this app ships; the badges say which ones apply changes.',
+        mode: 'live',
       },
       {
         to: '/customize/actions',
         icon: 'lightning',
         title: 'Run adhoc actions',
-        desc: 'Walk the four actions the runner executes, with a sample transcript.',
-        mode: 'simulation',
+        desc: 'Fire the real actions the runner executes, and watch the pod evidence live.',
+        mode: 'live',
       },
       {
         to: '/customize/health',
@@ -113,8 +113,15 @@ export const categories: Category[] = [
         to: '/customize/roles',
         icon: 'lock',
         title: 'Scope operation roles',
-        desc: 'The per-operation IAM roles, the break-glass role, and the OPA guardrails.',
-        mode: 'guide',
+        desc: 'The per-operation IAM roles, the break-glass role, and the OPA guardrails — with the real proof one action run away.',
+        mode: 'live',
+      },
+      {
+        to: '/audit-log',
+        icon: 'toggle',
+        title: 'Sell an entitlement',
+        desc: 'The audit-log exporter is gated per install, the way a plan tier gates a feature. Flip it on and watch this switch move.',
+        mode: 'live',
       },
     ],
   },
@@ -129,6 +136,21 @@ export const categories: Category[] = [
         icon: 'gauge',
         title: 'Wire up triggers',
         desc: 'How the actions this app ships decide when to run.',
+        mode: 'guide',
+      },
+    ],
+  },
+  {
+    key: 'drive',
+    title: 'Drive it from your terminal',
+    blurb: 'Every operation above is one CLI command. Run them yourself, or hand the whole tour to a coding agent.',
+    dayTwo: true,
+    items: [
+      {
+        to: '/customize/agent',
+        icon: 'caret-right',
+        title: 'The command menu & agent prompt',
+        desc: 'The day-2 commands with this install’s ids filled in, and one copy-paste prompt for Claude Code or Codex.',
         mode: 'guide',
       },
     ],

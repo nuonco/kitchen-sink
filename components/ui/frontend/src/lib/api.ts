@@ -285,6 +285,18 @@ export function hasTicTacToe(services: ServiceSummary[]): boolean {
   return services.some((svc) => svc.metadata?.name === 'kitchen-sink-tictactoe')
 }
 
+/** The marker Service name the toggleable `audit_log_exporter` deploys. */
+export const AUDIT_LOG_SERVICE = 'kitchen-sink-audit-log-exporter'
+
+/**
+ * Same mechanic as hasTicTacToe, for the audit-log exporter: the toggleable
+ * component deploys one marker Service, and its presence in the namespace is
+ * how the UI knows the entitlement is switched on for this install.
+ */
+export function hasAuditLogExporter(services: ServiceSummary[]): boolean {
+  return services.some((svc) => svc.metadata?.name === AUDIT_LOG_SERVICE)
+}
+
 export function countReady(pods: PodSummary[]): number {
   return pods.filter((pod) => {
     const statuses = pod.status?.containerStatuses ?? []

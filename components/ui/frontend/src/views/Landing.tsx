@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   countReady,
+  hasAuditLogExporter,
   hasTicTacToe,
   useIntrospect,
   useIntrospectPoll,
@@ -15,7 +16,7 @@ import {
   repoName,
 } from '../lib/config-data.gen'
 import { categories } from '../lib/taxonomy'
-import { CapabilityGroups } from '../ui/CapabilityGrid'
+import { CapabilityGroups, type SwitchStates } from '../ui/CapabilityGrid'
 import { Eyebrow, Icon, OutLink } from '../ui/Primitives'
 
 /* ============================================================
@@ -265,8 +266,8 @@ function ShipStrip({ config }: { config: UIConfig }) {
 /* ============================================================
    The customize page: the tour's destination, and the returning-visitor
    front door. The tiles come from the one taxonomy in lib/taxonomy.ts,
-   grouped by category, each badged live, simulation, or guide so nobody
-   mistakes a browser demo for the real operation.
+   grouped by category, each badged live or guide so nobody has to click in
+   to find out which pages read the install.
    ============================================================ */
 
 export function Landing({ config }: { config: UIConfig }) {
@@ -279,28 +280,43 @@ export function Landing({ config }: { config: UIConfig }) {
   const namespace = config.namespace ?? 'kitchen-sink'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
 
-  // The namespace read doubles as the tictactoe watcher: while the hub is on
-  // screen and the component is still off, keep re-reading so flipping it on
-  // in the dashboard flips the tile's switch here without a reload.
+  // The namespace read doubles as the toggleable-component watcher: while the
+  // hub is on screen and either component is still off, keep re-reading so
+  // flipping one on in the dashboard flips its tile's switch here without a
+  // reload.
   const [tictactoe, setTictactoe] = useState(false)
   const [tictactoeFlipped, setTictactoeFlipped] = useState(false)
-  const sawOff = useRef(false)
+  const [auditLog, setAuditLog] = useState(false)
+  const [auditLogFlipped, setAuditLogFlipped] = useState(false)
+  const sawTictactoeOff = useRef(false)
+  const sawAuditLogOff = useRef(false)
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     20_000,
-    step === 'explore' && !tictactoe,
+    step === 'explore' && !(tictactoe && auditLog),
   )
 
   useEffect(() => {
     if (ns.state !== 'ok') return
-    const found = hasTicTacToe(ns.value.response.services ?? [])
-    if (found) {
-      if (sawOff.current) setTictactoeFlipped(true)
+    const services = ns.value.response.services ?? []
+    if (hasTicTacToe(services)) {
+      if (sawTictactoeOff.current) setTictactoeFlipped(true)
       setTictactoe(true)
     } else {
-      sawOff.current = true
+      sawTictactoeOff.current = true
+    }
+    if (hasAuditLogExporter(services)) {
+      if (sawAuditLogOff.current) setAuditLogFlipped(true)
+      setAuditLog(true)
+    } else {
+      sawAuditLogOff.current = true
     }
   }, [ns])
+
+  const switches: SwitchStates = {
+    '/tictactoe': { on: tictactoe, flipped: tictactoeFlipped },
+    '/audit-log': { on: auditLog, flipped: auditLogFlipped },
+  }
 
   const namespaceCount =
     kube.state === 'ok' ? kube.value.response.namespaces?.length : undefined
@@ -372,9 +388,10 @@ export function Landing({ config }: { config: UIConfig }) {
           <Eyebrow>Kitchen sink &middot; live install</Eyebrow>
           <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
           <p className="hero__lede">
-            Each tile says what it is. Live pages read this install right now.
-            Simulations run in the browser only; the real operation runs from
-            the Nuon dashboard. Guides explain the config this app ships. Pick
+            Each tile says what it is. Live pages read this install right now;
+            guides explain the config this app ships. The operations themselves
+            run from your terminal and dashboard &mdash; every page hands you
+            the exact commands, with this install&rsquo;s ids filled in. Pick
             any order.
           </p>
           <div className="row" style={{ marginTop: 20 }}>
@@ -391,8 +408,7 @@ export function Landing({ config }: { config: UIConfig }) {
         <div style={{ marginTop: 32 }}>
           <CapabilityGroups
             categories={categories.filter((c) => !c.dayTwo)}
-            tictactoe={tictactoe}
-            tictactoeFlipped={tictactoeFlipped}
+            switches={switches}
           />
         </div>
 
@@ -407,7 +423,7 @@ export function Landing({ config }: { config: UIConfig }) {
 
         <CapabilityGroups
           categories={categories.filter((c) => c.dayTwo)}
-          tictactoe={tictactoe}
+          switches={switches}
         />
 
         {config.links.install && (
