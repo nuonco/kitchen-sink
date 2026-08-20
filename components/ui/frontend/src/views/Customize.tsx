@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   countReady,
+  hasAuditLogExporter,
+  hasTicTacToe,
   useIntrospect,
+  useIntrospectPoll,
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
@@ -13,16 +16,19 @@ import {
   guardrails,
   installGroups,
   lifecycleHooksToml,
+  repoName,
   roles,
   runbooks,
 } from '../lib/config-data.gen'
 import { categories } from '../lib/taxonomy'
-import { CapabilityGroups } from '../ui/CapabilityGrid'
+import { CapabilityGroups, type SwitchStates } from '../ui/CapabilityGrid'
 import {
   BackLink,
   Badge,
   Callout,
   CodeBlock,
+  CommandBlock,
+  CopyButton,
   Eyebrow,
   Icon,
   LoadState,
@@ -36,26 +42,12 @@ import {
    roles, guardrails) come from lib/config-data.gen.ts, generated at build
    time from the repo's real TOML, so they cannot drift from the config.
 
-   The branches, runbooks, and actions pages SIMULATE their operation in the
-   browser; nothing here calls a mutating API. Each one says so in a banner
-   before any control. The simulations are transitional and will be replaced
-   by real, dashboard-backed views.
+   Nothing on these pages is a mock or a rehearsal. The interaction model is
+   deliberate and permanent: you act in your own terminal and your own Nuon
+   dashboard; this app hands you the exact commands (with this install's ids
+   filled in) and shows the cluster-side evidence live where the operation
+   has one.
    ============================================================ */
-
-function SimBanner() {
-  return (
-    <div className="demo-banner">
-      <Badge tone="warning" dot>
-        simulation
-      </Badge>
-      <span>
-        The controls below simulate the operation in the browser. Nothing on
-        this page changes the real install; the real version runs from the
-        Nuon dashboard and CLI.
-      </span>
-    </div>
-  )
-}
 
 function FlowHeader({
   eyebrow,
@@ -75,38 +67,117 @@ function FlowHeader({
   )
 }
 
+/** The install/app ids for command interpolation, with honest placeholders
+    when this app was started without them (local dev). */
+const installIdOf = (config: UIConfig) => config.install_id ?? '<your-install-id>'
+const appIdOf = (config: UIConfig) => config.app_id ?? '<your-app-id>'
+
+/* ============================================================
+   The live-evidence register: the pods of this namespace, re-read on a short
+   interval, so a mutating operation run from the terminal is visible right
+   here — image tags move on a deploy or rollback, names change and ages
+   reset on a rollout restart.
+   ============================================================ */
+
+const EVIDENCE_POLL_MS = 10_000
+
+function podAge(ts?: string): string {
+  if (!ts) return '—'
+  const ms = Date.now() - new Date(ts).getTime()
+  if (!Number.isFinite(ms) || ms < 0) return '—'
+  const minutes = Math.floor(ms / 60_000)
+  if (minutes < 1) return '<1m'
+  if (minutes < 60) return `${minutes}m`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 48) return `${hours}h ${minutes % 60}m`
+  return `${Math.floor(hours / 24)}d`
+}
+
+function imageTag(image?: string): string {
+  if (!image) return '—'
+  const tail = image.split('/').pop() ?? image
+  const i = tail.lastIndexOf(':')
+  return i === -1 ? 'latest' : tail.slice(i + 1)
+}
+
+function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {
+  const namespace = config.namespace ?? 'kitchen-sink'
+  const ns = useIntrospectPoll<NamespaceResponse>(
+    `/api/introspect/namespace/${namespace}`,
+    EVIDENCE_POLL_MS,
+    true,
+  )
+  const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
+
+  return (
+    <section className="section">
+      <div className="section__head">
+        <h2 className="section__title">What you&rsquo;ll see, live</h2>
+        <div className="subtext muted">
+          GET /introspect/namespace/{namespace} · re-read every{' '}
+          {EVIDENCE_POLL_MS / 1000}s
+        </div>
+      </div>
+      <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
+        {lead}
+      </p>
+      <LoadState result={ns} what="the namespace" />
+      {ns.state === 'ok' && (
+        <>
+          <div className="row" style={{ marginBottom: 12 }}>
+            <Badge tone="positive" dot>
+              live
+            </Badge>
+            <Badge tone="accent">
+              {countReady(pods)} of {pods.length} pods ready
+            </Badge>
+          </div>
+          <div className="table-wrap">
+            <table className="data">
+              <thead>
+                <tr>
+                  <th>Pod</th>
+                  <th>Image tag</th>
+                  <th>Age</th>
+                  <th>Phase</th>
+                  <th>Restarts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pods.map((pod, i) => {
+                  const statuses = pod.status?.containerStatuses ?? []
+                  const image =
+                    statuses[0]?.image ?? pod.spec?.containers?.[0]?.image
+                  const restarts = statuses.reduce(
+                    (sum, c) => sum + (c.restartCount ?? 0),
+                    0,
+                  )
+                  return (
+                    <tr key={pod.metadata?.name ?? i}>
+                      <td className="mono">{pod.metadata?.name}</td>
+                      <td className="mono subtext">{imageTag(image)}</td>
+                      <td className="mono subtext">
+                        {podAge(pod.metadata?.creationTimestamp)}
+                      </td>
+                      <td>
+                        <PhaseBadge phase={pod.status?.phase} />
+                      </td>
+                      <td>{restarts}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
 /* ============================================================
    Ship: app branches (branch.toml)
    ============================================================ */
-
-type GroupState = 'waiting' | 'planning' | 'approval' | 'deploying' | 'healthy'
-
-function groupBadge(state: GroupState) {
-  if (state === 'waiting') return <Badge>waiting</Badge>
-  if (state === 'planning')
-    return (
-      <Badge tone="warning" dot>
-        planning
-      </Badge>
-    )
-  if (state === 'approval')
-    return (
-      <Badge tone="accent" dot>
-        awaiting approval
-      </Badge>
-    )
-  if (state === 'deploying')
-    return (
-      <Badge tone="warning" dot>
-        deploying
-      </Badge>
-    )
-  return (
-    <Badge tone="positive" dot>
-      healthy
-    </Badge>
-  )
-}
 
 const groupNotes: Record<string, string> = {
   staging: 'use_for_previews: PR preview plans run here',
@@ -115,53 +186,13 @@ const groupNotes: Record<string, string> = {
 }
 
 function BranchesFlow({ config }: { config: UIConfig }) {
-  const [states, setStates] = useState<GroupState[]>(
-    installGroups.map(() => 'waiting'),
-  )
-  const [pushed, setPushed] = useState(false)
-  const timers = useRef<number[]>([])
-
-  useEffect(() => () => timers.current.forEach(clearTimeout), [])
-
-  const later = (ms: number, fn: () => void) => {
-    timers.current.push(window.setTimeout(fn, ms))
-  }
-
-  const setGroup = (i: number, state: GroupState) =>
-    setStates((prev) => prev.map((s, j) => (j === i ? state : s)))
-
-  const push = () => {
-    setPushed(true)
-    setStates(installGroups.map((_, i) => (i === 0 ? 'planning' : 'waiting')))
-    later(1300, () => setGroup(0, 'approval'))
-  }
-
-  const approve = (i: number) => {
-    setGroup(i, 'deploying')
-    later(1500, () => {
-      setGroup(i, 'healthy')
-      if (i + 1 < installGroups.length) {
-        setGroup(i + 1, 'planning')
-        later(1300, () => setGroup(i + 1, 'approval'))
-      }
-    })
-  }
-
-  const reset = () => {
-    timers.current.forEach(clearTimeout)
-    timers.current = []
-    setPushed(false)
-    setStates(installGroups.map(() => 'waiting'))
-  }
-
   return (
     <>
       <FlowHeader
         eyebrow="Ship · app branches"
         title="Ship through app branches"
-        lede={`This app's branch config connects git pushes to a staged rollout: every push to ${branchName} fetches the config at that commit, builds what changed, and rolls it across the install groups in order, pausing for an approval on each group's plan.`}
+        lede={`This app's branch config connects git pushes to a staged rollout: every push to ${branchName} fetches the config at that commit, builds what changed, and rolls it across the install groups in order, pausing for an approval on each group's plan. Below is the one command that runs it for real.`}
       />
-      <SimBanner />
 
       <div className="prose" style={{ marginTop: 24 }}>
         <p>
@@ -176,46 +207,21 @@ function BranchesFlow({ config }: { config: UIConfig }) {
 
       <section className="section">
         <div className="section__head">
-          <h2 className="section__title">The staged rollout, simulated</h2>
+          <h2 className="section__title">The staged rollout this config declares</h2>
           <div className="subtext muted">branch.toml · [[install_groups]]</div>
         </div>
-        <div className="row" style={{ marginBottom: 20 }}>
-          {!pushed ? (
-            <button className="btn btn--primary" onClick={push}>
-              Simulate a push to {branchName} <Icon name="arrow-right" />
-            </button>
-          ) : (
-            <button className="btn btn--secondary" onClick={reset}>
-              Reset the simulation
-            </button>
-          )}
-        </div>
         <div className="groups">
-          {installGroups.map((group, i) => (
-            <div
-              key={group.name}
-              className={
-                states[i] === 'waiting' ? 'group-card group-card--waiting' : 'group-card'
-              }
-            >
+          {installGroups.map((group) => (
+            <div key={group.name} className="group-card">
               <div className="group-card__head">
                 <span className="arch__num">0{group.order}</span>
                 <span className="group-card__name">{group.name}</span>
-                {groupBadge(states[i])}
               </div>
               <div className="group-card__selector mono">{group.selector}</div>
               <div className="group-card__note">
-                {groupNotes[group.name] ?? (group.preview ? 'PR preview plans run here' : '')}
+                {groupNotes[group.name] ??
+                  (group.preview ? 'PR preview plans run here' : '')}
               </div>
-              {states[i] === 'approval' && (
-                <button
-                  className="btn btn--primary btn--sm"
-                  style={{ marginTop: 12 }}
-                  onClick={() => approve(i)}
-                >
-                  Approve {group.name} (simulated)
-                </button>
-              )}
             </div>
           ))}
         </div>
@@ -229,11 +235,46 @@ function BranchesFlow({ config }: { config: UIConfig }) {
         </p>
       </section>
 
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">Ship a change, for real</h2>
+          <div className="subtext muted">from your own terminal</div>
+        </div>
+        <CommandBlock
+          label="1 · get the app config (skip if you already have a clone)"
+          command={`git clone https://github.com/${repoName} && cd ${repoName.split('/')[1] ?? 'kitchen-sink'}`}
+        />
+        <CommandBlock
+          label="2 · edit any file, then sync your local files and trigger the run"
+          command={`nuon sync --branch ${branchName}`}
+          note={
+            <>
+              This syncs your local files exactly as they are — even
+              uncommitted, no fork, no push — and triggers a real branch run
+              through the groups above. Add{' '}
+              <span className="mono">--preview</span> to plan every group with
+              nothing applied. (Pushing to the tracked branch is the other
+              path: the repo webhook starts the same run.)
+            </>
+          }
+        />
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          Each group&rsquo;s plan then holds for an approval, and that approval
+          is a person in the dashboard — there is deliberately no CLI command
+          for it.{' '}
+          {config.links.branches && (
+            <OutLink href={config.links.branches} variant="plain">
+              Watch the run and approve each group
+            </OutLink>
+          )}
+        </p>
+      </section>
+
       {(config.links.branches || config.links.versions) && (
         <Callout label="The real record, one link away">
-          This machinery genuinely runs for every push to{' '}
-          <span className="mono">{branchName}</span>; the simulation above is
-          only a rehearsal of what you would watch.{' '}
+          This machinery runs for every push to{' '}
+          <span className="mono">{branchName}</span> — including the one that
+          shipped the page you are reading.{' '}
           {config.links.branches && (
             <OutLink href={config.links.branches} variant="plain">
               Open the branch runs and pending approvals
@@ -248,25 +289,54 @@ function BranchesFlow({ config }: { config: UIConfig }) {
         </Callout>
       )}
 
+      <LiveEvidence
+        config={config}
+        lead={
+          <>
+            When the run&rsquo;s deploy reaches this install, the image tags
+            below flip to the new <span className="mono">sha-*</span> stamp and
+            the pods churn as the new version rolls in — no reload, this table
+            re-reads itself.
+          </>
+        }
+      />
+
       <CodeBlock
         label="branch.toml (the real config, comments stripped)"
         code={branchConfigAbridged}
       />
 
-      <Callout label="Rolling back an install">
-        A rollback is the same machinery in reverse: point the branch at the
-        last good commit (or revert the commit) and push. The staged rollout
-        replays with the old config, group by group, behind the same approvals.
-        For out-of-band damage there is the{' '}
-        <span className="mono">reconcile-drift</span> runbook, which plans the
-        chart first so the run records what drifted before anything is
-        re-applied.
-      </Callout>
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">Rolling back an install</h2>
+          <div className="subtext muted">app config versions</div>
+        </div>
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Nuon keeps every config version this install has ever run, so a
+          rollback is picking a previous version and re-deploying it. There is
+          no CLI command for rollback yet — it runs from the version history in
+          the dashboard (plan first, then apply), and the old image tags
+          reappear in the table above as it lands.{' '}
+          {config.links.versions && (
+            <OutLink href={config.links.versions} variant="plain">
+              Open this install&rsquo;s version history
+            </OutLink>
+          )}
+        </p>
+        <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
+          The git-level path works too: revert the commit and push, and the
+          staged rollout replays with the old config, group by group, behind
+          the same approvals. For out-of-band damage there is the{' '}
+          <span className="mono">reconcile-drift</span> runbook, which plans
+          the chart first so the run records what drifted before anything is
+          re-applied.
+        </p>
+      </section>
 
       <Callout label="Why it matters at 50 installs">
         Without branches, a config change is all-or-nothing across every
         customer. With them, the blast radius of a mistake is one install, and
-        rolling back is a branch pointer rather than an incident.
+        rolling back is a version pointer rather than an incident.
       </Callout>
     </>
   )
@@ -275,8 +345,6 @@ function BranchesFlow({ config }: { config: UIConfig }) {
 /* ============================================================
    Operate: runbooks (runbooks/*.toml)
    ============================================================ */
-
-type StepState = 'pending' | 'running' | 'done'
 
 function RunbookModeBadge({ mutates }: { mutates: boolean }) {
   return mutates ? (
@@ -292,49 +360,16 @@ function RunbookModeBadge({ mutates }: { mutates: boolean }) {
 
 function RunbooksFlow({ config }: { config: UIConfig }) {
   const [selected, setSelected] = useState(0)
-  const [stepStates, setStepStates] = useState<StepState[]>([])
-  const timers = useRef<number[]>([])
   const runbook = runbooks[selected]
-  const running = stepStates.some((s) => s === 'running')
-
-  useEffect(() => () => timers.current.forEach(clearTimeout), [])
-
-  const select = (i: number) => {
-    timers.current.forEach(clearTimeout)
-    timers.current = []
-    setSelected(i)
-    setStepStates([])
-  }
-
-  const simulate = () => {
-    timers.current.forEach(clearTimeout)
-    timers.current = []
-    const total = runbook.steps.length
-    setStepStates(Array(total).fill('pending'))
-    for (let i = 0; i < total; i++) {
-      timers.current.push(
-        window.setTimeout(() => {
-          setStepStates((prev) =>
-            prev.map((s, j) => (j < i ? 'done' : j === i ? 'running' : s)),
-          )
-        }, i * 1000),
-      )
-    }
-    timers.current.push(
-      window.setTimeout(() => {
-        setStepStates(Array(total).fill('done'))
-      }, total * 1000),
-    )
-  }
+  const install = installIdOf(config)
 
   return (
     <>
       <FlowHeader
         eyebrow="Operate · runbooks"
         title="Run runbooks"
-        lede="A runbook is a versioned, multi-step procedure Nuon runs against an install and records. This app ships four, one per operational moment: routine health, something's-wrong diagnostics, drift, and the emergency. Two are read-only; two apply changes, and the badges below say which."
+        lede="A runbook is a versioned, multi-step procedure Nuon runs against an install and records. This app ships four, one per operational moment: routine health, something's-wrong diagnostics, drift, and the emergency. Two are read-only; two apply changes, and the badges below say which. Each one is a single CLI command away."
       />
-      <SimBanner />
 
       <div className="prose" style={{ marginTop: 24 }}>
         <p>
@@ -352,14 +387,15 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
             <button
               key={rb.name}
               className={i === selected ? 'tile tile--active' : 'tile'}
-              onClick={() => select(i)}
+              onClick={() => setSelected(i)}
             >
               <span className="tile__head">
                 <Icon name="book-open" />
                 <span className="mono">{rb.name}</span>
               </span>
               <span className="tile__body">
-                {rb.steps.length} steps · {rb.mutates ? 'applies changes' : 'read-only'}
+                {rb.steps.length} steps ·{' '}
+                {rb.mutates ? 'applies changes' : 'read-only'}
               </span>
             </button>
           ))}
@@ -374,19 +410,26 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
         </div>
         <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
           {runbook.description}
-          {runbook.mutates &&
-            ' The real run re-applies state or assumes elevated access; the simulation below only steps through the plan.'}
         </p>
-        <div className="row" style={{ marginBottom: 16 }}>
-          <button
-            className="btn btn--primary"
-            onClick={simulate}
-            disabled={running}
-          >
-            {running ? 'Simulating…' : 'Simulate a run'}
-          </button>
-        </div>
-        <div className="table-wrap">
+        <CommandBlock
+          label={`run ${runbook.name} against this install`}
+          command={`nuon runbooks create-run --install-id ${install} --runbook-id ${runbook.name}`}
+          note={
+            runbook.mutates ? (
+              <>
+                <strong>This one changes things</strong> — it re-applies state
+                or assumes elevated access. Run it deliberately; the per-step
+                record it leaves behind is the point.
+              </>
+            ) : (
+              <>
+                Read-only diagnostics: safe to run right now. Runbooks accept
+                their name directly — no id lookup needed.
+              </>
+            )
+          }
+        />
+        <div className="table-wrap" style={{ marginTop: 16 }}>
           <table className="data">
             <thead>
               <tr>
@@ -394,54 +437,48 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
                 <th>Step</th>
                 <th>Type</th>
                 <th>What it does</th>
-                <th>Status</th>
               </tr>
             </thead>
             <tbody>
-              {runbook.steps.map((step, i) => {
-                const state = stepStates[i]
-                return (
-                  <tr key={step.name}>
-                    <td className="mono subtext">{i + 1}</td>
-                    <td className="mono">{step.name}</td>
-                    <td className="mono subtext">{step.type}</td>
-                    <td>{step.detail}</td>
-                    <td>
-                      {state === 'running' ? (
-                        <Badge tone="warning" dot>
-                          running
-                        </Badge>
-                      ) : state === 'done' ? (
-                        <Badge tone="positive" dot>
-                          done
-                        </Badge>
-                      ) : state === 'pending' ? (
-                        <Badge>pending</Badge>
-                      ) : (
-                        <span className="muted subtext">—</span>
-                      )}
-                    </td>
-                  </tr>
-                )
-              })}
+              {runbook.steps.map((step, i) => (
+                <tr key={step.name}>
+                  <td className="mono subtext">{i + 1}</td>
+                  <td className="mono">{step.name}</td>
+                  <td className="mono subtext">{step.type}</td>
+                  <td>{step.detail}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       </section>
 
-      <Callout label="Where these run for real">
+      <Callout label="Where the record lives">
         The branch config runs <span className="mono">full-health-check</span>{' '}
         automatically after every staged deploy (
         <span className="mono">post_deploy_runbooks</span> in branch.toml), so
-        this install already has real runs on record. The rest are run on
-        demand from the install&rsquo;s Runbooks page in the dashboard, where
-        each run leaves a per-step transcript.{' '}
+        this install already has real runs on record, and the run you create
+        above joins them: each one leaves a per-step transcript.{' '}
         {config.links.runbooks && (
           <OutLink href={config.links.runbooks} variant="plain">
             Open the latest full-health-check transcript
           </OutLink>
         )}
       </Callout>
+
+      <LiveEvidence
+        config={config}
+        lead={
+          <>
+            The read-only runbooks leave the cluster untouched — their record
+            is the transcript. The two that apply changes are visible right
+            here: <span className="mono">reconcile-drift</span> redeploys the
+            chart and <span className="mono">break-glass</span> restarts the
+            app&rsquo;s deployments, so pod names change and ages reset in this
+            table as the run works.
+          </>
+        }
+      />
     </>
   )
 }
@@ -462,87 +499,62 @@ const actionNotes: Record<string, string> = {
     'Elevated remediation through a recorded action instead of ad-hoc console access. Assumes the break-glass role from break_glass.toml.',
 }
 
-/** Illustrative sample output per action. Not captured from a real run. */
-const sampleTranscripts: Record<string, string[]> = {
-  cron_status: [
-    '=== Pods ===',
-    'kitchen-sink-api-…      Running   1/1',
-    'kitchen-sink-ui-…       Running   1/1',
-    'kitchen-sink-ui-…       Running   1/1',
-    'kitchen-sink-worker-…   Running   1/1',
-    'writing structured outputs…',
-    'pods_ready=4 pods_total=4 checked_at=<run time>',
-    'exit 0',
-  ],
-  debug: [
-    '=== Pods ===',
-    '(pod list, restart counts)',
-    '=== Events ===',
-    '(warning events in kitchen-sink, if any)',
-    '=== Recent logs: kitchen-sink-api ===',
-    '(last log lines from the API pod)',
-    'exit 0',
-  ],
-  lifecycle_hooks: [
-    'HOOK_VERSION=v1',
-    'hook fired: manual',
-    'this hook also runs post-provision and around every kitchen_sink deploy',
-    'logged lifecycle event',
-    'exit 0',
-  ],
-  break_glass_remediation: [
-    'assuming role: {install-id}-app-break-glass',
-    'policy: AdministratorAccess, with secretsmanager:* explicitly denied',
-    'kube config enabled for this run',
-    '(your remediation here; every line of it lands in the workflow history)',
-    'exit 0',
-  ],
+/** What a real run of each action puts on the record. */
+function actionOutcome(name: string, installID: string): ReactNode {
+  if (name === 'cron_status') {
+    return (
+      <>
+        The run&rsquo;s transcript lists this namespace&rsquo;s pods and
+        publishes <span className="mono">pods_ready</span> /{' '}
+        <span className="mono">pods_total</span> /{' '}
+        <span className="mono">checked_at</span> as structured outputs —
+        read-only, over in seconds.
+      </>
+    )
+  }
+  if (name === 'debug') {
+    return (
+      <>
+        The transcript collects pod state with restart counts, warning events,
+        and recent API logs — the support bundle, read-only, nothing changes in
+        the cluster.
+      </>
+    )
+  }
+  if (name === 'lifecycle_hooks') {
+    return (
+      <>
+        The transcript logs which hook fired. The same script runs
+        automatically post-provision and before and after every{' '}
+        <span className="mono">kitchen_sink</span> deploy.
+      </>
+    )
+  }
+  return (
+    <>
+      The transcript prints the identity the run assumed (
+      <span className="mono">aws sts get-caller-identity</span> &rarr;{' '}
+      <span className="mono">{installID}-app-break-glass</span>), then a{' '}
+      <em>denied</em> Secrets Manager call — the permissions boundary doing its
+      job — and then restarts the app&rsquo;s three deployments. Watch the pod
+      table below while it runs.
+    </>
+  )
 }
 
 function ActionsFlow({ config }: { config: UIConfig }) {
   const [selected, setSelected] = useState(0)
-  const [lines, setLines] = useState<string[]>([])
-  const [running, setRunning] = useState(false)
-  const timers = useRef<number[]>([])
   const action = adhocActions[selected]
-
-  useEffect(() => () => timers.current.forEach(clearTimeout), [])
-
-  const select = (i: number) => {
-    timers.current.forEach(clearTimeout)
-    timers.current = []
-    setSelected(i)
-    setLines([])
-    setRunning(false)
-  }
-
-  const run = () => {
-    timers.current.forEach(clearTimeout)
-    timers.current = []
-    const transcript = sampleTranscripts[action.name] ?? ['exit 0']
-    setLines([
-      `$ nuon actions run ${action.name}`,
-      '# simulated: sample output, not a real run',
-    ])
-    setRunning(true)
-    transcript.forEach((line, i) => {
-      timers.current.push(
-        window.setTimeout(() => {
-          setLines((prev) => [...prev, line])
-          if (i === transcript.length - 1) setRunning(false)
-        }, 400 * (i + 1)),
-      )
-    })
-  }
+  const install = installIdOf(config)
+  const app = appIdOf(config)
 
   return (
     <>
       <FlowHeader
         eyebrow="Operate · adhoc actions"
         title="Run adhoc actions"
-        lede="An action is a script the runner executes inside the install, on a schedule, around a deploy, or on demand. This app ships four; the manual ones are how support fixes an install without cluster credentials."
+        lede="An action is a script the runner executes inside the install, on a schedule, around a deploy, or on demand. This app ships four; the manual ones are how support fixes an install without cluster credentials. Two commands run any of them for real."
       />
-      <SimBanner />
 
       <section className="section">
         <div className="tiles" style={{ marginBottom: 24 }}>
@@ -550,7 +562,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
             <button
               key={a.name}
               className={i === selected ? 'tile tile--active' : 'tile'}
-              onClick={() => select(i)}
+              onClick={() => setSelected(i)}
             >
               <span className="tile__head">
                 <Icon name="lightning" />
@@ -571,7 +583,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
         {action.breakGlass && (
           <div className="row" style={{ marginBottom: 12 }}>
             <Badge tone="warning" dot>
-              elevated access
+              elevated access · restarts the app&rsquo;s pods
             </Badge>
           </div>
         )}
@@ -586,14 +598,33 @@ function ActionsFlow({ config }: { config: UIConfig }) {
           ))}
           {action.labels && <span className="chip">{action.labels}</span>}
         </div>
-        <div className="row" style={{ marginBottom: 16 }}>
-          <button className="btn btn--primary" onClick={run} disabled={running}>
-            {running ? 'Simulating…' : 'Simulate a run'}
-          </button>
-        </div>
-        {lines.length > 0 && (
-          <pre className="raw sim-log">{lines.join('\n')}</pre>
-        )}
+
+        <CommandBlock
+          label="1 · list the action workflows and copy the id"
+          command={`nuon actions list --app-id ${app}`}
+          note={
+            <>
+              The sharp edge: <span className="mono">create-run</span> takes
+              the workflow <strong>id</strong> (it starts with{' '}
+              <span className="mono">actw</span>), never the name — so list
+              first and copy the id next to{' '}
+              <span className="mono">{action.name}</span>.
+            </>
+          }
+        />
+        <CommandBlock
+          label={`2 · run ${action.name} against this install`}
+          command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
+          note={
+            <>
+              To override the IAM role for one run, the flag is{' '}
+              <span className="mono">--role-name</span>.
+            </>
+          }
+        />
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          {actionOutcome(action.name, install)}
+        </p>
       </section>
 
       <Callout label="Real runs, on the record right now">
@@ -602,13 +633,26 @@ function ActionsFlow({ config }: { config: UIConfig }) {
         <span className="mono">pods_ready</span> /{' '}
         <span className="mono">pods_total</span> as structured outputs (the
         install readme reads them as its health pulse). Every run&rsquo;s
-        transcript and outputs are in the dashboard.{' '}
+        transcript and outputs are in the dashboard — including the one you
+        create above.{' '}
         {config.links.actions && (
           <OutLink href={config.links.actions} variant="plain">
             Open the hourly run history
           </OutLink>
         )}
       </Callout>
+
+      <LiveEvidence
+        config={config}
+        lead={
+          <>
+            Three of the four actions are read-only, so their only record is
+            the transcript. <span className="mono">break_glass_remediation</span>{' '}
+            ends with a rollout restart: new pod names, ages reset to seconds —
+            it lands in this table within one poll.
+          </>
+        }
+      />
 
       <Callout label="Why adhoc beats a kubeconfig">
         The runner already has the access an action needs; the action is the
@@ -833,13 +877,15 @@ const roleNotes: Record<string, string> = {
 function RolesFlow({ config }: { config: UIConfig }) {
   const [selected, setSelected] = useState(0)
   const role = roles[selected]
+  const install = installIdOf(config)
+  const app = appIdOf(config)
 
   return (
     <>
       <FlowHeader
         eyebrow="Govern · operation roles"
         title="Scope operation roles"
-        lede="Nuon performs every operation under a per-operation IAM role your customer can read, each with its own permissions boundary. This app declares seven, from provision down to a break-glass role that exists only for emergencies. This page is a guide to the real config; there is nothing to run here."
+        lede="Nuon performs every operation under a per-operation IAM role your customer can read, each with its own permissions boundary. This app declares seven, from provision down to a break-glass role that exists only for emergencies — and one action run proves the whole model on the record."
       />
 
       <section className="section">
@@ -880,6 +926,50 @@ function RolesFlow({ config }: { config: UIConfig }) {
           {roleNotes[role.name] ?? role.desc}
         </div>
       </section>
+
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">Prove it, for real</h2>
+          <div className="subtext muted">the break-glass run narrates its own evidence</div>
+        </div>
+        <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
+          The <span className="mono">break_glass_remediation</span> action is
+          scripted to demonstrate this page: its transcript prints the identity
+          it assumed and then a call the boundary refuses. Two commands run it
+          against this install.
+        </p>
+        <CommandBlock
+          label="1 · resolve the workflow id (create-run takes the id, not the name)"
+          command={`nuon actions list --app-id ${app}`}
+        />
+        <CommandBlock
+          label="2 · run it (heads up: it ends by restarting the app's pods)"
+          command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
+        />
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          In the run&rsquo;s transcript:{' '}
+          <span className="mono">aws sts get-caller-identity</span> resolves to{' '}
+          <span className="mono">{install}-app-break-glass</span>, and the
+          Secrets Manager call that follows is <em>denied</em> — the explicit
+          Deny from break_glass.toml holding under AdministratorAccess.{' '}
+          {config.links.actions && (
+            <OutLink href={config.links.actions} variant="plain">
+              Read the transcript in the dashboard
+            </OutLink>
+          )}
+        </p>
+      </section>
+
+      <LiveEvidence
+        config={config}
+        lead={
+          <>
+            The same run&rsquo;s last act is a rollout restart of the
+            app&rsquo;s three deployments — proof you can watch from right
+            here: pod names change and ages reset the moment it lands.
+          </>
+        }
+      />
 
       <CodeBlock label="break_glass.toml (the real file)" code={breakGlassToml} />
 
@@ -930,6 +1020,181 @@ function RolesFlow({ config }: { config: UIConfig }) {
 }
 
 /* ============================================================
+   Drive: the command menu and the copy-paste agent prompt. Both tracks use
+   this install's real ids, filled in from ui-config at render time.
+   ============================================================ */
+
+function agentPrompt(install: string, app: string): string {
+  return `You are operating the Nuon CLI against MY app and MY install, in my own Nuon org.
+I have already run "nuon auth login" on this machine, so the CLI is authenticated
+(session in ~/.nuon). Do not ask me for, print, or export any token.
+
+Hard limits:
+- Only this app and install: app kitchen-sink (${app}), install ${install}.
+- NEVER create, delete, or tear down installs, apps, components, or branches.
+- Add --output agent to every nuon command; prefix every read with NUON_READ_ONLY=1.
+- Before EVERY mutating command: show me the exact command, say what it will change,
+  and wait for my explicit "yes". After every command, show me the result.
+
+Warm-up: NUON_READ_ONLY=1 nuon installs get -i ${install} --output agent
+
+Then walk me through day-2 for real, in this order:
+
+1. RUNBOOK — NUON_READ_ONLY=1 nuon runbooks list -i ${install} --output agent;
+   confirm full-health-check exists (it is read-only diagnostics). After my yes:
+   nuon runbooks create-run -i ${install} -r full-health-check --output agent.
+   Poll get-run until it finishes; summarize each step.
+
+2. ACTION + ROLE PROOF — NUON_READ_ONLY=1 nuon actions list -a ${app} --output agent;
+   create-run needs the workflow ID (actw...), not the name — resolve
+   break_glass_remediation here. Warn me it restarts my app's three deployments.
+   After my yes:
+   nuon actions create-run -i ${install} -w <actw-id> --output agent
+   (if overriding the role: the flag is --role-name, not --role). Fetch the run logs
+   and point out the assumed role ARN (...-app-break-glass) and the expected Secrets
+   Manager deny — that is the per-operation IAM proof. Then tell me to open my
+   kitchen-sink page and watch the pod ages reset.
+
+3. BRANCH — my app config is cloned at <path-to-your-clone>. Help me make one small
+   visible edit, then from that directory, after my yes:
+   nuon sync --branch ${branchName} --output agent.
+   This syncs my local files and triggers a real staged branch run — no push needed.
+   Report each group's progress; if a group holds for approval, tell me and I will
+   approve it in my dashboard.
+
+4. ROLLBACK — API-only (no CLI command yet). Read my session credentials into shell
+   variables without echoing them:
+   TOK=$(awk '$1=="api_token:"{print $2}' ~/.nuon); ORG=$(awk '$1=="org_id:"{print $2}' ~/.nuon)
+   GET https://api.nuon.co/v1/installs/${install}/app-config-versions
+   (headers: Authorization: Bearer $TOK, X-Nuon-Org-ID: $ORG). Show me the versions,
+   then POST /v1/installs/${install}/app-config-updates with
+   {"app_config_id":"<previous>","plan_only":true} and show me the plan.
+   Only after my yes, repeat with "plan_only": false, and tell me to watch the old
+   image tags reappear on my pods page.
+
+Budget: exactly one run per flow. Anything else requires my explicit request.`
+}
+
+function AgentFlow({ config }: { config: UIConfig }) {
+  const install = installIdOf(config)
+  const app = appIdOf(config)
+  const prompt = agentPrompt(install, app)
+
+  return (
+    <>
+      <FlowHeader
+        eyebrow="Drive · terminal & agents"
+        title="Run day-2 from your terminal"
+        lede="Two tracks to the same place. Run the command menu yourself, or paste one prompt into Claude Code or Codex and let it drive — it must show you every command and wait for your yes before anything mutates. Either way, this install's ids are already filled in below."
+      />
+
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">Once per machine: the CLI</h2>
+          <div className="subtext muted">no tokens to paste</div>
+        </div>
+        <CommandBlock
+          label="install the nuon CLI"
+          command="curl -sSL install.nuon.co | bash"
+          note={
+            <>
+              Or <span className="mono">brew install nuonco/tap/nuon</span>.
+            </>
+          }
+        />
+        <CommandBlock
+          label="authenticate"
+          command="nuon auth login"
+          note={
+            <>
+              Opens your browser; approve and this machine — and any agent you
+              run in its shell — is signed in for the day. No token handling.
+            </>
+          }
+        />
+      </section>
+
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">Track one: the command menu</h2>
+          <div className="subtext muted">one command per flow, your ids filled in</div>
+        </div>
+        <CommandBlock
+          label="run a real health check (read-only)"
+          command={`nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`}
+          note={<>A run appears in your dashboard with per-step results.</>}
+        />
+        <CommandBlock
+          label="prove the per-operation IAM roles (restarts this app's pods)"
+          command={`nuon actions list --app-id ${app}`}
+          note={
+            <>
+              Copy the <span className="mono">actw</span> id next to{' '}
+              <span className="mono">break_glass_remediation</span>, then{' '}
+              <span className="mono">
+                nuon actions create-run --install-id {install}{' '}
+                --action-workflow-id &lt;actw-id&gt;
+              </span>
+              . The run logs print the assumed break-glass role and a denied
+              Secrets Manager call; watch the pod ages reset on the{' '}
+              <span className="mono">actions</span> page here.
+            </>
+          }
+        />
+        <CommandBlock
+          label="ship a change through the staged groups (from your clone)"
+          command={`nuon sync --branch ${branchName}`}
+          note={
+            <>
+              Syncs your local edit — no push needed — and triggers a real
+              branch run, group by group; approve held groups in your
+              dashboard.
+            </>
+          }
+        />
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          Rollback is the one flow without a CLI command today: it runs from
+          the version history in the dashboard — plan first, then apply, and
+          the old image tags reappear on your pods.{' '}
+          {config.links.versions && (
+            <OutLink href={config.links.versions} variant="plain">
+              Open this install&rsquo;s version history
+            </OutLink>
+          )}
+        </p>
+      </section>
+
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">Track two: the agent prompt</h2>
+          <div className="subtext muted">paste into Claude Code or Codex</div>
+        </div>
+        <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
+          One prompt, scoped hard to this app and install: the agent must show
+          every command, keep reads read-only, and stop for your explicit
+          &ldquo;yes&rdquo; before each of the four mutating steps.
+        </p>
+        <div className="agent-prompt">
+          <div className="cmd__head">
+            <span className="cmd__label">the prompt, your ids filled in</span>
+            <CopyButton text={prompt} />
+          </div>
+          <pre className="cmd__pre agent-prompt__pre">{prompt}</pre>
+        </div>
+      </section>
+
+      <Callout label="Why the terminal, and not buttons here">
+        Acting from your own terminal and your own dashboard is the product:
+        this page runs behind your customer&rsquo;s load balancer, so it hands
+        you commands and shows you evidence instead of holding credentials. An
+        app that could mutate your install from a public page would be the
+        wrong demo.
+      </Callout>
+    </>
+  )
+}
+
+/* ============================================================
    The view. Bare #/customize renders the day-2 half of the taxonomy for
    deep links; the landing's customize hub is the full front door.
    ============================================================ */
@@ -951,7 +1216,43 @@ function flowLinks(flow: string, config: UIConfig) {
     return { href: links.components ?? links.install, label: 'See component health in Nuon' }
   if (flow === 'triggers')
     return { href: links.actions ?? links.install, label: 'Open the actions for this install' }
+  if (flow === 'agent')
+    return { href: links.tokens ?? links.install, label: 'API tokens for CI & agents in Nuon' }
   return { href: links.install, label: 'Open this install in Nuon' }
+}
+
+/**
+ * The bare index doubles as a watcher for the toggleable components' tiles,
+ * the same way the landing hub does: while either component is off, keep
+ * re-reading the namespace so a dashboard toggle flips the switch here.
+ */
+function CustomizeIndex({ config }: { config: UIConfig }) {
+  const namespace = config.namespace ?? 'kitchen-sink'
+  const probe = useIntrospectPoll<NamespaceResponse>(
+    `/api/introspect/namespace/${namespace}`,
+    20_000,
+    true,
+  )
+  const services =
+    probe.state === 'ok' ? (probe.value.response.services ?? []) : []
+  const switches: SwitchStates = {
+    '/tictactoe': { on: hasTicTacToe(services) },
+    '/audit-log': { on: hasAuditLogExporter(services) },
+  }
+
+  return (
+    <>
+      <FlowHeader
+        eyebrow="Customize"
+        title="Day-2, one capability at a time"
+        lede="Everything below is grounded in this app's real config. Live pages read this install right now; guides explain the config it ships. The operations themselves run from your terminal and dashboard — each page hands you the exact commands."
+      />
+      <CapabilityGroups
+        categories={categories.filter((c) => c.dayTwo)}
+        switches={switches}
+      />
+    </>
+  )
 }
 
 export function Customize({
@@ -971,17 +1272,9 @@ export function Customize({
       {flow === 'health' && <HealthFlow config={config} />}
       {flow === 'triggers' && <TriggersFlow />}
       {flow === 'roles' && <RolesFlow config={config} />}
+      {flow === 'agent' && <AgentFlow config={config} />}
 
-      {!flow && (
-        <>
-          <FlowHeader
-            eyebrow="Customize"
-            title="Day-2, one capability at a time"
-            lede="Everything below is grounded in this app's real config. Simulations run in the browser only; live pages read this install; guides explain the config."
-          />
-          <CapabilityGroups categories={categories.filter((c) => c.dayTwo)} />
-        </>
-      )}
+      {!flow && <CustomizeIndex config={config} />}
 
       {flow && (
         <div className="row" style={{ marginTop: 32 }}>

@@ -31,30 +31,27 @@ export function ModeBadge({ mode }: { mode: Mode }) {
       </Badge>
     )
   }
-  if (mode === 'simulation') {
-    return (
-      <Badge tone="warning" dot>
-        simulation
-      </Badge>
-    )
-  }
   return <Badge>guide</Badge>
 }
 
+/**
+ * Live state for a toggleable-component tile, keyed by the tile's route:
+ * whether the component is on, and whether it flipped on while the visitor
+ * was watching (which earns the tile a highlight).
+ */
+export type SwitchStates = Record<string, { on: boolean; flipped?: boolean }>
+
 function CapabilityCard({
   item,
-  tictactoe,
-  tictactoeFlipped,
+  switches,
 }: {
   item: Capability
-  tictactoe?: boolean
-  /** True when the switch flipped on while the visitor was watching. */
-  tictactoeFlipped?: boolean
+  switches?: SwitchStates
 }) {
   const navigate = useNavigate()
   const isToggle = item.icon === 'toggle'
-  const cardClass =
-    isToggle && tictactoeFlipped ? 'action action--flipped' : 'action'
+  const sw = isToggle ? switches?.[item.to] : undefined
+  const cardClass = sw?.flipped ? 'action action--flipped' : 'action'
   return (
     <button className={cardClass} onClick={() => navigate(item.to)}>
       <span className="action__mode">
@@ -64,7 +61,7 @@ function CapabilityCard({
         {isToggle ? (
           <span
             className={
-              tictactoe ? 'switch switch--sm switch--on' : 'switch switch--sm'
+              sw?.on ? 'switch switch--sm switch--on' : 'switch switch--sm'
             }
             aria-hidden="true"
           />
@@ -88,12 +85,10 @@ function CapabilityCard({
 
 export function CapabilityGroups({
   categories,
-  tictactoe,
-  tictactoeFlipped,
+  switches,
 }: {
   categories: Category[]
-  tictactoe?: boolean
-  tictactoeFlipped?: boolean
+  switches?: SwitchStates
 }) {
   return (
     <>
@@ -105,12 +100,7 @@ export function CapabilityGroups({
           </div>
           <div className="actions">
             {category.items.map((item) => (
-              <CapabilityCard
-                key={item.to}
-                item={item}
-                tictactoe={tictactoe}
-                tictactoeFlipped={tictactoeFlipped}
-              />
+              <CapabilityCard key={item.to} item={item} switches={switches} />
             ))}
           </div>
         </section>

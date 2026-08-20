@@ -45,6 +45,13 @@ export interface Guardrail {
   target: string
 }
 
+export interface ToggleableComponent {
+  name: string
+  type: string
+  defaultEnabled: boolean
+  toml: string
+}
+
 export const branchName = "ms/onboarding-edit"
 
 export const repoName = "nuonco/kitchen-sink"
@@ -313,5 +320,20 @@ export const guardrails: Guardrail[] = [
     "name": "sandbox-limits",
     "type": "sandbox",
     "target": "the sandbox plan"
+  }
+]
+
+export const toggleableComponents: ToggleableComponent[] = [
+  {
+    "name": "audit_log_exporter",
+    "type": "kubernetes_manifest",
+    "defaultEnabled": false,
+    "toml": "name = \"audit_log_exporter\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/onboarding-edit\"\n\n[kustomize]\npath        = \"./src/components/audit-log-exporter\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
+  },
+  {
+    "name": "tictactoe",
+    "type": "kubernetes_manifest",
+    "defaultEnabled": false,
+    "toml": "name = \"tictactoe\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/onboarding-edit\"\n\n[kustomize]\npath        = \"./src/components/tictactoe\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
   }
 ]

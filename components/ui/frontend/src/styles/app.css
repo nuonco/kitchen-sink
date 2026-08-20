@@ -1092,7 +1092,7 @@ body::before {
   max-width: 70ch;
 }
 
-/* The live / simulation / guide badge pinned to a capability card. */
+/* The live / guide badge pinned to a capability card. */
 
 .action__mode {
   position: absolute;
@@ -1626,7 +1626,7 @@ pre.raw {
 }
 
 /* ============================================================
-   Tic-tac-toe (the toggleable component demo)
+   Tic-tac-toe and the audit-log exporter (the toggleable components)
    ============================================================ */
 
 /* The landing tile's locked state: still clickable (it leads to the pitch),
@@ -1676,6 +1676,13 @@ pre.raw {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   background: var(--surface-card);
+}
+
+/* The audit-log exporter's enabled panel reuses the ttt frame (and its
+   just-unlocked glow), but reads as a document, not a centered game. */
+.ttt.entitled {
+  align-items: stretch;
+  gap: var(--space-3);
 }
 
 .ttt__status {
@@ -1932,26 +1939,96 @@ pre.raw {
 }
 
 /* ============================================================
-   Customize setup-flow stubs
+   Customize day-2 flows: real commands, live evidence
    ============================================================ */
 
-.demo-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border: 1px dashed rgba(254, 178, 115, 0.35);
+/* A command to run in the reader's own terminal, with a copy button. */
+
+.cmd {
+  margin-top: var(--space-4);
+  border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  background: rgba(254, 178, 115, 0.05);
+  background: var(--surface-sunken);
+  max-width: 86ch;
+}
+
+.cmd__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.cmd__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-right: auto;
+}
+
+.cmd__pre {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-subtext);
+  line-height: 1.7;
+  color: var(--text-primary);
+  white-space: pre;
+  tab-size: 2;
+}
+
+.cmd__note {
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  border-top: 1px solid var(--border-subtle);
   font-size: var(--text-subtext);
   line-height: var(--text-subtext-line);
-  color: var(--text-secondary);
+  color: var(--text-tertiary);
   max-width: 76ch;
 }
 
-.demo-banner .badge {
+.copy-btn {
   flex: none;
-  margin-top: 1px;
+  padding: 2px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
+}
+
+.copy-btn:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.copy-btn--done {
+  border-color: rgba(134, 239, 172, 0.4);
+  color: var(--text-primary);
+}
+
+/* The copy-paste agent prompt */
+
+.agent-prompt {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.agent-prompt__pre {
+  max-height: 480px;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: var(--text-secondary);
 }
 
 /* Staged-rollout pipeline in the branches flow */
@@ -1969,11 +2046,6 @@ pre.raw {
   background: var(--surface-card);
   transition: opacity var(--duration-base) var(--ease-standard),
     border-color var(--duration-base) var(--ease-standard);
-}
-
-.group-card--waiting {
-  opacity: 0.55;
-  border-style: dashed;
 }
 
 .group-card__head {
@@ -2000,16 +2072,6 @@ pre.raw {
   font-size: var(--text-subtext);
   line-height: var(--text-subtext-line);
   color: var(--text-tertiary);
-}
-
-/* Simulated action log */
-
-pre.sim-log {
-  padding: var(--space-4);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-  max-height: 280px;
 }
 
 /* Clickable table rows in the roles flow */

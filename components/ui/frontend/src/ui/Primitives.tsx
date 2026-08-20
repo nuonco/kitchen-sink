@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Loadable } from '../lib/api'
 import { useNavigate } from '../lib/router'
 import { iconPaths } from './icons'
@@ -188,6 +188,68 @@ export function CodeBlock({ label, code }: { label: string; code: string }) {
     <Disclosure summary={label}>
       <pre className="raw">{code}</pre>
     </Disclosure>
+  )
+}
+
+/** Puts `text` on the clipboard, with a fallback for older browsers. */
+async function copyText(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text)
+  } catch {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.setAttribute('readonly', '')
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    document.body.appendChild(ta)
+    ta.select()
+    document.execCommand('copy')
+    ta.remove()
+  }
+}
+
+export function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  const timer = useRef<number | undefined>(undefined)
+  useEffect(() => () => window.clearTimeout(timer.current), [])
+  return (
+    <button
+      className={copied ? 'copy-btn copy-btn--done' : 'copy-btn'}
+      onClick={() => {
+        void copyText(text).then(() => {
+          setCopied(true)
+          window.clearTimeout(timer.current)
+          timer.current = window.setTimeout(() => setCopied(false), 1800)
+        })
+      }}
+    >
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  )
+}
+
+/**
+ * A real command to run in the reader's own terminal: shown in full, with a
+ * copy button. The command text is exactly what gets copied.
+ */
+export function CommandBlock({
+  label,
+  command,
+  note,
+}: {
+  label?: string
+  command: string
+  note?: ReactNode
+}) {
+  return (
+    <div className="cmd">
+      <div className="cmd__head">
+        {label && <span className="cmd__label">{label}</span>}
+        <CopyButton text={command} />
+      </div>
+      <pre className="cmd__pre">{command}</pre>
+      {note && <div className="cmd__note">{note}</div>}
+    </div>
   )
 }
 

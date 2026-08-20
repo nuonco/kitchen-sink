@@ -205,6 +205,29 @@ for (const role of breakGlass.role ?? []) {
 
 const breakGlassToml = read('break_glass.toml').trim()
 
+/* ---------- components/*.toml: toggleable components ---------- */
+
+// Comment-stripped real file, same treatment as branch.toml above.
+const strippedToml = (rel) =>
+  read(rel)
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('#'))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+
+const toggleableComponents = readdirSync(join(repoRoot, 'components'))
+  .filter((f) => f.endsWith('.toml'))
+  .map((f) => ({ file: f, cfg: toml(`components/${f}`) }))
+  .filter(({ cfg }) => cfg.toggleable === true)
+  .sort((a, b) => a.cfg.name.localeCompare(b.cfg.name))
+  .map(({ file, cfg }) => ({
+    name: cfg.name,
+    type: cfg.type,
+    defaultEnabled: Boolean(cfg.default_enabled),
+    toml: strippedToml(`components/${file}`),
+  }))
+
 /* ---------- policies/*.toml ---------- */
 
 const guardrails = readdirSync(join(repoRoot, 'policies'))
@@ -272,6 +295,13 @@ export interface Guardrail {
   target: string
 }
 
+export interface ToggleableComponent {
+  name: string
+  type: string
+  defaultEnabled: boolean
+  toml: string
+}
+
 export const branchName = ${ts(branch.name)}
 
 export const repoName = ${ts(branch.public_repo?.repo ?? branch.connected_repo?.repo ?? '')}
@@ -293,6 +323,8 @@ export const roles: Role[] = ${ts(roles)}
 export const breakGlassToml = ${ts(breakGlassToml)}
 
 export const guardrails: Guardrail[] = ${ts(guardrails)}
+
+export const toggleableComponents: ToggleableComponent[] = ${ts(toggleableComponents)}
 `
 
 writeFileSync(outFile, out)

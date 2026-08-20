@@ -3,6 +3,7 @@ import { segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { Icon, NuonMark, OutLink } from './ui/Primitives'
+import { AuditLog } from './views/AuditLog'
 import { Customize } from './views/Customize'
 import { Deployed } from './views/Deployed'
 import { Landing } from './views/Landing'
@@ -57,6 +58,8 @@ export default function App() {
     view = <Customize config={config} flow={parts[1]} />
   } else if (parts[0] === 'tictactoe') {
     view = <TicTacToe config={config} />
+  } else if (parts[0] === 'audit-log') {
+    view = <AuditLog config={config} />
   } else if (parts[0] === 'customize') {
     view = <Customize config={config} flow={parts[1]} />
   }
