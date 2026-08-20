@@ -9,15 +9,9 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import {
-  branchName,
-  installGroups,
-  postDeployRunbooks,
-  repoName,
-} from '../lib/config-data.gen'
-import { categories } from '../lib/taxonomy'
-import { CapabilityGroups, type SwitchStates } from '../ui/CapabilityGrid'
-import { Eyebrow, Icon, OutLink } from '../ui/Primitives'
+import { agentPrompt } from '../lib/prompts'
+import { EvalPath, type SwitchStates } from '../ui/CapabilityGrid'
+import { CopyButton, Eyebrow, Icon, OutLink } from '../ui/Primitives'
 
 /* ============================================================
    The landing is a guided walkthrough. A first-time visitor has just
@@ -34,7 +28,6 @@ const steps = [
   'components',
   'runner',
   'deployed',
-  'shipped',
   'explore',
 ] as const
 
@@ -45,9 +38,10 @@ const TOUR_KEY = 'kitchen-sink-tour'
 function storedStep(): Step {
   try {
     const value = window.localStorage.getItem(TOUR_KEY)
-    // Older tours had dedicated toggle and day-2 steps; those beats now live
-    // on the customize page, so resume there.
+    // Older tours had dedicated toggle, day-2 and shipped steps; those beats
+    // now live elsewhere, so resume at the nearest surviving step.
     if (value === 'toggle' || value === 'day2') return 'explore'
+    if (value === 'shipped') return 'deployed'
     if (value && (steps as readonly string[]).includes(value)) {
       return value as Step
     }
@@ -65,37 +59,68 @@ function rememberStep(step: Step) {
   }
 }
 
+/* ============================================================
+   A fact panel entry. Every fact is a link: internal facts open the page
+   where the rest of that read lives, the install fact opens the dashboard.
+   ============================================================ */
+
 function Fact({
   label,
   value,
   note,
   numeric = false,
   delay,
+  href,
+  external = false,
 }: {
   label: string
   value: ReactNode
   note?: string
   numeric?: boolean
   delay?: number
+  href?: string
+  external?: boolean
 }) {
   const pending = value === null || value === undefined || value === ''
   const cls = [
     'fact',
+    href ? 'fact--link' : '',
     pending ? 'fact--pending' : '',
     delay === undefined ? '' : 'fact--in',
   ]
     .filter(Boolean)
     .join(' ')
-  return (
-    <div
-      className={cls}
-      style={delay === undefined ? undefined : { animationDelay: `${delay}ms` }}
-    >
+  const style =
+    delay === undefined ? undefined : { animationDelay: `${delay}ms` }
+  const body = (
+    <>
       <div className="fact__label">{label}</div>
       <div className={numeric ? 'fact__value fact__value--num' : 'fact__value'}>
         {pending ? '—' : value}
       </div>
       {note && <div className="fact__note">{note}</div>}
+      {href && (
+        <span className="fact__go" aria-hidden="true">
+          <Icon name="arrow-up-right" />
+        </span>
+      )}
+    </>
+  )
+  if (href) {
+    return (
+      <a
+        className={cls}
+        style={style}
+        href={href}
+        {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
+      >
+        {body}
+      </a>
+    )
+  }
+  return (
+    <div className={cls} style={style}>
+      {body}
     </div>
   )
 }
@@ -178,96 +203,9 @@ function GoldenPath({
 }
 
 /* ============================================================
-   The shipping lifecycle strip: how this exact page got here, drawn from
-   the real config at build time (branch name, install groups, post-deploy
-   runbook all come from config-data.gen.ts). Each beat with a live
-   dashboard screen behind it is a deep link to that screen.
-   ============================================================ */
-
-interface ShipBeatSpec {
-  label: string
-  detail: string
-  href?: string
-}
-
-function ShipStrip({ config }: { config: UIConfig }) {
-  const groups = installGroups.map((g) => g.name).join(' → ')
-  const healthRunbook = postDeployRunbooks[0]
-  const beats: ShipBeatSpec[] = [
-    {
-      label: 'git push',
-      detail: branchName,
-      href: repoName
-        ? `https://github.com/${repoName}/tree/${branchName}`
-        : undefined,
-    },
-    {
-      label: 'CI stamps images',
-      detail: 'new tags land in the config',
-      href: repoName ? `https://github.com/${repoName}/actions` : undefined,
-    },
-    {
-      label: 'branch run',
-      detail: 'a new config version',
-      href: config.links.versions,
-    },
-    {
-      label: 'staged rollout',
-      detail: `${groups} · an approval each`,
-      href: config.links.branches,
-    },
-    {
-      label: 'deploy',
-      detail: 'to this install',
-      href: config.links.workflows,
-    },
-  ]
-  if (healthRunbook) {
-    beats.push({
-      label: 'health check',
-      detail: healthRunbook,
-      href: config.links.runbooks,
-    })
-  }
-
-  return (
-    <div className="ship">
-      {beats.map((beat, i) => {
-        const body = (
-          <>
-            <span className="ship__num">0{i + 1}</span>
-            <span className="ship__label">{beat.label}</span>
-            <span className="ship__detail mono">{beat.detail}</span>
-          </>
-        )
-        return beat.href ? (
-          <a
-            key={beat.label}
-            className="ship__beat ship__beat--link"
-            href={beat.href}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {body}
-            <span className="ship__go" aria-hidden="true">
-              <Icon name="arrow-up-right" />
-            </span>
-          </a>
-        ) : (
-          <span key={beat.label} className="ship__beat">
-            {body}
-          </span>
-        )
-      })}
-    </div>
-  )
-}
-
-/* ============================================================
-   The customize page: the tour's destination, and the returning-visitor
-   front door. The tiles come from the one taxonomy in lib/taxonomy.ts,
-   grouped by category, each badged live or guide so nobody has to click in
-   to find out which pages read the install.
+   The customize hub: the tour's destination, and the returning-visitor
+   front door. One ordered path from lib/taxonomy.ts, with the agent prompt
+   as the default way to run it.
    ============================================================ */
 
 export function Landing({ config }: { config: UIConfig }) {
@@ -282,7 +220,7 @@ export function Landing({ config }: { config: UIConfig }) {
 
   // The namespace read doubles as the toggleable-component watcher: while the
   // hub is on screen and either component is still off, keep re-reading so
-  // flipping one on in the dashboard flips its tile's switch here without a
+  // flipping one on in the dashboard flips its row's switch here without a
   // reload.
   const [tictactoe, setTictactoe] = useState(false)
   const [tictactoeFlipped, setTictactoeFlipped] = useState(false)
@@ -382,18 +320,42 @@ export function Landing({ config }: { config: UIConfig }) {
   /* ---------- Explore (the finish state, and the returning-visitor state) ---------- */
 
   if (step === 'explore') {
+    const install = config.install_id ?? '<your-install-id>'
+    const app = config.app_id ?? '<your-app-id>'
     return (
       <div className="tour__step" key="explore">
         <header className="hero">
           <Eyebrow>Kitchen sink &middot; live install</Eyebrow>
           <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
           <p className="hero__lede">
-            Each tile says what it is. Live pages read this install right now;
-            guides explain the config this app ships. The operations themselves
-            run from your terminal and dashboard &mdash; every page hands you
-            the exact commands, with this install&rsquo;s ids filled in. Pick
-            any order.
+            Nine steps, in the order an engineer sizes up a BYOC system: read
+            the install, ship to it, operate it, govern it. Each step names a
+            problem, shows the config that answers it, and hands you the
+            commands to prove it on this install.
           </p>
+          <div className="agent-cta">
+            <div className="agent-cta__body">
+              <div className="agent-cta__title">
+                The default way to run it: your coding agent
+              </div>
+              <p className="agent-cta__desc">
+                One prompt covers the whole checklist, ids filled in. The
+                agent shows every command and waits for your yes before
+                anything mutates.
+              </p>
+            </div>
+            <div className="agent-cta__actions">
+              <CopyButton
+                text={agentPrompt(install, app)}
+                label="Copy the agent prompt"
+                doneLabel="Copied"
+                big
+              />
+              <a href="#/customize/agent">
+                Read it first <Icon name="arrow-right" />
+              </a>
+            </div>
+          </div>
           <div className="row" style={{ marginTop: 20 }}>
             <button
               className="tour__skip"
@@ -405,26 +367,7 @@ export function Landing({ config }: { config: UIConfig }) {
           </div>
         </header>
 
-        <div style={{ marginTop: 32 }}>
-          <CapabilityGroups
-            categories={categories.filter((c) => !c.dayTwo)}
-            switches={switches}
-          />
-        </div>
-
-        <div className="hub-day2">
-          <h2 className="hub-day2__title">How do I operate 50 of these?</h2>
-          <p className="hub-day2__lede">
-            One install is a demo. Fifty is a business, and the difference is
-            day-two tooling. Four kinds of it carry the weight, each grounded
-            in this app&rsquo;s real config.
-          </p>
-        </div>
-
-        <CapabilityGroups
-          categories={categories.filter((c) => c.dayTwo)}
-          switches={switches}
-        />
+        <EvalPath switches={switches} />
 
         {config.links.install && (
           <section className="section">
@@ -433,10 +376,8 @@ export function Landing({ config }: { config: UIConfig }) {
                 <div className="card__title">The other half of the tour</div>
               </div>
               <p className="small muted" style={{ maxWidth: '70ch' }}>
-                This app shows you the install from the inside. The Nuon
-                dashboard shows you the same install from the outside: its
-                components, actions, runbooks and deploy history. It is also
-                where you operate every other install.
+                This app reads the install from the inside. The Nuon dashboard
+                operates it, and every other install, from the outside.
               </p>
               <div className="row" style={{ marginTop: 20 }}>
                 <OutLink href={config.links.install}>
@@ -456,7 +397,7 @@ export function Landing({ config }: { config: UIConfig }) {
     )
   }
 
-  /* ---------- The six tour steps between arrival and explore ---------- */
+  /* ---------- The four tour steps between arrival and explore ---------- */
 
   const tourSteps = steps.slice(1, -1) as Step[]
   const tourIdx = tourSteps.indexOf(step)
@@ -568,11 +509,6 @@ export function Landing({ config }: { config: UIConfig }) {
             </>,
           )}
           <GoldenPath stage="runner" onPick={(p) => go(p)} />
-          <p className="golden__aside">
-            That&rsquo;s the whole golden path. Everything else is optional:
-            inputs, policies, secrets, actions, break-glass roles, the other
-            component types. You add them when a customer asks.
-          </p>
           {stepActions()}
         </>
       )}
@@ -583,9 +519,8 @@ export function Landing({ config }: { config: UIConfig }) {
             <Eyebrow>This install &middot; read live</Eyebrow>
             <h2>Here&rsquo;s what Nuon deployed.</h2>
             <p className="step-header__lede">
-              Nothing here is a mock. Every value below is read from the
-              cluster, right now, through the app&rsquo;s own introspection
-              API.
+              Four facts, read from the cluster as you load this page. Each
+              one opens the record behind it.
             </p>
           </header>
           <div className="facts">
@@ -594,12 +529,15 @@ export function Landing({ config }: { config: UIConfig }) {
               value={config.install_id}
               note="The tenant this app belongs to"
               delay={0}
+              href={config.links.install}
+              external
             />
             <Fact
               label="Cluster"
               value={config.cluster_name}
               note={config.region ? `EKS in ${config.region}` : 'EKS'}
               delay={140}
+              href="#/deployed/cluster"
             />
             <Fact
               label="Namespaces"
@@ -607,6 +545,7 @@ export function Landing({ config }: { config: UIConfig }) {
               note="Read from the Kubernetes API"
               numeric
               delay={280}
+              href="#/deployed/cluster"
             />
             <Fact
               label={`Pods ready in ${namespace}`}
@@ -614,45 +553,9 @@ export function Landing({ config }: { config: UIConfig }) {
               note="api, ui, worker"
               numeric
               delay={420}
+              href="#/deployed/namespace"
             />
           </div>
-          <p className="tour__aside">
-            The full picture lives one page deeper: pods, services, Helm
-            releases, the pod environment, and the raw JSON behind each
-            summary.
-            {config.links.versions && (
-              <>
-                {' '}
-                And it is all on your record:{' '}
-                <OutLink href={config.links.versions} variant="plain">
-                  see this install&rsquo;s config versions
-                </OutLink>
-              </>
-            )}
-          </p>
-          {stepActions()}
-        </>
-      )}
-
-      {step === 'shipped' && (
-        <>
-          <header className="step-header">
-            <Eyebrow>How it got here &middot; from the real config</Eyebrow>
-            <h2>A git push did all of this.</h2>
-            <p className="step-header__lede">
-              This page did not get deployed by hand. A push to{' '}
-              <span className="mono">{branchName}</span> sets the whole chain
-              in motion, and the same chain reruns for every change you ship.
-              The beats with an arrow open the live dashboard screen where
-              that beat is on record.
-            </p>
-          </header>
-          <ShipStrip config={config} />
-          <p className="golden__aside">
-            That is the whole shipping interface: nobody deploys, they push.
-            The staged groups and the approval on each one are why a mistake
-            reaches one friendly install instead of every customer at once.
-          </p>
           <div className="cta-block">
             <div className="cta-block__kicker">
               What it takes to operate BYOC with real customers

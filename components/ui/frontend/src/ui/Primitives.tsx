@@ -128,7 +128,43 @@ export function Section({
   title,
   aside,
   children,
+  id,
 }: {
+  title: string
+  aside?: ReactNode
+  children: ReactNode
+  id?: string
+}) {
+  return (
+    <section className="section" id={id}>
+      <div className="section__head">
+        <h2 className="section__title">{title}</h2>
+        {aside && <div className="subtext muted">{aside}</div>}
+      </div>
+      {children}
+    </section>
+  )
+}
+
+/* ============================================================
+   Every feature page runs the same three beats: Problem (where this bites),
+   Solution (the config that answers it), Proof (test it on this install,
+   right now). The tags make the pattern visible without a paragraph.
+   ============================================================ */
+
+export type PspKind = 'problem' | 'solution' | 'proof'
+
+export function PspTag({ kind }: { kind: PspKind }) {
+  return <span className={`psp-tag psp-tag--${kind}`}>{kind}</span>
+}
+
+export function PspSection({
+  kind,
+  title,
+  aside,
+  children,
+}: {
+  kind: PspKind
   title: string
   aside?: ReactNode
   children: ReactNode
@@ -136,6 +172,7 @@ export function Section({
   return (
     <section className="section">
       <div className="section__head">
+        <PspTag kind={kind} />
         <h2 className="section__title">{title}</h2>
         {aside && <div className="subtext muted">{aside}</div>}
       </div>
@@ -208,13 +245,30 @@ async function copyText(text: string): Promise<void> {
   }
 }
 
-export function CopyButton({ text }: { text: string }) {
+export function CopyButton({
+  text,
+  label = 'Copy',
+  doneLabel = 'Copied',
+  big = false,
+}: {
+  text: string
+  label?: string
+  doneLabel?: string
+  big?: boolean
+}) {
   const [copied, setCopied] = useState(false)
   const timer = useRef<number | undefined>(undefined)
   useEffect(() => () => window.clearTimeout(timer.current), [])
+  const cls = [
+    'copy-btn',
+    copied ? 'copy-btn--done' : '',
+    big ? 'copy-btn--big' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
   return (
     <button
-      className={copied ? 'copy-btn copy-btn--done' : 'copy-btn'}
+      className={cls}
       onClick={() => {
         void copyText(text).then(() => {
           setCopied(true)
@@ -223,7 +277,7 @@ export function CopyButton({ text }: { text: string }) {
         })
       }}
     >
-      {copied ? 'Copied' : 'Copy'}
+      {copied ? doneLabel : label}
     </button>
   )
 }

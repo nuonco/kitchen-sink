@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import {
   countReady,
   useIntrospect,
@@ -8,6 +9,7 @@ import {
   type SecretSummary,
   type UIConfig,
 } from '../lib/api'
+import { stepEyebrow } from '../lib/taxonomy'
 import {
   BackLink,
   Badge,
@@ -35,6 +37,7 @@ function Namespaces({ config }: { config: UIConfig }) {
 
   return (
     <Section
+      id="cluster"
       title="Cluster and namespaces"
       aside="GET /introspect/kube"
     >
@@ -115,6 +118,7 @@ function ThisNamespace({ config }: { config: UIConfig }) {
 
   return (
     <Section
+      id="namespace"
       title={`Inside the ${namespace} namespace`}
       aside={`GET /introspect/namespace/${namespace}`}
     >
@@ -256,7 +260,7 @@ function HelmReleases({ config }: { config: UIConfig }) {
   const hasThisApp = releases.some(([, rel]) => rel.name === 'kitchen-sink')
 
   return (
-    <Section title="Helm releases" aside="GET /introspect/helm">
+    <Section id="helm" title="Helm releases" aside="GET /introspect/helm">
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
         Nuon deploys the <span className="mono">kitchen_sink</span> component by
         running Helm from the runner, so Helm&rsquo;s own release history is the record
@@ -347,7 +351,7 @@ function PodEnvironment() {
   const discovered = keys.filter(kubeInjected)
 
   return (
-    <Section title="What the pod actually sees" aside="GET /introspect/env">
+    <Section id="env" title="What the pod actually sees" aside="GET /introspect/env">
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
         The API pod&rsquo;s own environment. This is the honest answer to &ldquo;what does
         Nuon inject into my container?&rdquo; The answer: exactly what your
@@ -423,12 +427,24 @@ function PodEnvironment() {
   )
 }
 
-export function Deployed({ config }: { config: UIConfig }) {
+export function Deployed({
+  config,
+  section,
+}: {
+  config: UIConfig
+  /** Optional deep-link target: #/deployed/cluster scrolls to that section. */
+  section?: string
+}) {
+  useEffect(() => {
+    if (!section) return
+    document.getElementById(section)?.scrollIntoView({ block: 'start' })
+  }, [section])
+
   return (
     <>
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
-        <Eyebrow>Deep dive</Eyebrow>
+        <Eyebrow>{stepEyebrow('/deployed')}</Eyebrow>
         <h1>What did Nuon actually deploy?</h1>
         <p className="lede">
           Four live reads against this install. Each one is a summary of what the
