@@ -9,6 +9,8 @@ import {
 } from '../lib/api'
 import { toggleableComponents } from '../lib/config-data.gen'
 import { stepEyebrow } from '../lib/taxonomy'
+import { useMarkStepSeen } from '../lib/progress'
+import { StepNav } from '../ui/CapabilityGrid'
 import {
   BackLink,
   Badge,
@@ -120,6 +122,7 @@ function HowItKnows({
 }
 
 export function AuditLog({ config }: { config: UIConfig }) {
+  useMarkStepSeen('/audit-log')
   const namespace = config.namespace ?? 'kitchen-sink'
   const [enabled, setEnabled] = useState(false)
   const [justEnabled, setJustEnabled] = useState(false)
@@ -159,7 +162,7 @@ export function AuditLog({ config }: { config: UIConfig }) {
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
         <Eyebrow>{stepEyebrow('/audit-log')}</Eyebrow>
-        <h1>Sell an entitlement.</h1>
+        <h1>Sell an entitlement</h1>
         <p className="lede psp-lede">
           <PspTag kind="problem" /> One plan tier includes a feature the
           others don&rsquo;t, and every install runs the same config.
@@ -289,6 +292,7 @@ export function AuditLog({ config }: { config: UIConfig }) {
           </PspSection>
         </>
       )}
+      <StepNav current="/audit-log" />
     </>
   )
 }
