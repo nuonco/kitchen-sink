@@ -1614,40 +1614,137 @@ pre.raw {
 }
 
 /* ============================================================
-   Component-type mapping cards
+   Component-type matrix: one row per type, one open at a time.
    ============================================================ */
 
-.maps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--space-4);
+.typelist {
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  overflow: hidden;
 }
 
-.map__type {
-  font-family: var(--font-mono);
+.typerow + .typerow {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.typerow__head {
+  display: grid;
+  grid-template-columns: 176px 1fr max-content 16px;
+  gap: var(--space-4);
+  align-items: baseline;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: none;
+  border: 0;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.typerow__head:hover {
+  background: var(--surface-hover);
+}
+
+.typerow__head:focus-visible {
+  outline: none;
+  box-shadow: inset var(--shadow-focus);
+}
+
+.typerow__type {
   font-size: var(--text-subtext);
   letter-spacing: 0;
   color: var(--accent);
+  overflow-wrap: anywhere;
 }
 
-.map__what {
-  margin-top: var(--space-3);
+.typerow__purpose {
   font-size: var(--text-body);
   line-height: var(--text-body-line);
   color: var(--text-secondary);
 }
 
-.map__here {
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
+.typerow__uses {
+  font-size: var(--text-subtext);
+  letter-spacing: 0;
+  color: var(--text-primary);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.typerow__caret {
+  color: var(--text-tertiary);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.typerow--open .typerow__caret {
+  transform: rotate(90deg);
+}
+
+.typerow__body {
+  padding: var(--space-2) var(--space-4) var(--space-4);
   border-top: 1px solid var(--border-subtle);
+  background: var(--surface-sunken);
+}
+
+.typerow__what {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+  max-width: 76ch;
+}
+
+.typerow__here {
+  margin: var(--space-3) 0 0;
   font-size: var(--text-body);
   line-height: var(--text-body-line);
   color: var(--text-primary);
+  max-width: 76ch;
 }
 
-.map__here strong {
+.typerow__here strong {
   font-weight: var(--weight-strong);
+}
+
+@media (max-width: 720px) {
+  .typerow__head {
+    grid-template-columns: 1fr 16px;
+  }
+  .typerow__uses {
+    text-align: left;
+  }
+}
+
+/* A config file shown in place: the filename links to the file in the repo. */
+
+.filecode {
+  margin-top: var(--space-4);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+
+.filecode__name {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-subtext);
+  letter-spacing: 0;
+  color: var(--text-tertiary);
+  text-decoration: none;
+}
+
+.filecode__name:hover {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.filecode pre.raw {
+  padding: var(--space-3);
 }
 
 /* ============================================================

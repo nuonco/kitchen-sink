@@ -197,12 +197,15 @@ export function Callout({ label, children }: { label: string; children: ReactNod
 export function Disclosure({
   summary,
   children,
+  defaultOpen = false,
 }: {
   summary: string
   children: ReactNode
+  /** Start expanded (e.g. when a deep link targets what's inside). */
+  defaultOpen?: boolean
 }) {
   return (
-    <details className="disclosure">
+    <details className="disclosure" open={defaultOpen || undefined}>
       <summary>
         <Icon name="caret-right" />
         {summary}
