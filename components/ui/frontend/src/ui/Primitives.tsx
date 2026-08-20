@@ -94,15 +94,18 @@ export function OutLink({
   href,
   children,
   variant = 'primary',
+  onClick,
 }: {
   href?: string
   children: ReactNode
   variant?: 'primary' | 'secondary' | 'plain'
+  /** Fires alongside the navigation (the link still opens in a new tab). */
+  onClick?: () => void
 }) {
   if (!href) return null
   if (variant === 'plain') {
     return (
-      <a href={href} target="_blank" rel="noreferrer">
+      <a href={href} target="_blank" rel="noreferrer" onClick={onClick}>
         {children} <Icon name="arrow-up-right" />
       </a>
     )
@@ -113,6 +116,7 @@ export function OutLink({
       href={href}
       target="_blank"
       rel="noreferrer"
+      onClick={onClick}
     >
       {children}
       <Icon name="arrow-square-out" />

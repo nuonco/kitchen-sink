@@ -1,12 +1,19 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   countReady,
   hasTicTacToe,
   useIntrospect,
+  useIntrospectPoll,
   type KubeResponse,
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
+import {
+  branchName,
+  installGroups,
+  postDeployRunbooks,
+  repoName,
+} from '../lib/config-data.gen'
 import { categories } from '../lib/taxonomy'
 import { CapabilityGroups } from '../ui/CapabilityGrid'
 import { Eyebrow, Icon, OutLink } from '../ui/Primitives'
@@ -26,6 +33,7 @@ const steps = [
   'components',
   'runner',
   'deployed',
+  'shipped',
   'explore',
 ] as const
 
@@ -169,6 +177,92 @@ function GoldenPath({
 }
 
 /* ============================================================
+   The shipping lifecycle strip: how this exact page got here, drawn from
+   the real config at build time (branch name, install groups, post-deploy
+   runbook all come from config-data.gen.ts). Each beat with a live
+   dashboard screen behind it is a deep link to that screen.
+   ============================================================ */
+
+interface ShipBeatSpec {
+  label: string
+  detail: string
+  href?: string
+}
+
+function ShipStrip({ config }: { config: UIConfig }) {
+  const groups = installGroups.map((g) => g.name).join(' → ')
+  const healthRunbook = postDeployRunbooks[0]
+  const beats: ShipBeatSpec[] = [
+    {
+      label: 'git push',
+      detail: branchName,
+      href: repoName
+        ? `https://github.com/${repoName}/tree/${branchName}`
+        : undefined,
+    },
+    {
+      label: 'CI stamps images',
+      detail: 'new tags land in the config',
+      href: repoName ? `https://github.com/${repoName}/actions` : undefined,
+    },
+    {
+      label: 'branch run',
+      detail: 'a new config version',
+      href: config.links.versions,
+    },
+    {
+      label: 'staged rollout',
+      detail: `${groups} · an approval each`,
+      href: config.links.branches,
+    },
+    {
+      label: 'deploy',
+      detail: 'to this install',
+      href: config.links.workflows,
+    },
+  ]
+  if (healthRunbook) {
+    beats.push({
+      label: 'health check',
+      detail: healthRunbook,
+      href: config.links.runbooks,
+    })
+  }
+
+  return (
+    <div className="ship">
+      {beats.map((beat, i) => {
+        const body = (
+          <>
+            <span className="ship__num">0{i + 1}</span>
+            <span className="ship__label">{beat.label}</span>
+            <span className="ship__detail mono">{beat.detail}</span>
+          </>
+        )
+        return beat.href ? (
+          <a
+            key={beat.label}
+            className="ship__beat ship__beat--link"
+            href={beat.href}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {body}
+            <span className="ship__go" aria-hidden="true">
+              <Icon name="arrow-up-right" />
+            </span>
+          </a>
+        ) : (
+          <span key={beat.label} className="ship__beat">
+            {body}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ============================================================
    The customize page: the tour's destination, and the returning-visitor
    front door. The tiles come from the one taxonomy in lib/taxonomy.ts,
    grouped by category, each badged live, simulation, or guide so nobody
@@ -184,17 +278,35 @@ export function Landing({ config }: { config: UIConfig }) {
 
   const namespace = config.namespace ?? 'kitchen-sink'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
-  const ns = useIntrospect<NamespaceResponse>(
+
+  // The namespace read doubles as the tictactoe watcher: while the hub is on
+  // screen and the component is still off, keep re-reading so flipping it on
+  // in the dashboard flips the tile's switch here without a reload.
+  const [tictactoe, setTictactoe] = useState(false)
+  const [tictactoeFlipped, setTictactoeFlipped] = useState(false)
+  const sawOff = useRef(false)
+  const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
+    20_000,
+    step === 'explore' && !tictactoe,
   )
+
+  useEffect(() => {
+    if (ns.state !== 'ok') return
+    const found = hasTicTacToe(ns.value.response.services ?? [])
+    if (found) {
+      if (sawOff.current) setTictactoeFlipped(true)
+      setTictactoe(true)
+    } else {
+      sawOff.current = true
+    }
+  }, [ns])
 
   const namespaceCount =
     kube.state === 'ok' ? kube.value.response.namespaces?.length : undefined
   const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
   const podSummary =
     ns.state === 'ok' ? `${countReady(pods)} / ${pods.length}` : undefined
-  const tictactoe =
-    ns.state === 'ok' && hasTicTacToe(ns.value.response.services ?? [])
 
   const idx = steps.indexOf(step)
   const go = (next: Step) => {
@@ -228,6 +340,15 @@ export function Landing({ config }: { config: UIConfig }) {
                 <span className="chip">cluster {config.cluster_name}</span>
               )}
             </div>
+          )}
+          {config.links.versions && (
+            <p className="arrive__versions">
+              This install is yours: every config version it has ever run is
+              on record.{' '}
+              <OutLink href={config.links.versions} variant="plain">
+                See its config versions
+              </OutLink>
+            </p>
           )}
           <div className="arrive__actions">
             <button className="btn btn--primary" onClick={next}>
@@ -271,6 +392,7 @@ export function Landing({ config }: { config: UIConfig }) {
           <CapabilityGroups
             categories={categories.filter((c) => !c.dayTwo)}
             tictactoe={tictactoe}
+            tictactoeFlipped={tictactoeFlipped}
           />
         </div>
 
@@ -482,6 +604,38 @@ export function Landing({ config }: { config: UIConfig }) {
             The full picture lives one page deeper: pods, services, Helm
             releases, the pod environment, and the raw JSON behind each
             summary.
+            {config.links.versions && (
+              <>
+                {' '}
+                And it is all on your record:{' '}
+                <OutLink href={config.links.versions} variant="plain">
+                  see this install&rsquo;s config versions
+                </OutLink>
+              </>
+            )}
+          </p>
+          {stepActions()}
+        </>
+      )}
+
+      {step === 'shipped' && (
+        <>
+          <header className="step-header">
+            <Eyebrow>How it got here &middot; from the real config</Eyebrow>
+            <h2>A git push did all of this.</h2>
+            <p className="step-header__lede">
+              This page did not get deployed by hand. A push to{' '}
+              <span className="mono">{branchName}</span> sets the whole chain
+              in motion, and the same chain reruns for every change you ship.
+              The beats with an arrow open the live dashboard screen where
+              that beat is on record.
+            </p>
+          </header>
+          <ShipStrip config={config} />
+          <p className="golden__aside">
+            That is the whole shipping interface: nobody deploys, they push.
+            The staged groups and the approval on each one are why a mistake
+            reaches one friendly install instead of every customer at once.
           </p>
           <div className="cta-block">
             <div className="cta-block__kicker">

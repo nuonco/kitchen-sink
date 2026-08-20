@@ -54,7 +54,7 @@ export const categories: Category[] = [
         to: '/tictactoe',
         icon: 'toggle',
         title: 'Enable custom features',
-        desc: 'A toggleable component gates this feature per install. The switch shows its real state.',
+        desc: 'A toggleable component gates this feature per install. Flip it on in the dashboard and watch this switch move by itself.',
         mode: 'live',
       },
     ],

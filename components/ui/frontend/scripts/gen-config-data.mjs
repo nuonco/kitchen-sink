@@ -274,6 +274,8 @@ export interface Guardrail {
 
 export const branchName = ${ts(branch.name)}
 
+export const repoName = ${ts(branch.public_repo?.repo ?? branch.connected_repo?.repo ?? '')}
+
 export const postDeployRunbooks: string[] = ${ts(branch.post_deploy_runbooks ?? [])}
 
 export const installGroups: InstallGroup[] = ${ts(installGroups)}

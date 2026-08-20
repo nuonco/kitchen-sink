@@ -1,18 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   hasTicTacToe,
-  useIntrospect,
+  useIntrospectPoll,
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
 import {
   BackLink,
+  Badge,
   Callout,
   Eyebrow,
   Icon,
   LoadState,
   OutLink,
 } from '../ui/Primitives'
+
+/** How often the locked page re-reads the namespace looking for the deploy. */
+const POLL_MS = 10_000
 
 type Cell = 'X' | 'O' | null
 
@@ -35,7 +39,7 @@ function winningLine(board: Cell[]): number[] | null {
   return null
 }
 
-function Game() {
+function Game({ justDeployed }: { justDeployed: boolean }) {
   const [board, setBoard] = useState<Cell[]>(Array(9).fill(null))
   const [xToMove, setXToMove] = useState(true)
 
@@ -64,7 +68,19 @@ function Game() {
 
   return (
     <section className="section">
-      <div className="ttt">
+      {justDeployed && (
+        <div className="ttt-unlocked-note">
+          <Badge tone="positive" dot>
+            just deployed
+          </Badge>
+          <span>
+            That was the deploy landing: the marker Service appeared in the
+            namespace, this page noticed, and the feature unlocked itself. No
+            reload.
+          </span>
+        </div>
+      )}
+      <div className={justDeployed ? 'ttt ttt--just-unlocked' : 'ttt'}>
         <div className="ttt__status" role="status">
           {status}
         </div>
@@ -98,7 +114,15 @@ function Game() {
   )
 }
 
-function Locked({ config }: { config: UIConfig }) {
+function Locked({
+  config,
+  waiting,
+  onDashboardOpen,
+}: {
+  config: UIConfig
+  waiting: boolean
+  onDashboardOpen: () => void
+}) {
   return (
     <section className="section">
       <div className="ttt-locked">
@@ -112,11 +136,12 @@ function Locked({ config }: { config: UIConfig }) {
           and <span className="mono">default_enabled = false</span>, so every
           install knows about it and none of them run it until someone flips it
           on. That is the shape of a SKU: one config, per-install entitlements.
-          Enable the component for this install in the dashboard, deploy it, and
-          reload this page.
+          Enable the component for this install in the dashboard and deploy it
+          &mdash; this page is watching the namespace and unlocks itself the
+          moment the deploy lands.
         </p>
         <div className="row" style={{ marginTop: 20 }}>
-          <OutLink href={config.links.components}>
+          <OutLink href={config.links.components} onClick={onDashboardOpen}>
             Open components in Nuon
           </OutLink>
           <OutLink
@@ -125,6 +150,30 @@ function Locked({ config }: { config: UIConfig }) {
           >
             Read about components
           </OutLink>
+        </div>
+        <div className="ttt-watch">
+          {waiting ? (
+            <>
+              <Badge tone="warning" dot>
+                waiting for the deploy
+              </Badge>
+              <span>
+                Toggle the component on in the dashboard tab and deploy it.
+                This page re-reads the namespace every {POLL_MS / 1000} seconds
+                and flips to the game when the marker Service appears.
+              </span>
+            </>
+          ) : (
+            <>
+              <Badge tone="accent" dot>
+                watching live
+              </Badge>
+              <span>
+                Checking this namespace for the marker Service every{' '}
+                {POLL_MS / 1000} seconds.
+              </span>
+            </>
+          )}
         </div>
       </div>
       <Callout label="How this page knows">
@@ -139,11 +188,29 @@ function Locked({ config }: { config: UIConfig }) {
 
 export function TicTacToe({ config }: { config: UIConfig }) {
   const namespace = config.namespace ?? 'kitchen-sink'
-  const ns = useIntrospect<NamespaceResponse>(
+  const [unlocked, setUnlocked] = useState(false)
+  const [justUnlocked, setJustUnlocked] = useState(false)
+  const [waiting, setWaiting] = useState(false)
+  // True once the visitor has actually seen the locked pitch, so an unlock
+  // detected later is a real on-screen moment rather than the initial load.
+  const sawLocked = useRef(false)
+
+  const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
+    POLL_MS,
+    !unlocked,
   )
-  const unlocked =
-    ns.state === 'ok' && hasTicTacToe(ns.value.response.services ?? [])
+
+  useEffect(() => {
+    if (ns.state !== 'ok') return
+    const found = hasTicTacToe(ns.value.response.services ?? [])
+    if (found) {
+      if (sawLocked.current) setJustUnlocked(true)
+      setUnlocked(true)
+    } else {
+      sawLocked.current = true
+    }
+  }, [ns])
 
   return (
     <>
@@ -158,9 +225,20 @@ export function TicTacToe({ config }: { config: UIConfig }) {
         </p>
       </header>
 
-      <LoadState result={ns} what={`the ${namespace} namespace`} />
-      {ns.state === 'ok' &&
-        (unlocked ? <Game /> : <Locked config={config} />)}
+      {!unlocked && (
+        <LoadState result={ns} what={`the ${namespace} namespace`} />
+      )}
+      {unlocked ? (
+        <Game justDeployed={justUnlocked} />
+      ) : (
+        ns.state === 'ok' && (
+          <Locked
+            config={config}
+            waiting={waiting}
+            onDashboardOpen={() => setWaiting(true)}
+          />
+        )
+      )}
     </>
   )
 }
