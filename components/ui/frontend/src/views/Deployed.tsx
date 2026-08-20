@@ -2,9 +2,11 @@ import { useEffect } from 'react'
 import {
   countReady,
   useIntrospect,
+  type Envelope,
   type EnvResponse,
   type HelmResponse,
   type KubeResponse,
+  type Loadable,
   type NamespaceResponse,
   type SecretSummary,
   type UIConfig,
@@ -14,8 +16,8 @@ import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
 import {
   BackLink,
-  Badge,
   Callout,
+  Disclosure,
   Eyebrow,
   EmptyState,
   LoadState,
@@ -25,20 +27,163 @@ import {
   Section,
 } from '../ui/Primitives'
 
-/** Namespaces this app config is responsible for, so the table can mark them. */
-function namespaceNote(name?: string, installID?: string): string | null {
-  // A row with no name is a malformed response; a public demo page must
-  // degrade to a blank cell, never a crash.
-  if (!name) return null
-  if (name === 'kitchen-sink') return 'This app'
-  if (installID && name === `${installID}-dne`) return 'The kustomize component'
-  if (name === 'nuon') return 'The Nuon runner'
-  if (name.startsWith('kube-') || name === 'default') return null
-  return null
+/**
+ * Who put a namespace there. `app: true` marks the rows this app config is
+ * responsible for; the rest is cluster plumbing, grouped out of the way.
+ * A row with no name is a malformed response; a public demo page must
+ * degrade to a muted cell, never a crash.
+ */
+function namespaceOwner(
+  name: string | undefined,
+  installID: string | undefined,
+): { label: string; app: boolean } {
+  if (!name) return { label: '', app: false }
+  if (name === 'kitchen-sink') return { label: 'This app', app: true }
+  if (installID && name === `${installID}-dne`)
+    return { label: 'The kustomize component', app: true }
+  if (name === 'nuon') return { label: 'The Nuon runner', app: true }
+  if (name.startsWith('kube-') || name === 'default')
+    return { label: 'Kubernetes', app: false }
+  return { label: 'The sandbox', app: false }
 }
 
-function Namespaces({ config }: { config: UIConfig }) {
-  const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
+type KubeResult = Loadable<Envelope<KubeResponse>>
+type NsResult = Loadable<Envelope<NamespaceResponse>>
+
+/* ============================================================
+   The page's summary: the few facts an evaluator checks first, live from the
+   same two introspection reads the sections below break down.
+   ============================================================ */
+
+function GlanceFact({
+  label,
+  value,
+  note,
+  numeric = false,
+}: {
+  label: string
+  value?: string
+  note?: string
+  numeric?: boolean
+}) {
+  return (
+    <div className={value ? 'fact' : 'fact fact--pending'}>
+      <div className="fact__label">{label}</div>
+      <div className={numeric ? 'fact__value fact__value--num' : 'fact__value'}>
+        {value ?? '…'}
+      </div>
+      {note && <div className="fact__note">{note}</div>}
+    </div>
+  )
+}
+
+/** "kitchen-sink-api :8080 · kitchen-sink-ui :3000", trimmed for a tile note. */
+function servingNote(data: NamespaceResponse): string {
+  return (data.services ?? [])
+    .map((svc) => {
+      const name = svc.metadata?.name?.replace(/^kitchen-sink-/, '') ?? '?'
+      const port = svc.spec?.ports?.[0]?.port
+      return port ? `${name} :${port}` : name
+    })
+    .join(' · ')
+}
+
+function Glance({
+  kube,
+  ns,
+  namespace,
+  installID,
+}: {
+  kube: KubeResult
+  ns: NsResult
+  namespace: string
+  installID?: string
+}) {
+  const nsData = ns.state === 'ok' ? ns.value.response : undefined
+  const pods = nsData?.pods ?? []
+  const kubeRows = kube.state === 'ok' ? (kube.value.response.namespaces ?? []) : undefined
+  const appRows = kubeRows?.filter((row) => namespaceOwner(row.name, installID).app)
+  const thisNs = kubeRows?.find((row) => row.name === namespace)
+
+  return (
+    <div className="facts" style={{ marginTop: 0 }}>
+      <GlanceFact
+        label="Pods ready"
+        value={nsData ? `${countReady(pods)} of ${pods.length}` : undefined}
+        note={`in ${namespace}`}
+        numeric
+      />
+      <GlanceFact
+        label="Serving"
+        value={nsData ? `${(nsData.services ?? []).length} services` : undefined}
+        note={nsData ? servingNote(nsData) : undefined}
+        numeric
+      />
+      <GlanceFact
+        label="This app's namespace"
+        value={kubeRows ? namespace : undefined}
+        note={thisNs?.status?.phase ?? undefined}
+      />
+      <GlanceFact
+        label="Namespaces in the cluster"
+        value={kubeRows ? String(kubeRows.length) : undefined}
+        note={
+          kubeRows && appRows
+            ? `${appRows.length} from this install · ${kubeRows.length - appRows.length} infrastructure`
+            : undefined
+        }
+        numeric
+      />
+    </div>
+  )
+}
+
+function NamespaceTable({
+  rows,
+  installID,
+}: {
+  rows: KubeResponse['namespaces']
+  installID?: string
+}) {
+  return (
+    <div className="table-wrap">
+      <table className="data">
+        <thead>
+          <tr>
+            <th>Namespace</th>
+            <th>Phase</th>
+            <th>Owner</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, i) => {
+            const owner = namespaceOwner(row.name, installID)
+            return (
+              <tr key={row.name ?? i}>
+                <td className="mono">{row.name}</td>
+                <td>
+                  <PhaseBadge phase={row.status?.phase} />
+                </td>
+                <td>
+                  {owner.app ? owner.label : <span className="muted">{owner.label}</span>}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function Namespaces({ kube, config }: { kube: KubeResult; config: UIConfig }) {
+  const rows = kube.state === 'ok' ? (kube.value.response.namespaces ?? []) : []
+  const mine = rows.filter((row) => namespaceOwner(row.name, config.install_id).app)
+  const infra = rows.filter((row) => !namespaceOwner(row.name, config.install_id).app)
+  const preview = infra
+    .slice(0, 3)
+    .map((row) => row.name)
+    .join(', ')
 
   return (
     <Section
@@ -47,38 +192,24 @@ function Namespaces({ config }: { config: UIConfig }) {
       aside="GET /introspect/kube"
     >
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        The API pod asks the Kubernetes API what else is in the cluster.
+        The API pod asks the Kubernetes API what else is in the cluster. These
+        namespaces are this install&rsquo;s:
       </p>
 
       <LoadState result={kube} what="the cluster" />
 
       {kube.state === 'ok' && (
         <>
-          <div className="table-wrap">
-            <table className="data">
-              <thead>
-                <tr>
-                  <th>Namespace</th>
-                  <th>Phase</th>
-                  <th>Owner</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(kube.value.response.namespaces ?? []).map((ns) => {
-                  const note = namespaceNote(ns.name, config.install_id)
-                  return (
-                    <tr key={ns.name}>
-                      <td className="mono">{ns.name}</td>
-                      <td>
-                        <PhaseBadge phase={ns.status?.phase} />
-                      </td>
-                      <td>{note ?? <span className="muted">Sandbox</span>}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <NamespaceTable rows={mine} installID={config.install_id} />
+          {infra.length > 0 && (
+            <Disclosure
+              summary={`Show the ${infra.length} infrastructure namespaces (${preview}${
+                infra.length > 3 ? ', …' : ''
+              })`}
+            >
+              <NamespaceTable rows={infra} installID={config.install_id} />
+            </Disclosure>
+          )}
           <RawJSON value={kube.value} />
         </>
       )}
@@ -111,13 +242,20 @@ function secretNote(secret: SecretSummary): string | null {
   return null
 }
 
-function ThisNamespace({ config }: { config: UIConfig }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
-  const ns = useIntrospect<NamespaceResponse>(
-    `/api/introspect/namespace/${namespace}`,
-  )
-
+function ThisNamespace({
+  ns,
+  namespace,
+  openPods,
+}: {
+  ns: NsResult
+  namespace: string
+  /** True when a deep link targeted this section: open the pods table. */
+  openPods: boolean
+}) {
   const data = ns.state === 'ok' ? redactSecrets(ns.value.response) : null
+  const pods = data?.pods ?? []
+  const services = data?.services ?? []
+  const secrets = data?.secrets ?? []
 
   return (
     <Section
@@ -134,13 +272,11 @@ function ThisNamespace({ config }: { config: UIConfig }) {
       <LoadState result={ns} what={`the ${namespace} namespace`} />
 
       {ns.state === 'ok' && data && (
-        <div className="stack stack--lg">
-          <div>
-            <div className="row" style={{ marginBottom: 12 }}>
-              <Badge tone="accent">
-                {countReady(data.pods ?? [])} of {data.pods_count} pods ready
-              </Badge>
-            </div>
+        <div className="stack">
+          <Disclosure
+            summary={`Show the ${pods.length} pods (${countReady(pods)} ready)`}
+            defaultOpen={openPods}
+          >
             <div className="table-wrap">
               <table className="data">
                 <thead>
@@ -152,7 +288,7 @@ function ThisNamespace({ config }: { config: UIConfig }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {(data.pods ?? []).map((pod, i) => {
+                  {pods.map((pod, i) => {
                     const statuses = pod.status?.containerStatuses ?? []
                     const restarts = statuses.reduce(
                       (sum, c) => sum + (c.restartCount ?? 0),
@@ -174,9 +310,9 @@ function ThisNamespace({ config }: { config: UIConfig }) {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Disclosure>
 
-          <div>
+          <Disclosure summary={`Show the ${services.length} services`}>
             <div className="table-wrap">
               <table className="data">
                 <thead>
@@ -188,7 +324,7 @@ function ThisNamespace({ config }: { config: UIConfig }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {(data.services ?? []).map((svc, i) => (
+                  {services.map((svc, i) => (
                     <tr key={svc.metadata?.name ?? i}>
                       <td className="mono">{svc.metadata?.name}</td>
                       <td>{svc.spec?.type}</td>
@@ -203,9 +339,11 @@ function ThisNamespace({ config }: { config: UIConfig }) {
                 </tbody>
               </table>
             </div>
-          </div>
+          </Disclosure>
 
-          <div>
+          <Disclosure
+            summary={`Show the ${secrets.length} secrets (values redacted by the server)`}
+          >
             <div className="table-wrap">
               <table className="data">
                 <thead>
@@ -216,7 +354,7 @@ function ThisNamespace({ config }: { config: UIConfig }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {(data.secrets ?? []).map((secret, i) => (
+                  {secrets.map((secret, i) => (
                     <tr key={secret.metadata?.name ?? i}>
                       <td className="mono">{secret.metadata?.name}</td>
                       <td className="mono subtext">
@@ -233,18 +371,14 @@ function ThisNamespace({ config }: { config: UIConfig }) {
               </table>
             </div>
             <Callout label="Where the secret values went">
-              This endpoint returns whole Kubernetes Secret objects, values
-              included, and the introspection API has no authentication, while
-              this page is published on the install&rsquo;s internet-facing load
-              balancer. So the server behind this UI strips every secret value
-              out of the response before it reaches your browser, and forwards
-              only the four introspection endpoints these views read.{' '}
-              <span className="mono">/introspect/helm-values</span> and{' '}
-              <span className="mono">/introspect/secrets</span> are not among
-              them. Filtering in the browser instead would protect nobody: you
-              could just call the endpoint yourself.
+              This endpoint returns whole Secret objects, values included, and
+              this page sits on the install&rsquo;s internet-facing load
+              balancer. So the server strips every secret value before the
+              response leaves the cluster, and proxies only the four endpoints
+              these views read. Filtering in the browser instead would protect
+              nobody: you could just call the endpoint yourself.
             </Callout>
-          </div>
+          </Disclosure>
 
           <RawJSON
             value={{ ...ns.value, response: data }}
@@ -277,54 +411,56 @@ function HelmReleases({ config }: { config: UIConfig }) {
           {releases.length === 0 ? (
             <EmptyState>No Helm releases were returned.</EmptyState>
           ) : (
-            <div className="table-wrap">
-              <table className="data">
-                <thead>
-                  <tr>
-                    <th>Release</th>
-                    <th>Namespace</th>
-                    <th>Chart</th>
-                    <th>Rev</th>
-                    <th>Status</th>
-                    <th>Last deployed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {releases.map(([key, rel]) => (
-                    <tr key={key}>
-                      <td className="mono">{rel.name}</td>
-                      <td className="mono subtext">{rel.namespace}</td>
-                      <td className="mono subtext">
-                        {rel.chart_metadata?.name}
-                        {rel.chart_metadata?.version
-                          ? ` ${rel.chart_metadata.version}`
-                          : ''}
-                      </td>
-                      <td>{rel.version}</td>
-                      <td>
-                        <PhaseBadge phase={rel.info?.status} />
-                      </td>
-                      <td className="subtext muted">
-                        {rel.info?.last_deployed?.slice(0, 19).replace('T', ' ')}
-                      </td>
+            <Disclosure
+              summary={`Show the ${releases.length} releases stored with the secret driver`}
+            >
+              <div className="table-wrap">
+                <table className="data">
+                  <thead>
+                    <tr>
+                      <th>Release</th>
+                      <th>Namespace</th>
+                      <th>Chart</th>
+                      <th>Rev</th>
+                      <th>Status</th>
+                      <th>Last deployed</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {releases.map(([key, rel]) => (
+                      <tr key={key}>
+                        <td className="mono">{rel.name}</td>
+                        <td className="mono subtext">{rel.namespace}</td>
+                        <td className="mono subtext">
+                          {rel.chart_metadata?.name}
+                          {rel.chart_metadata?.version
+                            ? ` ${rel.chart_metadata.version}`
+                            : ''}
+                        </td>
+                        <td>{rel.version}</td>
+                        <td>
+                          <PhaseBadge phase={rel.info?.status} />
+                        </td>
+                        <td className="subtext muted">
+                          {rel.info?.last_deployed?.slice(0, 19).replace('T', ' ')}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Disclosure>
           )}
 
           {!hasThisApp && (
             <Callout label="Why this app is missing from the list">
-              This app&rsquo;s own release is stored with Helm&rsquo;s{' '}
-              <code>configmap</code> driver:{' '}
+              This app&rsquo;s release is stored with Helm&rsquo;s{' '}
+              <code>configmap</code> driver (
               <span className="mono">components/chart/nuon.toml</span> sets{' '}
-              <span className="mono">storage_driver = &quot;configmap&quot;</span>, and{' '}
-              <span className="mono">runner.toml</span> sets{' '}
-              <span className="mono">helm_driver = &quot;configmap&quot;</span>. The
+              <span className="mono">storage_driver = &quot;configmap&quot;</span>;{' '}
+              <span className="mono">runner.toml</span> matches). The
               introspection API reads the <code>secret</code> driver, so it lists
-              the sandbox&rsquo;s releases and not this one. Storage driver is an
-              install-wide decision worth making once.
+              the sandbox&rsquo;s releases and not this one.
             </Callout>
           )}
 
@@ -437,6 +573,12 @@ export function Deployed({
   /** Optional deep-link target: #/deployed/cluster scrolls to that section. */
   section?: string
 }) {
+  const namespace = config.namespace ?? 'kitchen-sink'
+  const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
+  const ns = useIntrospect<NamespaceResponse>(
+    `/api/introspect/namespace/${namespace}`,
+  )
+
   useEffect(() => {
     if (!section) return
     document.getElementById(section)?.scrollIntoView({ block: 'start' })
@@ -451,13 +593,15 @@ export function Deployed({
         <Eyebrow>{stepEyebrow('/deployed')}</Eyebrow>
         <h1>What did Nuon actually deploy?</h1>
         <p className="lede">
-          Four live reads against this install; the untouched API response is
-          one click behind each.
+          Live reads from this install — the summary first; every table and raw
+          response is one click deeper.
         </p>
       </header>
 
-      <Namespaces config={config} />
-      <ThisNamespace config={config} />
+      <Glance kube={kube} ns={ns} namespace={namespace} installID={config.install_id} />
+
+      <Namespaces kube={kube} config={config} />
+      <ThisNamespace ns={ns} namespace={namespace} openPods={section === 'namespace'} />
       <HelmReleases config={config} />
       <PodEnvironment />
       <StepNav current="/deployed" />

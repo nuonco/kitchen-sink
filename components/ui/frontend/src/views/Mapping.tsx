@@ -1,18 +1,25 @@
+import { useState } from 'react'
 import type { UIConfig } from '../lib/api'
+import { branchName, repoName } from '../lib/config-data.gen'
 import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
 import {
   BackLink,
   Callout,
-  CodeBlock,
   Eyebrow,
+  Icon,
   OutLink,
   Section,
 } from '../ui/Primitives'
 
 interface ComponentType {
   type: string
+  /** One line for the matrix row. */
+  purpose: string
+  /** What this type is in this app, named. */
+  uses: string
+  /** The open row's detail. */
   what: string
   here: string
   file: string
@@ -20,13 +27,15 @@ interface ComponentType {
 }
 
 /**
- * One card per component type this app config actually uses. The TOML is copied
+ * One row per component type this app config actually uses. The TOML is copied
  * from the repo, so what a visitor reads here is the config that produced the
  * install they are reading it in.
  */
 const types: ComponentType[] = [
   {
     type: 'helm_chart',
+    purpose: 'Deploy a Helm chart',
+    uses: 'kitchen_sink',
     what:
       'Deploys a Helm chart into the install cluster. Nuon interpolates your values file first, so image tags and sandbox outputs are filled in per install.',
     here:
@@ -49,6 +58,8 @@ contents = "./chart/values.yaml"`,
   },
   {
     type: 'container_image',
+    purpose: 'Sync an image your CI already built',
+    uses: 'img_ui · img_api',
     what:
       'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
     here:
@@ -65,6 +76,8 @@ tag       = "sha-…"`,
   },
   {
     type: 'terraform_module',
+    purpose: 'Run a Terraform module',
+    uses: 'certificate',
     what:
       'Runs a Terraform module. The runner holds the state and the credentials, so your customer keeps both.',
     here:
@@ -87,6 +100,8 @@ domain_name = "*.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}
   },
   {
     type: 'pulumi',
+    purpose: 'Run a Pulumi program',
+    uses: 'pulumi_infra',
     what:
       'Runs a Pulumi program in Go, TypeScript or Python. Same contract as Terraform: your code, the customer’s account, the runner in between.',
     here:
@@ -107,6 +122,8 @@ branch    = "main"
   },
   {
     type: 'kubernetes_manifest',
+    purpose: 'Apply raw YAML or a kustomize overlay',
+    uses: 'kustomizeapp',
     what:
       'Applies raw YAML or a kustomize overlay. The escape hatch for anything that is not packaged as a chart.',
     here:
@@ -129,6 +146,84 @@ enable_helm = false`,
   },
 ]
 
+/** The file's home in the repo, at the branch this install tracks. */
+function repoFileURL(file: string): string {
+  return `https://github.com/${repoName}/blob/${branchName}/${file}`
+}
+
+function FileCode({ file, code }: { file: string; code: string }) {
+  return (
+    <div className="filecode">
+      <a
+        className="filecode__name mono"
+        href={repoFileURL(file)}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {file} <Icon name="arrow-up-right" />
+      </a>
+      <pre className="raw">{code}</pre>
+    </div>
+  )
+}
+
+/** The matrix: one row per type, one row open at a time. */
+function TypeMatrix() {
+  const [open, setOpen] = useState<string | null>(null)
+
+  return (
+    <div className="typelist">
+      {types.map((t) => {
+        const isOpen = open === t.type
+        return (
+          <div className={isOpen ? 'typerow typerow--open' : 'typerow'} key={t.type}>
+            <button
+              className="typerow__head"
+              aria-expanded={isOpen}
+              onClick={() => setOpen(isOpen ? null : t.type)}
+            >
+              <span className="typerow__type mono">{t.type}</span>
+              <span className="typerow__purpose">{t.purpose}</span>
+              <span className="typerow__uses mono">{t.uses}</span>
+              <span className="typerow__caret" aria-hidden="true">
+                <Icon name="caret-right" />
+              </span>
+            </button>
+            {isOpen && (
+              <div className="typerow__body">
+                <p className="typerow__what">{t.what}</p>
+                <p className="typerow__here">
+                  <strong>In this app:</strong> {t.here}
+                </p>
+                <FileCode file={t.file} code={t.toml} />
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * The dependency order of this app's core pieces, copied from each
+ * component's own `dependencies` line.
+ */
+const deployOrder = [
+  {
+    label: 'img_api · img_ui',
+    detail: 'container_image — nothing to wait for',
+  },
+  {
+    label: 'kitchen_sink',
+    detail: 'dependencies = ["img_api", "img_ui"]',
+  },
+  {
+    label: 'application_load_balancer',
+    detail: 'dependencies = ["certificate", "kitchen_sink"]',
+  },
+]
+
 export function Mapping({ config }: { config: UIConfig }) {
   useMarkStepSeen('/map')
   return (
@@ -144,57 +239,11 @@ export function Mapping({ config }: { config: UIConfig }) {
       </header>
 
       <Section title="The component types" aside="Five of them, in this app">
-        <div className="maps">
-          {types.map((t) => (
-            <article className="card" key={t.type}>
-              <div className="map__type">type = &quot;{t.type}&quot;</div>
-              <p className="map__what">{t.what}</p>
-              <div className="map__here">
-                <strong>In this app:</strong> {t.here}
-              </div>
-              <CodeBlock label={t.file} code={t.toml} />
-            </article>
-          ))}
-        </div>
-      </Section>
-
-      <Section title="How they find each other" aside="Outputs and dependencies">
-        <div className="prose">
-          <p>
-            Every component publishes outputs, and any other component can
-            interpolate them.
-          </p>
-          <p>
-            The Helm values file for this app names the two image components
-            directly, and Nuon fills in the repository and tag of the
-            CI-published image it synced into <em>this</em> install:
-          </p>
-        </div>
-        <CodeBlock
-          label="components/chart/values.yaml"
-          code={`api:
-  image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
-
-ui:
-  image: "{{.nuon.components.img_ui.outputs.image.repository}}:{{.nuon.components.img_ui.outputs.image.tag}}"
-  env:
-    API_URL: "http://kitchen-sink-api:8080"
-    NUON_INSTALL_ID: "{{.nuon.install.id}}"`}
-        />
-        <div className="prose" style={{ marginTop: 24 }}>
-          <p>
-            <code>dependencies = ["img_api", "img_ui"]</code> in the chart&rsquo;s TOML
-            is what makes the ordering safe: the images sync before the chart
-            deploys. The load balancer component depends on the chart, the
-            certificate on nothing, and Nuon works out the rest.
-          </p>
-        </div>
-        <Callout label="The three-part rule, applied">
-          Of the five component types here, a first app config needs exactly one.
-          Pick the type that matches how you already ship (a chart, a prebuilt
-          image, a Terraform module), write the sandbox, and the runner
-          does the rest. The other four are here because this app exists to
-          show them.
+        <TypeMatrix />
+        <Callout label="A first config needs one, not five">
+          Pick the type that matches how you already ship — a chart, a prebuilt
+          image, a Terraform module. The other four are here because this app
+          exists to show them.
         </Callout>
         {config.links.components && (
           <div className="row" style={{ marginTop: 24 }}>
@@ -203,6 +252,27 @@ ui:
             </OutLink>
           </div>
         )}
+      </Section>
+
+      <Section title="How they find each other" aside="outputs · dependencies">
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          <span className="mono">dependencies</span> orders the deploys; any
+          component can interpolate another&rsquo;s outputs.
+        </p>
+        <div className="ship">
+          {deployOrder.map((beat, i) => (
+            <span key={beat.label} className="ship__beat">
+              <span className="ship__num">0{i + 1}</span>
+              <span className="ship__label">{beat.label}</span>
+              <span className="ship__detail mono">{beat.detail}</span>
+            </span>
+          ))}
+        </div>
+        <FileCode
+          file="components/chart/values.yaml"
+          code={`api:
+  image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"`}
+        />
       </Section>
       <StepNav current="/map" />
     </>
