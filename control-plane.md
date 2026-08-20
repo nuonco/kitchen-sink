@@ -95,17 +95,17 @@ Everything on the next tab is optional until a customer makes it necessary.
 
 Reach for these when a real request makes them necessary — not before. Each is a few lines of config in the same repo.
 
-<!-- Dashboard deep links below hard-code the org id (orgohjjpdu41iaej96eusl2lfq) because Kitchen Sink is a single-org demo app. Update them if this config is ever installed under a different org. -->
+<!-- Dashboard deep links below take the org id from the render state (nuon.org.id), so they work under whichever org this config is installed in. -->
 
 **"Our platform team needs bigger nodes and our own domain."** [Inputs](https://github.com/nuonco/kitchen-sink/tree/main/inputs): knobs declared once with defaults, set per install, templated into infrastructure and components. This install's values are under **Current inputs**, top right.
 
 **"Where does the database password come from?"** [Secrets](https://github.com/nuonco/kitchen-sink/blob/main/secrets.toml): declared in config, generated or supplied per install, synced into the cluster. Nothing sensitive lives in git.
 
-**"Something's acting weird — can you look?"** [Actions](https://app.nuon.co/orgohjjpdu41iaej96eusl2lfq/installs/{{ .nuon.install.id }}/actions): scripts that run on the runner, inside the customer's boundary, and stream results back here. No credentials handed out, no VPN, no screenshare.
+**"Something's acting weird — can you look?"** [Actions](https://app.nuon.co/{{ .nuon.org.id }}/installs/{{ .nuon.install.id }}/actions): scripts that run on the runner, inside the customer's boundary, and stream results back here. No credentials handed out, no VPN, no screenshare.
 
 **"What exactly can you touch in our account?"** Answer with files: a scoped IAM role per operation with [permissions boundaries](https://github.com/nuonco/kitchen-sink/tree/main/permissions), [policies](https://github.com/nuonco/kitchen-sink/tree/main/policies) that block a deploy before it applies, and a pre-declared [break-glass role](https://github.com/nuonco/kitchen-sink/blob/main/break_glass.toml) with an audit trail — agreed to before the emergency.
 
-**"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/orgohjjpdu41iaej96eusl2lfq/installs/{{ .nuon.install.id }}/runbooks): an operational procedure as a reviewable, repeatable, parameterized workflow anyone on the team can run against an install.
+**"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/{{ .nuon.org.id }}/installs/{{ .nuon.install.id }}/runbooks): an operational procedure as a reviewable, repeatable, parameterized workflow anyone on the team can run against an install.
 
 **"Do we have to click a button every time?"** Triggers run actions and runbooks on a schedule or off lifecycle events — post-provision, before and after a deploy — so routine operations just happen.
 

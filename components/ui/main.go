@@ -20,11 +20,6 @@ var staticFiles embed.FS
 // control plane can be pointed at without a rebuild.
 const defaultDashboardBaseURL = "https://app.nuon.co"
 
-// demoOrgID is the org that owns this demo app. NUON_ORG_ID is set from
-// {{.nuon.org.id}} by the chart, but the deep links are the whole point of the
-// day-2 views, so fall back to the known value rather than hide them.
-const demoOrgID = "orgohjjpdu41iaej96eusl2lfq"
-
 // uiConfig is the runtime configuration the frontend needs and cannot discover
 // from the introspection API: which install it belongs to, and how to link back
 // into the Nuon dashboard.
@@ -63,9 +58,6 @@ func buildUIConfig() uiConfig {
 		Namespace:    resolvedEnv("NUON_NAMESPACE"),
 		Links:        map[string]string{},
 	}
-	if cfg.OrgID == "" {
-		cfg.OrgID = demoOrgID
-	}
 	if cfg.Namespace == "" {
 		cfg.Namespace = "kitchen-sink"
 	}
@@ -76,18 +68,34 @@ func buildUIConfig() uiConfig {
 	}
 	base = strings.TrimSuffix(base, "/")
 
-	// Without an install id there is nothing to deep link to, so ship no links
-	// at all rather than links that 404.
-	if cfg.InstallID == "" {
+	// Every dashboard URL needs the org and the install this app belongs to.
+	// Both come from the chart's NUON_* env (never hardcoded: any prospect's
+	// install runs under their own org), so without either we ship no links at
+	// all rather than links that 404.
+	if cfg.InstallID == "" || cfg.OrgID == "" {
 		return cfg
 	}
 
-	install := base + "/" + cfg.OrgID + "/installs/" + cfg.InstallID
+	// URL shapes verified against the dashboard's router
+	// (nuonco/nuon services/dashboard-ui/client/views/{org,app,install}/routes.tsx).
+	org := base + "/" + cfg.OrgID
+	install := org + "/installs/" + cfg.InstallID
 	cfg.Links = map[string]string{
 		"install":    install,
 		"components": install + "/components",
 		"actions":    install + "/actions",
 		"runbooks":   install + "/runbooks",
+		// Deploy / provision workflow history for this install; a branch run's
+		// per-install approval also lands here.
+		"workflows": install + "/workflows",
+		// The install's app-config version history (a fresh install starts at v1).
+		"versions": install + "/versions",
+		// Org-level API tokens, for anyone wiring up the CLI or an agent.
+		"tokens": org + "/settings/api-tokens",
+	}
+	if cfg.AppID != "" {
+		// App branches: the staged rollout's runs and pending approvals.
+		cfg.Links["branches"] = org + "/apps/" + cfg.AppID + "/branches"
 	}
 	return cfg
 }

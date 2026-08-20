@@ -49,6 +49,78 @@ async function get<T>(path: string): Promise<Envelope<T>> {
   return JSON.parse(text) as Envelope<T>
 }
 
+/**
+ * Like useIntrospect, but keeps the value fresh: while `active` is true and
+ * the tab is visible, the endpoint is re-fetched every `intervalMs`. Refreshes
+ * are silent -- once a value has loaded, a failed refresh keeps the last good
+ * value rather than flashing an error. This is how the UI notices cluster
+ * changes (a toggleable component deploying) without a manual reload; flip
+ * `active` to false once the thing being watched has happened.
+ */
+export function useIntrospectPoll<T>(
+  path: string,
+  intervalMs: number,
+  active: boolean,
+): Loadable<Envelope<T>> {
+  const [result, setResult] = useState<Loadable<Envelope<T>>>({ state: 'loading' })
+
+  useEffect(() => {
+    let live = true
+    let inFlight = false
+
+    const refresh = (first: boolean) => {
+      if (inFlight) return
+      inFlight = true
+      const fetched = get<T>(path)
+      // Only the very first fetch takes part in the boot overlay.
+      ;(first ? trackBoot(fetched) : fetched)
+        .then((value) => {
+          if (live) setResult({ state: 'ok', value })
+        })
+        .catch((err: unknown) => {
+          if (!live) return
+          setResult((prev) => {
+            if (prev.state === 'ok') return prev // silent refresh failure
+            const message = err instanceof Error ? err.message : String(err)
+            return {
+              state: 'error',
+              message,
+              unreachable:
+                err instanceof TypeError || (err as ApiError)?.unreachable === true,
+            }
+          })
+        })
+        .finally(() => {
+          inFlight = false
+        })
+    }
+
+    refresh(true)
+
+    if (!active) return () => {
+      live = false
+    }
+
+    const tick = () => {
+      if (document.visibilityState === 'visible') refresh(false)
+    }
+    const timer = window.setInterval(tick, intervalMs)
+    // A backgrounded tab skips ticks; catch up the moment it is visible again.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh(false)
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      live = false
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [path, intervalMs, active])
+
+  return result
+}
+
 export function useIntrospect<T>(path: string): Loadable<Envelope<T>> {
   const [result, setResult] = useState<Loadable<Envelope<T>>>({ state: 'loading' })
 
@@ -154,6 +226,21 @@ export type EnvResponse = Record<string, string>
    Runtime config served by the Go server, not the introspection API.
    ============================================================ */
 
+/**
+ * Deep links into the Nuon dashboard, built server-side (main.go) from the
+ * install's own org/app/install ids. The frontend never constructs dashboard
+ * URLs; it renders whichever of these it received and hides the rest.
+ */
+export type DashboardLink =
+  | 'install' // the install's overview page
+  | 'components' // the install's components (toggle lives here)
+  | 'actions' // action workflows + run history
+  | 'runbooks' // runbooks + per-run transcripts
+  | 'workflows' // deploy/provision workflow history, incl. approvals
+  | 'versions' // the install's app-config version history
+  | 'branches' // the app's branches: staged rollout runs + pending approvals
+  | 'tokens' // org API tokens (CLI / agent setup)
+
 export interface UIConfig {
   install_id?: string
   org_id?: string
@@ -162,7 +249,7 @@ export interface UIConfig {
   region?: string
   public_domain?: string
   namespace?: string
-  links: Partial<Record<'install' | 'components' | 'actions' | 'runbooks', string>>
+  links: Partial<Record<DashboardLink, string>>
 }
 
 const emptyConfig: UIConfig = { links: {} }
