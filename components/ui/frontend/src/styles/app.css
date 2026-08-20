@@ -1024,90 +1024,48 @@ body::before {
 }
 
 /* ============================================================
-   Customize-page action tiles. Hover treatment ported from
-   nuon.co/product's PixelCard (nuonco/mono, services/website,
-   components/common/ui/PixelCard.astro + PixelArrow.astro): the card
-   lifts by (-4,-4), a 2px cyan border snaps on with a steps() timing
-   function, a dithered checkerboard shadow appears offset bottom-right,
-   and the title turns cyan with a pixel arrow sliding in from the left.
-   Square corners are part of the borrowed pixel look.
+   The evaluation checklist: one ordered path, rendered as numbered rows.
+   Hover treatment keeps nuon.co/product's PixelCard look: the row lifts,
+   a cyan border snaps on, the title turns cyan with a pixel arrow.
    ============================================================ */
 
-.actions {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-5);
-}
-
-/* Category groups in the capability hub, one heading per taxonomy entry. */
-
-.hub-group {
-  margin-top: var(--space-8);
-}
-
-/* auto-fill, not auto-fit: a one-tile category keeps the same card width
-   as the three-tile ones instead of stretching across the page. */
-.hub-group .actions {
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-}
-
-.hub-group__head {
+.pathlist {
+  list-style: none;
+  margin: var(--space-8) 0 0;
+  padding: 0;
   display: flex;
-  align-items: baseline;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
-.hub-group__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-}
-
-.hub-group__blurb {
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
+.pathlist__phase {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin: var(--space-5) 0 var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
   color: var(--text-tertiary);
 }
 
-/* The day-2 interlude between the live-install group and the rest. */
-
-.hub-day2 {
-  margin-top: var(--space-10);
-  padding-top: var(--space-8);
-  border-top: 1px solid var(--border-subtle);
+.pathlist__phase::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
 }
 
-.hub-day2__title {
-  font-size: var(--text-title);
-  font-weight: var(--weight-stronger);
-}
-
-.hub-day2__lede {
-  margin-top: var(--space-2);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  max-width: 70ch;
-}
-
-/* The live / guide badge pinned to a capability card. */
-
-.action__mode {
-  position: absolute;
-  top: var(--space-4);
-  right: var(--space-4);
-}
-
-.action {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3);
+.pathrow {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: var(--space-4);
   text-align: left;
-  padding: var(--space-6);
+  padding: var(--space-4) var(--space-5);
   border: 2px solid var(--border-subtle);
   background: var(--surface-card);
   cursor: pointer;
@@ -1115,25 +1073,31 @@ body::before {
     background-color 0.1s steps(2);
 }
 
-.action:hover {
+.pathrow:hover {
   transform: translate(-4px, -4px);
   border-color: var(--accent);
   background: rgba(76, 201, 240, 0.03);
 }
 
-.action__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--accent-wash-strong);
-  background: var(--accent-wash);
-  color: var(--accent);
-  font-size: 20px;
+.pathrow--bonus {
+  border-style: dashed;
 }
 
-.action__title {
+.pathrow__num {
+  font-family: var(--font-mono);
+  font-size: var(--text-title);
+  line-height: var(--text-title-line);
+  color: var(--accent-dim);
+}
+
+.pathrow__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.pathrow__title {
   display: flex;
   align-items: center;
   font-size: var(--text-heading);
@@ -1143,11 +1107,11 @@ body::before {
   transition: color 300ms var(--ease-standard);
 }
 
-.action:hover .action__title {
+.pathrow:hover .pathrow__title {
   color: var(--accent-hover);
 }
 
-.action__arrow {
+.pathrow__arrow {
   display: flex;
   align-items: center;
   width: 0;
@@ -1157,62 +1121,36 @@ body::before {
     opacity 300ms var(--ease-standard);
 }
 
-.action:hover .action__arrow {
+.pathrow:hover .pathrow__arrow {
   width: 20px;
   opacity: 1;
 }
 
-.action__desc {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
+.pathrow__desc {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
   color: var(--text-secondary);
 }
 
-/* Dithered checkerboard shadow, from PixelCard's dark-mode treatment */
-
-.action__shadow {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.05s steps(1);
-  color: var(--accent);
-  background-image: linear-gradient(45deg, currentColor 25%, transparent 25%),
-    linear-gradient(-45deg, currentColor 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, currentColor 75%),
-    linear-gradient(-45deg, transparent 75%, currentColor 75%);
-  background-size: 4px 4px;
-  background-position: 0 0, 0 2px, 2px -2px, -2px 0px;
+.pathrow__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.action__shadow--right {
-  top: 4px;
-  right: -6px;
-  width: 6px;
-  bottom: -2px;
+.pathrow__meta .switch {
+  margin-left: 0;
 }
 
-.action__shadow--bottom {
-  left: 4px;
-  bottom: -6px;
-  height: 6px;
-  right: -2px;
-}
+@media (max-width: 640px) {
+  .pathrow {
+    grid-template-columns: 32px 1fr;
+  }
 
-.action__shadow--corner {
-  right: -6px;
-  bottom: -6px;
-  width: 10px;
-  height: 10px;
-  background-size: 3px 3px;
-}
-
-.action:hover .action__shadow--right,
-.action:hover .action__shadow--bottom {
-  opacity: 0.6;
-}
-
-.action:hover .action__shadow--corner {
-  opacity: 0.45;
+  .pathrow__meta {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
 }
 
 /* Path cards */
@@ -2161,11 +2099,11 @@ tr.row-select--active td {
 }
 
 /* ============================================================
-   Lifecycle visibility (phase 2): the shipped strip, the live tictactoe
-   unlock, and the hub tile flip highlight.
+   Lifecycle visibility (phase 2): the beat strip, the live tictactoe
+   unlock, and the checklist-row flip highlight.
    ============================================================ */
 
-/* The shipping lifecycle strip on the tour's `shipped` step. */
+/* A strip of numbered beats (used by the audit-log page's mechanism). */
 
 .ship {
   display: flex;
@@ -2314,9 +2252,9 @@ tr.row-select--active td {
   }
 }
 
-/* The hub tile the moment its component flips on while on screen. */
+/* The checklist row the moment its component flips on while on screen. */
 
-.action--flipped {
+.pathrow--flipped {
   animation: action-flip 1400ms var(--ease-standard) both;
 }
 
@@ -2337,7 +2275,213 @@ tr.row-select--active td {
 @media (prefers-reduced-motion: reduce) {
   .ttt--just-unlocked,
   .ttt-unlocked-note,
-  .action--flipped {
+  .pathrow--flipped {
     animation: none;
   }
+}
+
+/* ============================================================
+   Review edits (Matt): clickable tour facts, the agent-prompt CTA, the
+   problem / solution / proof tags, per-proof prompts, and the audit-log
+   entitlement card.
+   ============================================================ */
+
+/* Tour facts double as links: internal ones open the deep page, the install
+   fact opens the dashboard. */
+
+a.fact {
+  color: inherit;
+  text-decoration: none;
+}
+
+.fact--link {
+  position: relative;
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-standard),
+    background var(--duration-base) var(--ease-standard);
+}
+
+.fact--link:hover {
+  text-decoration: none;
+  border-color: var(--accent-dim);
+  background: var(--surface-raised);
+}
+
+.fact__go {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.fact--link:hover .fact__go {
+  color: var(--accent);
+}
+
+/* The hub's default action: hand the checklist to a coding agent. */
+
+.agent-cta {
+  margin-top: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid var(--border-subtle);
+  border-left: 2px solid var(--accent-dim);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(
+    100deg,
+    var(--accent-wash) 0%,
+    rgba(11, 18, 21, 0) 60%
+  );
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.agent-cta__body {
+  flex: 1 1 320px;
+}
+
+.agent-cta__title {
+  font-size: var(--text-body);
+  font-weight: var(--weight-stronger);
+}
+
+.agent-cta__desc {
+  margin-top: var(--space-1);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+  max-width: 60ch;
+}
+
+.agent-cta__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  white-space: nowrap;
+}
+
+.copy-btn--big {
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-body);
+}
+
+/* The three beats every feature page runs. */
+
+.psp-tag {
+  display: inline-block;
+  vertical-align: 2px;
+  margin-right: var(--space-2);
+  padding: 1px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.psp-tag--problem {
+  color: var(--status-warning);
+  border-color: rgba(254, 178, 115, 0.32);
+  background: rgba(254, 178, 115, 0.08);
+}
+
+.psp-tag--solution {
+  color: var(--accent);
+  border-color: rgba(76, 201, 240, 0.32);
+  background: var(--accent-wash);
+}
+
+.psp-tag--proof {
+  color: var(--status-positive);
+  border-color: rgba(108, 233, 166, 0.32);
+  background: rgba(108, 233, 166, 0.08);
+}
+
+.psp-lede {
+  max-width: 72ch;
+}
+
+/* Keep the tag glued to the title; the aside stays on the far edge. */
+.section__head .psp-tag {
+  margin-right: calc(var(--space-4) * -1 + var(--space-2));
+}
+
+.section__head .psp-tag + .section__title {
+  margin-right: auto;
+}
+
+/* A single proof's agent prompt: shorter pane than the full checklist. */
+
+.proof-prompt__pre {
+  max-height: 240px;
+}
+
+/* The audit-log entitlement card: plan and toggle state, drawn. */
+
+.ent {
+  padding: var(--space-6);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  max-width: 560px;
+}
+
+.ent--on {
+  border-color: var(--accent-dim);
+  background: linear-gradient(
+    100deg,
+    var(--accent-wash) 0%,
+    rgba(11, 18, 21, 0) 70%
+  );
+}
+
+.ent__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.ent__plan {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+.ent__name {
+  margin-top: var(--space-4);
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
+  font-weight: var(--weight-stronger);
+}
+
+.ent__pitch {
+  margin-top: var(--space-2);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+  max-width: 46ch;
+}
+
+.ent__foot {
+  margin-top: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.ent__facts {
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-tertiary);
 }

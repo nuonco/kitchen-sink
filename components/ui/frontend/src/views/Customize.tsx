@@ -20,12 +20,12 @@ import {
   roles,
   runbooks,
 } from '../lib/config-data.gen'
-import { categories } from '../lib/taxonomy'
-import { CapabilityGroups, type SwitchStates } from '../ui/CapabilityGrid'
+import { agentPrompt, proofPrompts } from '../lib/prompts'
+import { stepEyebrow } from '../lib/taxonomy'
+import { EvalPath, type SwitchStates } from '../ui/CapabilityGrid'
 import {
   BackLink,
   Badge,
-  Callout,
   CodeBlock,
   CommandBlock,
   CopyButton,
@@ -34,35 +34,35 @@ import {
   LoadState,
   OutLink,
   PhaseBadge,
+  PspSection,
+  PspTag,
 } from '../ui/Primitives'
 
 /* ============================================================
-   The day-2 capability pages, one per entry in lib/taxonomy.ts. The config
-   facts on these pages (install groups, runbook steps, action triggers,
-   roles, guardrails) come from lib/config-data.gen.ts, generated at build
-   time from the repo's real TOML, so they cannot drift from the config.
-
-   Nothing on these pages is a mock or a rehearsal. The interaction model is
-   deliberate and permanent: you act in your own terminal and your own Nuon
-   dashboard; this app hands you the exact commands (with this install's ids
-   filled in) and shows the cluster-side evidence live where the operation
-   has one.
+   The feature pages, one per step in lib/taxonomy.ts. Every page runs the
+   same three beats: Problem (where this bites), Solution (the config that
+   answers it, from lib/config-data.gen.ts so it cannot drift), Proof (test
+   it on this install, right now — your coding agent by default, the raw
+   commands underneath, and the cluster-side evidence live where the
+   operation has one).
    ============================================================ */
 
 function FlowHeader({
-  eyebrow,
+  to,
   title,
-  lede,
+  problem,
 }: {
-  eyebrow: string
+  to: string
   title: string
-  lede: string
+  problem: ReactNode
 }) {
   return (
     <header className="page-header">
-      <Eyebrow>{eyebrow}</Eyebrow>
+      <Eyebrow>{stepEyebrow(to)}</Eyebrow>
       <h1>{title}</h1>
-      <p className="lede">{lede}</p>
+      <p className="lede psp-lede">
+        <PspTag kind="problem" /> {problem}
+      </p>
     </header>
   )
 }
@@ -71,6 +71,24 @@ function FlowHeader({
     when this app was started without them (local dev). */
 const installIdOf = (config: UIConfig) => config.install_id ?? '<your-install-id>'
 const appIdOf = (config: UIConfig) => config.app_id ?? '<your-app-id>'
+
+/** The default way to run a proof: paste it into a coding agent. */
+function ProofPrompt({ flow, config }: { flow: string; config: UIConfig }) {
+  const build = proofPrompts[flow]
+  if (!build) return null
+  const prompt = build(installIdOf(config), appIdOf(config))
+  return (
+    <div className="agent-prompt proof-prompt">
+      <div className="cmd__head">
+        <span className="cmd__label">
+          the default way: paste into your coding agent
+        </span>
+        <CopyButton text={prompt} />
+      </div>
+      <pre className="cmd__pre agent-prompt__pre proof-prompt__pre">{prompt}</pre>
+    </div>
+  )
+}
 
 /* ============================================================
    The live-evidence register: the pods of this namespace, re-read on a short
@@ -189,27 +207,16 @@ function BranchesFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        eyebrow="Ship · app branches"
+        to="/customize/branches"
         title="Ship through app branches"
-        lede={`This app's branch config connects git pushes to a staged rollout: every push to ${branchName} fetches the config at that commit, builds what changed, and rolls it across the install groups in order, pausing for an approval on each group's plan. Below is the one command that runs it for real.`}
+        problem="Without staging, one bad config change reaches every customer at once."
       />
 
-      <div className="prose" style={{ marginTop: 24 }}>
-        <p>
-          Every component in this app points at a git branch, and an app branch
-          extends that to the whole config at once: you branch the config,
-          point selected installs at the branch, and leave everyone else on
-          main. A chart change can be proven against one friendly customer
-          before it becomes the default for all of them. The unit of risk
-          shrinks to a single install.
-        </p>
-      </div>
-
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">The staged rollout this config declares</h2>
-          <div className="subtext muted">branch.toml · [[install_groups]]</div>
-        </div>
+      <PspSection
+        kind="solution"
+        title="One branch, a staged rollout"
+        aside="branch.toml · [[install_groups]]"
+      >
         <div className="groups">
           {installGroups.map((group) => (
             <div key={group.name} className="group-card">
@@ -226,20 +233,28 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           ))}
         </div>
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Selectors re-evaluate on every run, so a new customer install joins
-          the right wave the moment it is labelled. After each group deploys,
-          the <span className="mono">full-health-check</span> runbook runs
-          against every install in it (
-          <span className="mono">post_deploy_runbooks</span>), leaving a
-          per-install health transcript behind.
+          Every push to <span className="mono">{branchName}</span> builds the
+          config at that commit and rolls it across these groups in order.
+          Each group&rsquo;s plan holds for a human approval, and the{' '}
+          <span className="mono">full-health-check</span> runbook runs on
+          every install after its group deploys. A mistake reaches one
+          friendly group, not the fleet.
         </p>
-      </section>
+        <CodeBlock
+          label="branch.toml (the real config, comments stripped)"
+          code={branchConfigAbridged}
+        />
+      </PspSection>
 
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Ship a change, for real</h2>
-          <div className="subtext muted">from your own terminal</div>
-        </div>
+      <PspSection
+        kind="proof"
+        title="Ship a change to this install"
+        aside="one command from your terminal"
+      >
+        <ProofPrompt flow="branches" config={config} />
+        <p className="small muted" style={{ margin: '16px 0', maxWidth: '72ch' }}>
+          Or run it yourself:
+        </p>
         <CommandBlock
           label="1 · get the app config (skip if you already have a clone)"
           command={`git clone https://github.com/${repoName} && cd ${repoName.split('/')[1] ?? 'kitchen-sink'}`}
@@ -249,95 +264,44 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           command={`nuon sync --branch ${branchName}`}
           note={
             <>
-              This syncs your local files exactly as they are — even
-              uncommitted, no fork, no push — and triggers a real branch run
-              through the groups above. Add{' '}
-              <span className="mono">--preview</span> to plan every group with
-              nothing applied. (Pushing to the tracked branch is the other
-              path: the repo webhook starts the same run.)
+              Syncs your local files exactly as they are (even uncommitted, no
+              push) and triggers a real branch run through the groups above.{' '}
+              <span className="mono">--preview</span> plans every group with
+              nothing applied.
             </>
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Each group&rsquo;s plan then holds for an approval, and that approval
-          is a person in the dashboard — there is deliberately no CLI command
-          for it.{' '}
+          Each group&rsquo;s approval is a person in the dashboard; there is
+          deliberately no CLI command for it.{' '}
           {config.links.branches && (
             <OutLink href={config.links.branches} variant="plain">
               Watch the run and approve each group
             </OutLink>
           )}
         </p>
-      </section>
-
-      {(config.links.branches || config.links.versions) && (
-        <Callout label="The real record, one link away">
-          This machinery runs for every push to{' '}
-          <span className="mono">{branchName}</span> — including the one that
-          shipped the page you are reading.{' '}
-          {config.links.branches && (
-            <OutLink href={config.links.branches} variant="plain">
-              Open the branch runs and pending approvals
-            </OutLink>
-          )}
-          {config.links.branches && config.links.versions && <> &middot; </>}
-          {config.links.versions && (
-            <OutLink href={config.links.versions} variant="plain">
-              this install&rsquo;s config versions
-            </OutLink>
-          )}
-        </Callout>
-      )}
-
-      <LiveEvidence
-        config={config}
-        lead={
-          <>
-            When the run&rsquo;s deploy reaches this install, the image tags
-            below flip to the new <span className="mono">sha-*</span> stamp and
-            the pods churn as the new version rolls in — no reload, this table
-            re-reads itself.
-          </>
-        }
-      />
-
-      <CodeBlock
-        label="branch.toml (the real config, comments stripped)"
-        code={branchConfigAbridged}
-      />
-
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Rolling back an install</h2>
-          <div className="subtext muted">app config versions</div>
-        </div>
-        <p className="small muted" style={{ maxWidth: '72ch' }}>
-          Nuon keeps every config version this install has ever run, so a
-          rollback is picking a previous version and re-deploying it. There is
-          no CLI command for rollback yet — it runs from the version history in
-          the dashboard (plan first, then apply), and the old image tags
-          reappear in the table above as it lands.{' '}
+        <LiveEvidence
+          config={config}
+          lead={
+            <>
+              When the run&rsquo;s deploy reaches this install, the image tags
+              below flip to the new <span className="mono">sha-*</span> stamp
+              and the pods churn as the new version rolls in. No reload; this
+              table re-reads itself.
+            </>
+          }
+        />
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          Rolling back: there is no CLI command yet. Re-deploy a previous
+          version from the dashboard&rsquo;s version history (plan first),
+          or revert the commit and let the same staged rollout replay.{' '}
           {config.links.versions && (
             <OutLink href={config.links.versions} variant="plain">
               Open this install&rsquo;s version history
             </OutLink>
           )}
         </p>
-        <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
-          The git-level path works too: revert the commit and push, and the
-          staged rollout replays with the old config, group by group, behind
-          the same approvals. For out-of-band damage there is the{' '}
-          <span className="mono">reconcile-drift</span> runbook, which plans
-          the chart first so the run records what drifted before anything is
-          re-applied.
-        </p>
-      </section>
-
-      <Callout label="Why it matters at 50 installs">
-        Without branches, a config change is all-or-nothing across every
-        customer. With them, the blast radius of a mistake is one install, and
-        rolling back is a version pointer rather than an incident.
-      </Callout>
+      </PspSection>
     </>
   )
 }
@@ -366,22 +330,16 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        eyebrow="Operate · runbooks"
+        to="/customize/runbooks"
         title="Run runbooks"
-        lede="A runbook is a versioned, multi-step procedure Nuon runs against an install and records. This app ships four, one per operational moment: routine health, something's-wrong diagnostics, drift, and the emergency. Two are read-only; two apply changes, and the badges below say which. Each one is a single CLI command away."
+        problem="Something breaks at 2am, in an install you cannot log into."
       />
 
-      <div className="prose" style={{ marginTop: 24 }}>
-        <p>
-          A runbook is the readme&rsquo;s counterpart, aimed at a different
-          moment: the readme is read once, when someone is deciding; a runbook
-          runs at 2am, when something is broken. It arrives already scoped to
-          the install in front of you, and every run leaves a per-step
-          transcript in the dashboard.
-        </p>
-      </div>
-
-      <section className="section">
+      <PspSection
+        kind="solution"
+        title="Four recorded procedures"
+        aside="runbooks/*.toml"
+      >
         <div className="tiles" style={{ marginBottom: 24 }}>
           {runbooks.map((rb, i) => (
             <button
@@ -411,25 +369,7 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
         <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
           {runbook.description}
         </p>
-        <CommandBlock
-          label={`run ${runbook.name} against this install`}
-          command={`nuon runbooks create-run --install-id ${install} --runbook-id ${runbook.name}`}
-          note={
-            runbook.mutates ? (
-              <>
-                <strong>This one changes things</strong> — it re-applies state
-                or assumes elevated access. Run it deliberately; the per-step
-                record it leaves behind is the point.
-              </>
-            ) : (
-              <>
-                Read-only diagnostics: safe to run right now. Runbooks accept
-                their name directly — no id lookup needed.
-              </>
-            )
-          }
-        />
-        <div className="table-wrap" style={{ marginTop: 16 }}>
+        <div className="table-wrap">
           <table className="data">
             <thead>
               <tr>
@@ -451,34 +391,59 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
             </tbody>
           </table>
         </div>
-      </section>
+      </PspSection>
 
-      <Callout label="Where the record lives">
-        The branch config runs <span className="mono">full-health-check</span>{' '}
-        automatically after every staged deploy (
-        <span className="mono">post_deploy_runbooks</span> in branch.toml), so
-        this install already has real runs on record, and the run you create
-        above joins them: each one leaves a per-step transcript.{' '}
-        {config.links.runbooks && (
-          <OutLink href={config.links.runbooks} variant="plain">
-            Open the latest full-health-check transcript
-          </OutLink>
-        )}
-      </Callout>
-
-      <LiveEvidence
-        config={config}
-        lead={
-          <>
-            The read-only runbooks leave the cluster untouched — their record
-            is the transcript. The two that apply changes are visible right
-            here: <span className="mono">reconcile-drift</span> redeploys the
-            chart and <span className="mono">break-glass</span> restarts the
-            app&rsquo;s deployments, so pod names change and ages reset in this
-            table as the run works.
-          </>
-        }
-      />
+      <PspSection
+        kind="proof"
+        title="Run one against this install"
+        aside="every run leaves a per-step transcript"
+      >
+        <ProofPrompt flow="runbooks" config={config} />
+        <p className="small muted" style={{ margin: '16px 0', maxWidth: '72ch' }}>
+          Or run it yourself:
+        </p>
+        <CommandBlock
+          label={`run ${runbook.name} against this install`}
+          command={`nuon runbooks create-run --install-id ${install} --runbook-id ${runbook.name}`}
+          note={
+            runbook.mutates ? (
+              <>
+                <strong>This one changes things</strong> — it re-applies state
+                or assumes elevated access. Run it deliberately; the per-step
+                record it leaves behind is the point.
+              </>
+            ) : (
+              <>
+                Read-only diagnostics: safe to run right now. Runbooks accept
+                their name directly — no id lookup needed.
+              </>
+            )
+          }
+        />
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          This install already has real runs on record:{' '}
+          <span className="mono">full-health-check</span> runs after every
+          staged deploy (<span className="mono">post_deploy_runbooks</span>).{' '}
+          {config.links.runbooks && (
+            <OutLink href={config.links.runbooks} variant="plain">
+              Open the latest full-health-check transcript
+            </OutLink>
+          )}
+        </p>
+        <LiveEvidence
+          config={config}
+          lead={
+            <>
+              The read-only runbooks leave the cluster untouched; their record
+              is the transcript. The two that apply changes land right here:{' '}
+              <span className="mono">reconcile-drift</span> redeploys the chart
+              and <span className="mono">break-glass</span> restarts the
+              app&rsquo;s deployments, so pod names change and ages reset as
+              the run works.
+            </>
+          }
+        />
+      </PspSection>
     </>
   )
 }
@@ -492,7 +457,7 @@ const actionNotes: Record<string, string> = {
   cron_status:
     'Collects pod status and publishes pods_ready / pods_total as structured outputs; the install readme reads them as its health pulse.',
   debug:
-    'The thing support runs when an install misbehaves: pods, events, and recent logs, with nobody handed a kubeconfig.',
+    'What support runs when an install misbehaves: pods, events, and recent logs, with nobody handed a kubeconfig.',
   lifecycle_hooks:
     'Brackets every chart deploy, which is where a migration or a cache warm goes. Depends on kitchen_sink.',
   break_glass_remediation:
@@ -551,12 +516,16 @@ function ActionsFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        eyebrow="Operate · adhoc actions"
+        to="/customize/actions"
         title="Run adhoc actions"
-        lede="An action is a script the runner executes inside the install, on a schedule, around a deploy, or on demand. This app ships four; the manual ones are how support fixes an install without cluster credentials. Two commands run any of them for real."
+        problem="Support needs to fix a customer install without holding its credentials."
       />
 
-      <section className="section">
+      <PspSection
+        kind="solution"
+        title="Scripts the runner executes inside the install"
+        aside="actions/*/nuon.toml"
+      >
         <div className="tiles" style={{ marginBottom: 24 }}>
           {adhocActions.map((a, i) => (
             <button
@@ -590,7 +559,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
         <p className="small muted" style={{ maxWidth: '72ch', marginBottom: 12 }}>
           {actionNotes[action.name] ?? ''}
         </p>
-        <div className="row" style={{ marginBottom: 16 }}>
+        <div className="row">
           {action.triggers.map((t) => (
             <span key={t} className="chip">
               {t}
@@ -598,7 +567,22 @@ function ActionsFlow({ config }: { config: UIConfig }) {
           ))}
           {action.labels && <span className="chip">{action.labels}</span>}
         </div>
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          The runner already has the access an action needs; the action is the
+          audited, repeatable path to using it. Production credentials never
+          move.
+        </p>
+      </PspSection>
 
+      <PspSection
+        kind="proof"
+        title="Fire one at this install"
+        aside="two commands"
+      >
+        <ProofPrompt flow="actions" config={config} />
+        <p className="small muted" style={{ margin: '16px 0', maxWidth: '72ch' }}>
+          Or run it yourself:
+        </p>
         <CommandBlock
           label="1 · list the action workflows and copy the id"
           command={`nuon actions list --app-id ${app}`}
@@ -625,41 +609,29 @@ function ActionsFlow({ config }: { config: UIConfig }) {
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           {actionOutcome(action.name, install)}
         </p>
-      </section>
-
-      <Callout label="Real runs, on the record right now">
-        One of these is not waiting for you: <span className="mono">cron_status</span>{' '}
-        has run hourly on this install since it provisioned, publishing{' '}
-        <span className="mono">pods_ready</span> /{' '}
-        <span className="mono">pods_total</span> as structured outputs (the
-        install readme reads them as its health pulse). Every run&rsquo;s
-        transcript and outputs are in the dashboard — including the one you
-        create above.{' '}
-        {config.links.actions && (
-          <OutLink href={config.links.actions} variant="plain">
-            Open the hourly run history
-          </OutLink>
-        )}
-      </Callout>
-
-      <LiveEvidence
-        config={config}
-        lead={
-          <>
-            Three of the four actions are read-only, so their only record is
-            the transcript. <span className="mono">break_glass_remediation</span>{' '}
-            ends with a rollout restart: new pod names, ages reset to seconds —
-            it lands in this table within one poll.
-          </>
-        }
-      />
-
-      <Callout label="Why adhoc beats a kubeconfig">
-        The runner already has the access an action needs; the action is the
-        audited, repeatable path to using it. A support engineer answering a
-        ticket runs <span className="mono">debug</span> from the dashboard and
-        reads the transcript, and production credentials never move.
-      </Callout>
+        <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
+          One of these is already on the record:{' '}
+          <span className="mono">cron_status</span> has run hourly since this
+          install provisioned.{' '}
+          {config.links.actions && (
+            <OutLink href={config.links.actions} variant="plain">
+              Open the hourly run history
+            </OutLink>
+          )}
+        </p>
+        <LiveEvidence
+          config={config}
+          lead={
+            <>
+              Three of the four actions are read-only, so their only record is
+              the transcript.{' '}
+              <span className="mono">break_glass_remediation</span> ends with a
+              rollout restart: new pod names, ages reset to seconds — it lands
+              in this table within one poll.
+            </>
+          }
+        />
+      </PspSection>
     </>
   )
 }
@@ -678,42 +650,50 @@ function HealthFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        eyebrow="Operate · component health"
+        to="/customize/health"
         title="Watch component health"
-        lede="Nuon deploys a component and then waits for it to become healthy before calling the deploy done. The pod table below is not a mock: it is read from this cluster, right now."
+        problem="A deploy can succeed while the app it shipped is down."
       />
 
-      <div className="prose" style={{ marginTop: 24 }}>
-        <p>
-          A component that never goes green blocks the install, which means
-          health checks end up shaping your config as much as your dashboard.
-          Two decisions in this app exist only because of that gate.
+      <PspSection
+        kind="solution"
+        title="Health gates every deploy"
+        aside="a component that never goes green blocks the install"
+      >
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Nuon waits for a component to become healthy before calling its
+          deploy done. That gate shapes this app&rsquo;s config in two places:
         </p>
-        <ul>
-          <li>
-            The API has no ingress. An internal ingress has no certificate and
-            no DNS for its host, so it would never converge and the component
-            would sit un-green forever. The UI reaches the API over the
-            in-cluster service instead, at{' '}
-            <code>http://kitchen-sink-api:8080</code>.
-          </li>
-          <li>
-            The chart&rsquo;s ConfigMap carries a <code>nuon.co/roll</code>{' '}
-            annotation set to the Helm release revision. It changes on every
-            release, so a redeploy is never a no-op. A no-op plan would be
-            skipped, quietly bypassing the health gate the deploy is supposed
-            to pass.
-          </li>
-        </ul>
-      </div>
-
-      <div className="section" style={{ marginTop: 32 }}>
-        <div className="section__head">
-          <h3 className="section__title">Right now, in this install</h3>
-          <div className="subtext muted">
-            GET /introspect/namespace/{namespace}
-          </div>
+        <div className="prose" style={{ marginTop: 12 }}>
+          <ul>
+            <li>
+              The API has no ingress: an internal ingress never converges (no
+              cert, no DNS), so the component would sit un-green forever. The
+              UI reaches it in-cluster at{' '}
+              <code>http://kitchen-sink-api:8080</code>.
+            </li>
+            <li>
+              The chart&rsquo;s ConfigMap carries a <code>nuon.co/roll</code>{' '}
+              annotation set to the Helm release revision, so a redeploy is
+              never a no-op that would skip the gate.
+            </li>
+          </ul>
         </div>
+        <CodeBlock
+          label="components/chart/values.yaml"
+          code={`api:
+  # No internal ingress: the UI reaches the API via the in-cluster service
+  # (see ui.env.API_URL). An internal ingress here never converges (no cert/DNS
+  # for its host), which would keep the component health from ever going green.
+  ingress: {}`}
+        />
+      </PspSection>
+
+      <PspSection
+        kind="proof"
+        title="The gate's inputs, right now"
+        aside={`GET /introspect/namespace/${namespace}`}
+      >
         <LoadState result={ns} what="pod health" />
         {ns.state === 'ok' && (
           <>
@@ -758,22 +738,10 @@ function HealthFlow({ config }: { config: UIConfig }) {
             </div>
           </>
         )}
-      </div>
-
-      <CodeBlock
-        label="components/chart/values.yaml"
-        code={`api:
-  # No internal ingress: the UI reaches the API via the in-cluster service
-  # (see ui.env.API_URL). An internal ingress here never converges (no cert/DNS
-  # for its host), which would keep the component health from ever going green.
-  ingress: {}`}
-      />
-      <Callout label="Why it matters at 50 installs">
-        Health is the difference between &ldquo;deployed&rdquo; and
-        &ldquo;working&rdquo;. When you operate installs you cannot log into,
-        the deploy pipeline has to be the thing that notices. The failure mode
-        you are trying to avoid is your customer noticing first.
-      </Callout>
+        <div style={{ marginTop: 16 }}>
+          <ProofPrompt flow="health" config={config} />
+        </div>
+      </PspSection>
     </>
   )
 }
@@ -782,20 +750,20 @@ function HealthFlow({ config }: { config: UIConfig }) {
    React: triggers (derived from the actions' trigger declarations)
    ============================================================ */
 
-function TriggersFlow() {
+function TriggersFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        eyebrow="React · triggers"
+        to="/customize/triggers"
         title="Wire up triggers"
-        lede="An action is a script the runner executes inside the install. A trigger decides when. Between them, the actions this app ships cover every kind of trigger you get: cron, lifecycle, and manual."
+        problem="Operational scripts need to run at the right moment with nobody remembering them."
       />
 
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Every trigger this app declares</h2>
-          <div className="subtext muted">actions/*/nuon.toml · [[triggers]]</div>
-        </div>
+      <PspSection
+        kind="solution"
+        title="Every trigger this app declares"
+        aside="actions/*/nuon.toml · [[triggers]]"
+      >
         <div className="table-wrap">
           <table className="data">
             <thead>
@@ -824,30 +792,34 @@ function TriggersFlow() {
             </tbody>
           </table>
         </div>
-      </section>
-
-      <div className="prose">
-        <p>
-          <code>cron_status</code> runs hourly and on demand.{' '}
-          <code>lifecycle_hooks</code> fires on <code>post-provision</code> and
-          again before and after every <code>kitchen_sink</code> deploy, which
-          is where a migration or a cache warm goes. <code>debug</code> and{' '}
-          <code>break_glass_remediation</code> are manual only: the things a
-          person reaches for when an install misbehaves.
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          <span className="mono">cron_status</span> runs hourly.{' '}
+          <span className="mono">lifecycle_hooks</span> fires post-provision
+          and around every <span className="mono">kitchen_sink</span> deploy,
+          which is where a migration or a cache warm goes. The other two are
+          manual: what a person reaches for when an install misbehaves.
         </p>
-      </div>
+        <CodeBlock
+          label="actions/lifecycle_hooks/nuon.toml (the real file)"
+          code={lifecycleHooksToml}
+        />
+      </PspSection>
 
-      <CodeBlock
-        label="actions/lifecycle_hooks/nuon.toml (the real file)"
-        code={lifecycleHooksToml}
-      />
-
-      <Callout label="Why it matters at 50 installs">
-        Manual triggers are how support fixes an install without cluster
-        credentials. The runner already has the access it needs; the action is
-        the audited, repeatable path to using it. Nobody has to be handed a
-        production kubeconfig to answer a ticket.
-      </Callout>
+      <PspSection
+        kind="proof"
+        title="Fire a scheduled action on demand"
+        aside="the same run its cron fires hourly"
+      >
+        <ProofPrompt flow="triggers" config={config} />
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          Its hourly history is already on the record.{' '}
+          {config.links.actions && (
+            <OutLink href={config.links.actions} variant="plain">
+              Open the run history
+            </OutLink>
+          )}
+        </p>
+      </PspSection>
     </>
   )
 }
@@ -883,16 +855,16 @@ function RolesFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        eyebrow="Govern · operation roles"
+        to="/customize/roles"
         title="Scope operation roles"
-        lede="Nuon performs every operation under a per-operation IAM role your customer can read, each with its own permissions boundary. This app declares seven, from provision down to a break-glass role that exists only for emergencies — and one action run proves the whole model on the record."
+        problem="Your customer's security team asks exactly what Nuon may do in their account."
       />
 
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">One role per operation</h2>
-          <div className="subtext muted">permissions/*.toml · break_glass.toml</div>
-        </div>
+      <PspSection
+        kind="solution"
+        title="One role per operation"
+        aside="permissions/*.toml · break_glass.toml"
+      >
         <div className="table-wrap">
           <table className="data">
             <thead>
@@ -925,18 +897,49 @@ function RolesFlow({ config }: { config: UIConfig }) {
           </div>
           {roleNotes[role.name] ?? role.desc}
         </div>
-      </section>
-
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Prove it, for real</h2>
-          <div className="subtext muted">the break-glass run narrates its own evidence</div>
+        <CodeBlock label="break_glass.toml (the real file)" code={breakGlassToml} />
+        <p className="small muted" style={{ marginTop: 24, maxWidth: '72ch' }}>
+          On top of the roles, OPA policies bound what a config may ask for,
+          evaluated against plans before anything applies:
+        </p>
+        <div className="table-wrap" style={{ marginTop: 12 }}>
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Policy</th>
+                <th>Evaluates against</th>
+                <th>Scope</th>
+              </tr>
+            </thead>
+            <tbody>
+              {guardrails.map((g) => (
+                <tr key={g.name}>
+                  <td className="mono">{g.name}</td>
+                  <td className="mono subtext">{g.type}</td>
+                  <td>{g.target}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-          The <span className="mono">break_glass_remediation</span> action is
-          scripted to demonstrate this page: its transcript prints the identity
-          it assumed and then a call the boundary refuses. Two commands run it
-          against this install.
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          Who may drive Nuon itself is governed by org API tokens.{' '}
+          {config.links.tokens && (
+            <OutLink href={config.links.tokens} variant="plain">
+              Manage API tokens in Nuon
+            </OutLink>
+          )}
+        </p>
+      </PspSection>
+
+      <PspSection
+        kind="proof"
+        title="Prove the boundary, on the record"
+        aside="the break-glass run narrates its own evidence"
+      >
+        <ProofPrompt flow="roles" config={config} />
+        <p className="small muted" style={{ margin: '16px 0', maxWidth: '72ch' }}>
+          Or run it yourself:
         </p>
         <CommandBlock
           label="1 · resolve the workflow id (create-run takes the id, not the name)"
@@ -958,122 +961,25 @@ function RolesFlow({ config }: { config: UIConfig }) {
             </OutLink>
           )}
         </p>
-      </section>
-
-      <LiveEvidence
-        config={config}
-        lead={
-          <>
-            The same run&rsquo;s last act is a rollout restart of the
-            app&rsquo;s three deployments — proof you can watch from right
-            here: pod names change and ages reset the moment it lands.
-          </>
-        }
-      />
-
-      <CodeBlock label="break_glass.toml (the real file)" code={breakGlassToml} />
-
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Guardrails on top: OPA policies</h2>
-          <div className="subtext muted">policies/*.toml</div>
-        </div>
-        <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-          Roles bound what Nuon may do; policies bound what a config may ask
-          for. These evaluate against plans before anything applies.
-        </p>
-        <div className="table-wrap">
-          <table className="data">
-            <thead>
-              <tr>
-                <th>Policy</th>
-                <th>Evaluates against</th>
-                <th>Scope</th>
-              </tr>
-            </thead>
-            <tbody>
-              {guardrails.map((g) => (
-                <tr key={g.name}>
-                  <td className="mono">{g.name}</td>
-                  <td className="mono subtext">{g.type}</td>
-                  <td>{g.target}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      {config.links.tokens && (
-        <Callout label="Access on the Nuon side">
-          Everything above bounds what Nuon may do inside the customer&rsquo;s
-          account. Who may drive Nuon itself &mdash; a teammate&rsquo;s CLI, a
-          CI job, a coding agent &mdash; is governed by org API tokens in the
-          dashboard.{' '}
-          <OutLink href={config.links.tokens} variant="plain">
-            Manage API tokens in Nuon
-          </OutLink>
-        </Callout>
-      )}
+        <LiveEvidence
+          config={config}
+          lead={
+            <>
+              The same run&rsquo;s last act is a rollout restart of the
+              app&rsquo;s three deployments: pod names change and ages reset
+              the moment it lands.
+            </>
+          }
+        />
+      </PspSection>
     </>
   )
 }
 
 /* ============================================================
-   Drive: the command menu and the copy-paste agent prompt. Both tracks use
-   this install's real ids, filled in from ui-config at render time.
+   The agent page: the full checklist prompt and the command menu it wraps.
+   Both use this install's real ids, filled in from ui-config at render time.
    ============================================================ */
-
-function agentPrompt(install: string, app: string): string {
-  return `You are operating the Nuon CLI against MY app and MY install, in my own Nuon org.
-I have already run "nuon auth login" on this machine, so the CLI is authenticated
-(session in ~/.nuon). Do not ask me for, print, or export any token.
-
-Hard limits:
-- Only this app and install: app kitchen-sink (${app}), install ${install}.
-- NEVER create, delete, or tear down installs, apps, components, or branches.
-- Add --output agent to every nuon command; prefix every read with NUON_READ_ONLY=1.
-- Before EVERY mutating command: show me the exact command, say what it will change,
-  and wait for my explicit "yes". After every command, show me the result.
-
-Warm-up: NUON_READ_ONLY=1 nuon installs get -i ${install} --output agent
-
-Then walk me through day-2 for real, in this order:
-
-1. RUNBOOK — NUON_READ_ONLY=1 nuon runbooks list -i ${install} --output agent;
-   confirm full-health-check exists (it is read-only diagnostics). After my yes:
-   nuon runbooks create-run -i ${install} -r full-health-check --output agent.
-   Poll get-run until it finishes; summarize each step.
-
-2. ACTION + ROLE PROOF — NUON_READ_ONLY=1 nuon actions list -a ${app} --output agent;
-   create-run needs the workflow ID (actw...), not the name — resolve
-   break_glass_remediation here. Warn me it restarts my app's three deployments.
-   After my yes:
-   nuon actions create-run -i ${install} -w <actw-id> --output agent
-   (if overriding the role: the flag is --role-name, not --role). Fetch the run logs
-   and point out the assumed role ARN (...-app-break-glass) and the expected Secrets
-   Manager deny — that is the per-operation IAM proof. Then tell me to open my
-   kitchen-sink page and watch the pod ages reset.
-
-3. BRANCH — my app config is cloned at <path-to-your-clone>. Help me make one small
-   visible edit, then from that directory, after my yes:
-   nuon sync --branch ${branchName} --output agent.
-   This syncs my local files and triggers a real staged branch run — no push needed.
-   Report each group's progress; if a group holds for approval, tell me and I will
-   approve it in my dashboard.
-
-4. ROLLBACK — API-only (no CLI command yet). Read my session credentials into shell
-   variables without echoing them:
-   TOK=$(awk '$1=="api_token:"{print $2}' ~/.nuon); ORG=$(awk '$1=="org_id:"{print $2}' ~/.nuon)
-   GET https://api.nuon.co/v1/installs/${install}/app-config-versions
-   (headers: Authorization: Bearer $TOK, X-Nuon-Org-ID: $ORG). Show me the versions,
-   then POST /v1/installs/${install}/app-config-updates with
-   {"app_config_id":"<previous>","plan_only":true} and show me the plan.
-   Only after my yes, repeat with "plan_only": false, and tell me to watch the old
-   image tags reappear on my pods page.
-
-Budget: exactly one run per flow. Anything else requires my explicit request.`
-}
 
 function AgentFlow({ config }: { config: UIConfig }) {
   const install = installIdOf(config)
@@ -1082,11 +988,16 @@ function AgentFlow({ config }: { config: UIConfig }) {
 
   return (
     <>
-      <FlowHeader
-        eyebrow="Drive · terminal & agents"
-        title="Run day-2 from your terminal"
-        lede="Two tracks to the same place. Run the command menu yourself, or paste one prompt into Claude Code or Codex and let it drive — it must show you every command and wait for your yes before anything mutates. Either way, this install's ids are already filled in below."
-      />
+      <header className="page-header">
+        <Eyebrow>The default action · terminal &amp; agents</Eyebrow>
+        <h1>Run day-2 from your terminal</h1>
+        <p className="lede">
+          One prompt walks Claude Code or Codex through every proof on the
+          checklist: it must show you each command and wait for your yes
+          before anything mutates. Prefer typing? The command menu below is
+          the same walk, one command per flow, ids filled in.
+        </p>
+      </header>
 
       <section className="section">
         <div className="section__head">
@@ -1112,6 +1023,20 @@ function AgentFlow({ config }: { config: UIConfig }) {
             </>
           }
         />
+      </section>
+
+      <section className="section">
+        <div className="section__head">
+          <h2 className="section__title">Track two: the agent prompt</h2>
+          <div className="subtext muted">paste into Claude Code or Codex</div>
+        </div>
+        <div className="agent-prompt">
+          <div className="cmd__head">
+            <span className="cmd__label">the prompt, your ids filled in</span>
+            <CopyButton text={prompt} />
+          </div>
+          <pre className="cmd__pre agent-prompt__pre">{prompt}</pre>
+        </div>
       </section>
 
       <section className="section">
@@ -1164,39 +1089,19 @@ function AgentFlow({ config }: { config: UIConfig }) {
         </p>
       </section>
 
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Track two: the agent prompt</h2>
-          <div className="subtext muted">paste into Claude Code or Codex</div>
-        </div>
-        <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-          One prompt, scoped hard to this app and install: the agent must show
-          every command, keep reads read-only, and stop for your explicit
-          &ldquo;yes&rdquo; before each of the four mutating steps.
-        </p>
-        <div className="agent-prompt">
-          <div className="cmd__head">
-            <span className="cmd__label">the prompt, your ids filled in</span>
-            <CopyButton text={prompt} />
-          </div>
-          <pre className="cmd__pre agent-prompt__pre">{prompt}</pre>
-        </div>
-      </section>
-
-      <Callout label="Why the terminal, and not buttons here">
-        Acting from your own terminal and your own dashboard is the product:
-        this page runs behind your customer&rsquo;s load balancer, so it hands
-        you commands and shows you evidence instead of holding credentials. An
-        app that could mutate your install from a public page would be the
-        wrong demo.
-      </Callout>
+      <p className="small muted" style={{ maxWidth: '72ch' }}>
+        Why the terminal, and not buttons here: this page runs behind your
+        customer&rsquo;s load balancer, so it hands you commands and shows you
+        evidence instead of holding credentials. An app that could mutate your
+        install from a public page would be the wrong demo.
+      </p>
     </>
   )
 }
 
 /* ============================================================
-   The view. Bare #/customize renders the day-2 half of the taxonomy for
-   deep links; the landing's customize hub is the full front door.
+   The view. Bare #/customize renders the checklist for deep links; the
+   landing's hub is the full front door.
    ============================================================ */
 
 /**
@@ -1222,7 +1127,7 @@ function flowLinks(flow: string, config: UIConfig) {
 }
 
 /**
- * The bare index doubles as a watcher for the toggleable components' tiles,
+ * The bare index doubles as a watcher for the toggleable components' rows,
  * the same way the landing hub does: while either component is off, keep
  * re-reading the namespace so a dashboard toggle flips the switch here.
  */
@@ -1242,15 +1147,15 @@ function CustomizeIndex({ config }: { config: UIConfig }) {
 
   return (
     <>
-      <FlowHeader
-        eyebrow="Customize"
-        title="Day-2, one capability at a time"
-        lede="Everything below is grounded in this app's real config. Live pages read this install right now; guides explain the config it ships. The operations themselves run from your terminal and dashboard — each page hands you the exact commands."
-      />
-      <CapabilityGroups
-        categories={categories.filter((c) => c.dayTwo)}
-        switches={switches}
-      />
+      <header className="page-header">
+        <Eyebrow>Customize</Eyebrow>
+        <h1>The evaluation checklist</h1>
+        <p className="lede">
+          Live pages read this install right now; guides explain the config it
+          ships. Each page hands you the commands to prove its point.
+        </p>
+      </header>
+      <EvalPath switches={switches} />
     </>
   )
 }
@@ -1270,7 +1175,7 @@ export function Customize({
       {flow === 'runbooks' && <RunbooksFlow config={config} />}
       {flow === 'actions' && <ActionsFlow config={config} />}
       {flow === 'health' && <HealthFlow config={config} />}
-      {flow === 'triggers' && <TriggersFlow />}
+      {flow === 'triggers' && <TriggersFlow config={config} />}
       {flow === 'roles' && <RolesFlow config={config} />}
       {flow === 'agent' && <AgentFlow config={config} />}
 
