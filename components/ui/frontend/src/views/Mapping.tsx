@@ -1,5 +1,7 @@
 import type { UIConfig } from '../lib/api'
 import { stepEyebrow } from '../lib/taxonomy'
+import { useMarkStepSeen } from '../lib/progress'
+import { StepNav } from '../ui/CapabilityGrid'
 import {
   BackLink,
   Callout,
@@ -128,6 +130,7 @@ enable_helm = false`,
 ]
 
 export function Mapping({ config }: { config: UIConfig }) {
+  useMarkStepSeen('/map')
   return (
     <>
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
@@ -136,8 +139,7 @@ export function Mapping({ config }: { config: UIConfig }) {
         <h1>How does my product map onto this?</h1>
         <p className="lede">
           A component is one deployable piece of your product, described by a
-          small TOML file in your repo. There are five kinds in play in this
-          install. You need one or two of them.
+          small TOML file in your repo.
         </p>
       </header>
 
@@ -160,8 +162,7 @@ export function Mapping({ config }: { config: UIConfig }) {
         <div className="prose">
           <p>
             Every component publishes outputs, and any other component can
-            interpolate them. That is the whole wiring model: no service mesh
-            to configure, no registry to run.
+            interpolate them.
           </p>
           <p>
             The Helm values file for this app names the two image components
@@ -203,6 +204,7 @@ ui:
           </div>
         )}
       </Section>
+      <StepNav current="/map" />
     </>
   )
 }

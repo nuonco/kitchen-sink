@@ -129,6 +129,9 @@ export function LoadingOverlay() {
       <div className="loading__center">
         <img className="loading__mark" src={logoWhite} alt="Nuon" />
         <div className="loading__title">Kitchen Sink</div>
+        {/* Name the work, not just the app: the overlay is literally waiting
+            on the first introspection reads. */}
+        <div className="loading__sub">Reading your install&hellip;</div>
       </div>
     </div>
   )

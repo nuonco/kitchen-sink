@@ -16,13 +16,13 @@ import {
   guardrails,
   installGroups,
   lifecycleHooksToml,
-  repoName,
   roles,
   runbooks,
 } from '../lib/config-data.gen'
 import { agentPrompt, proofPrompts } from '../lib/prompts'
 import { stepEyebrow } from '../lib/taxonomy'
-import { EvalPath, type SwitchStates } from '../ui/CapabilityGrid'
+import { EvalPath, StepNav, type SwitchStates } from '../ui/CapabilityGrid'
+import { useMarkStepSeen } from '../lib/progress'
 import {
   BackLink,
   Badge,
@@ -72,6 +72,40 @@ function FlowHeader({
 const installIdOf = (config: UIConfig) => config.install_id ?? '<your-install-id>'
 const appIdOf = (config: UIConfig) => config.app_id ?? '<your-app-id>'
 
+/**
+ * The two ways to run a proof, as one first-class control: hand it to a
+ * coding agent, or type the commands yourself. Same pattern on every proof
+ * section, agent first — that is the default action everywhere else too.
+ */
+function Tracks({ agent, manual }: { agent: ReactNode; manual: ReactNode }) {
+  const [track, setTrack] = useState<'agent' | 'manual'>('agent')
+  return (
+    <div className="tracks">
+      <div className="tracks__bar" role="tablist" aria-label="How to run this">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={track === 'agent'}
+          className={track === 'agent' ? 'tracks__tab tracks__tab--on' : 'tracks__tab'}
+          onClick={() => setTrack('agent')}
+        >
+          Paste into your coding agent
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={track === 'manual'}
+          className={track === 'manual' ? 'tracks__tab tracks__tab--on' : 'tracks__tab'}
+          onClick={() => setTrack('manual')}
+        >
+          Run it yourself
+        </button>
+      </div>
+      <div className="tracks__panel">{track === 'agent' ? agent : manual}</div>
+    </div>
+  )
+}
+
 /** The default way to run a proof: paste it into a coding agent. */
 function ProofPrompt({ flow, config }: { flow: string; config: UIConfig }) {
   const build = proofPrompts[flow]
@@ -80,9 +114,7 @@ function ProofPrompt({ flow, config }: { flow: string; config: UIConfig }) {
   return (
     <div className="agent-prompt proof-prompt">
       <div className="cmd__head">
-        <span className="cmd__label">
-          the default way: paste into your coding agent
-        </span>
+        <span className="cmd__label">the prompt, your ids filled in</span>
         <CopyButton text={prompt} />
       </div>
       <pre className="cmd__pre agent-prompt__pre proof-prompt__pre">{prompt}</pre>
@@ -237,8 +269,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           config at that commit and rolls it across these groups in order.
           Each group&rsquo;s plan holds for a human approval, and the{' '}
           <span className="mono">full-health-check</span> runbook runs on
-          every install after its group deploys. A mistake reaches one
-          friendly group, not the fleet.
+          every install after its group deploys.
         </p>
         <CodeBlock
           label="branch.toml (the real config, comments stripped)"
@@ -251,24 +282,21 @@ function BranchesFlow({ config }: { config: UIConfig }) {
         title="Ship a change to this install"
         aside="one command from your terminal"
       >
-        <ProofPrompt flow="branches" config={config} />
-        <p className="small muted" style={{ margin: '16px 0', maxWidth: '72ch' }}>
-          Or run it yourself:
-        </p>
-        <CommandBlock
-          label="1 · get the app config (skip if you already have a clone)"
-          command={`git clone https://github.com/${repoName} && cd ${repoName.split('/')[1] ?? 'kitchen-sink'}`}
-        />
-        <CommandBlock
-          label="2 · edit any file, then sync your local files and trigger the run"
-          command={`nuon sync --branch ${branchName}`}
-          note={
-            <>
-              Syncs your local files exactly as they are (even uncommitted, no
-              push) and triggers a real branch run through the groups above.{' '}
-              <span className="mono">--preview</span> plans every group with
-              nothing applied.
-            </>
+        <Tracks
+          agent={<ProofPrompt flow="branches" config={config} />}
+          manual={
+            <CommandBlock
+              label="edit any file in your clone, then sync and trigger the run"
+              command={`nuon sync --branch ${branchName}`}
+              note={
+                <>
+                  Syncs your local files exactly as they are (even uncommitted,
+                  no push) and triggers a real branch run through the groups
+                  above. <span className="mono">--preview</span> plans every
+                  group with nothing applied.
+                </>
+              }
+            />
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
@@ -286,8 +314,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
             <>
               When the run&rsquo;s deploy reaches this install, the image tags
               below flip to the new <span className="mono">sha-*</span> stamp
-              and the pods churn as the new version rolls in. No reload; this
-              table re-reads itself.
+              and the pods churn as the new version rolls in.
             </>
           }
         />
@@ -398,26 +425,26 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
         title="Run one against this install"
         aside="every run leaves a per-step transcript"
       >
-        <ProofPrompt flow="runbooks" config={config} />
-        <p className="small muted" style={{ margin: '16px 0', maxWidth: '72ch' }}>
-          Or run it yourself:
-        </p>
-        <CommandBlock
-          label={`run ${runbook.name} against this install`}
-          command={`nuon runbooks create-run --install-id ${install} --runbook-id ${runbook.name}`}
-          note={
-            runbook.mutates ? (
-              <>
-                <strong>This one changes things</strong> — it re-applies state
-                or assumes elevated access. Run it deliberately; the per-step
-                record it leaves behind is the point.
-              </>
-            ) : (
-              <>
-                Read-only diagnostics: safe to run right now. Runbooks accept
-                their name directly — no id lookup needed.
-              </>
-            )
+        <Tracks
+          agent={<ProofPrompt flow="runbooks" config={config} />}
+          manual={
+            <CommandBlock
+              label={`run ${runbook.name} against this install`}
+              command={`nuon runbooks create-run --install-id ${install} --runbook-id ${runbook.name}`}
+              note={
+                runbook.mutates ? (
+                  <>
+                    <strong>This one changes things</strong> — it re-applies
+                    state or assumes elevated access. Run it deliberately.
+                  </>
+                ) : (
+                  <>
+                    Read-only diagnostics: safe to run right now. Runbooks
+                    accept their name directly — no id lookup needed.
+                  </>
+                )
+              }
+            />
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
@@ -434,8 +461,7 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
           config={config}
           lead={
             <>
-              The read-only runbooks leave the cluster untouched; their record
-              is the transcript. The two that apply changes land right here:{' '}
+              The two runbooks that apply changes land right here:{' '}
               <span className="mono">reconcile-drift</span> redeploys the chart
               and <span className="mono">break-glass</span> restarts the
               app&rsquo;s deployments, so pod names change and ages reset as
@@ -569,8 +595,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
         </div>
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           The runner already has the access an action needs; the action is the
-          audited, repeatable path to using it. Production credentials never
-          move.
+          audited, repeatable path to using it.
         </p>
       </PspSection>
 
@@ -579,30 +604,33 @@ function ActionsFlow({ config }: { config: UIConfig }) {
         title="Fire one at this install"
         aside="two commands"
       >
-        <ProofPrompt flow="actions" config={config} />
-        <p className="small muted" style={{ margin: '16px 0', maxWidth: '72ch' }}>
-          Or run it yourself:
-        </p>
-        <CommandBlock
-          label="1 · list the action workflows and copy the id"
-          command={`nuon actions list --app-id ${app}`}
-          note={
+        <Tracks
+          agent={<ProofPrompt flow="actions" config={config} />}
+          manual={
             <>
-              The sharp edge: <span className="mono">create-run</span> takes
-              the workflow <strong>id</strong> (it starts with{' '}
-              <span className="mono">actw</span>), never the name — so list
-              first and copy the id next to{' '}
-              <span className="mono">{action.name}</span>.
-            </>
-          }
-        />
-        <CommandBlock
-          label={`2 · run ${action.name} against this install`}
-          command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
-          note={
-            <>
-              To override the IAM role for one run, the flag is{' '}
-              <span className="mono">--role-name</span>.
+              <CommandBlock
+                label="1 · list the action workflows and copy the id"
+                command={`nuon actions list --app-id ${app}`}
+                note={
+                  <>
+                    The sharp edge: <span className="mono">create-run</span>{' '}
+                    takes the workflow <strong>id</strong> (it starts with{' '}
+                    <span className="mono">actw</span>), never the name — so
+                    list first and copy the id next to{' '}
+                    <span className="mono">{action.name}</span>.
+                  </>
+                }
+              />
+              <CommandBlock
+                label={`2 · run ${action.name} against this install`}
+                command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
+                note={
+                  <>
+                    To override the IAM role for one run, the flag is{' '}
+                    <span className="mono">--role-name</span>.
+                  </>
+                }
+              />
             </>
           }
         />
@@ -623,8 +651,6 @@ function ActionsFlow({ config }: { config: UIConfig }) {
           config={config}
           lead={
             <>
-              Three of the four actions are read-only, so their only record is
-              the transcript.{' '}
               <span className="mono">break_glass_remediation</span> ends with a
               rollout restart: new pod names, ages reset to seconds — it lands
               in this table within one poll.
@@ -739,7 +765,15 @@ function HealthFlow({ config }: { config: UIConfig }) {
           </>
         )}
         <div style={{ marginTop: 16 }}>
-          <ProofPrompt flow="health" config={config} />
+          <Tracks
+            agent={<ProofPrompt flow="health" config={config} />}
+            manual={
+              <CommandBlock
+                label="run the same checks the deploy gate relies on (read-only)"
+                command={`nuon runbooks create-run --install-id ${installIdOf(config)} --runbook-id full-health-check`}
+              />
+            }
+          />
         </div>
       </PspSection>
     </>
@@ -793,11 +827,9 @@ function TriggersFlow({ config }: { config: UIConfig }) {
           </table>
         </div>
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          <span className="mono">cron_status</span> runs hourly.{' '}
           <span className="mono">lifecycle_hooks</span> fires post-provision
           and around every <span className="mono">kitchen_sink</span> deploy,
-          which is where a migration or a cache warm goes. The other two are
-          manual: what a person reaches for when an install misbehaves.
+          which is where a migration or a cache warm goes.
         </p>
         <CodeBlock
           label="actions/lifecycle_hooks/nuon.toml (the real file)"
@@ -810,7 +842,21 @@ function TriggersFlow({ config }: { config: UIConfig }) {
         title="Fire a scheduled action on demand"
         aside="the same run its cron fires hourly"
       >
-        <ProofPrompt flow="triggers" config={config} />
+        <Tracks
+          agent={<ProofPrompt flow="triggers" config={config} />}
+          manual={
+            <>
+              <CommandBlock
+                label="1 · resolve cron_status to its workflow id"
+                command={`nuon actions list --app-id ${appIdOf(config)}`}
+              />
+              <CommandBlock
+                label="2 · fire the same run its cron fires hourly"
+                command={`nuon actions create-run --install-id ${installIdOf(config)} --action-workflow-id <actw-id>`}
+              />
+            </>
+          }
+        />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           Its hourly history is already on the record.{' '}
           {config.links.actions && (
@@ -937,17 +983,20 @@ function RolesFlow({ config }: { config: UIConfig }) {
         title="Prove the boundary, on the record"
         aside="the break-glass run narrates its own evidence"
       >
-        <ProofPrompt flow="roles" config={config} />
-        <p className="small muted" style={{ margin: '16px 0', maxWidth: '72ch' }}>
-          Or run it yourself:
-        </p>
-        <CommandBlock
-          label="1 · resolve the workflow id (create-run takes the id, not the name)"
-          command={`nuon actions list --app-id ${app}`}
-        />
-        <CommandBlock
-          label="2 · run it (heads up: it ends by restarting the app's pods)"
-          command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
+        <Tracks
+          agent={<ProofPrompt flow="roles" config={config} />}
+          manual={
+            <>
+              <CommandBlock
+                label="1 · resolve the workflow id (create-run takes the id, not the name)"
+                command={`nuon actions list --app-id ${app}`}
+              />
+              <CommandBlock
+                label="2 · run it (heads up: it ends by restarting the app's pods)"
+                command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
+              />
+            </>
+          }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           In the run&rsquo;s transcript:{' '}
@@ -989,111 +1038,78 @@ function AgentFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <header className="page-header">
-        <Eyebrow>The default action · terminal &amp; agents</Eyebrow>
         <h1>Run day-2 from your terminal</h1>
         <p className="lede">
           One prompt walks Claude Code or Codex through every proof on the
           checklist: it must show you each command and wait for your yes
-          before anything mutates. Prefer typing? The command menu below is
-          the same walk, one command per flow, ids filled in.
+          before anything mutates. The command menu below is the same walk,
+          one command per flow.
         </p>
       </header>
 
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Once per machine: the CLI</h2>
-          <div className="subtext muted">no tokens to paste</div>
-        </div>
-        <CommandBlock
-          label="install the nuon CLI"
-          command="curl -sSL install.nuon.co | bash"
-          note={
-            <>
-              Or <span className="mono">brew install nuonco/tap/nuon</span>.
-            </>
-          }
-        />
-        <CommandBlock
-          label="authenticate"
-          command="nuon auth login"
-          note={
-            <>
-              Opens your browser; approve and this machine — and any agent you
-              run in its shell — is signed in for the day. No token handling.
-            </>
-          }
-        />
-      </section>
-
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Track two: the agent prompt</h2>
-          <div className="subtext muted">paste into Claude Code or Codex</div>
-        </div>
-        <div className="agent-prompt">
-          <div className="cmd__head">
-            <span className="cmd__label">the prompt, your ids filled in</span>
-            <CopyButton text={prompt} />
+      <Tracks
+        agent={
+          <div className="agent-prompt">
+            <div className="cmd__head">
+              <span className="cmd__label">the prompt, your ids filled in</span>
+              <CopyButton text={prompt} />
+            </div>
+            <pre className="cmd__pre agent-prompt__pre">{prompt}</pre>
           </div>
-          <pre className="cmd__pre agent-prompt__pre">{prompt}</pre>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="section__head">
-          <h2 className="section__title">Track one: the command menu</h2>
-          <div className="subtext muted">one command per flow, your ids filled in</div>
-        </div>
-        <CommandBlock
-          label="run a real health check (read-only)"
-          command={`nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`}
-          note={<>A run appears in your dashboard with per-step results.</>}
-        />
-        <CommandBlock
-          label="prove the per-operation IAM roles (restarts this app's pods)"
-          command={`nuon actions list --app-id ${app}`}
-          note={
-            <>
-              Copy the <span className="mono">actw</span> id next to{' '}
-              <span className="mono">break_glass_remediation</span>, then{' '}
-              <span className="mono">
-                nuon actions create-run --install-id {install}{' '}
-                --action-workflow-id &lt;actw-id&gt;
-              </span>
-              . The run logs print the assumed break-glass role and a denied
-              Secrets Manager call; watch the pod ages reset on the{' '}
-              <span className="mono">actions</span> page here.
-            </>
-          }
-        />
-        <CommandBlock
-          label="ship a change through the staged groups (from your clone)"
-          command={`nuon sync --branch ${branchName}`}
-          note={
-            <>
-              Syncs your local edit — no push needed — and triggers a real
-              branch run, group by group; approve held groups in your
-              dashboard.
-            </>
-          }
-        />
-        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Rollback is the one flow without a CLI command today: it runs from
-          the version history in the dashboard — plan first, then apply, and
-          the old image tags reappear on your pods.{' '}
-          {config.links.versions && (
-            <OutLink href={config.links.versions} variant="plain">
-              Open this install&rsquo;s version history
-            </OutLink>
-          )}
-        </p>
-      </section>
+        }
+        manual={
+          <>
+            <CommandBlock
+              label="run a real health check (read-only)"
+              command={`nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`}
+              note={<>A run appears in your dashboard with per-step results.</>}
+            />
+            <CommandBlock
+              label="prove the per-operation IAM roles (restarts this app's pods)"
+              command={`nuon actions list --app-id ${app}`}
+              note={
+                <>
+                  Copy the <span className="mono">actw</span> id next to{' '}
+                  <span className="mono">break_glass_remediation</span>, then{' '}
+                  <span className="mono">
+                    nuon actions create-run --install-id {install}{' '}
+                    --action-workflow-id &lt;actw-id&gt;
+                  </span>
+                  . The run logs print the assumed break-glass role and a
+                  denied Secrets Manager call; watch the pod ages reset on the{' '}
+                  <span className="mono">actions</span> page here.
+                </>
+              }
+            />
+            <CommandBlock
+              label="ship a change through the staged groups (from your clone)"
+              command={`nuon sync --branch ${branchName}`}
+              note={
+                <>
+                  Syncs your local edit — no push needed — and triggers a real
+                  branch run, group by group; approve held groups in your
+                  dashboard.
+                </>
+              }
+            />
+            <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+              Rollback is the one flow without a CLI command today: it runs
+              from the version history in the dashboard — plan first, then
+              apply, and the old image tags reappear on your pods.{' '}
+              {config.links.versions && (
+                <OutLink href={config.links.versions} variant="plain">
+                  Open this install&rsquo;s version history
+                </OutLink>
+              )}
+            </p>
+          </>
+        }
+      />
 
       <p className="small muted" style={{ maxWidth: '72ch' }}>
         Why the terminal, and not buttons here: this page runs behind your
         customer&rsquo;s load balancer, so it hands you commands and shows you
-        evidence instead of holding credentials. An app that could mutate your
-        install from a public page would be the wrong demo.
+        evidence instead of holding credentials.
       </p>
     </>
   )
@@ -1148,11 +1164,10 @@ function CustomizeIndex({ config }: { config: UIConfig }) {
   return (
     <>
       <header className="page-header">
-        <Eyebrow>Customize</Eyebrow>
         <h1>The evaluation checklist</h1>
         <p className="lede">
           Live pages read this install right now; guides explain the config it
-          ships. Each page hands you the commands to prove its point.
+          ships.
         </p>
       </header>
       <EvalPath switches={switches} />
@@ -1167,6 +1182,9 @@ export function Customize({
   config: UIConfig
   flow?: string
 }) {
+  const route = flow ? `/customize/${flow}` : undefined
+  useMarkStepSeen(route)
+
   return (
     <>
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
@@ -1191,6 +1209,8 @@ export function Customize({
           </OutLink>
         </div>
       )}
+
+      {route && <StepNav current={route} />}
     </>
   )
 }
