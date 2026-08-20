@@ -7,7 +7,8 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import { useNavigate } from '../lib/router'
+import { categories } from '../lib/taxonomy'
+import { CapabilityGroups } from '../ui/CapabilityGrid'
 import { Eyebrow, Icon, OutLink } from '../ui/Primitives'
 
 /* ============================================================
@@ -169,78 +170,12 @@ function GoldenPath({
 
 /* ============================================================
    The customize page: the tour's destination, and the returning-visitor
-   front door. Every tile is an action against this install. The hover
-   treatment is ported from nuon.co/product's PixelCard: the card lifts,
-   a cyan border snaps on, a dithered checkerboard shadow appears offset
-   bottom-right, and the title turns cyan with a pixel arrow sliding in.
+   front door. The tiles come from the one taxonomy in lib/taxonomy.ts,
+   grouped by category, each badged live, simulation, or guide so nobody
+   mistakes a browser demo for the real operation.
    ============================================================ */
 
-/** nuon.co's pixel arrow (PixelArrow.astro, direction "right"). */
-function PixelArrow() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 15 15" fill="none" aria-hidden="true">
-      <rect x="0" y="0" width="3" height="3" fill="currentColor" />
-      <rect x="3" y="3" width="3" height="3" fill="currentColor" />
-      <rect x="6" y="6" width="3" height="3" fill="currentColor" />
-      <rect x="3" y="9" width="3" height="3" fill="currentColor" />
-      <rect x="0" y="12" width="3" height="3" fill="currentColor" />
-    </svg>
-  )
-}
-
-const actions = [
-  {
-    to: '/deployed',
-    icon: 'magnifying-glass',
-    title: 'Read your live install',
-    desc: 'Inspect the namespaces, pods, services, and secrets Nuon deployed here.',
-  },
-  {
-    to: '/map',
-    icon: 'puzzle-piece',
-    title: 'Map your product onto components',
-    desc: 'Match the five component types to the pieces you already ship.',
-  },
-  {
-    to: '/tictactoe',
-    icon: 'toggle',
-    title: 'Enable custom features',
-    desc: 'Flip on the toggleable tictactoe component and watch it deploy.',
-  },
-  {
-    to: '/customize/branches',
-    icon: 'git-branch',
-    title: 'Set up an app branch',
-    desc: 'Walk the staged rollout that ships changes group by group.',
-  },
-  {
-    to: '/customize/runbooks',
-    icon: 'book-open',
-    title: 'Configure runbooks',
-    desc: 'Step through the four runbooks this app ships; simulate one.',
-  },
-  {
-    to: '/customize/actions',
-    icon: 'lightning',
-    title: 'Run an adhoc action',
-    desc: 'Fire a manual action on the runner and watch the log.',
-  },
-  {
-    to: '/customize/roles',
-    icon: 'lock',
-    title: 'Set up operation roles',
-    desc: 'See the scoped IAM role behind every operation Nuon performs.',
-  },
-  {
-    to: '/day2',
-    icon: 'gauge',
-    title: 'Learn the day-2 story',
-    desc: 'Why branches, runbooks, triggers, and health matter at fifty installs.',
-  },
-]
-
 export function Landing({ config }: { config: UIConfig }) {
-  const navigate = useNavigate()
   const [step, setStep] = useState<Step>(storedStep)
 
   useEffect(() => {
@@ -316,8 +251,10 @@ export function Landing({ config }: { config: UIConfig }) {
           <Eyebrow>Kitchen sink &middot; live install</Eyebrow>
           <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
           <p className="hero__lede">
-            Every action below works against this live install, and each page
-            explains itself as you go. Pick any order.
+            Each tile says what it is. Live pages read this install right now.
+            Simulations run in the browser only; the real operation runs from
+            the Nuon dashboard. Guides explain the config this app ships. Pick
+            any order.
           </p>
           <div className="row" style={{ marginTop: 20 }}>
             <button
@@ -330,38 +267,26 @@ export function Landing({ config }: { config: UIConfig }) {
           </div>
         </header>
 
-        <div className="actions" style={{ marginTop: 32 }}>
-          {actions.map((action) => (
-            <button
-              key={action.to}
-              className="action"
-              onClick={() => navigate(action.to)}
-            >
-              <span className="action__icon">
-                {action.icon === 'toggle' ? (
-                  <span
-                    className={
-                      tictactoe ? 'switch switch--sm switch--on' : 'switch switch--sm'
-                    }
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <Icon name={action.icon} />
-                )}
-              </span>
-              <span className="action__title">
-                <span className="action__arrow" aria-hidden="true">
-                  <PixelArrow />
-                </span>
-                {action.title}
-              </span>
-              <span className="action__desc">{action.desc}</span>
-              <span className="action__shadow action__shadow--right" aria-hidden="true" />
-              <span className="action__shadow action__shadow--bottom" aria-hidden="true" />
-              <span className="action__shadow action__shadow--corner" aria-hidden="true" />
-            </button>
-          ))}
+        <div style={{ marginTop: 32 }}>
+          <CapabilityGroups
+            categories={categories.filter((c) => !c.dayTwo)}
+            tictactoe={tictactoe}
+          />
         </div>
+
+        <div className="hub-day2">
+          <h2 className="hub-day2__title">How do I operate 50 of these?</h2>
+          <p className="hub-day2__lede">
+            One install is a demo. Fifty is a business, and the difference is
+            day-two tooling. Four kinds of it carry the weight, each grounded
+            in this app&rsquo;s real config.
+          </p>
+        </div>
+
+        <CapabilityGroups
+          categories={categories.filter((c) => c.dayTwo)}
+          tictactoe={tictactoe}
+        />
 
         {config.links.install && (
           <section className="section">
