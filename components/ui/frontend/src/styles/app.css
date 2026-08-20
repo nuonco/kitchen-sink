@@ -1039,6 +1039,67 @@ body::before {
   gap: var(--space-5);
 }
 
+/* Category groups in the capability hub, one heading per taxonomy entry. */
+
+.hub-group {
+  margin-top: var(--space-8);
+}
+
+/* auto-fill, not auto-fit: a one-tile category keeps the same card width
+   as the three-tile ones instead of stretching across the page. */
+.hub-group .actions {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+.hub-group__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.hub-group__title {
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
+  font-weight: var(--weight-stronger);
+}
+
+.hub-group__blurb {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+}
+
+/* The day-2 interlude between the live-install group and the rest. */
+
+.hub-day2 {
+  margin-top: var(--space-10);
+  padding-top: var(--space-8);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.hub-day2__title {
+  font-size: var(--text-title);
+  font-weight: var(--weight-stronger);
+}
+
+.hub-day2__lede {
+  margin-top: var(--space-2);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+  max-width: 70ch;
+}
+
+/* The live / simulation / guide badge pinned to a capability card. */
+
+.action__mode {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+}
+
 .action {
   position: relative;
   display: flex;

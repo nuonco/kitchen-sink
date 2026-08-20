@@ -4,7 +4,6 @@ import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { Icon, NuonMark, OutLink } from './ui/Primitives'
 import { Customize } from './views/Customize'
-import { DayTwo } from './views/DayTwo'
 import { Deployed } from './views/Deployed'
 import { Landing } from './views/Landing'
 import { Mapping } from './views/Mapping'
@@ -53,7 +52,9 @@ export default function App() {
   } else if (parts[0] === 'map') {
     view = <Mapping config={config} />
   } else if (parts[0] === 'day2') {
-    view = <DayTwo config={config} feature={parts[1]} />
+    // The old day-2 pages merged into the customize taxonomy; keep the old
+    // deep links working.
+    view = <Customize config={config} flow={parts[1]} />
   } else if (parts[0] === 'tictactoe') {
     view = <TicTacToe config={config} />
   } else if (parts[0] === 'customize') {
