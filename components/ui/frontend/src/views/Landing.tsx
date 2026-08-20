@@ -11,7 +11,7 @@ import {
 } from '../lib/api'
 import { agentPrompt } from '../lib/prompts'
 import { EvalPath, type SwitchStates } from '../ui/CapabilityGrid'
-import { CopyButton, Eyebrow, Icon, OutLink } from '../ui/Primitives'
+import { CopyButton, Icon, OutLink } from '../ui/Primitives'
 
 /* ============================================================
    The landing is a guided walkthrough. A first-time visitor has just
@@ -271,19 +271,32 @@ export function Landing({ config }: { config: UIConfig }) {
   const back = () => go(steps[Math.max(idx - 1, 0)])
   const skip = () => go('explore')
 
+  // Arrow keys page the tour, the way every tour library's users expect.
+  // The finish state is a real page, not a step, so it keeps its keys.
+  useEffect(() => {
+    if (step === 'explore') return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const target = e.target as HTMLElement | null
+      if (target && /^(input|textarea|select)$/i.test(target.tagName)) return
+      if (e.key === 'ArrowRight') next()
+      if (e.key === 'ArrowLeft') back()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
+
   /* ---------- Arrival ---------- */
 
   if (step === 'arrive') {
     return (
       <div className="tour__step" key="arrive">
         <div className="arrive">
-          <Eyebrow>Kitchen sink &middot; live install</Eyebrow>
           <h1>You&rsquo;re inside a BYOC install.</h1>
           <p className="arrive__lede">
             This page is served by a container in an EKS cluster, in an AWS
             account, that Nuon provisioned and deployed into when you
-            installed. It went in a few minutes ago. Take the short tour and
-            see what you got.
+            installed.
           </p>
           {(config.install_id || config.cluster_name) && (
             <div className="row arrive__chips">
@@ -297,8 +310,7 @@ export function Landing({ config }: { config: UIConfig }) {
           )}
           {config.links.versions && (
             <p className="arrive__versions">
-              This install is yours: every config version it has ever run is
-              on record.{' '}
+              Every config version it has ever run is on record.{' '}
               <OutLink href={config.links.versions} variant="plain">
                 See its config versions
               </OutLink>
@@ -325,13 +337,10 @@ export function Landing({ config }: { config: UIConfig }) {
     return (
       <div className="tour__step" key="explore">
         <header className="hero">
-          <Eyebrow>Kitchen sink &middot; live install</Eyebrow>
           <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
           <p className="hero__lede">
-            Nine steps, in the order an engineer sizes up a BYOC system: read
-            the install, ship to it, operate it, govern it. Each step names a
-            problem, shows the config that answers it, and hands you the
-            commands to prove it on this install.
+            Each step names a problem, shows the config that answers it, and
+            hands you the commands to prove it on this install.
           </p>
           <div className="agent-cta">
             <div className="agent-cta__body">
@@ -372,9 +381,6 @@ export function Landing({ config }: { config: UIConfig }) {
         {config.links.install && (
           <section className="section">
             <div className="card">
-              <div className="card__header">
-                <div className="card__title">The other half of the tour</div>
-              </div>
               <p className="small muted" style={{ maxWidth: '70ch' }}>
                 This app reads the install from the inside. The Nuon dashboard
                 operates it, and every other install, from the outside.
@@ -407,10 +413,11 @@ export function Landing({ config }: { config: UIConfig }) {
       <span className="tour__progress">
         step {tourIdx + 1} of {tourSteps.length}
       </span>
-      <span className="tour__dots" aria-hidden="true">
+      <span className="tour__dots">
         {tourSteps.map((s, i) => (
-          <span
+          <button
             key={s}
+            type="button"
             className={
               i === tourIdx
                 ? 'tour__dot tour__dot--active'
@@ -418,6 +425,10 @@ export function Landing({ config }: { config: UIConfig }) {
                   ? 'tour__dot tour__dot--done'
                   : 'tour__dot'
             }
+            disabled={i > tourIdx}
+            aria-label={`Step ${i + 1} of ${tourSteps.length}`}
+            {...(i === tourIdx ? { 'aria-current': 'step' as const } : {})}
+            onClick={() => go(s)}
           />
         ))}
       </span>
@@ -438,9 +449,8 @@ export function Landing({ config }: { config: UIConfig }) {
     </div>
   )
 
-  const goldenHeader = (num: string, title: string, lede: ReactNode) => (
+  const goldenHeader = (title: string, lede: ReactNode) => (
     <header className="step-header">
-      <Eyebrow>The golden path &middot; {num}</Eyebrow>
       <h2>{title}</h2>
       <p className="step-header__lede">{lede}</p>
     </header>
@@ -453,12 +463,10 @@ export function Landing({ config }: { config: UIConfig }) {
       {step === 'sandbox' && (
         <>
           {goldenHeader(
-            '01 of 03',
             'It starts with a sandbox.',
             <>
-              A shippable Nuon app is three parts, and this is the first: the
-              footprint Nuon creates in your customer&rsquo;s cloud account.
-              Everything else lives inside this boundary. Here it&rsquo;s{' '}
+              The footprint Nuon creates in your customer&rsquo;s cloud
+              account. Here it&rsquo;s{' '}
               <span className="mono">aws-eks-sandbox</span>: a VPC, an EKS
               cluster, and a public DNS zone.
             </>,
@@ -477,7 +485,6 @@ export function Landing({ config }: { config: UIConfig }) {
       {step === 'components' && (
         <>
           {goldenHeader(
-            '02 of 03',
             'Components are your product.',
             <>
               One component is one deployable piece of your product. Here the{' '}
@@ -500,7 +507,6 @@ export function Landing({ config }: { config: UIConfig }) {
       {step === 'runner' && (
         <>
           {goldenHeader(
-            '03 of 03',
             'The runner does the deploying.',
             <>
               An agent Nuon runs inside the account. Every build and deploy
@@ -516,11 +522,10 @@ export function Landing({ config }: { config: UIConfig }) {
       {step === 'deployed' && (
         <>
           <header className="step-header">
-            <Eyebrow>This install &middot; read live</Eyebrow>
             <h2>Here&rsquo;s what Nuon deployed.</h2>
             <p className="step-header__lede">
-              Four facts, read from the cluster as you load this page. Each
-              one opens the record behind it.
+              Read from the cluster as this page loads; each fact opens the
+              record behind it.
             </p>
           </header>
           <div className="facts">
@@ -557,9 +562,6 @@ export function Landing({ config }: { config: UIConfig }) {
             />
           </div>
           <div className="cta-block">
-            <div className="cta-block__kicker">
-              What it takes to operate BYOC with real customers
-            </div>
             <button className="btn btn--primary btn--xl" onClick={next}>
               Customize the Kitchen Sink <Icon name="arrow-right" />
             </button>

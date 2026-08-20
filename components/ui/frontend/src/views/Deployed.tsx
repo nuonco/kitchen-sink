@@ -10,6 +10,8 @@ import {
   type UIConfig,
 } from '../lib/api'
 import { stepEyebrow } from '../lib/taxonomy'
+import { useMarkStepSeen } from '../lib/progress'
+import { StepNav } from '../ui/CapabilityGrid'
 import {
   BackLink,
   Badge,
@@ -24,7 +26,10 @@ import {
 } from '../ui/Primitives'
 
 /** Namespaces this app config is responsible for, so the table can mark them. */
-function namespaceNote(name: string, installID?: string): string | null {
+function namespaceNote(name?: string, installID?: string): string | null {
+  // A row with no name is a malformed response; a public demo page must
+  // degrade to a blank cell, never a crash.
+  if (!name) return null
   if (name === 'kitchen-sink') return 'This app'
   if (installID && name === `${installID}-dne`) return 'The kustomize component'
   if (name === 'nuon') return 'The Nuon runner'
@@ -42,9 +47,7 @@ function Namespaces({ config }: { config: UIConfig }) {
       aside="GET /introspect/kube"
     >
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        The API pod asks the Kubernetes API what else is in the cluster. Some of
-        these namespaces are the sandbox&rsquo;s (the EKS add-ons, the Nuon runner);
-        the rest are this app&rsquo;s components.
+        The API pod asks the Kubernetes API what else is in the cluster.
       </p>
 
       <LoadState result={kube} what="the cluster" />
@@ -124,8 +127,8 @@ function ThisNamespace({ config }: { config: UIConfig }) {
     >
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
         Everything the <span className="mono">kitchen_sink</span> Helm component
-        created. Three deployments, three services, and the Kubernetes secrets
-        Nuon syncs into the namespace.
+        created, including the Kubernetes secrets Nuon syncs into the
+        namespace.
       </p>
 
       <LoadState result={ns} what={`the ${namespace} namespace`} />
@@ -353,10 +356,9 @@ function PodEnvironment() {
   return (
     <Section id="env" title="What the pod actually sees" aside="GET /introspect/env">
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        The API pod&rsquo;s own environment. This is the honest answer to &ldquo;what does
-        Nuon inject into my container?&rdquo; The answer: exactly what your
-        chart passes it, and nothing else. Any value whose name looks like a
-        credential is replaced before the response leaves the cluster.
+        The API pod&rsquo;s own environment: exactly what your chart passes it,
+        and nothing else. Any value whose name looks like a credential is
+        replaced before the response leaves the cluster.
       </p>
 
       <LoadState result={env} what="the pod environment" />
@@ -440,6 +442,8 @@ export function Deployed({
     document.getElementById(section)?.scrollIntoView({ block: 'start' })
   }, [section])
 
+  useMarkStepSeen('/deployed')
+
   return (
     <>
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
@@ -447,9 +451,8 @@ export function Deployed({
         <Eyebrow>{stepEyebrow('/deployed')}</Eyebrow>
         <h1>What did Nuon actually deploy?</h1>
         <p className="lede">
-          Four live reads against this install. Each one is a summary of what the
-          introspection API returned, with the untouched response one click
-          behind it.
+          Four live reads against this install; the untouched API response is
+          one click behind each.
         </p>
       </header>
 
@@ -457,6 +460,7 @@ export function Deployed({
       <ThisNamespace config={config} />
       <HelmReleases config={config} />
       <PodEnvironment />
+      <StepNav current="/deployed" />
     </>
   )
 }

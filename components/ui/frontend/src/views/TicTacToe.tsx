@@ -135,8 +135,7 @@ function Locked({
           app&rsquo;s config with <span className="mono">toggleable = true</span>{' '}
           and <span className="mono">default_enabled = false</span>, so every
           install knows about it and none of them run it until someone flips it
-          on. That is the shape of a SKU: one config, per-install entitlements.
-          Enable the component for this install in the dashboard and deploy it
+          on. Enable the component for this install in the dashboard and deploy it
           &mdash; this page is watching the namespace and unlocks itself the
           moment the deploy lands.
         </p>
@@ -217,11 +216,10 @@ export function TicTacToe({ config }: { config: UIConfig }) {
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
         <Eyebrow>Toggleable component</Eyebrow>
-        <h1>One config, per-install features.</h1>
+        <h1>One config, per-install features</h1>
         <p className="lede">
           The <span className="mono">tictactoe</span> component is deployed only
-          where it has been switched on. This page reads the live cluster to
-          find out which kind of install this one is, then behaves accordingly.
+          where it has been switched on.
         </p>
       </header>
 
