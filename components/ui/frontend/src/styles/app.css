@@ -2097,3 +2097,185 @@ tr.row-select--active td {
     display: none;
   }
 }
+
+/* ============================================================
+   Lifecycle visibility (phase 2): the shipped strip, the live tictactoe
+   unlock, and the hub tile flip highlight.
+   ============================================================ */
+
+/* The shipping lifecycle strip on the tour's `shipped` step. */
+
+.ship {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--space-2);
+  margin-top: var(--space-8);
+}
+
+.ship__beat {
+  position: relative;
+  flex: 1 1 150px;
+  min-width: 150px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: inherit;
+  text-decoration: none;
+}
+
+.ship__beat--link:hover {
+  text-decoration: none;
+  border-color: var(--accent-dim);
+  background: var(--surface-raised);
+}
+
+.ship__num {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-tertiary);
+}
+
+.ship__label {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  font-weight: var(--weight-stronger);
+}
+
+.ship__detail {
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+.ship__go {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.ship__beat--link:hover .ship__go {
+  color: var(--accent);
+}
+
+/* The arrive step's config-versions line. */
+
+.arrive__versions {
+  margin-top: var(--space-4);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+  max-width: 60ch;
+}
+
+/* The tictactoe watcher: the locked tile is polling the namespace. */
+
+.ttt-watch {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px dashed var(--border-subtle);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+  max-width: 68ch;
+}
+
+.ttt-watch .badge {
+  flex: none;
+  margin-top: 1px;
+}
+
+/* The unlock moment: the deploy landed while the visitor was watching. */
+
+.ttt-unlocked-note {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--accent-dim);
+  border-radius: var(--radius-md);
+  background: var(--accent-wash-strong);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+  max-width: 76ch;
+  animation: ttt-note-in 600ms var(--ease-standard) both;
+}
+
+.ttt-unlocked-note .badge {
+  flex: none;
+  margin-top: 1px;
+}
+
+.ttt--just-unlocked {
+  animation: ttt-unlock 900ms var(--ease-standard) both;
+}
+
+@keyframes ttt-unlock {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+    box-shadow: 0 0 0 0 var(--accent-ring);
+  }
+  55% {
+    opacity: 1;
+    box-shadow: 0 0 32px 2px var(--accent-ring);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@keyframes ttt-note-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The hub tile the moment its component flips on while on screen. */
+
+.action--flipped {
+  animation: action-flip 1400ms var(--ease-standard) both;
+}
+
+@keyframes action-flip {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-ring);
+    border-color: var(--accent);
+  }
+  60% {
+    box-shadow: 0 0 26px 2px var(--accent-ring);
+    border-color: var(--accent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ttt--just-unlocked,
+  .ttt-unlocked-note,
+  .action--flipped {
+    animation: none;
+  }
+}

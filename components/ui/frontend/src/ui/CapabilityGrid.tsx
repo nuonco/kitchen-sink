@@ -44,18 +44,24 @@ export function ModeBadge({ mode }: { mode: Mode }) {
 function CapabilityCard({
   item,
   tictactoe,
+  tictactoeFlipped,
 }: {
   item: Capability
   tictactoe?: boolean
+  /** True when the switch flipped on while the visitor was watching. */
+  tictactoeFlipped?: boolean
 }) {
   const navigate = useNavigate()
+  const isToggle = item.icon === 'toggle'
+  const cardClass =
+    isToggle && tictactoeFlipped ? 'action action--flipped' : 'action'
   return (
-    <button className="action" onClick={() => navigate(item.to)}>
+    <button className={cardClass} onClick={() => navigate(item.to)}>
       <span className="action__mode">
         <ModeBadge mode={item.mode} />
       </span>
       <span className="action__icon">
-        {item.icon === 'toggle' ? (
+        {isToggle ? (
           <span
             className={
               tictactoe ? 'switch switch--sm switch--on' : 'switch switch--sm'
@@ -83,9 +89,11 @@ function CapabilityCard({
 export function CapabilityGroups({
   categories,
   tictactoe,
+  tictactoeFlipped,
 }: {
   categories: Category[]
   tictactoe?: boolean
+  tictactoeFlipped?: boolean
 }) {
   return (
     <>
@@ -97,7 +105,12 @@ export function CapabilityGroups({
           </div>
           <div className="actions">
             {category.items.map((item) => (
-              <CapabilityCard key={item.to} item={item} tictactoe={tictactoe} />
+              <CapabilityCard
+                key={item.to}
+                item={item}
+                tictactoe={tictactoe}
+                tictactoeFlipped={tictactoeFlipped}
+              />
             ))}
           </div>
         </section>

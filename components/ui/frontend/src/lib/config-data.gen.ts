@@ -47,6 +47,8 @@ export interface Guardrail {
 
 export const branchName = "ms/onboarding-edit"
 
+export const repoName = "nuonco/kitchen-sink"
+
 export const postDeployRunbooks: string[] = [
   "full-health-check"
 ]

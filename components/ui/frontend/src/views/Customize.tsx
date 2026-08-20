@@ -114,7 +114,7 @@ const groupNotes: Record<string, string> = {
   enterprise: 'the installs with change windows',
 }
 
-function BranchesFlow() {
+function BranchesFlow({ config }: { config: UIConfig }) {
   const [states, setStates] = useState<GroupState[]>(
     installGroups.map(() => 'waiting'),
   )
@@ -229,6 +229,25 @@ function BranchesFlow() {
         </p>
       </section>
 
+      {(config.links.branches || config.links.versions) && (
+        <Callout label="The real record, one link away">
+          This machinery genuinely runs for every push to{' '}
+          <span className="mono">{branchName}</span>; the simulation above is
+          only a rehearsal of what you would watch.{' '}
+          {config.links.branches && (
+            <OutLink href={config.links.branches} variant="plain">
+              Open the branch runs and pending approvals
+            </OutLink>
+          )}
+          {config.links.branches && config.links.versions && <> &middot; </>}
+          {config.links.versions && (
+            <OutLink href={config.links.versions} variant="plain">
+              this install&rsquo;s config versions
+            </OutLink>
+          )}
+        </Callout>
+      )}
+
       <CodeBlock
         label="branch.toml (the real config, comments stripped)"
         code={branchConfigAbridged}
@@ -271,7 +290,7 @@ function RunbookModeBadge({ mutates }: { mutates: boolean }) {
   )
 }
 
-function RunbooksFlow() {
+function RunbooksFlow({ config }: { config: UIConfig }) {
   const [selected, setSelected] = useState(0)
   const [stepStates, setStepStates] = useState<StepState[]>([])
   const timers = useRef<number[]>([])
@@ -413,9 +432,15 @@ function RunbooksFlow() {
       <Callout label="Where these run for real">
         The branch config runs <span className="mono">full-health-check</span>{' '}
         automatically after every staged deploy (
-        <span className="mono">post_deploy_runbooks</span> in branch.toml). The
-        rest are run on demand from the install&rsquo;s Runbooks page in the
-        dashboard, where each run leaves a per-step transcript.
+        <span className="mono">post_deploy_runbooks</span> in branch.toml), so
+        this install already has real runs on record. The rest are run on
+        demand from the install&rsquo;s Runbooks page in the dashboard, where
+        each run leaves a per-step transcript.{' '}
+        {config.links.runbooks && (
+          <OutLink href={config.links.runbooks} variant="plain">
+            Open the latest full-health-check transcript
+          </OutLink>
+        )}
       </Callout>
     </>
   )
@@ -474,7 +499,7 @@ const sampleTranscripts: Record<string, string[]> = {
   ],
 }
 
-function ActionsFlow() {
+function ActionsFlow({ config }: { config: UIConfig }) {
   const [selected, setSelected] = useState(0)
   const [lines, setLines] = useState<string[]>([])
   const [running, setRunning] = useState(false)
@@ -570,6 +595,20 @@ function ActionsFlow() {
           <pre className="raw sim-log">{lines.join('\n')}</pre>
         )}
       </section>
+
+      <Callout label="Real runs, on the record right now">
+        One of these is not waiting for you: <span className="mono">cron_status</span>{' '}
+        has run hourly on this install since it provisioned, publishing{' '}
+        <span className="mono">pods_ready</span> /{' '}
+        <span className="mono">pods_total</span> as structured outputs (the
+        install readme reads them as its health pulse). Every run&rsquo;s
+        transcript and outputs are in the dashboard.{' '}
+        {config.links.actions && (
+          <OutLink href={config.links.actions} variant="plain">
+            Open the hourly run history
+          </OutLink>
+        )}
+      </Callout>
 
       <Callout label="Why adhoc beats a kubeconfig">
         The runner already has the access an action needs; the action is the
@@ -791,7 +830,7 @@ const roleNotes: Record<string, string> = {
     'AdministratorAccess with secretsmanager:* explicitly denied, declared in break_glass.toml. Only the break_glass_remediation action can assume it, so every use is a recorded workflow.',
 }
 
-function RolesFlow() {
+function RolesFlow({ config }: { config: UIConfig }) {
   const [selected, setSelected] = useState(0)
   const role = roles[selected]
 
@@ -874,6 +913,18 @@ function RolesFlow() {
           </table>
         </div>
       </section>
+
+      {config.links.tokens && (
+        <Callout label="Access on the Nuon side">
+          Everything above bounds what Nuon may do inside the customer&rsquo;s
+          account. Who may drive Nuon itself &mdash; a teammate&rsquo;s CLI, a
+          CI job, a coding agent &mdash; is governed by org API tokens in the
+          dashboard.{' '}
+          <OutLink href={config.links.tokens} variant="plain">
+            Manage API tokens in Nuon
+          </OutLink>
+        </Callout>
+      )}
     </>
   )
 }
@@ -883,14 +934,23 @@ function RolesFlow() {
    deep links; the landing's customize hub is the full front door.
    ============================================================ */
 
-/** Footer links per flow: where the real version of this page's subject lives. */
+/**
+ * Footer links per flow: the specific dashboard screen where the real version
+ * of this page's subject lives (built server-side in main.go from this
+ * install's own org/app ids), falling back to the install overview.
+ */
 function flowLinks(flow: string, config: UIConfig) {
   const links = config.links
-  if (flow === 'branches') return { href: links.install, label: 'Do it for real in Nuon' }
-  if (flow === 'runbooks') return { href: links.runbooks ?? links.install, label: 'Do it for real in Nuon' }
-  if (flow === 'actions') return { href: links.actions ?? links.install, label: 'Do it for real in Nuon' }
-  if (flow === 'health') return { href: links.components ?? links.install, label: 'See component health in Nuon' }
-  if (flow === 'triggers') return { href: links.actions ?? links.install, label: 'Open the actions for this install' }
+  if (flow === 'branches')
+    return { href: links.branches ?? links.install, label: 'See branch runs & approvals in Nuon' }
+  if (flow === 'runbooks')
+    return { href: links.runbooks ?? links.install, label: 'Open runbook runs & transcripts in Nuon' }
+  if (flow === 'actions')
+    return { href: links.actions ?? links.install, label: 'Open the action run history in Nuon' }
+  if (flow === 'health')
+    return { href: links.components ?? links.install, label: 'See component health in Nuon' }
+  if (flow === 'triggers')
+    return { href: links.actions ?? links.install, label: 'Open the actions for this install' }
   return { href: links.install, label: 'Open this install in Nuon' }
 }
 
@@ -905,12 +965,12 @@ export function Customize({
     <>
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
 
-      {flow === 'branches' && <BranchesFlow />}
-      {flow === 'runbooks' && <RunbooksFlow />}
-      {flow === 'actions' && <ActionsFlow />}
+      {flow === 'branches' && <BranchesFlow config={config} />}
+      {flow === 'runbooks' && <RunbooksFlow config={config} />}
+      {flow === 'actions' && <ActionsFlow config={config} />}
       {flow === 'health' && <HealthFlow config={config} />}
       {flow === 'triggers' && <TriggersFlow />}
-      {flow === 'roles' && <RolesFlow />}
+      {flow === 'roles' && <RolesFlow config={config} />}
 
       {!flow && (
         <>
