@@ -1,158 +1,127 @@
 /**
- * The one taxonomy of everything this app can show. The landing's customize
- * hub and the bare #/customize index both render from this module, so there
- * is exactly one list of capabilities and one categorization.
+ * The one path through this app. The landing hub and the bare #/customize
+ * index both render it, and each feature page takes its step number from it,
+ * so there is exactly one list and one order.
  *
- * `mode` is what a tile's badge says before anyone clicks in:
+ * The order is how an engineer sizes up a BYOC system: read what it put in
+ * the account, ship to it, operate it, govern it, then charge for it. Each
+ * page states a problem, shows the config that answers it, and hands you the
+ * proof to run against this install.
+ *
+ * `mode` is what a row's badge says before anyone clicks in:
  * - live: the page reads this install, right now
  * - guide: the page explains real config; there is nothing to read live
- * Nothing in this app is a mock or a rehearsal: the day-2 pages hand you the
- * real CLI commands (with this install's own ids filled in) and show the
- * cluster-side evidence live where the operation has one.
  */
 
 export type Mode = 'live' | 'guide'
 
-export interface Capability {
+export interface PathStep {
   to: string
   icon: string
   title: string
   desc: string
   mode: Mode
+  phase: 'Read' | 'Ship' | 'Operate' | 'Govern'
+  /** Off the numbered path: the surprise at the end. */
+  bonus?: boolean
 }
 
-export interface Category {
-  key: string
-  title: string
-  blurb: string
-  dayTwo: boolean
-  items: Capability[]
-}
-
-export const categories: Category[] = [
+export const pathSteps: PathStep[] = [
   {
-    key: 'install',
-    title: 'This install',
-    blurb: 'Read what Nuon deployed here, straight from the cluster.',
-    dayTwo: false,
-    items: [
-      {
-        to: '/deployed',
-        icon: 'magnifying-glass',
-        title: 'Read your live install',
-        desc: 'Inspect the namespaces, pods, services, and secrets Nuon deployed here.',
-        mode: 'live',
-      },
-      {
-        to: '/map',
-        icon: 'puzzle-piece',
-        title: 'Map your product onto components',
-        desc: 'Match the five component types to the pieces you already ship.',
-        mode: 'guide',
-      },
-      {
-        to: '/tictactoe',
-        icon: 'toggle',
-        title: 'Enable custom features',
-        desc: 'A toggleable component gates this feature per install. Flip it on in the dashboard and watch this switch move by itself.',
-        mode: 'live',
-      },
-    ],
+    to: '/deployed',
+    icon: 'magnifying-glass',
+    title: 'Read your live install',
+    desc: 'Namespaces, pods, services, and secrets, straight from the cluster.',
+    mode: 'live',
+    phase: 'Read',
   },
   {
-    key: 'ship',
-    title: 'Ship',
-    blurb: 'Get a config change to every install safely, and back out when it goes wrong.',
-    dayTwo: true,
-    items: [
-      {
-        to: '/customize/branches',
-        icon: 'git-branch',
-        title: 'Ship through app branches',
-        desc: 'Run a real staged rollout from your terminal and watch the image tags move here.',
-        mode: 'live',
-      },
-    ],
+    to: '/map',
+    icon: 'puzzle-piece',
+    title: 'Map your product onto components',
+    desc: 'The five component types against the pieces you already ship.',
+    mode: 'guide',
+    phase: 'Read',
   },
   {
-    key: 'operate',
-    title: 'Operate',
-    blurb: 'Keep fifty installs healthy without logging into any of them.',
-    dayTwo: true,
-    items: [
-      {
-        to: '/customize/runbooks',
-        icon: 'book-open',
-        title: 'Run runbooks',
-        desc: 'Run the four real runbooks this app ships; the badges say which ones apply changes.',
-        mode: 'live',
-      },
-      {
-        to: '/customize/actions',
-        icon: 'lightning',
-        title: 'Run adhoc actions',
-        desc: 'Fire the real actions the runner executes, and watch the pod evidence live.',
-        mode: 'live',
-      },
-      {
-        to: '/customize/health',
-        icon: 'heartbeat',
-        title: 'Watch component health',
-        desc: 'The gate every deploy has to pass, read live from this cluster.',
-        mode: 'live',
-      },
-    ],
+    to: '/customize/branches',
+    icon: 'git-branch',
+    title: 'Ship through app branches',
+    desc: 'A staged rollout with an approval on each group.',
+    mode: 'live',
+    phase: 'Ship',
   },
   {
-    key: 'govern',
-    title: 'Govern',
-    blurb: 'Bound what Nuon may do in the account, and prove it.',
-    dayTwo: true,
-    items: [
-      {
-        to: '/customize/roles',
-        icon: 'lock',
-        title: 'Scope operation roles',
-        desc: 'The per-operation IAM roles, the break-glass role, and the OPA guardrails — with the real proof one action run away.',
-        mode: 'live',
-      },
-      {
-        to: '/audit-log',
-        icon: 'toggle',
-        title: 'Sell an entitlement',
-        desc: 'The audit-log exporter is gated per install, the way a plan tier gates a feature. Flip it on and watch this switch move.',
-        mode: 'live',
-      },
-    ],
+    to: '/customize/health',
+    icon: 'heartbeat',
+    title: 'Watch component health',
+    desc: 'The gate a deploy has to pass before it counts.',
+    mode: 'live',
+    phase: 'Operate',
   },
   {
-    key: 'react',
-    title: 'React',
-    blurb: 'Decide when scripts run: on a schedule, around a deploy, or on demand.',
-    dayTwo: true,
-    items: [
-      {
-        to: '/customize/triggers',
-        icon: 'gauge',
-        title: 'Wire up triggers',
-        desc: 'How the actions this app ships decide when to run.',
-        mode: 'guide',
-      },
-    ],
+    to: '/customize/runbooks',
+    icon: 'book-open',
+    title: 'Run runbooks',
+    desc: 'Four recorded procedures; two of them apply changes.',
+    mode: 'live',
+    phase: 'Operate',
   },
   {
-    key: 'drive',
-    title: 'Drive it from your terminal',
-    blurb: 'Every operation above is one CLI command. Run them yourself, or hand the whole tour to a coding agent.',
-    dayTwo: true,
-    items: [
-      {
-        to: '/customize/agent',
-        icon: 'caret-right',
-        title: 'The command menu & agent prompt',
-        desc: 'The day-2 commands with this install’s ids filled in, and one copy-paste prompt for Claude Code or Codex.',
-        mode: 'guide',
-      },
-    ],
+    to: '/customize/actions',
+    icon: 'lightning',
+    title: 'Run adhoc actions',
+    desc: 'Scripts the runner executes, with no kubeconfig handed out.',
+    mode: 'live',
+    phase: 'Operate',
+  },
+  {
+    to: '/customize/triggers',
+    icon: 'gauge',
+    title: 'Wire up triggers',
+    desc: 'When scripts run: cron, lifecycle, or on demand.',
+    mode: 'guide',
+    phase: 'Operate',
+  },
+  {
+    to: '/customize/roles',
+    icon: 'lock',
+    title: 'Scope operation roles',
+    desc: 'Seven per-operation IAM roles and the guardrails on top.',
+    mode: 'live',
+    phase: 'Govern',
+  },
+  {
+    to: '/audit-log',
+    icon: 'toggle',
+    title: 'Sell an entitlement',
+    desc: 'One component, deployed only where the plan includes it.',
+    mode: 'live',
+    phase: 'Govern',
+  },
+  {
+    to: '/tictactoe',
+    icon: 'toggle',
+    title: 'Enable custom features',
+    desc: 'The other toggleable component. Less businesslike.',
+    mode: 'live',
+    phase: 'Govern',
+    bonus: true,
   },
 ]
+
+const numbered = pathSteps.filter((step) => !step.bonus)
+
+/** "03" for the third numbered step; undefined for bonus rows. */
+export function stepNumber(to: string): string | undefined {
+  const i = numbered.findIndex((step) => step.to === to)
+  return i === -1 ? undefined : String(i + 1).padStart(2, '0')
+}
+
+/** The eyebrow a feature page wears: "Step 03 of 09 · Ship". */
+export function stepEyebrow(to: string): string {
+  const step = pathSteps.find((s) => s.to === to)
+  const num = stepNumber(to)
+  if (!step || !num) return 'Customize'
+  return `Step ${num} of ${String(numbered.length).padStart(2, '0')} · ${step.phase}`
+}
