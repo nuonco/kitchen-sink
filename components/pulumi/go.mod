@@ -1,4 +1,4 @@
-module github.com/nuonco/kitchen-sink-app/pulumi
+module github.com/nuonco/conduit-app/pulumi
 
 go 1.24.0
 

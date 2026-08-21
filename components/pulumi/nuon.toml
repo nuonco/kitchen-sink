@@ -1,16 +1,22 @@
 # pulumi
-name    = "pulumi_infra"
+name    = "destination_bucket"
 type    = "pulumi"
 runtime = "go"
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "components/pulumi"
-branch    = "main"
+# main.go changes for the Conduit sync engine live on this branch; flip back to
+# "main" when ms/theme-conduit merges.
+branch    = "ms/theme-conduit"
 
 [config]
-"aws:region"                 = "{{.nuon.install_stack.outputs.region}}"
-"kitchen-sink:install_id"    = "{{.nuon.install.id}}"
+"aws:region"                = "{{.nuon.install_stack.outputs.region}}"
+"conduit:install_id"        = "{{.nuon.install.id}}"
+# The sandbox's EKS OIDC provider, used to mint the IRSA role that the
+# conduit-worker ServiceAccount assumes to write into the bucket.
+"conduit:oidc_provider_arn" = "{{.nuon.install.sandbox.outputs.cluster.oidc_provider_arn}}"
+"conduit:oidc_provider"     = "{{.nuon.install.sandbox.outputs.cluster.oidc_provider}}"
 
 [env_vars]
 PULUMI_SKIP_UPDATE_CHECK = "true"
