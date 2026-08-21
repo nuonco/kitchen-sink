@@ -31,6 +31,9 @@ function nameList(items: Array<{ name: string; mutates?: boolean }>) {
 export function Ops({ config }: { config: UIConfig }) {
   const install = installIdOf(config)
   const app = appIdOf(config)
+  // Straight to the component's own page on this install (its toggle lives
+  // there); the components list is the fallback when the id didn't resolve.
+  const toggleLink = config.links.audit_log_exporter ?? config.links.components
 
   return (
     <>
@@ -77,9 +80,9 @@ export function Ops({ config }: { config: UIConfig }) {
           A component with <Mono>toggleable = true</Mono> is a per-install
           entitlement: flip it on and Nuon deploys it.
         </p>
-        {config.links.components && (
+        {toggleLink && (
           <div className="row" style={{ marginTop: 16 }}>
-            <OutLink href={config.links.components}>
+            <OutLink href={toggleLink}>
               Toggle audit_log_exporter on in Nuon
             </OutLink>
           </div>

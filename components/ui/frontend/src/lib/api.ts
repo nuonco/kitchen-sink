@@ -251,6 +251,7 @@ export type EnvResponse = Record<string, string>
 export type DashboardLink =
   | 'install' // the install's overview page
   | 'components' // the install's components (toggle lives here)
+  | 'audit_log_exporter' // the audit_log_exporter component's own page on this install
   | 'actions' // action workflows + run history
   | 'runbooks' // runbooks + per-run transcripts
   | 'workflows' // deploy/provision workflow history, incl. approvals
