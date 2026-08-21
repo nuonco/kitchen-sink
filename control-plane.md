@@ -1,4 +1,4 @@
-# Kitchen Sink
+# Conduit
 
 {{ $accountId := dig "account_id" "000000000000" .nuon.install_stack.outputs }}
 {{ $region := .nuon.cloud_account.aws.region }}
@@ -13,18 +13,19 @@
 {{- $cR := 0 -}}{{- range $n, $c := $comps }}{{ if eq (dig "status" "" $c) "active" }}{{ $cR = add $cR 1 }}{{ end }}{{ end -}}
 {{- $cT := len $comps -}}
 {{- $allCompsOk := and (gt $cT 0) (ge $cR $cT) -}}
-{{- $hc := default dict (index $workflows "cron_status") -}}
+{{- $hc := default dict (index $workflows "sync_heartbeat") -}}
 {{- $hcOut := default dict (dig "outputs" dict $hc) -}}
 {{- $pr := int (dig "pods_ready" 0 $hcOut) -}}{{- $pt := int (dig "pods_total" 0 $hcOut) -}}
+{{- $syncsOk := int (dig "syncs_succeeded_last_hour" 0 $hcOut) -}}
 {{- $checkedAt := dig "checked_at" "" $hcOut -}}
 {{- $healthOk := and (gt $pt 0) (ge $pr $pt) -}}
 
 {{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }}
 <div style="border:1px solid rgba(127,127,127,0.3);border-radius:12px;padding:30px 24px;margin:4px 0 6px;text-align:center;background:rgba(127,127,127,0.06);">
-<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin-bottom:12px;">THE APP IS RUNNING</div>
-<div style="font-size:1.75em;font-weight:800;line-height:1.2;"><a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/">Open the app and explore ↗</a></div>
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin-bottom:12px;">CONDUIT IS RUNNING</div>
+<div style="font-size:1.75em;font-weight:800;line-height:1.2;"><a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/">Open it ↗</a></div>
 <div style="font-family:monospace;font-size:0.85em;opacity:0.6;margin-top:10px;">app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}</div>
-<div style="font-size:0.9em;opacity:0.75;margin-top:14px;max-width:34em;margin-left:auto;margin-right:auto;line-height:1.5;">A guided tour of the platform lives inside the app itself. This page just gets you there.</div>
+<div style="font-size:0.9em;opacity:0.75;margin-top:14px;max-width:34em;margin-left:auto;margin-right:auto;line-height:1.5;">Pipelines are syncing into this account's own bucket. The app narrates the install from the inside; this page just gets you there.</div>
 </div>
 {{ else }}
 <div style="border:1px solid rgba(127,127,127,0.3);border-radius:12px;padding:26px 24px;margin:4px 0 6px;text-align:center;background:rgba(127,127,127,0.06);">
@@ -50,7 +51,7 @@ Creating this install ran these steps, in order. The checkmarks are live.
 </div>
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
 <span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">2</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Built the application's components and deployed them in dependency order — {{ $cR }}/{{ $cT }} active.</div>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Built the application's components — the sync engine, its destination bucket, the database — and deployed them in dependency order — {{ $cR }}/{{ $cT }} active.</div>
 <span style="font-weight:800;flex:none;color:{{ if $allCompsOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if $allCompsOk }}✓{{ else }}…{{ end }}</span>
 </div>
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
@@ -60,7 +61,7 @@ Creating this install ran these steps, in order. The checkmarks are live.
 </div>
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
 <span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">4</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Started scheduled health checks that run inside the install: every pod, every hour{{ if gt $pt 0 }} — currently <strong>{{ $pr }}/{{ $pt }} ready</strong>{{ if ne $checkedAt "" }}, last run <nuon-time time="{{ $checkedAt }}" format="relative"></nuon-time>{{ end }}{{ end }}.</div>
+<div style="flex:1;font-size:0.92em;line-height:1.45;">Started the sync heartbeat: every hour it checks every pod and reads the pipeline run history{{ if gt $pt 0 }} — currently <strong>{{ $pr }}/{{ $pt }} pods ready</strong>{{ if gt $syncsOk 0 }}, <strong>{{ $syncsOk }} syncs</strong> landed in your bucket in the last hour{{ end }}{{ if ne $checkedAt "" }}, last check <nuon-time time="{{ $checkedAt }}" format="relative"></nuon-time>{{ end }}{{ end }}.</div>
 <span style="font-weight:800;flex:none;color:{{ if $healthOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if $healthOk }}✓{{ else }}…{{ end }}</span>
 </div>
 </div>
@@ -75,11 +76,11 @@ Nobody logged into a server, and the same sequence repeats identically for the n
 
 ## A shippable Nuon app is three parts
 
-Kitchen Sink uses a lot of the platform because it exists to demo it. You don't need any of that to ship — you need three things:
+Conduit uses a lot of the platform because it exists to demo it. You don't need any of that to ship — you need three things:
 
 **A sandbox — where it runs.** One Terraform-provisioned foundation, created fresh in each customer's account: here an EKS cluster and a dedicated VPC (`{{ $vpcId }}`) in `{{ $accountId }}`. You pick a sandbox; you don't write one.
 
-**At least one component — the thing you ship.** A piece of your software in a format you already build: container image, Helm chart, Kubernetes manifests, Terraform module. Declare what it needs, and Nuon works out build and deploy order. This install has {{ $cT }}{{ if gt $cT 0 }} ({{ $cR }} active){{ end }}. One is a legitimate app.
+**At least one component — the thing you ship.** A piece of your software in a format you already build: container image, Helm chart, Kubernetes manifests, Terraform module, Pulumi program. Here that's the sync engine and its destination bucket — the bucket belongs to this account, and the data pipelines copy into it never leaves. Declare what each piece needs, and Nuon works out build and deploy order. This install has {{ $cT }}{{ if gt $cT 0 }} ({{ $cR }} active){{ end }}. One is a legitimate app.
 
 **The runner — what does the work.** A small compute group inside the customer's account performs every build, deploy, and action itself. It authenticates outbound and polls for work, so **Nuon never needs inbound access to their account**. That asymmetry is the whole security story, and you get it by default.
 
@@ -96,16 +97,17 @@ Everything on the next tab is optional until a customer makes it necessary.
 Reach for these when a real request makes them necessary — not before. Each is a few lines of config in the same repo.
 
 <!-- Dashboard deep links below take the org id from the render state (nuon.org.id), so they work under whichever org this config is installed in. -->
+<!-- Repo links pinned to tree/ms/theme-conduit; flip to main when the branch merges. -->
 
-**"Our platform team needs bigger nodes and our own domain."** [Inputs](https://github.com/nuonco/kitchen-sink/tree/main/inputs): knobs declared once with defaults, set per install, templated into infrastructure and components. This install's values are under **Current inputs**, top right.
+**"Our platform team needs bigger nodes and our own domain."** [Inputs](https://github.com/nuonco/kitchen-sink/tree/ms/theme-conduit/inputs): knobs declared once with defaults, set per install, templated into infrastructure and components. This install's values are under **Current inputs**, top right.
 
-**"Where does the database password come from?"** [Secrets](https://github.com/nuonco/kitchen-sink/blob/main/secrets.toml): declared in config, generated or supplied per install, synced into the cluster. Nothing sensitive lives in git.
+**"Where does the database password come from?"** [Secrets](https://github.com/nuonco/kitchen-sink/blob/ms/theme-conduit/secrets.toml): declared in config, generated per install, synced into the cluster — and consumed by the postgres, api and worker pods via a secretKeyRef. Nothing sensitive lives in git.
 
 **"Something's acting weird — can you look?"** [Actions](https://app.nuon.co/{{ .nuon.org.id }}/installs/{{ .nuon.install.id }}/actions): scripts that run on the runner, inside the customer's boundary, and stream results back here. No credentials handed out, no VPN, no screenshare.
 
-**"What exactly can you touch in our account?"** Answer with files: a scoped IAM role per operation with [permissions boundaries](https://github.com/nuonco/kitchen-sink/tree/main/permissions), [policies](https://github.com/nuonco/kitchen-sink/tree/main/policies) that block a deploy before it applies, and a pre-declared [break-glass role](https://github.com/nuonco/kitchen-sink/blob/main/break_glass.toml) with an audit trail — agreed to before the emergency.
+**"What exactly can you touch in our account?"** Answer with files: a scoped IAM role per operation with [permissions boundaries](https://github.com/nuonco/kitchen-sink/tree/ms/theme-conduit/permissions), [policies](https://github.com/nuonco/kitchen-sink/tree/ms/theme-conduit/policies) that block a deploy before it applies, and a pre-declared [break-glass role](https://github.com/nuonco/kitchen-sink/blob/ms/theme-conduit/break_glass.toml) with an audit trail — agreed to before the emergency.
 
-**"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/{{ .nuon.org.id }}/installs/{{ .nuon.install.id }}/runbooks): an operational procedure as a reviewable, repeatable, parameterized workflow anyone on the team can run against an install.
+**"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/{{ .nuon.org.id }}/installs/{{ .nuon.install.id }}/runbooks): an operational procedure as a reviewable, repeatable, parameterized workflow anyone on the team can run against an install — including the [pause-pipelines emergency drill](https://github.com/nuonco/kitchen-sink/blob/ms/theme-conduit/runbooks/pause-pipelines.md).
 
 **"Do we have to click a button every time?"** Triggers run actions and runbooks on a schedule or off lifecycle events — post-provision, before and after a deploy — so routine operations just happen.
 
@@ -113,7 +115,7 @@ Reach for these when a real request makes them necessary — not before. Each is
 
 ---
 
-This page is itself part of the config: [`control-plane.md`](https://github.com/nuonco/kitchen-sink/blob/main/control-plane.md) in [nuonco/kitchen-sink](https://github.com/nuonco/kitchen-sink), a template rendered against this install's live state. To build your own, start with the [Nuon documentation](https://docs.nuon.co/get-started/introduction).
+This page is itself part of the config: [`control-plane.md`](https://github.com/nuonco/kitchen-sink/blob/ms/theme-conduit/control-plane.md) in [nuonco/kitchen-sink](https://github.com/nuonco/kitchen-sink), a template rendered against this install's live state. To build your own, start with the [Nuon documentation](https://docs.nuon.co/get-started/introduction).
 
 </nuon-tab>
 
