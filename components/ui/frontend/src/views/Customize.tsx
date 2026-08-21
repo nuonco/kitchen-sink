@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import {
   countReady,
-  hasAuditLogExporter,
+  hasComplianceExport,
   hasTicTacToe,
   useIntrospect,
   useIntrospectPoll,
@@ -36,7 +36,9 @@ import {
   PhaseBadge,
   PspSection,
   PspTag,
+  Tracks,
 } from '../ui/Primitives'
+import { PipelineStrip } from './Pipelines'
 
 /* ============================================================
    The feature pages, one per step in lib/taxonomy.ts. Every page runs the
@@ -45,6 +47,10 @@ import {
    it on this install, right now — your coding agent by default, the raw
    commands underneath, and the cluster-side evidence live where the
    operation has one).
+
+   One honest exception on the proof sections: `nuon runbooks create-run` is
+   broken platform-side today (empty request body), so runbook runs start
+   from the dashboard and the CLI path returns when the fix ships.
    ============================================================ */
 
 function FlowHeader({
@@ -72,40 +78,6 @@ function FlowHeader({
 const installIdOf = (config: UIConfig) => config.install_id ?? '<your-install-id>'
 const appIdOf = (config: UIConfig) => config.app_id ?? '<your-app-id>'
 
-/**
- * The two ways to run a proof, as one first-class control: hand it to a
- * coding agent, or type the commands yourself. Same pattern on every proof
- * section, agent first — that is the default action everywhere else too.
- */
-function Tracks({ agent, manual }: { agent: ReactNode; manual: ReactNode }) {
-  const [track, setTrack] = useState<'agent' | 'manual'>('agent')
-  return (
-    <div className="tracks">
-      <div className="tracks__bar" role="tablist" aria-label="How to run this">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={track === 'agent'}
-          className={track === 'agent' ? 'tracks__tab tracks__tab--on' : 'tracks__tab'}
-          onClick={() => setTrack('agent')}
-        >
-          Paste into your coding agent
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={track === 'manual'}
-          className={track === 'manual' ? 'tracks__tab tracks__tab--on' : 'tracks__tab'}
-          onClick={() => setTrack('manual')}
-        >
-          Run it yourself
-        </button>
-      </div>
-      <div className="tracks__panel">{track === 'agent' ? agent : manual}</div>
-    </div>
-  )
-}
-
 /** The default way to run a proof: paste it into a coding agent. */
 function ProofPrompt({ flow, config }: { flow: string; config: UIConfig }) {
   const build = proofPrompts[flow]
@@ -122,11 +94,52 @@ function ProofPrompt({ flow, config }: { flow: string; config: UIConfig }) {
   )
 }
 
+/**
+ * The manual path for starting a runbook run: the dashboard, because the
+ * CLI's create-run is broken platform-side right now. Says so plainly.
+ */
+function RunbookStartPath({
+  runbook,
+  config,
+  note,
+}: {
+  runbook: string
+  config: UIConfig
+  note?: ReactNode
+}) {
+  return (
+    <div className="cmd">
+      <div className="cmd__head">
+        <span className="cmd__label">start {runbook} from the dashboard</span>
+      </div>
+      <div className="cmd__pre" style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        {config.links.runbooks ? (
+          <OutLink href={config.links.runbooks}>
+            Open runbooks in Nuon &middot; run {runbook}
+          </OutLink>
+        ) : (
+          <span>
+            Open your install&rsquo;s runbooks page in Nuon and run{' '}
+            <span className="mono">{runbook}</span>.
+          </span>
+        )}
+      </div>
+      <div className="cmd__note">
+        Why not a CLI command: <span className="mono">nuon runbooks create-run</span>{' '}
+        currently sends an empty request body (platform bug, fix in flight).
+        Reads still work &mdash;{' '}
+        <span className="mono">nuon runbooks list / get-run</span> follow the
+        run from your terminal. {note}
+      </div>
+    </div>
+  )
+}
+
 /* ============================================================
    The live-evidence register: the pods of this namespace, re-read on a short
    interval, so a mutating operation run from the terminal is visible right
-   here — image tags move on a deploy or rollback, names change and ages
-   reset on a rollout restart.
+   here — image tags move on a deploy or rollback, pod names change and ages
+   reset when postgres or the engine restarts.
    ============================================================ */
 
 const EVIDENCE_POLL_MS = 10_000
@@ -151,7 +164,7 @@ function imageTag(image?: string): string {
 }
 
 function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'conduit'
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     EVIDENCE_POLL_MS,
@@ -225,6 +238,25 @@ function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {
   )
 }
 
+/**
+ * The pause drill's evidence is the product itself: the pipelines flip to
+ * paused, then back. The strip reads /sync/pipelines on its own poll.
+ */
+function PipelineEvidence({ lead }: { lead: ReactNode }) {
+  return (
+    <section className="section">
+      <div className="section__head">
+        <h2 className="section__title">What you&rsquo;ll see, live</h2>
+        <div className="subtext muted">GET /sync/pipelines · re-read every 10s</div>
+      </div>
+      <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
+        {lead}
+      </p>
+      <PipelineStrip />
+    </section>
+  )
+}
+
 /* ============================================================
    Ship: app branches (branch.toml)
    ============================================================ */
@@ -268,7 +300,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           Every push to <span className="mono">{branchName}</span> builds the
           config at that commit and rolls it across these groups in order.
           Each group&rsquo;s plan holds for a human approval, and the{' '}
-          <span className="mono">full-health-check</span> runbook runs on
+          <span className="mono">pipeline-health-sweep</span> runbook runs on
           every install after its group deploys.
         </p>
         <CodeBlock
@@ -352,14 +384,13 @@ function RunbookModeBadge({ mutates }: { mutates: boolean }) {
 function RunbooksFlow({ config }: { config: UIConfig }) {
   const [selected, setSelected] = useState(0)
   const runbook = runbooks[selected]
-  const install = installIdOf(config)
 
   return (
     <>
       <FlowHeader
         to="/customize/runbooks"
         title="Run runbooks"
-        problem="Something breaks at 2am, in an install you cannot log into."
+        problem="A customer's pipelines stall at 2am, in an install you cannot log into."
       />
 
       <PspSection
@@ -428,32 +459,27 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
         <Tracks
           agent={<ProofPrompt flow="runbooks" config={config} />}
           manual={
-            <CommandBlock
-              label={`run ${runbook.name} against this install`}
-              command={`nuon runbooks create-run --install-id ${install} --runbook-id ${runbook.name}`}
+            <RunbookStartPath
+              runbook={runbook.name}
+              config={config}
               note={
                 runbook.mutates ? (
                   <>
-                    <strong>This one changes things</strong> — it re-applies
-                    state or assumes elevated access. Run it deliberately.
+                    <strong>This one changes things</strong> &mdash; run it
+                    deliberately.
                   </>
-                ) : (
-                  <>
-                    Read-only diagnostics: safe to run right now. Runbooks
-                    accept their name directly — no id lookup needed.
-                  </>
-                )
+                ) : undefined
               }
             />
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           This install already has real runs on record:{' '}
-          <span className="mono">full-health-check</span> runs after every
+          <span className="mono">pipeline-health-sweep</span> runs after every
           staged deploy (<span className="mono">post_deploy_runbooks</span>).{' '}
           {config.links.runbooks && (
             <OutLink href={config.links.runbooks} variant="plain">
-              Open the latest full-health-check transcript
+              Open the latest pipeline-health-sweep transcript
             </OutLink>
           )}
         </p>
@@ -463,9 +489,10 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
             <>
               The two runbooks that apply changes land right here:{' '}
               <span className="mono">reconcile-drift</span> redeploys the chart
-              and <span className="mono">break-glass</span> restarts the
-              app&rsquo;s deployments, so pod names change and ages reset as
-              the run works.
+              (pod names change, ages reset), and{' '}
+              <span className="mono">pause-pipelines</span> flips every
+              pipeline to paused and back &mdash; watch that one on the{' '}
+              <a href="#/pipelines">pipelines page</a>.
             </>
           }
         />
@@ -480,26 +507,27 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
 
 /** Editorial context per action; the facts next to it come from the config. */
 const actionNotes: Record<string, string> = {
-  cron_status:
-    'Collects pod status and publishes pods_ready / pods_total as structured outputs; the install readme reads them as its health pulse.',
+  sync_heartbeat:
+    'Counts pods and, straight from Postgres, the syncs that succeeded and failed in the last hour; publishes them as structured outputs the install readme reads as its pulse.',
   debug:
     'What support runs when an install misbehaves: pods, events, and recent logs, with nobody handed a kubeconfig.',
   lifecycle_hooks:
-    'Brackets every chart deploy, which is where a migration or a cache warm goes. Depends on kitchen_sink.',
-  break_glass_remediation:
-    'Elevated remediation through a recorded action instead of ad-hoc console access. Assumes the break-glass role from break_glass.toml.',
+    'Brackets every chart deploy, which is where a migration or a cache warm goes. Depends on conduit.',
+  pause_pipelines:
+    'The emergency pause, run as a drill whose every step is real: pause all pipelines in Postgres, verify no new runs start, resume. Assumes the break-glass role from break_glass.toml.',
 }
 
 /** What a real run of each action puts on the record. */
 function actionOutcome(name: string, installID: string): ReactNode {
-  if (name === 'cron_status') {
+  if (name === 'sync_heartbeat') {
     return (
       <>
         The run&rsquo;s transcript lists this namespace&rsquo;s pods and
         publishes <span className="mono">pods_ready</span> /{' '}
         <span className="mono">pods_total</span> /{' '}
-        <span className="mono">checked_at</span> as structured outputs —
-        read-only, over in seconds.
+        <span className="mono">syncs_succeeded_last_hour</span> /{' '}
+        <span className="mono">syncs_failed_last_hour</span> as structured
+        outputs — read-only, over in seconds.
       </>
     )
   }
@@ -517,7 +545,7 @@ function actionOutcome(name: string, installID: string): ReactNode {
       <>
         The transcript logs which hook fired. The same script runs
         automatically post-provision and before and after every{' '}
-        <span className="mono">kitchen_sink</span> deploy.
+        <span className="mono">conduit</span> deploy.
       </>
     )
   }
@@ -527,8 +555,8 @@ function actionOutcome(name: string, installID: string): ReactNode {
       <span className="mono">aws sts get-caller-identity</span> &rarr;{' '}
       <span className="mono">{installID}-app-break-glass</span>), then a{' '}
       <em>denied</em> Secrets Manager call — the permissions boundary doing its
-      job — and then restarts the app&rsquo;s three deployments. Watch the pod
-      table below while it runs.
+      job — then pauses every pipeline, proves no new runs start for a minute,
+      and resumes. Watch the strip below while it runs.
     </>
   )
 }
@@ -578,7 +606,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
         {action.breakGlass && (
           <div className="row" style={{ marginBottom: 12 }}>
             <Badge tone="warning" dot>
-              elevated access · restarts the app&rsquo;s pods
+              elevated access · pauses every pipeline, then resumes
             </Badge>
           </div>
         )}
@@ -639,21 +667,20 @@ function ActionsFlow({ config }: { config: UIConfig }) {
         </p>
         <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
           One of these is already on the record:{' '}
-          <span className="mono">cron_status</span> has run hourly since this
-          install provisioned.{' '}
+          <span className="mono">sync_heartbeat</span> has run hourly since
+          this install provisioned.{' '}
           {config.links.actions && (
             <OutLink href={config.links.actions} variant="plain">
               Open the hourly run history
             </OutLink>
           )}
         </p>
-        <LiveEvidence
-          config={config}
+        <PipelineEvidence
           lead={
             <>
-              <span className="mono">break_glass_remediation</span> ends with a
-              rollout restart: new pod names, ages reset to seconds — it lands
-              in this table within one poll.
+              <span className="mono">pause_pipelines</span> lands here: every
+              pipeline flips to paused within one poll, and back once the
+              drill resumes them.
             </>
           }
         />
@@ -667,7 +694,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
    ============================================================ */
 
 function HealthFlow({ config }: { config: UIConfig }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'conduit'
   const ns = useIntrospect<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
   )
@@ -678,7 +705,7 @@ function HealthFlow({ config }: { config: UIConfig }) {
       <FlowHeader
         to="/customize/health"
         title="Watch component health"
-        problem="A deploy can succeed while the app it shipped is down."
+        problem="A deploy can succeed while the sync engine it shipped is down."
       />
 
       <PspSection
@@ -696,12 +723,12 @@ function HealthFlow({ config }: { config: UIConfig }) {
               The API has no ingress: an internal ingress never converges (no
               cert, no DNS), so the component would sit un-green forever. The
               UI reaches it in-cluster at{' '}
-              <code>http://kitchen-sink-api:8080</code>.
+              <code>http://conduit-api:8080</code>.
             </li>
             <li>
-              The chart&rsquo;s ConfigMap carries a <code>nuon.co/roll</code>{' '}
-              annotation set to the Helm release revision, so a redeploy is
-              never a no-op that would skip the gate.
+              The worker&rsquo;s readiness probe is honest: <code>/readyz</code>{' '}
+              returns 503 until the engine can actually reach Postgres, so a
+              broken database keeps the deploy from going green.
             </li>
           </ul>
         </div>
@@ -768,9 +795,17 @@ function HealthFlow({ config }: { config: UIConfig }) {
           <Tracks
             agent={<ProofPrompt flow="health" config={config} />}
             manual={
-              <CommandBlock
-                label="run the same checks the deploy gate relies on (read-only)"
-                command={`nuon runbooks create-run --install-id ${installIdOf(config)} --runbook-id full-health-check`}
+              <RunbookStartPath
+                runbook="pipeline-health-sweep"
+                config={config}
+                note={
+                  <>
+                    Read-only: nodes, workloads, ingress, the public endpoint,
+                    and sync freshness (it curls{' '}
+                    <span className="mono">/api/sync/pipelines</span> from the
+                    runner).
+                  </>
+                }
               />
             }
           />
@@ -828,7 +863,7 @@ function TriggersFlow({ config }: { config: UIConfig }) {
         </div>
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           <span className="mono">lifecycle_hooks</span> fires post-provision
-          and around every <span className="mono">kitchen_sink</span> deploy,
+          and around every <span className="mono">conduit</span> deploy,
           which is where a migration or a cache warm goes.
         </p>
         <CodeBlock
@@ -847,12 +882,19 @@ function TriggersFlow({ config }: { config: UIConfig }) {
           manual={
             <>
               <CommandBlock
-                label="1 · resolve cron_status to its workflow id"
+                label="1 · resolve sync_heartbeat to its workflow id"
                 command={`nuon actions list --app-id ${appIdOf(config)}`}
               />
               <CommandBlock
                 label="2 · fire the same run its cron fires hourly"
                 command={`nuon actions create-run --install-id ${installIdOf(config)} --action-workflow-id <actw-id>`}
+                note={
+                  <>
+                    Its structured outputs include{' '}
+                    <span className="mono">syncs_succeeded_last_hour</span> —
+                    counted straight from the engine&rsquo;s own tables.
+                  </>
+                }
               />
             </>
           }
@@ -889,7 +931,7 @@ const roleNotes: Record<string, string> = {
   deprovision:
     'Teardown only. Separating it means routine operations can never delete the install.',
   'app-break-glass':
-    'AdministratorAccess with secretsmanager:* explicitly denied, declared in break_glass.toml. Only the break_glass_remediation action can assume it, so every use is a recorded workflow.',
+    'AdministratorAccess with secretsmanager:* explicitly denied, declared in break_glass.toml. Only the pause_pipelines action can assume it, so every use is a recorded workflow.',
 }
 
 function RolesFlow({ config }: { config: UIConfig }) {
@@ -981,7 +1023,7 @@ function RolesFlow({ config }: { config: UIConfig }) {
       <PspSection
         kind="proof"
         title="Prove the boundary, on the record"
-        aside="the break-glass run narrates its own evidence"
+        aside="the pause drill narrates its own evidence"
       >
         <Tracks
           agent={<ProofPrompt flow="roles" config={config} />}
@@ -992,7 +1034,7 @@ function RolesFlow({ config }: { config: UIConfig }) {
                 command={`nuon actions list --app-id ${app}`}
               />
               <CommandBlock
-                label="2 · run it (heads up: it ends by restarting the app's pods)"
+                label="2 · run pause_pipelines (a drill: pause all, verify, resume)"
                 command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
               />
             </>
@@ -1003,20 +1045,20 @@ function RolesFlow({ config }: { config: UIConfig }) {
           <span className="mono">aws sts get-caller-identity</span> resolves to{' '}
           <span className="mono">{install}-app-break-glass</span>, and the
           Secrets Manager call that follows is <em>denied</em> — the explicit
-          Deny from break_glass.toml holding under AdministratorAccess.{' '}
+          Deny from break_glass.toml holding under AdministratorAccess. In a
+          real emergency the drill stops at the pause.{' '}
           {config.links.actions && (
             <OutLink href={config.links.actions} variant="plain">
               Read the transcript in the dashboard
             </OutLink>
           )}
         </p>
-        <LiveEvidence
-          config={config}
+        <PipelineEvidence
           lead={
             <>
-              The same run&rsquo;s last act is a rollout restart of the
-              app&rsquo;s three deployments: pod names change and ages reset
-              the moment it lands.
+              The same run&rsquo;s work is visible in the product: every
+              pipeline below flips to paused, holds while the drill verifies
+              nothing runs, and flips back.
             </>
           }
         />
@@ -1038,7 +1080,7 @@ function AgentFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <header className="page-header">
-        <h1>Run day-2 from your terminal</h1>
+        <h1>Operate Conduit from your terminal</h1>
         <p className="lede">
           One prompt walks Claude Code or Codex through every proof on the
           checklist: it must show you each command and wait for your yes
@@ -1059,25 +1101,25 @@ function AgentFlow({ config }: { config: UIConfig }) {
         }
         manual={
           <>
-            <CommandBlock
-              label="run a real health check (read-only)"
-              command={`nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`}
+            <RunbookStartPath
+              runbook="pipeline-health-sweep"
+              config={config}
               note={<>A run appears in your dashboard with per-step results.</>}
             />
             <CommandBlock
-              label="prove the per-operation IAM roles (restarts this app's pods)"
+              label="prove the per-operation IAM roles (pauses all pipelines for ~1 min, then resumes)"
               command={`nuon actions list --app-id ${app}`}
               note={
                 <>
                   Copy the <span className="mono">actw</span> id next to{' '}
-                  <span className="mono">break_glass_remediation</span>, then{' '}
+                  <span className="mono">pause_pipelines</span>, then{' '}
                   <span className="mono">
                     nuon actions create-run --install-id {install}{' '}
                     --action-workflow-id &lt;actw-id&gt;
                   </span>
                   . The run logs print the assumed break-glass role and a
-                  denied Secrets Manager call; watch the pod ages reset on the{' '}
-                  <span className="mono">actions</span> page here.
+                  denied Secrets Manager call; watch the paused badges flip on
+                  the <a href="#/pipelines">pipelines page</a>.
                 </>
               }
             />
@@ -1093,7 +1135,7 @@ function AgentFlow({ config }: { config: UIConfig }) {
               }
             />
             <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-              Rollback is the one flow without a CLI command today: it runs
+              Rollback is the other flow without a CLI command today: it runs
               from the version history in the dashboard — plan first, then
               apply, and the old image tags reappear on your pods.{' '}
               {config.links.versions && (
@@ -1148,7 +1190,7 @@ function flowLinks(flow: string, config: UIConfig) {
  * re-reading the namespace so a dashboard toggle flips the switch here.
  */
 function CustomizeIndex({ config }: { config: UIConfig }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'conduit'
   const probe = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     20_000,
@@ -1158,7 +1200,7 @@ function CustomizeIndex({ config }: { config: UIConfig }) {
     probe.state === 'ok' ? (probe.value.response.services ?? []) : []
   const switches: SwitchStates = {
     '/tictactoe': { on: hasTicTacToe(services) },
-    '/audit-log': { on: hasAuditLogExporter(services) },
+    '/destinations': { on: hasComplianceExport(services) },
   }
 
   return (
@@ -1187,7 +1229,7 @@ export function Customize({
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Conduit</BackLink>
 
       {flow === 'branches' && <BranchesFlow config={config} />}
       {flow === 'runbooks' && <RunbooksFlow config={config} />}

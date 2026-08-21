@@ -35,23 +35,23 @@ const types: ComponentType[] = [
   {
     type: 'helm_chart',
     purpose: 'Deploy a Helm chart',
-    uses: 'kitchen_sink',
+    uses: 'conduit',
     what:
-      'Deploys a Helm chart into the install cluster. Nuon interpolates your values file first, so image tags and sandbox outputs are filled in per install.',
+      'Deploys a Helm chart into the install cluster. Nuon interpolates your values file first, so image tags and other components’ outputs are filled in per install.',
     here:
-      'kitchen_sink: the API, the worker, and this UI. One chart, three deployments.',
+      'conduit: the sync engine, the source Postgres, the API, and this UI. One chart, four deployments.',
     file: 'components/chart/nuon.toml',
-    toml: `name = "kitchen_sink"
+    toml: `name = "conduit"
 type = "helm_chart"
-chart_name = "kitchen-sink"
-namespace = "kitchen-sink"
+chart_name = "conduit"
+namespace = "conduit"
 storage_driver = "configmap"
 dependencies = ["img_api", "img_ui"]
 
 [public_repo]
 repo = "nuonco/kitchen-sink"
 directory = "components/chart"
-branch = "ms/onboarding-edit"
+branch = "ms/theme-conduit"
 
 [[values_file]]
 contents = "./chart/values.yaml"`,
@@ -63,7 +63,7 @@ contents = "./chart/values.yaml"`,
     what:
       'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
     here:
-      'img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_api_two shows the private-registry variant, pulled with an IAM role Nuon assumes.',
+      'img_ui (this page) and img_api (the API and the sync engine, one image). CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_premium_connector shows the private-registry variant, pulled with an IAM role Nuon assumes.',
     file: 'components/images/ui.toml',
     toml: `name     = "img_ui"
 type     = "container_image"
@@ -101,47 +101,51 @@ domain_name = "*.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}
   {
     type: 'pulumi',
     purpose: 'Run a Pulumi program',
-    uses: 'pulumi_infra',
+    uses: 'destination_bucket',
     what:
       'Runs a Pulumi program in Go, TypeScript or Python. Same contract as Terraform: your code, the customer’s account, the runner in between.',
     here:
-      'pulumi_infra: an S3 bucket with encryption and versioning, named from the install id.',
+      'destination_bucket: the S3 bucket every sync lands in, plus the IAM role the engine writes with — assumed through the worker’s service account (IRSA), so no access key exists anywhere.',
     file: 'components/pulumi/nuon.toml',
-    toml: `name    = "pulumi_infra"
+    toml: `name    = "destination_bucket"
 type    = "pulumi"
 runtime = "go"
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "components/pulumi"
-branch    = "main"
+branch    = "ms/theme-conduit"
 
 [config]
-"aws:region"              = "{{.nuon.install_stack.outputs.region}}"
-"kitchen-sink:install_id" = "{{.nuon.install.id}}"`,
+"aws:region"                = "{{.nuon.install_stack.outputs.region}}"
+"conduit:install_id"        = "{{.nuon.install.id}}"
+"conduit:oidc_provider_arn" = "{{.nuon.install.sandbox.outputs.cluster.oidc_provider_arn}}"`,
   },
   {
     type: 'kubernetes_manifest',
     purpose: 'Apply raw YAML or a kustomize overlay',
-    uses: 'kustomizeapp',
+    uses: 'tictactoe · compliance_export',
     what:
       'Applies raw YAML or a kustomize overlay. The escape hatch for anything that is not packaged as a chart.',
     here:
-      'kustomizeapp: the Argo CD guestbook example, applied straight from a public repo into its own namespace.',
-    file: 'components/kustomize.toml',
-    toml: `name = "kustomizeapp"
+      'the two toggleable components — compliance_export (the Enterprise destination) and tictactoe — both applied as kustomize overlays, deployed only where the toggle is on.',
+    file: 'components/tictactoe.toml',
+    toml: `name = "tictactoe"
 type = "kubernetes_manifest"
 
-namespace    = "{{.nuon.install.id}}-dne"
-dependencies = ["kustomize_namespace"]
+namespace    = "conduit"
+dependencies = ["conduit"]
+
+toggleable      = true
+default_enabled = false
 
 [public_repo]
 directory = "."
-repo      = "argoproj/argocd-example-apps"
-branch    = "master"
+repo      = "nuonco/kitchen-sink"
+branch    = "ms/theme-conduit"
 
 [kustomize]
-path        = "./kustomize-guestbook"
+path        = "./src/components/tictactoe"
 enable_helm = false`,
   },
 ]
@@ -207,7 +211,8 @@ function TypeMatrix() {
 
 /**
  * The dependency order of this app's core pieces, copied from each
- * component's own `dependencies` line.
+ * component's own `dependencies` line — plus the one edge that comes from an
+ * output reference rather than a dependencies list.
  */
 const deployOrder = [
   {
@@ -215,12 +220,16 @@ const deployOrder = [
     detail: 'container_image — nothing to wait for',
   },
   {
-    label: 'kitchen_sink',
+    label: 'destination_bucket',
+    detail: 'the chart interpolates its outputs',
+  },
+  {
+    label: 'conduit',
     detail: 'dependencies = ["img_api", "img_ui"]',
   },
   {
     label: 'application_load_balancer',
-    detail: 'dependencies = ["certificate", "kitchen_sink"]',
+    detail: 'dependencies = ["certificate", "conduit"]',
   },
 ]
 
@@ -228,13 +237,13 @@ export function Mapping({ config }: { config: UIConfig }) {
   useMarkStepSeen('/map')
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Conduit</BackLink>
       <header className="page-header">
         <Eyebrow>{stepEyebrow('/map')}</Eyebrow>
         <h1>How does my product map onto this?</h1>
         <p className="lede">
           A component is one deployable piece of your product, described by a
-          small TOML file in your repo.
+          small TOML file in your repo. Conduit is nine of them.
         </p>
       </header>
 
@@ -242,8 +251,8 @@ export function Mapping({ config }: { config: UIConfig }) {
         <TypeMatrix />
         <Callout label="A first config needs one, not five">
           Pick the type that matches how you already ship — a chart, a prebuilt
-          image, a Terraform module. The other four are here because this app
-          exists to show them.
+          image, a Terraform module. The other four are here because Conduit
+          needs them.
         </Callout>
         {config.links.components && (
           <div className="row" style={{ marginTop: 24 }}>
@@ -257,7 +266,8 @@ export function Mapping({ config }: { config: UIConfig }) {
       <Section title="How they find each other" aside="outputs · dependencies">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           <span className="mono">dependencies</span> orders the deploys; any
-          component can interpolate another&rsquo;s outputs.
+          component can interpolate another&rsquo;s outputs. That second
+          mechanism is how the engine knows its bucket:
         </p>
         <div className="ship">
           {deployOrder.map((beat, i) => (
@@ -270,7 +280,11 @@ export function Mapping({ config }: { config: UIConfig }) {
         </div>
         <FileCode
           file="components/chart/values.yaml"
-          code={`api:
+          code={`worker:
+  env:
+    S3_BUCKET: "{{.nuon.components.destination_bucket.outputs.bucket_name}}"
+
+api:
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"`}
         />
       </Section>

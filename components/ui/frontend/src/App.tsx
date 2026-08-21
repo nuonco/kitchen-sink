@@ -3,13 +3,14 @@ import { segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { Icon, NuonMark, OutLink } from './ui/Primitives'
-import { AuditLog } from './views/AuditLog'
 import { Customize } from './views/Customize'
-import { Deployed } from './views/Deployed'
+import { Destinations } from './views/Destinations'
 import { Landing } from './views/Landing'
 import { Mapping } from './views/Mapping'
 import { Ops } from './views/Ops'
+import { Pipelines } from './views/Pipelines'
 import { TicTacToe } from './views/TicTacToe'
+import { UnderTheHood } from './views/UnderTheHood'
 
 function TopBar({
   installID,
@@ -24,7 +25,7 @@ function TopBar({
     <header className="topbar">
       <button className="topbar__brand" onClick={() => navigate('/')}>
         <NuonMark />
-        <span className="topbar__brand-name">Kitchen sink</span>
+        <span className="topbar__brand-name">Conduit</span>
       </button>
       {installID && (
         <>
@@ -49,8 +50,14 @@ export default function App() {
   const parts = segments(path)
 
   let view = <Landing config={config} />
-  if (parts[0] === 'deployed') {
-    view = <Deployed config={config} section={parts[1]} />
+  if (parts[0] === 'pipelines') {
+    view = <Pipelines config={config} />
+  } else if (parts[0] === 'under-the-hood' || parts[0] === 'deployed') {
+    // #/deployed[/:section] is the old name for the same page.
+    view = <UnderTheHood config={config} section={parts[1]} />
+  } else if (parts[0] === 'destinations' || parts[0] === 'compliance' || parts[0] === 'audit-log') {
+    // The entitlement moved from the old audit-log page into destinations.
+    view = <Destinations config={config} />
   } else if (parts[0] === 'map') {
     view = <Mapping config={config} />
   } else if (parts[0] === 'day2') {
@@ -61,8 +68,6 @@ export default function App() {
     view = <Ops config={config} />
   } else if (parts[0] === 'tictactoe') {
     view = <TicTacToe config={config} />
-  } else if (parts[0] === 'audit-log') {
-    view = <AuditLog config={config} />
   } else if (parts[0] === 'customize') {
     view = <Customize config={config} flow={parts[1]} />
   }

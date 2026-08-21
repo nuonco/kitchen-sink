@@ -68,7 +68,7 @@ const triggerText = (t) => {
   return t.component_name ? `${t.type} ${t.component_name}` : t.type
 }
 
-const actionOrder = ['cron_status', 'debug', 'lifecycle_hooks', 'break_glass_remediation']
+const actionOrder = ['sync_heartbeat', 'debug', 'lifecycle_hooks', 'pause_pipelines']
 const actionDirs = readdirSync(join(repoRoot, 'actions'), { withFileTypes: true })
   .filter((e) => e.isDirectory())
   .map((e) => e.name)
@@ -136,7 +136,7 @@ const mutatingStepTypes = new Set([
   'sandbox_deprovision',
 ])
 
-const runbookOrder = ['full-health-check', 'debug-bundle', 'reconcile-drift', 'break-glass']
+const runbookOrder = ['pipeline-health-sweep', 'debug-bundle', 'reconcile-drift', 'pause-pipelines']
 const runbookFiles = readdirSync(join(repoRoot, 'runbooks'))
   .filter((f) => f.endsWith('.toml'))
   .sort((a, b) => {

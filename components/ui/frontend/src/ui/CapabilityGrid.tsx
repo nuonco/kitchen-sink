@@ -233,7 +233,7 @@ export function StepNav({ current }: { current: string }) {
           title={prev.title}
         />
       ) : (
-        <StepNavLink to="/" dir={<>&larr; Checklist</>} title="Customize the Kitchen Sink" />
+        <StepNavLink to="/" dir={<>&larr; Checklist</>} title="Operate Conduit" />
       )}
       {next ? (
         <StepNavLink

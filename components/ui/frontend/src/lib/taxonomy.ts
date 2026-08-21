@@ -3,10 +3,10 @@
  * index both render it, and each feature page takes its step number from it,
  * so there is exactly one list and one order.
  *
- * The order is how an engineer sizes up a BYOC system: read what it put in
- * the account, ship to it, operate it, govern it, then charge for it. Each
- * page states a problem, shows the config that answers it, and hands you the
- * proof to run against this install.
+ * The order is how an engineer sizes up a BYOC product: watch it work, read
+ * what it put in the account, then ship to it, operate it, and govern it.
+ * Each page states a problem, shows the config that answers it, and hands
+ * you the proof to run against this install.
  *
  * `mode` is what a row's badge says before anyone clicks in:
  * - live: the page reads this install, right now
@@ -28,10 +28,18 @@ export interface PathStep {
 
 export const pathSteps: PathStep[] = [
   {
-    to: '/deployed',
+    to: '/pipelines',
+    icon: 'gauge',
+    title: 'Watch your pipelines',
+    desc: 'Runs, rows copied, and the object keys written to your bucket.',
+    mode: 'live',
+    phase: 'Read',
+  },
+  {
+    to: '/under-the-hood',
     icon: 'magnifying-glass',
-    title: 'Read your live install',
-    desc: 'Namespaces, pods, services, and secrets, straight from the cluster.',
+    title: 'Look under the hood',
+    desc: 'Pods, services, secrets, and events, straight from the cluster.',
     mode: 'live',
     phase: 'Read',
   },
@@ -39,7 +47,7 @@ export const pathSteps: PathStep[] = [
     to: '/map',
     icon: 'puzzle-piece',
     title: 'Map your product onto components',
-    desc: 'The five component types against the pieces you already ship.',
+    desc: 'The five component types against the pieces that run a pipeline.',
     mode: 'guide',
     phase: 'Read',
   },
@@ -87,15 +95,15 @@ export const pathSteps: PathStep[] = [
     to: '/customize/roles',
     icon: 'lock',
     title: 'Scope operation roles',
-    desc: 'Seven per-operation IAM roles and the guardrails on top.',
+    desc: 'Seven per-operation IAM roles, proved by the pause drill.',
     mode: 'live',
     phase: 'Govern',
   },
   {
-    to: '/audit-log',
+    to: '/destinations',
     icon: 'toggle',
-    title: 'Sell an entitlement',
-    desc: 'One component, deployed only where the plan includes it.',
+    title: 'Sell a destination',
+    desc: 'The compliance export deploys only where the plan includes it.',
     mode: 'live',
     phase: 'Govern',
   },
@@ -118,7 +126,7 @@ export function stepNumber(to: string): string | undefined {
   return i === -1 ? undefined : String(i + 1).padStart(2, '0')
 }
 
-/** The eyebrow a feature page wears: "Step 03 of 09 · Ship". */
+/** The eyebrow a feature page wears: "Step 03 of 10 · Ship". */
 export function stepEyebrow(to: string): string {
   const step = pathSteps.find((s) => s.to === to)
   const num = stepNumber(to)

@@ -240,6 +240,60 @@ export interface HelmResponse {
 export type EnvResponse = Record<string, string>
 
 /* ============================================================
+   The sync engine's own status API, served by the API pod from the pipelines
+   and sync_runs tables and forwarded by the same fail-closed proxy as the
+   introspection endpoints. Read-only.
+   ============================================================ */
+
+export type SyncRunStatus = 'running' | 'succeeded' | 'failed'
+
+/** The last-run summary embedded in GET /sync/pipelines. */
+export interface SyncLastRun {
+  id: number
+  status: SyncRunStatus
+  started_at: string
+  finished_at: string | null
+  rows_copied: number
+  bytes_written: number
+  objects_count: number
+}
+
+export interface SyncPipeline {
+  name: string
+  description: string
+  source_tables: string[]
+  destination_prefix: string
+  interval_seconds: number
+  paused: boolean
+  last_run: SyncLastRun | null
+}
+
+/** GET /sync/pipelines */
+export interface SyncPipelinesResponse {
+  bucket: string
+  pipelines_count: number
+  pipelines: SyncPipeline[]
+}
+
+/** One row of GET /sync/runs?pipeline=<name>. */
+export interface SyncRun {
+  id: number
+  pipeline: string
+  status: SyncRunStatus
+  started_at: string
+  finished_at: string | null
+  rows_copied: number
+  bytes_written: number
+  objects: string[]
+  error: string
+}
+
+/** GET /sync/runs?pipeline=<name>&limit=<n> */
+export interface SyncRunsResponse {
+  runs: SyncRun[]
+}
+
+/* ============================================================
    Runtime config served by the Go server, not the introspection API.
    ============================================================ */
 
@@ -251,7 +305,7 @@ export type EnvResponse = Record<string, string>
 export type DashboardLink =
   | 'install' // the install's overview page
   | 'components' // the install's components (toggle lives here)
-  | 'audit_log_exporter' // the audit_log_exporter component's own page on this install
+  | 'compliance_export' // the compliance_export component's own page on this install
   | 'actions' // action workflows + run history
   | 'runbooks' // runbooks + per-run transcripts
   | 'workflows' // deploy/provision workflow history, incl. approvals
@@ -294,25 +348,27 @@ export function useUIConfig(): UIConfig {
   return config
 }
 
+/** The marker Service name the toggleable `tictactoe` component deploys. */
+export const TICTACTOE_SERVICE = 'conduit-tictactoe'
+
 /**
- * The marker Service the toggleable `tictactoe` component deploys. Its
- * presence in the namespace is how the UI knows that component is enabled on
- * this install.
+ * Its presence in the namespace is how the UI knows that component is enabled
+ * on this install.
  */
 export function hasTicTacToe(services: ServiceSummary[]): boolean {
-  return services.some((svc) => svc.metadata?.name === 'kitchen-sink-tictactoe')
+  return services.some((svc) => svc.metadata?.name === TICTACTOE_SERVICE)
 }
 
-/** The marker Service name the toggleable `audit_log_exporter` deploys. */
-export const AUDIT_LOG_SERVICE = 'kitchen-sink-audit-log-exporter'
+/** The marker Service name the toggleable `compliance_export` deploys. */
+export const COMPLIANCE_EXPORT_SERVICE = 'conduit-compliance-export'
 
 /**
- * Same mechanic as hasTicTacToe, for the audit-log exporter: the toggleable
+ * Same mechanic as hasTicTacToe, for the compliance export: the toggleable
  * component deploys one marker Service, and its presence in the namespace is
  * how the UI knows the entitlement is switched on for this install.
  */
-export function hasAuditLogExporter(services: ServiceSummary[]): boolean {
-  return services.some((svc) => svc.metadata?.name === AUDIT_LOG_SERVICE)
+export function hasComplianceExport(services: ServiceSummary[]): boolean {
+  return services.some((svc) => svc.metadata?.name === COMPLIANCE_EXPORT_SERVICE)
 }
 
 export function countReady(pods: PodSummary[]): number {

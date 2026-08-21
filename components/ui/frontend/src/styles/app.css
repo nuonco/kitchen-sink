@@ -1856,7 +1856,7 @@ pre.raw {
 }
 
 /* ============================================================
-   Tic-tac-toe and the audit-log exporter (the toggleable components)
+   Tic-tac-toe and the compliance export (the toggleable components)
    ============================================================ */
 
 /* The landing tile's locked state: still clickable (it leads to the pitch),
@@ -1908,7 +1908,7 @@ pre.raw {
   background: var(--surface-card);
 }
 
-/* The audit-log exporter's enabled panel reuses the ttt frame (and its
+/* The compliance export's enabled panel reuses the ttt frame (and its
    just-unlocked glow), but reads as a document, not a centered game. */
 .ttt.entitled {
   align-items: stretch;
@@ -2050,7 +2050,7 @@ pre.raw {
 }
 
 /* The centered lockup: the white Nuon wordmark over a big mono
-   "Kitchen Sink". */
+   "Conduit". */
 
 .loading__mark {
   display: block;
@@ -2406,7 +2406,7 @@ tr.row-select--active td {
    unlock, and the checklist-row flip highlight.
    ============================================================ */
 
-/* A strip of numbered beats (used by the audit-log page's mechanism). */
+/* A strip of numbered beats (used by the destinations page's mechanism). */
 
 .ship {
   display: flex;
@@ -2593,7 +2593,7 @@ tr.row-select--active td {
 
 /* ============================================================
    Review edits (Matt): clickable tour facts, the agent-prompt CTA, the
-   problem / solution / proof tags, per-proof prompts, and the audit-log
+   problem / solution / proof tags, per-proof prompts, and the destinations
    entitlement card.
    ============================================================ */
 
@@ -2731,7 +2731,7 @@ a.fact {
   max-height: 240px;
 }
 
-/* The audit-log entitlement card: plan, live state, and the one action. */
+/* The entitlement card: plan, live state, and the one action. */
 
 .ent {
   padding: var(--space-6);
@@ -2849,7 +2849,8 @@ a.fact {
 }
 
 /* ============================================================
-   The audit-log live feed: the namespace's own Kubernetes events, re-read
+   The under-the-hood live events feed: the namespace's own Kubernetes
+   events, re-read
    every few seconds. A row that was not in the previous poll flashes once.
    ============================================================ */
 
@@ -2980,6 +2981,256 @@ a.fact {
 @media (prefers-reduced-motion: reduce) {
   .evtfeed__dot,
   .evt--new {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Pipelines: the live strip (landing + evidence sections), the pipeline
+   list, and per-run history. Containers keep the 2px weight; separators
+   and micro-elements stay 1px.
+   ============================================================ */
+
+.pipestrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.pipestrip__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+
+.pipestrip__item:hover {
+  border-color: var(--accent-dim);
+}
+
+.pipestrip__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--text-tertiary);
+}
+
+.pipestrip__dot--succeeded {
+  background: var(--status-positive);
+}
+
+.pipestrip__dot--failed {
+  background: var(--status-negative);
+}
+
+.pipestrip__dot--running {
+  background: var(--accent);
+  animation: watch-pulse 2.4s var(--ease-standard) infinite;
+}
+
+.pipestrip__dot--paused {
+  background: var(--status-warning);
+}
+
+.pipestrip__meta {
+  color: var(--text-tertiary);
+}
+
+/* ---------- the pipeline list ---------- */
+
+.pipelist {
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  overflow: hidden;
+}
+
+.piperow + .piperow {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.piperow__head {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr) 90px auto auto 24px;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-4) var(--space-5);
+  background: none;
+  border: 0;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+}
+
+.piperow__head:hover {
+  background: var(--surface-hover);
+}
+
+.piperow__head:focus-visible {
+  outline: none;
+  box-shadow: inset var(--shadow-focus);
+}
+
+.piperow__name {
+  font-weight: var(--weight-stronger);
+}
+
+.piperow__sources,
+.piperow__interval,
+.piperow__last {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.piperow__caret {
+  display: inline-flex;
+  color: var(--text-tertiary);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.piperow--open .piperow__caret {
+  transform: rotate(90deg);
+}
+
+.piperow__body {
+  padding: 0 var(--space-5) var(--space-5);
+}
+
+@media (max-width: 860px) {
+  .piperow__head {
+    grid-template-columns: 1fr auto 24px;
+  }
+
+  .piperow__sources,
+  .piperow__interval,
+  .piperow__last {
+    display: none;
+  }
+}
+
+/* ---------- run history ---------- */
+
+.runlist {
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.runlist__head {
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.run + .run {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.run > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  list-style: none;
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+}
+
+.run > summary::-webkit-details-marker {
+  display: none;
+}
+
+.run > summary:hover {
+  background: var(--surface-hover);
+}
+
+.run__caret {
+  display: inline-flex;
+  color: var(--text-tertiary);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.run[open] .run__caret {
+  transform: rotate(90deg);
+}
+
+.run__id {
+  min-width: 64px;
+  color: var(--text-primary);
+}
+
+.run__meta {
+  color: var(--text-tertiary);
+}
+
+.run__body {
+  padding: var(--space-3) var(--space-4) var(--space-4) 40px;
+}
+
+.run__error {
+  display: flex;
+  gap: var(--space-3);
+  align-items: baseline;
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+  border: 1px solid var(--red-700);
+  border-radius: var(--radius-sm);
+  color: var(--status-negative);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  overflow-wrap: anywhere;
+}
+
+.run__error-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.run__objhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.run__objects {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+}
+
+.run__objects li {
+  padding: 2px 0;
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pipestrip__dot--running {
     animation: none;
   }
 }

@@ -1,12 +1,15 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   countReady,
   useIntrospect,
+  useIntrospectPoll,
   type Envelope,
   type EnvResponse,
   type HelmResponse,
   type KubeResponse,
   type Loadable,
+  type NamespaceEvent,
+  type NamespaceEventsResponse,
   type NamespaceResponse,
   type SecretSummary,
   type UIConfig,
@@ -27,20 +30,22 @@ import {
   Section,
 } from '../ui/Primitives'
 
+/* ============================================================
+   Under the hood: what Nuon actually put in the account to make the product
+   pages upstairs true. Live reads through the same fail-closed proxy the
+   sync endpoints use; nothing here is required to use Conduit, all of it is
+   available when you want to check its work.
+   ============================================================ */
+
 /**
  * Who put a namespace there. `app: true` marks the rows this app config is
  * responsible for; the rest is cluster plumbing, grouped out of the way.
  * A row with no name is a malformed response; a public demo page must
  * degrade to a muted cell, never a crash.
  */
-function namespaceOwner(
-  name: string | undefined,
-  installID: string | undefined,
-): { label: string; app: boolean } {
+function namespaceOwner(name: string | undefined): { label: string; app: boolean } {
   if (!name) return { label: '', app: false }
-  if (name === 'kitchen-sink') return { label: 'This app', app: true }
-  if (installID && name === `${installID}-dne`)
-    return { label: 'The kustomize component', app: true }
+  if (name === 'conduit') return { label: 'This app', app: true }
   if (name === 'nuon') return { label: 'The Nuon runner', app: true }
   if (name.startsWith('kube-') || name === 'default')
     return { label: 'Kubernetes', app: false }
@@ -77,11 +82,11 @@ function GlanceFact({
   )
 }
 
-/** "kitchen-sink-api :8080 · kitchen-sink-ui :3000", trimmed for a tile note. */
+/** "api :8080 · ui :3000 · postgres :5432", trimmed for a tile note. */
 function servingNote(data: NamespaceResponse): string {
   return (data.services ?? [])
     .map((svc) => {
-      const name = svc.metadata?.name?.replace(/^kitchen-sink-/, '') ?? '?'
+      const name = svc.metadata?.name?.replace(/^conduit-/, '') ?? '?'
       const port = svc.spec?.ports?.[0]?.port
       return port ? `${name} :${port}` : name
     })
@@ -92,17 +97,15 @@ function Glance({
   kube,
   ns,
   namespace,
-  installID,
 }: {
   kube: KubeResult
   ns: NsResult
   namespace: string
-  installID?: string
 }) {
   const nsData = ns.state === 'ok' ? ns.value.response : undefined
   const pods = nsData?.pods ?? []
   const kubeRows = kube.state === 'ok' ? (kube.value.response.namespaces ?? []) : undefined
-  const appRows = kubeRows?.filter((row) => namespaceOwner(row.name, installID).app)
+  const appRows = kubeRows?.filter((row) => namespaceOwner(row.name).app)
   const thisNs = kubeRows?.find((row) => row.name === namespace)
 
   return (
@@ -138,13 +141,7 @@ function Glance({
   )
 }
 
-function NamespaceTable({
-  rows,
-  installID,
-}: {
-  rows: KubeResponse['namespaces']
-  installID?: string
-}) {
+function NamespaceTable({ rows }: { rows: KubeResponse['namespaces'] }) {
   return (
     <div className="table-wrap">
       <table className="data">
@@ -157,7 +154,7 @@ function NamespaceTable({
         </thead>
         <tbody>
           {rows.map((row, i) => {
-            const owner = namespaceOwner(row.name, installID)
+            const owner = namespaceOwner(row.name)
             return (
               <tr key={row.name ?? i}>
                 <td className="mono">{row.name}</td>
@@ -178,8 +175,8 @@ function NamespaceTable({
 
 function Namespaces({ kube, config }: { kube: KubeResult; config: UIConfig }) {
   const rows = kube.state === 'ok' ? (kube.value.response.namespaces ?? []) : []
-  const mine = rows.filter((row) => namespaceOwner(row.name, config.install_id).app)
-  const infra = rows.filter((row) => !namespaceOwner(row.name, config.install_id).app)
+  const mine = rows.filter((row) => namespaceOwner(row.name).app)
+  const infra = rows.filter((row) => !namespaceOwner(row.name).app)
   const preview = infra
     .slice(0, 3)
     .map((row) => row.name)
@@ -200,17 +197,24 @@ function Namespaces({ kube, config }: { kube: KubeResult; config: UIConfig }) {
 
       {kube.state === 'ok' && (
         <>
-          <NamespaceTable rows={mine} installID={config.install_id} />
+          <NamespaceTable rows={mine} />
           {infra.length > 0 && (
             <Disclosure
               summary={`Show the ${infra.length} infrastructure namespaces (${preview}${
                 infra.length > 3 ? ', …' : ''
               })`}
             >
-              <NamespaceTable rows={infra} installID={config.install_id} />
+              <NamespaceTable rows={infra} />
             </Disclosure>
           )}
           <RawJSON value={kube.value} />
+          {config.links.install && (
+            <div className="row" style={{ marginTop: 20 }}>
+              <OutLink href={config.links.install} variant="secondary">
+                Open this install in Nuon
+              </OutLink>
+            </div>
+          )}
         </>
       )}
     </Section>
@@ -236,7 +240,8 @@ function redactSecrets(response: NamespaceResponse): NamespaceResponse {
 
 function secretNote(secret: SecretSummary): string | null {
   const name = secret.metadata?.name
-  if (name === 'db-password') return 'Synced from the Nuon secret db_password (auto-generated)'
+  if (name === 'db-password')
+    return 'Synced from the Nuon secret db_password — Postgres, the engine, and the API all consume it'
   if (name === 'api-key') return 'Synced from the Nuon secret api_key'
   if (secret.type === 'helm.sh/release.v1') return 'Helm release history'
   return null
@@ -264,8 +269,9 @@ function ThisNamespace({
       aside={`GET /introspect/namespace/${namespace}`}
     >
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        Everything the <span className="mono">kitchen_sink</span> Helm component
-        created, including the Kubernetes secrets Nuon syncs into the
+        Everything the <span className="mono">conduit</span> Helm component
+        created &mdash; the sync engine, the source Postgres, the API, this UI
+        &mdash; including the Kubernetes secrets Nuon syncs into the
         namespace.
       </p>
 
@@ -374,9 +380,10 @@ function ThisNamespace({
               This endpoint returns whole Secret objects, values included, and
               this page sits on the install&rsquo;s internet-facing load
               balancer. So the server strips every secret value before the
-              response leaves the cluster, and proxies only the four endpoints
-              these views read. Filtering in the browser instead would protect
-              nobody: you could just call the endpoint yourself.
+              response leaves the cluster, and proxies only the introspection
+              and sync endpoints these views read. Filtering in the browser
+              instead would protect nobody: you could just call the endpoint
+              yourself.
             </Callout>
           </Disclosure>
 
@@ -394,12 +401,12 @@ function HelmReleases({ config }: { config: UIConfig }) {
   const helm = useIntrospect<HelmResponse>('/api/introspect/helm')
   const releases =
     helm.state === 'ok' ? Object.entries(helm.value.response.Charts ?? {}) : []
-  const hasThisApp = releases.some(([, rel]) => rel.name === 'kitchen-sink')
+  const hasThisApp = releases.some(([, rel]) => rel.name === 'conduit')
 
   return (
     <Section id="helm" title="Helm releases" aside="GET /introspect/helm">
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        Nuon deploys the <span className="mono">kitchen_sink</span> component by
+        Nuon deploys the <span className="mono">conduit</span> component by
         running Helm from the runner, so Helm&rsquo;s own release history is the record
         of what was deployed and when.
       </p>
@@ -506,14 +513,27 @@ function PodEnvironment() {
             {ownKeys.length === 0 ? (
               <EmptyState>Nothing.</EmptyState>
             ) : (
-              <dl className="kv">
-                {ownKeys.map((k) => (
-                  <div key={k} style={{ display: 'contents' }}>
-                    <dt>{k}</dt>
-                    <dd>{all[k]}</dd>
-                  </div>
-                ))}
-              </dl>
+              <>
+                <dl className="kv">
+                  {ownKeys.map((k) => (
+                    <div key={k} style={{ display: 'contents' }}>
+                      <dt>{k}</dt>
+                      <dd>{all[k]}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
+                  <span className="mono">S3_BUCKET</span> is worth a look: its
+                  value is another component&rsquo;s output (
+                  <span className="mono">
+                    {'{{.nuon.components.destination_bucket.outputs.bucket_name}}'}
+                  </span>
+                  ), interpolated into the chart&rsquo;s values at deploy time.{' '}
+                  <span className="mono">PGPASSWORD</span> arrives as a
+                  secretKeyRef, never a literal &mdash; and shows up here
+                  redacted.
+                </p>
+              </>
             )}
           </div>
 
@@ -528,9 +548,9 @@ function PodEnvironment() {
                 </span>
                 , into your Helm values file at deploy time. Getting them into a
                 container is still your chart&rsquo;s job. This app&rsquo;s API deployment
-                forwards none of them, so its environment has none. The UI you&rsquo;re
-                reading does forward them, which is how this page knows which
-                install it belongs to.
+                forwards none of them under their NUON names, so this list is
+                empty. The UI you&rsquo;re reading does forward them, which is
+                how this page knows which install it belongs to.
               </Callout>
             ) : (
               <dl className="kv">
@@ -565,15 +585,166 @@ function PodEnvironment() {
   )
 }
 
-export function Deployed({
+/* ============================================================
+   The live events feed, absorbed from the old audit-log page: the
+   namespace's own Kubernetes events, re-read every few seconds. Rows that
+   were not in the previous poll flash once — a real operation landing, not
+   a replay.
+   ============================================================ */
+
+/** How often the events section re-reads the namespace's events. */
+const EVENTS_POLL_MS = 5_000
+
+function relativeTime(iso: string | null | undefined, now: number): string {
+  if (!iso) return '—'
+  const t = Date.parse(iso)
+  if (Number.isNaN(t)) return '—'
+  const s = Math.max(0, Math.round((now - t) / 1000))
+  if (s < 60) return `${s}s ago`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
+}
+
+/**
+ * Stable identities for the rows, so a poll can be diffed against the last
+ * one. Kubernetes dedupes events server-side; the suffix covers the rare
+ * identical pair anyway.
+ */
+function eventKeys(events: NamespaceEvent[]): string[] {
+  const used = new Map<string, number>()
+  return events.map((ev) => {
+    const base = [
+      ev.involvedObject?.kind,
+      ev.involvedObject?.name,
+      ev.reason,
+      ev.message,
+      ev.lastTimestamp,
+      ev.count,
+    ].join('|')
+    const n = used.get(base) ?? 0
+    used.set(base, n + 1)
+    return n === 0 ? base : `${base}#${n}`
+  })
+}
+
+function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig }) {
+  const events = useIntrospectPoll<NamespaceEventsResponse>(
+    `/api/introspect/namespace/${namespace}/events`,
+    EVENTS_POLL_MS,
+    true,
+  )
+  // Keys seen by the previous poll; null until the first one lands, so the
+  // initial render never flashes.
+  const seen = useRef<Set<string> | null>(null)
+  const [fresh, setFresh] = useState<Set<string>>(() => new Set())
+
+  useEffect(() => {
+    if (events.state !== 'ok') return
+    const keys = eventKeys(events.value.response.events ?? [])
+    if (seen.current !== null) {
+      const arrived = keys.filter((k) => !seen.current?.has(k))
+      if (arrived.length > 0) setFresh(new Set(arrived))
+    }
+    seen.current = new Set(keys)
+  }, [events])
+
+  if (events.state !== 'ok') {
+    return <LoadState result={events} what={`events in ${namespace}`} />
+  }
+
+  const list = events.value.response.events ?? []
+  const keys = eventKeys(list)
+  const now = Date.now()
+
+  return (
+    <div className="evtfeed" style={{ marginTop: 16 }}>
+      <div className="evtfeed__head">
+        <span className="evtfeed__dot" aria-hidden="true" />
+        <span>Kubernetes events in {namespace}, newest first</span>
+        <span className="evtfeed__meta mono">
+          re-read every {EVENTS_POLL_MS / 1000}s
+        </span>
+      </div>
+      {list.length === 0 ? (
+        <p className="evtfeed__empty">
+          Nothing yet — Kubernetes expires events after about an hour of quiet.
+        </p>
+      ) : (
+        <ol className="evtfeed__list">
+          {list.map((ev, i) => {
+            const key = keys[i]
+            const cls = [
+              'evt',
+              ev.type === 'Warning' ? 'evt--warning' : '',
+              fresh.has(key) ? 'evt--new' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')
+            const obj = [ev.involvedObject?.kind, ev.involvedObject?.name]
+              .filter(Boolean)
+              .join('/')
+            return (
+              <li key={key} className={cls}>
+                <span className="evt__time mono">
+                  {relativeTime(ev.lastTimestamp ?? ev.firstTimestamp, now)}
+                </span>
+                <span className="evt__reason mono">{ev.reason || '—'}</span>
+                <span className="evt__obj mono">{obj || '—'}</span>
+                <span className="evt__msg">
+                  {ev.message}
+                  {(ev.count ?? 1) > 1 && (
+                    <span className="evt__count mono"> ×{ev.count}</span>
+                  )}
+                </span>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+      <p className="evtfeed__invite">
+        Toggle a component off and on in{' '}
+        {config.links.components ? (
+          <OutLink href={config.links.components} variant="plain">
+            the dashboard
+          </OutLink>
+        ) : (
+          'the dashboard'
+        )}{' '}
+        and the teardown and redeploy land here as they happen.
+      </p>
+    </div>
+  )
+}
+
+function Events({ namespace, config }: { namespace: string; config: UIConfig }) {
+  return (
+    <Section
+      id="events"
+      title="Live events"
+      aside={`GET /introspect/namespace/${namespace}/events`}
+    >
+      <p className="small muted" style={{ marginBottom: 0, maxWidth: '72ch' }}>
+        Every operation that touches this namespace &mdash; deploys, restarts,
+        the toggleable components arriving and leaving &mdash; as Kubernetes
+        records it.
+      </p>
+      <EventsFeed namespace={namespace} config={config} />
+    </Section>
+  )
+}
+
+export function UnderTheHood({
   config,
   section,
 }: {
   config: UIConfig
-  /** Optional deep-link target: #/deployed/cluster scrolls to that section. */
+  /** Optional deep-link target: #/under-the-hood/cluster scrolls there. */
   section?: string
 }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'conduit'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
   const ns = useIntrospect<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
@@ -584,27 +755,29 @@ export function Deployed({
     document.getElementById(section)?.scrollIntoView({ block: 'start' })
   }, [section])
 
-  useMarkStepSeen('/deployed')
+  useMarkStepSeen('/under-the-hood')
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Conduit</BackLink>
       <header className="page-header">
-        <Eyebrow>{stepEyebrow('/deployed')}</Eyebrow>
-        <h1>What did Nuon actually deploy?</h1>
+        <Eyebrow>{stepEyebrow('/under-the-hood')}</Eyebrow>
+        <h1>Under the hood</h1>
         <p className="lede">
-          Live reads from this install — the summary first; every table and raw
-          response is one click deeper.
+          The pipelines page shows what Conduit did; this one shows what Nuon
+          actually put in the account to make that true. Live reads &mdash;
+          the summary first, every table and raw response one click deeper.
         </p>
       </header>
 
-      <Glance kube={kube} ns={ns} namespace={namespace} installID={config.install_id} />
+      <Glance kube={kube} ns={ns} namespace={namespace} />
 
       <Namespaces kube={kube} config={config} />
       <ThisNamespace ns={ns} namespace={namespace} openPods={section === 'namespace'} />
+      <Events namespace={namespace} config={config} />
       <HelmReleases config={config} />
       <PodEnvironment />
-      <StepNav current="/deployed" />
+      <StepNav current="/under-the-hood" />
     </>
   )
 }

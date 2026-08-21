@@ -311,6 +311,40 @@ export function CommandBlock({
 }
 
 /**
+ * The two ways to run a proof, as one first-class control: hand it to a
+ * coding agent, or type the commands yourself. Same pattern on every proof
+ * section, agent first — that is the default action everywhere else too.
+ */
+export function Tracks({ agent, manual }: { agent: ReactNode; manual: ReactNode }) {
+  const [track, setTrack] = useState<'agent' | 'manual'>('agent')
+  return (
+    <div className="tracks">
+      <div className="tracks__bar" role="tablist" aria-label="How to run this">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={track === 'agent'}
+          className={track === 'agent' ? 'tracks__tab tracks__tab--on' : 'tracks__tab'}
+          onClick={() => setTrack('agent')}
+        >
+          Paste into your coding agent
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={track === 'manual'}
+          className={track === 'manual' ? 'tracks__tab tracks__tab--on' : 'tracks__tab'}
+          onClick={() => setTrack('manual')}
+        >
+          Run it yourself
+        </button>
+      </div>
+      <div className="tracks__panel">{track === 'agent' ? agent : manual}</div>
+    </div>
+  )
+}
+
+/**
  * Renders the loading and failure states for a live introspection call. The
  * failure copy distinguishes "the API answered with an error" from "the API
  * never answered", because in this app those have different causes.

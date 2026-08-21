@@ -52,12 +52,12 @@ export interface ToggleableComponent {
   toml: string
 }
 
-export const branchName = "ms/onboarding-edit"
+export const branchName = "ms/theme-conduit"
 
 export const repoName = "nuonco/kitchen-sink"
 
 export const postDeployRunbooks: string[] = [
-  "full-health-check"
+  "pipeline-health-sweep"
 ]
 
 export const installGroups: InstallGroup[] = [
@@ -81,12 +81,12 @@ export const installGroups: InstallGroup[] = [
   }
 ]
 
-export const branchConfigAbridged = "name = \"ms/onboarding-edit\"\n\npost_deploy_runbooks = [\"full-health-check\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"ms/onboarding-edit\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\nuse_for_previews = true\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
+export const branchConfigAbridged = "name = \"ms/theme-conduit\"\n\npost_deploy_runbooks = [\"pipeline-health-sweep\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"ms/theme-conduit\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\nuse_for_previews = true\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
 
 export const runbooks: Runbook[] = [
   {
-    "name": "full-health-check",
-    "description": "Check an install end to end: nodes, the kitchen-sink workloads, the ALB ingress, and the public HTTPS endpoint.",
+    "name": "pipeline-health-sweep",
+    "description": "Check an install end to end: nodes, the Conduit workloads, the ALB ingress, the public HTTPS endpoint, and whether syncs are actually landing.",
     "kind": "health-check",
     "mutates": false,
     "steps": [
@@ -98,7 +98,7 @@ export const runbooks: Runbook[] = [
       {
         "name": "workload-health",
         "type": "action",
-        "detail": "runs the cron_status action"
+        "detail": "runs the sync_heartbeat action"
       },
       {
         "name": "rollout-convergence",
@@ -108,12 +108,17 @@ export const runbooks: Runbook[] = [
       {
         "name": "ingress-health",
         "type": "action",
-        "detail": "Helm releases in kitchen-sink, ALB ingress · 3m"
+        "detail": "Helm releases in conduit, ALB ingress · 3m"
       },
       {
         "name": "endpoint-health",
         "type": "action",
         "detail": "probe the public HTTPS endpoint · 5m"
+      },
+      {
+        "name": "sync-freshness",
+        "type": "action",
+        "detail": "probe the public HTTPS endpoint · 2m"
       }
     ]
   },
@@ -131,7 +136,7 @@ export const runbooks: Runbook[] = [
       {
         "name": "workload-detail",
         "type": "action",
-        "detail": "Deployments, Pods, Pod detail · 4m"
+        "detail": "Deployments, Pods, Pod detail, Worker logs, Postgres logs · 4m"
       },
       {
         "name": "ingress-and-secrets",
@@ -154,7 +159,7 @@ export const runbooks: Runbook[] = [
       {
         "name": "drift-plan",
         "type": "component_deploy",
-        "detail": "kitchen_sink, plan only"
+        "detail": "conduit, plan only"
       },
       {
         "name": "reconcile-sandbox",
@@ -162,9 +167,9 @@ export const runbooks: Runbook[] = [
         "detail": "sandbox infrastructure, component deploys skipped"
       },
       {
-        "name": "reconcile-pulumi-infra",
+        "name": "reconcile-destination-bucket",
         "type": "component_deploy",
-        "detail": "pulumi_infra"
+        "detail": "destination_bucket"
       },
       {
         "name": "reconcile-certificate",
@@ -174,7 +179,7 @@ export const runbooks: Runbook[] = [
       {
         "name": "reconcile-app",
         "type": "component_deploy",
-        "detail": "kitchen_sink, dependents follow"
+        "detail": "conduit, dependents follow"
       },
       {
         "name": "verify",
@@ -184,20 +189,20 @@ export const runbooks: Runbook[] = [
     ]
   },
   {
-    "name": "break-glass",
-    "description": "Emergency, elevated-access remediation run as a recorded procedure instead of ad-hoc console access.",
+    "name": "pause-pipelines",
+    "description": "Emergency pause of every sync pipeline, run as a recorded, elevated procedure instead of ad-hoc console access — then verified and resumed.",
     "kind": "break-glass",
     "mutates": true,
     "steps": [
       {
         "name": "capture-state",
         "type": "action",
-        "detail": "Pods before remediation, Recent events · 3m"
+        "detail": "Pods before the pause, Recent events · 3m"
       },
       {
-        "name": "elevated-remediation",
+        "name": "pause-and-verify",
         "type": "action",
-        "detail": "runs the break_glass_remediation action"
+        "detail": "runs the pause_pipelines action"
       },
       {
         "name": "verify",
@@ -210,8 +215,8 @@ export const runbooks: Runbook[] = [
 
 export const adhocActions: AdhocAction[] = [
   {
-    "name": "cron_status",
-    "timeout": "1m",
+    "name": "sync_heartbeat",
+    "timeout": "2m",
     "triggers": [
       "cron 0 * * * *",
       "manual"
@@ -234,14 +239,14 @@ export const adhocActions: AdhocAction[] = [
     "triggers": [
       "manual",
       "post-provision",
-      "post-deploy-component kitchen_sink",
-      "pre-deploy-component kitchen_sink"
+      "post-deploy-component conduit",
+      "pre-deploy-component conduit"
     ],
     "labels": null,
     "breakGlass": false
   },
   {
-    "name": "break_glass_remediation",
+    "name": "pause_pipelines",
     "timeout": "10m",
     "triggers": [
       "manual"
@@ -251,7 +256,7 @@ export const adhocActions: AdhocAction[] = [
   }
 ]
 
-export const lifecycleHooksToml = "name         = \"lifecycle_hooks\"\ntimeout      = \"1m\"\ndependencies = [\"kitchen_sink\"]\n\n[[triggers]]\ntype = \"manual\"\n\n[[triggers]]\ntype = \"post-provision\"\n\n[[triggers]]\ntype           = \"post-deploy-component\"\ncomponent_name = \"kitchen_sink\"\n\n[[triggers]]\ntype           = \"pre-deploy-component\"\ncomponent_name = \"kitchen_sink\"\n\n[[steps]]\nname            = \"log-lifecycle-hook\"\ninline_contents = \"./lifecycle_hooks/script.sh\"\n\n[steps.env_vars]\nHOOK_VERSION = \"v1\""
+export const lifecycleHooksToml = "name         = \"lifecycle_hooks\"\ntimeout      = \"1m\"\ndependencies = [\"conduit\"]\n\n[[triggers]]\ntype = \"manual\"\n\n[[triggers]]\ntype = \"post-provision\"\n\n[[triggers]]\ntype           = \"post-deploy-component\"\ncomponent_name = \"conduit\"\n\n[[triggers]]\ntype           = \"pre-deploy-component\"\ncomponent_name = \"conduit\"\n\n[[steps]]\nname            = \"log-lifecycle-hook\"\ninline_contents = \"./lifecycle_hooks/script.sh\"\n\n[steps.env_vars]\nHOOK_VERSION = \"v1\""
 
 export const roles: Role[] = [
   {
@@ -294,11 +299,11 @@ export const roles: Role[] = [
     "name": "app-break-glass",
     "type": "break-glass",
     "boundary": "explicit Deny",
-    "desc": "Grants admin access for emergencies."
+    "desc": "Admin access for emergencies, minus Secrets Manager; every use is recorded."
   }
 ]
 
-export const breakGlassToml = "[[role]]\nname         = \"{{.nuon.install.id}}-app-break-glass\"\ndisplay_name = \"Break Glass Admin\"\ndescription  = \"grants admin access for emergencies\"\n\n[[role.policies]]\nmanaged_policy_name = \"AdministratorAccess\"\n\n[[role.policies]]\nname     = \"remove-secrets-manager\"\ncontents = \"\"\"\n{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Deny\",\n            \"Action\": \"secretsmanager:*\",\n            \"Resource\": \"*\"\n        }\n    ]\n}\n\"\"\""
+export const breakGlassToml = "[[role]]\nname         = \"{{.nuon.install.id}}-app-break-glass\"\ndisplay_name = \"Break Glass Admin\"\ndescription  = \"admin access for emergencies, minus Secrets Manager; every use is recorded\"\n\n[[role.policies]]\nmanaged_policy_name = \"AdministratorAccess\"\n\n[[role.policies]]\nname     = \"remove-secrets-manager\"\ncontents = \"\"\"\n{\n    \"Version\": \"2012-10-17\",\n    \"Statement\": [\n        {\n            \"Effect\": \"Deny\",\n            \"Action\": \"secretsmanager:*\",\n            \"Resource\": \"*\"\n        }\n    ]\n}\n\"\"\""
 
 export const guardrails: Guardrail[] = [
   {
@@ -309,7 +314,7 @@ export const guardrails: Guardrail[] = [
   {
     "name": "deny-public-api-ingress",
     "type": "helm_chart",
-    "target": "kitchen_sink"
+    "target": "conduit"
   },
   {
     "name": "deny-public-s3-bucket",
@@ -325,15 +330,15 @@ export const guardrails: Guardrail[] = [
 
 export const toggleableComponents: ToggleableComponent[] = [
   {
-    "name": "audit_log_exporter",
+    "name": "compliance_export",
     "type": "kubernetes_manifest",
     "defaultEnabled": false,
-    "toml": "name = \"audit_log_exporter\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/onboarding-edit\"\n\n[kustomize]\npath        = \"./src/components/audit-log-exporter\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
+    "toml": "name = \"compliance_export\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"conduit\"\ndependencies = [\"conduit\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/theme-conduit\"\n\n[kustomize]\npath        = \"./src/components/compliance-export\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
   },
   {
     "name": "tictactoe",
     "type": "kubernetes_manifest",
     "defaultEnabled": false,
-    "toml": "name = \"tictactoe\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/onboarding-edit\"\n\n[kustomize]\npath        = \"./src/components/tictactoe\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
+    "toml": "name = \"tictactoe\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"conduit\"\ndependencies = [\"conduit\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/theme-conduit\"\n\n[kustomize]\npath        = \"./src/components/tictactoe\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
   }
 ]

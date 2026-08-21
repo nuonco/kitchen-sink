@@ -1,25 +1,28 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   countReady,
-  hasAuditLogExporter,
+  hasComplianceExport,
   hasTicTacToe,
   useIntrospect,
   useIntrospectPoll,
   type KubeResponse,
   type NamespaceResponse,
+  type SyncPipelinesResponse,
   type UIConfig,
 } from '../lib/api'
 import { agentPrompt } from '../lib/prompts'
 import { EvalPath, type SwitchStates } from '../ui/CapabilityGrid'
 import { CopyButton, Icon, OutLink } from '../ui/Primitives'
+import { PipelineStrip, timeAgo } from './Pipelines'
 
 /* ============================================================
    The landing is a guided walkthrough. A first-time visitor has just
-   installed and lands on the arrival moment; each step puts one idea on
-   screen and hands them a single "next". The tour ends on the deployed
-   step's big CTA into the customize page ('explore'), which is also what
-   returning visitors get: progress is remembered in localStorage, and
-   "Skip the tour" jumps straight there.
+   installed Conduit and lands on the activation moment — a pipeline already
+   wrote to their bucket; each step then puts one idea on screen: the
+   sandbox, the components, the runner, the working product. The tour ends
+   on the operate hub ('explore'), which is also what returning visitors
+   get: progress is remembered in localStorage, and "Skip the tour" jumps
+   straight there.
    ============================================================ */
 
 const steps = [
@@ -27,21 +30,17 @@ const steps = [
   'sandbox',
   'components',
   'runner',
-  'deployed',
+  'working',
   'explore',
 ] as const
 
 type Step = (typeof steps)[number]
 
-const TOUR_KEY = 'kitchen-sink-tour'
+const TOUR_KEY = 'conduit-tour'
 
 function storedStep(): Step {
   try {
     const value = window.localStorage.getItem(TOUR_KEY)
-    // Older tours had dedicated toggle, day-2 and shipped steps; those beats
-    // now live elsewhere, so resume at the nearest surviving step.
-    if (value === 'toggle' || value === 'day2') return 'explore'
-    if (value === 'shipped') return 'deployed'
     if (value && (steps as readonly string[]).includes(value)) {
       return value as Step
     }
@@ -177,7 +176,7 @@ function GoldenPath({
           >
             <span className="arch__num">02</span>
             <span className="arch__name">Components</span>
-            <span className="arch__hint">kitchen_sink chart</span>
+            <span className="arch__hint">engine · db · bucket · UI</span>
           </button>
           <div
             className={revealed < 2 ? 'arch__edge arch__edge--ghost' : 'arch__edge'}
@@ -203,9 +202,9 @@ function GoldenPath({
 }
 
 /* ============================================================
-   The customize hub: the tour's destination, and the returning-visitor
-   front door. One ordered path from lib/taxonomy.ts, with the agent prompt
-   as the default way to run it.
+   The operate hub: the tour's destination, and the returning-visitor front
+   door. One ordered path from lib/taxonomy.ts, with the agent prompt as the
+   default way to run it.
    ============================================================ */
 
 export function Landing({ config }: { config: UIConfig }) {
@@ -215,7 +214,7 @@ export function Landing({ config }: { config: UIConfig }) {
     rememberStep(step)
   }, [step])
 
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'conduit'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
 
   // The namespace read doubles as the toggleable-component watcher: while the
@@ -224,14 +223,21 @@ export function Landing({ config }: { config: UIConfig }) {
   // reload.
   const [tictactoe, setTictactoe] = useState(false)
   const [tictactoeFlipped, setTictactoeFlipped] = useState(false)
-  const [auditLog, setAuditLog] = useState(false)
-  const [auditLogFlipped, setAuditLogFlipped] = useState(false)
+  const [compliance, setCompliance] = useState(false)
+  const [complianceFlipped, setComplianceFlipped] = useState(false)
   const sawTictactoeOff = useRef(false)
-  const sawAuditLogOff = useRef(false)
+  const sawComplianceOff = useRef(false)
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     20_000,
-    step === 'explore' && !(tictactoe && auditLog),
+    step === 'explore' && !(tictactoe && compliance),
+  )
+
+  // The sync engine's own state, for the "it's already working" step.
+  const sync = useIntrospectPoll<SyncPipelinesResponse>(
+    '/api/sync/pipelines',
+    10_000,
+    step === 'working',
   )
 
   useEffect(() => {
@@ -243,24 +249,31 @@ export function Landing({ config }: { config: UIConfig }) {
     } else {
       sawTictactoeOff.current = true
     }
-    if (hasAuditLogExporter(services)) {
-      if (sawAuditLogOff.current) setAuditLogFlipped(true)
-      setAuditLog(true)
+    if (hasComplianceExport(services)) {
+      if (sawComplianceOff.current) setComplianceFlipped(true)
+      setCompliance(true)
     } else {
-      sawAuditLogOff.current = true
+      sawComplianceOff.current = true
     }
   }, [ns])
 
   const switches: SwitchStates = {
     '/tictactoe': { on: tictactoe, flipped: tictactoeFlipped },
-    '/audit-log': { on: auditLog, flipped: auditLogFlipped },
+    '/destinations': { on: compliance, flipped: complianceFlipped },
   }
 
-  const namespaceCount =
-    kube.state === 'ok' ? kube.value.response.namespaces?.length : undefined
   const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
   const podSummary =
     ns.state === 'ok' ? `${countReady(pods)} / ${pods.length}` : undefined
+  const namespaceCount =
+    kube.state === 'ok' ? kube.value.response.namespaces?.length : undefined
+
+  const syncData = sync.state === 'ok' ? sync.value.response : undefined
+  const lastLanded = syncData?.pipelines
+    ?.map((p) => p.last_run?.started_at)
+    .filter((t): t is string => Boolean(t))
+    .sort()
+    .pop()
 
   const idx = steps.indexOf(step)
   const go = (next: Step) => {
@@ -292,12 +305,14 @@ export function Landing({ config }: { config: UIConfig }) {
     return (
       <div className="tour__step" key="arrive">
         <div className="arrive">
-          <h1>You&rsquo;re inside a BYOC install.</h1>
+          <h1>Your pipelines run in your account.</h1>
           <p className="arrive__lede">
-            This page is served by a container in an EKS cluster, in an AWS
-            account, that Nuon provisioned and deployed into when you
-            installed.
+            Conduit is self-hosted data sync: the engine, the source database,
+            and the destination bucket all live in this AWS account &mdash;
+            Nuon put them there when you installed. Data never leaves. The
+            first sync has already landed:
           </p>
+          <PipelineStrip />
           {(config.install_id || config.cluster_name) && (
             <div className="row arrive__chips">
               {config.install_id && (
@@ -308,17 +323,9 @@ export function Landing({ config }: { config: UIConfig }) {
               )}
             </div>
           )}
-          {config.links.versions && (
-            <p className="arrive__versions">
-              Every config version it has ever run is on record.{' '}
-              <OutLink href={config.links.versions} variant="plain">
-                See its config versions
-              </OutLink>
-            </p>
-          )}
           <div className="arrive__actions">
             <button className="btn btn--primary" onClick={next}>
-              Show me around <Icon name="arrow-right" />
+              How did it get here? <Icon name="arrow-right" />
             </button>
             <button className="tour__skip" onClick={skip}>
               Skip the tour <Icon name="arrow-up-right" />
@@ -337,10 +344,12 @@ export function Landing({ config }: { config: UIConfig }) {
     return (
       <div className="tour__step" key="explore">
         <header className="hero">
-          <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
+          <h1 style={{ maxWidth: '28ch' }}>Operate Conduit.</h1>
           <p className="hero__lede">
-            Each step names a problem, shows the config that answers it, and
-            hands you the commands to prove it on this install.
+            Features ship through app branches and toggleable components;
+            monitoring and fixing run through health checks, runbooks,
+            actions, and roles. Each step below proves one of them on this
+            install.
           </p>
           <div className="agent-cta">
             <div className="agent-cta__body">
@@ -471,10 +480,11 @@ export function Landing({ config }: { config: UIConfig }) {
           {goldenHeader(
             'It starts with a sandbox.',
             <>
-              The footprint Nuon creates in your customer&rsquo;s cloud
+              The footprint Nuon creates in the customer&rsquo;s cloud
               account. Here it&rsquo;s{' '}
               <span className="mono">aws-eks-sandbox</span>: a VPC, an EKS
-              cluster, and a public DNS zone.
+              cluster, and a public DNS zone. Everything Conduit does happens
+              inside this boundary &mdash; that is why the data never leaves.
             </>,
           )}
           <GoldenPath stage="sandbox" onPick={(p) => go(p)} />
@@ -491,11 +501,15 @@ export function Landing({ config }: { config: UIConfig }) {
       {step === 'components' && (
         <>
           {goldenHeader(
-            'Components are your product.',
+            'Components are the product.',
             <>
-              One component is one deployable piece of your product. Here the{' '}
-              <span className="mono">kitchen_sink</span> Helm chart deploys the
-              API, the worker, and the UI you&rsquo;re reading.
+              One component is one deployable piece. The{' '}
+              <span className="mono">conduit</span> Helm chart ships the sync
+              engine, the source Postgres, the API, and the UI you&rsquo;re
+              reading; <span className="mono">destination_bucket</span> ships
+              the S3 bucket and the IAM role the engine writes with. The
+              compliance export is a component too &mdash; toggleable, so it
+              deploys only where the plan includes it.
             </>,
           )}
           <GoldenPath stage="components" onPick={(p) => go(p)} />
@@ -515,8 +529,9 @@ export function Landing({ config }: { config: UIConfig }) {
           {goldenHeader(
             'The runner does the deploying.',
             <>
-              An agent Nuon runs inside the account. Every build and deploy
-              happens from in there, so your customer&rsquo;s credentials never
+              An agent Nuon runs inside the account. Every build, deploy,
+              runbook, and action executes from in there &mdash; it needs no
+              inbound access, and your customer&rsquo;s credentials never
               leave their cloud.
             </>,
           )}
@@ -525,12 +540,13 @@ export function Landing({ config }: { config: UIConfig }) {
         </>
       )}
 
-      {step === 'deployed' && (
+      {step === 'working' && (
         <>
           <header className="step-header">
-            <h2>Here&rsquo;s what Nuon deployed.</h2>
+            <h2>And it&rsquo;s already working.</h2>
             <p className="step-header__lede">
-              Read from the cluster as this page loads; each fact opens the
+              Read as this page loads &mdash; from the sync engine&rsquo;s own
+              run history and the cluster underneath it. Each fact opens the
               record behind it.
             </p>
           </header>
@@ -544,32 +560,33 @@ export function Landing({ config }: { config: UIConfig }) {
               external
             />
             <Fact
-              label="Cluster"
-              value={config.cluster_name}
-              note={config.region ? `EKS in ${config.region}` : 'EKS'}
+              label="Pipelines"
+              value={syncData ? syncData.pipelines_count : undefined}
+              note="registered in the engine"
+              numeric
               delay={140}
-              href="#/deployed/cluster"
+              href="#/pipelines"
+            />
+            <Fact
+              label="Last sync landed"
+              value={syncData ? timeAgo(lastLanded, Date.now()) : undefined}
+              note={syncData?.bucket ? `in ${syncData.bucket}` : 'in your bucket'}
+              numeric
+              delay={280}
+              href="#/pipelines"
             />
             <Fact
               label="Namespaces"
               value={namespaceCount}
               note="Read from the Kubernetes API"
               numeric
-              delay={280}
-              href="#/deployed/cluster"
-            />
-            <Fact
-              label={`Pods ready in ${namespace}`}
-              value={podSummary}
-              note="api, ui, worker"
-              numeric
               delay={420}
-              href="#/deployed/namespace"
+              href="#/under-the-hood/cluster"
             />
           </div>
           <div className="cta-block">
             <button className="btn btn--primary btn--xl" onClick={next}>
-              Customize the Kitchen Sink <Icon name="arrow-right" />
+              Operate Conduit <Icon name="arrow-right" />
             </button>
           </div>
           <div className="tour__actions" style={{ marginTop: 24 }}>

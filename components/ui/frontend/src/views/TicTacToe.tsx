@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import {
+  TICTACTOE_SERVICE,
   hasTicTacToe,
   useIntrospectPoll,
   type NamespaceResponse,
@@ -105,7 +106,7 @@ function Game({ justDeployed }: { justDeployed: boolean }) {
       </div>
       <Callout label="What just got deployed">
         The game is client-side; the component behind it deploys one marker
-        Service, <span className="mono">kitchen-sink-tictactoe</span>, into the
+        Service, <span className="mono">{TICTACTOE_SERVICE}</span>, into the
         app&rsquo;s namespace. This page found that Service through the
         introspection API and unlocked itself. Your real optional features work
         the same way, with more behind the flag than a Service.
@@ -177,7 +178,7 @@ function Locked({
       </div>
       <Callout label="How this page knows">
         When enabled, the component applies a marker Service named{' '}
-        <span className="mono">kitchen-sink-tictactoe</span>. This page lists
+        <span className="mono">{TICTACTOE_SERVICE}</span>. This page lists
         the namespace&rsquo;s Services through the introspection API and did not
         find it, so you get the pitch instead of the game.
       </Callout>
@@ -186,7 +187,7 @@ function Locked({
 }
 
 export function TicTacToe({ config }: { config: UIConfig }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'conduit'
   const [unlocked, setUnlocked] = useState(false)
   const [justUnlocked, setJustUnlocked] = useState(false)
   const [waiting, setWaiting] = useState(false)
@@ -213,7 +214,7 @@ export function TicTacToe({ config }: { config: UIConfig }) {
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Conduit</BackLink>
       <header className="page-header">
         <Eyebrow>Toggleable component</Eyebrow>
         <h1>One config, per-install features</h1>

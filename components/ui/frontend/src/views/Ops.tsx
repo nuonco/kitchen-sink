@@ -14,7 +14,7 @@ import {
 } from '../ui/Primitives'
 
 /* ============================================================
-   The expert digest: every day-2 feature as one row — what it does, the
+   The expert digest: every operating feature as one row — what it does, the
    command that tries it. The narrative versions live under #/customize.
    ============================================================ */
 
@@ -33,11 +33,11 @@ export function Ops({ config }: { config: UIConfig }) {
   const app = appIdOf(config)
   // Straight to the component's own page on this install (its toggle lives
   // there); the components list is the fallback when the id didn't resolve.
-  const toggleLink = config.links.audit_log_exporter ?? config.links.components
+  const toggleLink = config.links.compliance_export ?? config.links.components
 
   return (
     <>
-      <BackLink to="/">Kitchen Sink</BackLink>
+      <BackLink to="/">Conduit</BackLink>
 
       <header className="page-header">
         <h1>The things it can do.</h1>
@@ -74,7 +74,7 @@ export function Ops({ config }: { config: UIConfig }) {
 
       <Section
         title="Toggleable components"
-        aside="components/audit_log_exporter.toml"
+        aside="components/compliance_export.toml"
       >
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           A component with <Mono>toggleable = true</Mono> is a per-install
@@ -83,52 +83,53 @@ export function Ops({ config }: { config: UIConfig }) {
         {toggleLink && (
           <div className="row" style={{ marginTop: 16 }}>
             <OutLink href={toggleLink}>
-              Toggle audit_log_exporter on in Nuon
+              Toggle compliance_export on in Nuon
             </OutLink>
           </div>
         )}
         <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
           When its Service reaches the namespace,{' '}
-          <a href="#/audit-log">#/audit-log</a> unlocks &mdash; usually under a
-          minute.
+          <a href="#/destinations">#/destinations</a> unlocks &mdash; usually
+          under a minute.
         </p>
       </Section>
 
       <Section title="Health checks" aside="probes run on the runner">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           Component health probes gate every deploy;{' '}
-          <Mono>full-health-check</Mono> re-checks nodes, workloads, ingress,
-          and the public endpoint on demand.
+          <Mono>pipeline-health-sweep</Mono> re-checks nodes, workloads,
+          ingress, the public endpoint, and sync freshness on demand.
+          Runbook runs start from the dashboard (<Mono>runbooks
+          create-run</Mono> has a known CLI bug, fix in flight)
+          {config.links.runbooks ? (
+            <>
+              {' '}
+              &mdash;{' '}
+              <OutLink href={config.links.runbooks} variant="plain">
+                run it there
+              </OutLink>
+            </>
+          ) : (
+            '.'
+          )}
         </p>
-        <CommandBlock
-          label="check this install now"
-          command={`nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`}
-        />
       </Section>
 
       <Section title="Runbooks" aside="runbooks/*.toml">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
-          Multi-step procedures, versioned with the app config, run on the
-          install&rsquo;s runner.
-        </p>
-        <CommandBlock
-          label="runbooks take their name directly"
-          command={`nuon runbooks create-run --install-id ${install} --runbook-id debug-bundle`}
-          note={
+          Multi-step procedures — {nameList(runbooks)} — versioned with the
+          app config, run on the install&rsquo;s runner. Start them from the
+          dashboard; follow them with{' '}
+          <Mono>nuon runbooks get-run</Mono>.
+          {config.links.runbooks && (
             <>
-              Also{' '}
-              {nameList(runbooks.filter((r) => r.name !== 'debug-bundle'))}.
-              {config.links.runbooks && (
-                <>
-                  {' '}
-                  <OutLink href={config.links.runbooks} variant="plain">
-                    Transcripts
-                  </OutLink>
-                </>
-              )}
+              {' '}
+              <OutLink href={config.links.runbooks} variant="plain">
+                Runs &amp; transcripts
+              </OutLink>
             </>
-          }
-        />
+          )}
+        </p>
       </Section>
 
       <Section title="Ad-hoc actions" aside="actions/*">
@@ -163,11 +164,10 @@ export function Ops({ config }: { config: UIConfig }) {
           command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id> --role-name <role>`}
           note={
             <>
-              Roles: {nameList(roles)}.{' '}
-              <Mono>break_glass_remediation</Mono> runs as{' '}
+              Roles: {nameList(roles)}. <Mono>pause_pipelines</Mono> runs as{' '}
               <Mono>app-break-glass</Mono>: AdministratorAccess minus an
               explicit Secrets Manager Deny &mdash; the transcript shows the
-              denial.
+              denial while the drill pauses and resumes every pipeline.
             </>
           }
         />
