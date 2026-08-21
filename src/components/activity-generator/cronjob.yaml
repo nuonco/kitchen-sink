@@ -1,0 +1,55 @@
+# Runs a short-lived Job in the observed namespace every five minutes, so the
+# console's live views always have real scheduling, pod, and completion events
+# to show. The pods do real (small) work and exit 0; nothing is simulated.
+# The namespace comes from the component config (<install id>-observed).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: activity-generator
+  labels:
+    app.kubernetes.io/name: activity-generator
+    app.kubernetes.io/part-of: periscope
+spec:
+  schedule: "*/5 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      labels:
+        app.kubernetes.io/name: activity-generator
+        app.kubernetes.io/part-of: periscope
+    spec:
+      backoffLimit: 0
+      ttlSecondsAfterFinished: 3600
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: activity-generator
+            app.kubernetes.io/part-of: periscope
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: task
+              # Existing public image on purpose: a new built image would need
+              # build-images.yaml matrix/paths/stamp changes (see CLAUDE.md).
+              image: public.ecr.aws/docker/library/busybox:1.36
+              command:
+                - sh
+                - -c
+                - |
+                  echo "activity job on $(hostname), $(date -u)"
+                  i=1
+                  while [ "$i" -le 5 ]; do
+                    echo "step $i of 5"
+                    sleep 4
+                    i=$((i + 1))
+                  done
+                  echo "done"
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 16Mi
+                limits:
+                  cpu: 50m
+                  memory: 32Mi

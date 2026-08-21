@@ -1,0 +1,32 @@
+# Real activity for the console to observe: a CronJob in the observed
+# namespace runs a short-lived Job to completion every five minutes, and a
+# seed Job runs once at deploy time, so a fresh install's live views (pods,
+# events, completions) show a working cluster immediately — real Jobs on the
+# real cluster, never faked data.
+name = "activity_generator"
+type = "kubernetes_manifest"
+
+namespace    = "{{.nuon.install.id}}-observed"
+dependencies = ["observed_namespace"]
+
+[public_repo]
+directory = "."
+repo      = "nuonco/kitchen-sink"
+# Ships with the Periscope theme; flip back to "main" when
+# ms/theme-periscope merges.
+branch = "ms/theme-periscope"
+
+[kustomize]
+path        = "./src/components/activity-generator"
+patches     = []
+enable_helm = false
+
+[labels]
+custom_component_type = "kustomize"
+
+# The Jobs and their pods are meant to come and go (TTL cleanup, history
+# limits), so the automatic assessment would flap on resources that are
+# supposed to disappear. Opted out for the same reason as observed_workload:
+# the observed namespace must not drag the install-level health rollup down.
+[health]
+enabled = false
