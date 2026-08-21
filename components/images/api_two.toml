@@ -1,6 +1,10 @@
-name     = "img_api_two"
+# container-image
+# The premium collector image: same binaries as img_api, distributed through a
+# private ECR repository that Nuon pulls with an assumed IAM role — the
+# enterprise-distribution example. ECR repo name is not ours to rename.
+name     = "img_collector_premium"
 type     = "container_image"
-var_name = "img_api_two"
+var_name = "img_collector_premium"
 
 [aws_ecr]
 image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-app"

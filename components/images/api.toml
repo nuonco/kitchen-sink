@@ -5,7 +5,8 @@
 # and published by .github/workflows/build-images.yaml, which then stamps the
 # tag below — that stamp commit is what starts the staged rollout.
 #
-# img_api_two stays as the app's private-ECR (cross-account IAM role) example.
+# img_collector_premium stays as the app's private-ECR (cross-account IAM
+# role) example.
 name     = "img_api"
 type     = "container_image"
 var_name = "img_api"
