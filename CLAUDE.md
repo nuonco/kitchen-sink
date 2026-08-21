@@ -1,16 +1,19 @@
-# Kitchen Sink — agent & contributor guide
+# Conduit — agent & contributor guide
 
-Kitchen Sink is Nuon's demo app config: a real web app (UI + API + worker) plus
-the full surface of the Nuon platform (components, actions, runbooks, an app
-branch, triggers, policies, permissions, break-glass, component health). It is
+Conduit is Nuon's demo app config (repo name stays `nuonco/kitchen-sink`): a
+self-hosted data-sync product — the worker is a real scheduled Postgres → S3
+sync engine writing to the install's own destination bucket — plus the full
+surface of the Nuon platform (components, actions, runbooks, an app branch,
+triggers, policies, permissions, break-glass, component health). It is
 installed into AWS accounts via Nuon; `control-plane.md` is the install page's
 programmable readme, and `components/ui` is a guided tour of the platform that
 deploys as the app itself.
 
 ## Layout
 
-- `components/*.toml` — component definitions; sources under `components/{api,ui,chart,pulumi}` and `src/components/{alb,certificate}`
-- `actions/` — scripts run on the install's runner (cron / manual / lifecycle triggers)
+- `components/*.toml` — component definitions; sources under `components/{api,ui,chart,pulumi}` and `src/components/{alb,certificate,tictactoe,compliance-export}`
+- `components/api/internal/syncengine/` — the sync engine (scheduler, Postgres → S3 export, run history); the chart deploys postgres + seed alongside it
+- `actions/` — scripts run on the install's runner (cron / manual / lifecycle triggers), e.g. `sync_heartbeat`, `pause_pipelines`
 - `runbooks/` — multi-step operational procedures (`.toml` + rendered `.md`)
 - `branch.toml`, `triggers.toml`, `installs.toml` — app branch with staged install groups, event trigger rules, install configs
 - `inputs/`, `input_groups/`, `secrets.toml` — per-install parameters
@@ -34,9 +37,9 @@ deploys as the app itself.
 3. **`branch.toml` must declare the repo the same way components do** — this
    repo resolves as public, so use `[public_repo]`. PR previews depend on the
    org's GitHub App covering the repo owner, not on this block.
-4. **Branch pinning:** `components/chart/nuon.toml`, `components/images/*.toml`
-   comments, and `branch.toml` currently track `ms/onboarding-edit`. When that
-   branch merges, flip each marked `branch =` back to `"main"` (grep for
+4. **Branch pinning:** `components/chart/nuon.toml`, component TOML
+   `branch =` pins, and `branch.toml` currently track `ms/theme-conduit`. When
+   that branch merges, flip each marked `branch =` back to `"main"` (grep for
    "flip back").
 5. `nuon apps validate` requires an authenticated Nuon CLI and the app to exist.
    Without it, check TOML syntax and chart rendering only — note plain

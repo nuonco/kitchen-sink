@@ -1,9 +1,11 @@
-# The toggleable / SKU-upsell demo. Off by default, so a plain install ships
-# without it and the UI shows a locked tile; toggling it on for one install
-# deploys the marker Service below, which the UI detects to unlock the game.
+# The second toggleable component: where tictactoe is the fun surprise, this
+# one carries the commercial framing — a compliance-export destination sold as
+# an entitlement ("included in the Enterprise plan"), enabled per install. Off
+# by default, so a plain install shows the locked tile; toggling it on for one
+# install deploys the marker Service below, which the UI detects live.
 # Toggle rules cut both ways: nothing always-enabled may depend on this
 # component or reference its outputs.
-name = "tictactoe"
+name = "compliance_export"
 type = "kubernetes_manifest"
 
 namespace    = "conduit"
@@ -20,7 +22,7 @@ repo      = "nuonco/kitchen-sink"
 branch = "ms/theme-conduit"
 
 [kustomize]
-path        = "./src/components/tictactoe"
+path        = "./src/components/compliance-export"
 patches     = []
 enable_helm = false
 

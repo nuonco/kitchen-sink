@@ -1,6 +1,10 @@
-name     = "img_api_two"
+# container-image
+# Premium connector image: the app's private-ECR example. Nuon pulls it
+# cross-account through the IAM role below rather than from a public gallery —
+# the shape a paid connector distribution takes. Not referenced by the chart.
+name     = "img_premium_connector"
 type     = "container_image"
-var_name = "img_api_two"
+var_name = "img_premium_connector"
 
 [aws_ecr]
 image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-app"

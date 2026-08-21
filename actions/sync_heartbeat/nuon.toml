@@ -1,6 +1,6 @@
 # action
-name    = "cron_status"
-timeout = "1m"
+name    = "sync_heartbeat"
+timeout = "2m"
 
 [[triggers]]
 type          = "cron"
@@ -11,7 +11,7 @@ type = "manual"
 
 [[steps]]
 name            = "collect-status"
-inline_contents = "./cron_status/script.sh"
+inline_contents = "./sync_heartbeat/script.sh"
 
 [labels]
 is_health_check = "true"

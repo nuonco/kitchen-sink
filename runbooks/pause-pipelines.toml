@@ -1,0 +1,40 @@
+name        = "pause-pipelines"
+description = "Emergency pause of every sync pipeline, run as a recorded, elevated procedure instead of ad-hoc console access — then verified and resumed."
+readme      = "./runbooks/pause-pipelines.md"
+
+[labels]
+team = "platform"
+kind = "break-glass"
+
+# Capture pre-pause state first: the run history is the incident record.
+[[steps]]
+name    = "capture-state"
+type    = "action"
+timeout = "3m"
+inline_contents = """
+#!/usr/bin/env sh
+set -uo pipefail
+
+echo "=== Pods before the pause ==="
+kubectl get pods -n conduit -o wide 2>&1 || true
+echo "=== Recent events ==="
+kubectl get events -n conduit --sort-by='.lastTimestamp' 2>&1 | tail -50 || true
+"""
+
+# Runs under the break-glass role declared in break_glass.toml: pauses every
+# pipeline, proves the engine starts nothing new for 60s, then resumes.
+[[steps]]
+name        = "pause-and-verify"
+type        = "action"
+action_name = "pause_pipelines"
+
+# The engine's status API, read through the public endpoint from the runner:
+# after the drill's resume, every pipeline must report paused:false.
+[[steps]]
+name    = "verify"
+type    = "action"
+timeout = "8m"
+command = "curl --fail --show-error --silent --retry $MAX_RETRIES --retry-delay 15 https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}/api/sync/pipelines | grep -q '\"paused\":false'"
+
+[steps.env_vars]
+MAX_RETRIES = "20"

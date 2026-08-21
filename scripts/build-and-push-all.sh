@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Build and push every image in this repo:
-#   - api  (components/api  -> kitchen-sink-app; also backs img_api_two + worker)
+#   - api  (components/api  -> kitchen-sink-app; also backs img_premium_connector + worker)
 #   - ui   (components/ui   -> kitchen-sink-ui)
 #
 # Common flags (--region, --profile, --tag) are forwarded to every image.

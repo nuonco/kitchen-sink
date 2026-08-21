@@ -6,15 +6,15 @@
 set -uo pipefail
 
 echo "=== Pods ==="
-kubectl get pods -n kitchen-sink -o wide 2>&1 || true
+kubectl get pods -n conduit -o wide 2>&1 || true
 echo "=== Events ==="
-kubectl get events -n kitchen-sink --sort-by='.lastTimestamp' 2>&1 | tail -50 || true
+kubectl get events -n conduit --sort-by='.lastTimestamp' 2>&1 | tail -50 || true
 echo "=== Helm ==="
-helm list -n kitchen-sink 2>&1 || true
+helm list -n conduit 2>&1 || true
 echo "=== Logs (API) ==="
-kubectl logs -n kitchen-sink -l app.kubernetes.io/component=api --tail=100 2>&1 || true
+kubectl logs -n conduit -l app.kubernetes.io/component=api --tail=100 2>&1 || true
 echo "=== Logs (UI) ==="
-kubectl logs -n kitchen-sink -l app.kubernetes.io/component=ui --tail=100 2>&1 || true
+kubectl logs -n conduit -l app.kubernetes.io/component=ui --tail=100 2>&1 || true
 
 # Structured outputs for Nuon (valid k=v).
 printf 'status=collected\n' >> "$NUON_ACTIONS_OUTPUT_FILEPATH"

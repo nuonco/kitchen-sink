@@ -1,7 +1,7 @@
 [[role]]
 name         = "{{.nuon.install.id}}-app-break-glass"
 display_name = "Break Glass Admin"
-description  = "grants admin access for emergencies"
+description  = "admin access for emergencies, minus Secrets Manager; every use is recorded"
 
 [[role.policies]]
 managed_policy_name = "AdministratorAccess"

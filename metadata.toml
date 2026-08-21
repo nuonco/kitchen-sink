@@ -1,5 +1,5 @@
 version = "v2"
 
-display_name = "Kitchen Sink"
-description  = "A comprehensive test app showcasing the full Nuon platform: API, UI, Helm chart, actions, roles, policies, and container images."
+display_name = "Conduit"
+description  = "Self-hosted data sync: pipelines run in your account and data never leaves it. This app config ships the sync engine, its destination bucket, and the full operational surface around them."
 readme       = "./control-plane.md"

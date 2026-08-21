@@ -1,4 +1,4 @@
 type       = "helm_chart"
 engine     = "opa"
-components = ["kitchen_sink"]
+components = ["conduit"]
 contents   = "./deny-public-api-ingress.rego"

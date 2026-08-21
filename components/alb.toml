@@ -1,27 +1,29 @@
 # helm
-# Internet-facing application load balancer for the UI. The sandbox's
+# Internet-facing application load balancer for the Conduit UI. The sandbox's
 # ingress-nginx sits behind an internal-scheme NLB, so this ALB (plus the ACM
 # cert from the certificate component) is what makes the app reachable at
 # https://app.<install domain>.
 name         = "application_load_balancer"
 type         = "helm_chart"
 chart_name   = "application-load-balancer"
-dependencies = ["certificate", "kitchen_sink"]
+dependencies = ["certificate", "conduit"]
 max_auto_retries = 5
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "src/components/alb"
-branch    = "main"
+# The ALB chart changes with the Conduit theme; flip back to "main" when
+# ms/theme-conduit merges.
+branch    = "ms/theme-conduit"
 
 [values]
 domain_certificate = "{{.nuon.components.certificate.outputs.public_domain_certificate_arn}}"
 domain             = "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
 https_port         = "443"
-service_name       = "kitchen-sink-ui"
+service_name       = "conduit-ui"
 service_port       = "3000"
 install_name       = "{{.nuon.install.id}}"
-namespace          = "kitchen-sink"
+namespace          = "conduit"
 healthcheck_path   = "/livez"
 
 # The public HTTPS endpoint is what this component provides, so this is where

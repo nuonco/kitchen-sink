@@ -1,6 +1,6 @@
-name        = "full-health-check"
-description = "Check an install end to end: nodes, the kitchen-sink workloads, the ALB ingress, and the public HTTPS endpoint."
-readme      = "./runbooks/full-health-check.md"
+name        = "pipeline-health-sweep"
+description = "Check an install end to end: nodes, the Conduit workloads, the ALB ingress, the public HTTPS endpoint, and whether syncs are actually landing."
+readme      = "./runbooks/pipeline-health-sweep.md"
 
 [labels]
 team = "platform"
@@ -23,7 +23,7 @@ kubectl top nodes 2>&1 || true
 [[steps]]
 name        = "workload-health"
 type        = "action"
-action_name = "cron_status"
+action_name = "sync_heartbeat"
 
 [[steps]]
 name    = "rollout-convergence"
@@ -33,13 +33,13 @@ inline_contents = """
 #!/usr/bin/env sh
 set -uo pipefail
 
-for deploy in kitchen-sink-api kitchen-sink-ui kitchen-sink-worker; do
+for deploy in conduit-api conduit-ui conduit-worker conduit-postgres; do
   echo "=== rollout status: $deploy ==="
-  kubectl rollout status "deploy/$deploy" -n kitchen-sink --timeout=90s 2>&1 || true
+  kubectl rollout status "deploy/$deploy" -n conduit --timeout=90s 2>&1 || true
 done
 
 echo "=== Horizontal pod autoscalers ==="
-kubectl get hpa -n kitchen-sink 2>&1 || true
+kubectl get hpa -n conduit 2>&1 || true
 """
 
 [[steps]]
@@ -50,10 +50,10 @@ inline_contents = """
 #!/usr/bin/env sh
 set -uo pipefail
 
-echo "=== Helm releases in kitchen-sink ==="
-helm list -n kitchen-sink 2>&1 || true
+echo "=== Helm releases in conduit ==="
+helm list -n conduit 2>&1 || true
 echo "=== ALB ingress (address, target group state, controller events) ==="
-kubectl describe ingress kitchen-sink-alb -n kitchen-sink 2>&1 || true
+kubectl describe ingress conduit-alb -n conduit 2>&1 || true
 """
 
 [[steps]]
@@ -64,3 +64,12 @@ command = 'curl --fail --show-error --silent --retry $MAX_RETRIES --retry-delay 
 
 [steps.env_vars]
 MAX_RETRIES = "10"
+
+# The layers above can all be green while syncs quietly stop. This reads the
+# engine's own status API through the public endpoint — the same data the
+# app's Pipelines page shows.
+[[steps]]
+name    = "sync-freshness"
+type    = "action"
+timeout = "2m"
+command = 'curl --fail --show-error --silent https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}/api/sync/pipelines'

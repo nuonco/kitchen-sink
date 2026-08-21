@@ -6,22 +6,23 @@ Terraform resource removed in the console.
 
 > [!WARNING]
 > This runbook **applies changes**. It reprovisions the sandbox and redeploys
-> components. Run [`full-health-check`](./full-health-check.md) or
+> components. Run [`pipeline-health-sweep`](./pipeline-health-sweep.md) or
 > [`debug-bundle`](./debug-bundle.md) first if you are not yet sure drift is the problem.
 
 ## What it does
 
-1. **drift-plan** — plans the `kitchen_sink` chart with `plan_only`, so the run records
+1. **drift-plan** — plans the `conduit` chart with `plan_only`, so the run records
    exactly what drifted before anything is applied.
 2. **reconcile-sandbox** — reprovisions the sandbox with `skip_component_deploys`, so
    the EKS cluster, VPC and DNS are brought back to desired state without a blind
    redeploy of everything on top of them.
-3. **reconcile-pulumi-infra** — redeploys `pulumi_infra`, whose config reads the
-   install stack's region and so has to follow the sandbox.
+3. **reconcile-destination-bucket** — redeploys `destination_bucket`: the bucket syncs
+   land in and the IAM role the sync engine writes with. Its config reads the install
+   stack's region, so it has to follow the sandbox.
 4. **reconcile-certificate** — redeploys `certificate`. Its ACM validation records live
    in the sandbox's Route53 zone, so it is re-applied after the sandbox and before the
    load balancer that consumes its ARN.
-5. **reconcile-app** — redeploys `kitchen_sink` with `deploy_dependents`, which rolls
+5. **reconcile-app** — redeploys `conduit` with `deploy_dependents`, which rolls
    `application_load_balancer` out immediately afterwards in dependency order.
 6. **verify** — curls the public endpoint until it returns healthy, retrying while the
    new target group registers.
@@ -39,8 +40,8 @@ The verification target is available once the sandbox is deployed.
 
 ## Why the order matters
 
-The steps follow this app's real dependency graph: sandbox → `pulumi_infra` →
-`certificate` → `kitchen_sink` → `application_load_balancer`. Reprovisioning the sandbox
+The steps follow this app's real dependency graph: sandbox → `destination_bucket` →
+`certificate` → `conduit` → `application_load_balancer`. Reprovisioning the sandbox
 can change the zone ID and outputs that the certificate and load balancer template
 against, so re-applying them in any other order leaves the install pointing at values
 that no longer exist.

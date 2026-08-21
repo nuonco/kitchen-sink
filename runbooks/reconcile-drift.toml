@@ -10,7 +10,7 @@ kind = "drift"
 [[steps]]
 name           = "drift-plan"
 type           = "component_deploy"
-component_name = "kitchen_sink"
+component_name = "conduit"
 plan_only      = true
 
 # Infrastructure only — components are redeployed by the later steps in the
@@ -21,9 +21,9 @@ type                   = "sandbox_reprovision"
 skip_component_deploys = true
 
 [[steps]]
-name           = "reconcile-pulumi-infra"
+name           = "reconcile-destination-bucket"
 type           = "component_deploy"
-component_name = "pulumi_infra"
+component_name = "destination_bucket"
 
 # The certificate is DNS-validated against the sandbox's Route53 zone, so it is
 # re-applied after the sandbox and before the load balancer that consumes it.
@@ -32,12 +32,12 @@ name           = "reconcile-certificate"
 type           = "component_deploy"
 component_name = "certificate"
 
-# application_load_balancer depends on kitchen_sink, so deploy_dependents rolls
+# application_load_balancer depends on conduit, so deploy_dependents rolls
 # it out immediately after the chart.
 [[steps]]
 name              = "reconcile-app"
 type              = "component_deploy"
-component_name    = "kitchen_sink"
+component_name    = "conduit"
 deploy_dependents = true
 
 [[steps]]

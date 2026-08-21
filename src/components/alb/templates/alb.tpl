@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: kitchen-sink-alb
+  name: conduit-alb
   namespace: {{ .Values.namespace }}
   labels:
     app.nuon.co/install: {{ .Values.install_name }}

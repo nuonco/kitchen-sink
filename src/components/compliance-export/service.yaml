@@ -1,13 +1,13 @@
-# Marker Service for the toggleable tictactoe component. The UI checks the
-# conduit namespace for a Service with this name and unlocks the game when
-# it exists. It selects the UI pods (the game is client-side, served by the UI
-# image already running) so the Service has real endpoints.
+# Marker Service for the toggleable compliance_export component. The UI
+# checks the conduit namespace for a Service with this name and unlocks the
+# entitlement view when it exists. It selects the UI pods (the entitlement
+# mechanic is the product being shown) so the Service has real endpoints.
 apiVersion: v1
 kind: Service
 metadata:
-  name: conduit-tictactoe
+  name: conduit-compliance-export
   labels:
-    app.kubernetes.io/name: conduit-tictactoe
+    app.kubernetes.io/name: conduit-compliance-export
     app.kubernetes.io/part-of: conduit
     nuon.co/purpose: feature-flag-marker
 spec:
