@@ -8,7 +8,7 @@ Read-only: nothing here applies a change.
 ## What it checks
 
 1. **node-health** — node readiness and capacity (`kubectl get nodes`, `kubectl top nodes`).
-2. **workload-health** — runs the existing **cron_status** action, which reports the
+2. **workload-health** — runs the existing **uptime_heartbeat** action, which reports the
    `periscope` namespace's pods, services and ingresses and emits `pods_ready` /
    `pods_total` as structured outputs.
 3. **rollout-convergence** — `kubectl rollout status` for `periscope-api`,

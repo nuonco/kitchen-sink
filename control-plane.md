@@ -13,7 +13,7 @@
 {{- $cR := 0 -}}{{- range $n, $c := $comps }}{{ if eq (dig "status" "" $c) "active" }}{{ $cR = add $cR 1 }}{{ end }}{{ end -}}
 {{- $cT := len $comps -}}
 {{- $allCompsOk := and (gt $cT 0) (ge $cR $cT) -}}
-{{- $hc := default dict (index $workflows "cron_status") -}}
+{{- $hc := default dict (index $workflows "uptime_heartbeat") -}}
 {{- $hcOut := default dict (dig "outputs" dict $hc) -}}
 {{- $pr := int (dig "pods_ready" 0 $hcOut) -}}{{- $pt := int (dig "pods_total" 0 $hcOut) -}}
 {{- $checkedAt := dig "checked_at" "" $hcOut -}}

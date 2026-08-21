@@ -1,5 +1,5 @@
 # action
-name    = "cron_status"
+name    = "uptime_heartbeat"
 timeout = "1m"
 
 [[triggers]]
@@ -11,7 +11,7 @@ type = "manual"
 
 [[steps]]
 name            = "collect-status"
-inline_contents = "./cron_status/script.sh"
+inline_contents = "./uptime_heartbeat/script.sh"
 
 [labels]
 is_health_check = "true"

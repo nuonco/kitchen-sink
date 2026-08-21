@@ -23,7 +23,7 @@ kubectl top nodes 2>&1 || true
 [[steps]]
 name        = "workload-health"
 type        = "action"
-action_name = "cron_status"
+action_name = "uptime_heartbeat"
 
 [[steps]]
 name    = "rollout-convergence"
