@@ -11,8 +11,8 @@ actions `uptime_heartbeat`, `debug`, `break_glass_remediation`.
 
 | Runbook | Scenario | Steps |
 |---------|----------|-------|
-| [`full-health-check`](./full-health-check.md) | **Health check** — many signals at once, read-only | nodes → `uptime_heartbeat` → rollout convergence → ALB ingress → public endpoint |
-| [`debug-bundle`](./debug-bundle.md) | **Debug** — something's gone wrong, read-only | `debug` → pod/restart detail → ingress + synced secrets → endpoint probe |
+| [`full-health-check`](./full-health-check.md) | **Health check** — many signals at once, cluster-read-only | nodes → `uptime_heartbeat` → rollout convergence → ALB ingress → public endpoint → report to the archive |
+| [`debug-bundle`](./debug-bundle.md) | **Debug** — something's gone wrong, cluster-read-only | `debug` → pod/restart detail → ingress + synced secrets → endpoint probe → bundle to the archive |
 | [`reconcile-drift`](./reconcile-drift.md) | **Drift** — re-apply desired state (applies changes) | `plan_only` chart plan → `sandbox_reprovision` → `pulumi_infra` → `certificate` → `periscope` + dependents → verify |
 | [`break-glass`](./break-glass.md) | **Break glass** — recorded emergency with elevated access | capture state → `break_glass_remediation` (assumes the break-glass role) → verify |
 

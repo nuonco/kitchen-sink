@@ -1,9 +1,12 @@
 # debug-bundle
 
 Collects a diagnostic bundle for install `{{ .nuon.install.id }}` in one workflow
-record, so an incident has a single artifact to attach rather than a scrollback.
+record, then uploads the tarred bundle to the report archive
+(`s3://periscope-reports-{{ .nuon.install.id }}/debug-bundles/`), so an incident has
+a single artifact to attach rather than a scrollback.
 
-Read-only: nothing here restarts, applies or deletes anything.
+Read-only against the cluster: nothing here restarts, applies or deletes anything.
+The only write is the bundle object in the archive bucket.
 
 ## What it collects
 
@@ -17,6 +20,11 @@ Read-only: nothing here restarts, applies or deletes anything.
    (`db-password`, `api-key`) exist in the namespace. Names only — never values.
 4. **endpoint-probe** — one verbose curl of the public endpoint with the status code
    and total time, tolerant of failure so the bundle always completes.
+5. **archive-bundle** — re-collects the same surfaces into files, tars them, and
+   `aws s3 cp`s the result to the archive bucket, then lists the prefix to prove the
+   write landed. Runs under the actions role, which is granted `s3:PutObject` and
+   `s3:ListBucket` on exactly this bucket. This step fails loudly if the write path
+   is broken.
 
 ## Endpoint probed
 

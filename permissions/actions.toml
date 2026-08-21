@@ -20,3 +20,34 @@ contents = """
     ]
 }
 """
+
+# Write access to the report archive (the pulumi_infra S3 bucket,
+# periscope-reports-<install id> — the name convention set in
+# components/pulumi/main.go). Runbook steps and actions run under this role,
+# so this is what lets debug-bundle and the health/heartbeat reports upload.
+# Write-and-list only: this role cannot read objects back or delete them.
+[[policies]]
+name = "{{.nuon.install.id}}-actions-report-archive"
+contents = """
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ReportArchivePut",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject"
+            ],
+            "Resource": "arn:aws:s3:::periscope-reports-{{.nuon.install.id}}/*"
+        },
+        {
+            "Sid": "ReportArchiveList",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket"
+            ],
+            "Resource": "arn:aws:s3:::periscope-reports-{{.nuon.install.id}}"
+        }
+    ]
+}
+"""

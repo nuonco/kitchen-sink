@@ -1,5 +1,5 @@
 name        = "full-health-check"
-description = "Check an install end to end: nodes, the Periscope workloads, the ALB ingress, and the public HTTPS endpoint."
+description = "Check an install end to end: nodes, the Periscope workloads, the ALB ingress, and the public HTTPS endpoint — then write the report to the install's report archive."
 readme      = "./runbooks/full-health-check.md"
 
 [labels]
@@ -64,3 +64,42 @@ command = 'curl --fail --show-error --silent --retry $MAX_RETRIES --retry-delay 
 
 [steps.env_vars]
 MAX_RETRIES = "10"
+
+# Writes this run's health report into the report archive (the pulumi_infra
+# S3 bucket). This runbook is branch.toml's post_deploy_runbooks entry, so
+# every successful deploy — including an install's first — leaves a real
+# object in the archive. The aws cp/ls calls are NOT tolerant of failure: a
+# broken archive write path fails this step visibly. Runs under the actions
+# role (s3:PutObject + s3:ListBucket on this bucket, permissions/actions.toml).
+[[steps]]
+name    = "archive-report"
+type    = "action"
+timeout = "3m"
+inline_contents = """
+#!/usr/bin/env sh
+set -uo pipefail
+
+report=$(mktemp)
+{
+  echo "health report, generated $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  echo "=== Nodes ==="
+  kubectl get nodes -o wide 2>&1 || true
+  echo "=== Pods (periscope) ==="
+  kubectl get pods -n periscope -o wide 2>&1 || true
+  echo "=== Helm releases ==="
+  helm list -n periscope 2>&1 || true
+  echo "=== Ingress ==="
+  kubectl get ingress -n periscope -o wide 2>&1 || true
+} > "$report"
+
+key="health-reports/$(date -u +%Y%m%dT%H%M%SZ).txt"
+echo "uploading report to s3://$REPORT_BUCKET/$key"
+aws s3 cp "$report" "s3://$REPORT_BUCKET/$key"
+echo "=== Reports in the archive ==="
+aws s3 ls "s3://$REPORT_BUCKET/health-reports/"
+"""
+
+# Bucket name matches the convention in components/pulumi/main.go
+# (periscope-reports-<install id>).
+[steps.env_vars]
+REPORT_BUCKET = "periscope-reports-{{.nuon.install.id}}"

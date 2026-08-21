@@ -13,5 +13,11 @@ type = "manual"
 name            = "collect-status"
 inline_contents = "./uptime_heartbeat/script.sh"
 
+# The report archive (pulumi_infra's S3 bucket); each heartbeat writes a
+# snapshot under heartbeats/ — see the tail of script.sh. Name matches the
+# convention in components/pulumi/main.go.
+[steps.env_vars]
+REPORT_BUCKET = "periscope-reports-{{.nuon.install.id}}"
+
 [labels]
 is_health_check = "true"

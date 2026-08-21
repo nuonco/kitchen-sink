@@ -34,3 +34,22 @@ fi
     printf 'status=degraded\n'
   fi
 } >> "$NUON_ACTIONS_OUTPUT_FILEPATH"
+
+# Snapshot to the report archive (REPORT_BUCKET is set in nuon.toml; the
+# actions role grants s3:PutObject on it). Tolerant on purpose — this action
+# feeds the install README's health tile, and archiving must never break the
+# heartbeat itself. When the upload succeeds, report_object joins the outputs.
+if [ -n "${REPORT_BUCKET:-}" ] && command -v aws >/dev/null 2>&1; then
+  snapshot=$(mktemp)
+  {
+    echo "heartbeat snapshot, generated $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    printf 'pods_ready=%s pods_total=%s\n' "$ready" "$total"
+    kubectl get pods -n periscope -o wide 2>&1 || true
+  } > "$snapshot"
+  key="heartbeats/$(date -u +%Y%m%dT%H%M%SZ).txt"
+  if aws s3 cp "$snapshot" "s3://${REPORT_BUCKET}/${key}"; then
+    printf 'report_object=s3://%s/%s\n' "$REPORT_BUCKET" "$key" >> "$NUON_ACTIONS_OUTPUT_FILEPATH"
+  else
+    echo "report archive upload failed (bucket ${REPORT_BUCKET}); heartbeat outputs unaffected"
+  fi
+fi

@@ -1,9 +1,12 @@
 # full-health-check
 
 Checks install `{{ .nuon.install.id }}` at every layer that has to be working for the
-app to serve traffic — from the nodes up to the public HTTPS endpoint.
+app to serve traffic — from the nodes up to the public HTTPS endpoint — and writes
+the report to the report archive
+(`s3://periscope-reports-{{ .nuon.install.id }}/health-reports/`).
 
-Read-only: nothing here applies a change.
+Read-only against the cluster: nothing here applies a change. The only write is the
+report object in the archive bucket.
 
 ## What it checks
 
@@ -19,6 +22,10 @@ Read-only: nothing here applies a change.
    target-group and certificate problems.
 5. **endpoint-health** — curls the public endpoint and only passes on a healthy HTTP
    status, retrying while DNS and the target group settle.
+6. **archive-report** — writes the run's node/pod/helm/ingress state to the archive
+   bucket and lists the prefix to prove the write landed. Because this runbook is
+   `branch.toml`'s `post_deploy_runbooks` entry, every successful deploy — including
+   an install's first — leaves a real report object in the archive.
 
 ## Target
 

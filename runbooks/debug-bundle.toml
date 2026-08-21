@@ -1,5 +1,5 @@
 name        = "debug-bundle"
-description = "Something's gone wrong — collect a read-only diagnostic bundle: pod state, events, logs, restart reasons, and a verbose endpoint probe."
+description = "Something's gone wrong — collect a diagnostic bundle (pod state, events, logs, restart reasons, endpoint probe) and upload it to the install's report archive."
 readme      = "./runbooks/debug-bundle.md"
 
 [labels]
@@ -52,3 +52,44 @@ name    = "endpoint-probe"
 type    = "action"
 timeout = "2m"
 command = 'curl -sS -o /dev/null -w "livez: HTTP %{http_code} in %{time_total}s\n" https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}/livez || true'
+
+# Uploads the bundle to the report archive (the pulumi_infra S3 bucket). Steps
+# are separate runs — earlier steps' stdout is not readable here — so this
+# step re-collects the same surfaces into files before tarring. The aws cp/ls
+# calls are NOT tolerant of failure: if the archive write path is broken, this
+# step must say so. Runs under the actions role, which grants s3:PutObject and
+# s3:ListBucket on exactly this bucket (permissions/actions.toml).
+[[steps]]
+name    = "archive-bundle"
+type    = "action"
+timeout = "4m"
+inline_contents = """
+#!/usr/bin/env sh
+set -uo pipefail
+
+dir=$(mktemp -d)
+kubectl get pods -n periscope -o wide > "$dir/pods.txt" 2>&1 || true
+kubectl get events -n periscope --sort-by='.lastTimestamp' > "$dir/events.txt" 2>&1 || true
+kubectl describe deploy -n periscope > "$dir/deployments.txt" 2>&1 || true
+kubectl get svc,ingress -n periscope -o wide > "$dir/network.txt" 2>&1 || true
+helm list -n periscope > "$dir/helm.txt" 2>&1 || true
+date -u +%Y-%m-%dT%H:%M:%SZ > "$dir/collected-at.txt"
+
+ts=$(date -u +%Y%m%dT%H%M%SZ)
+bundle=$(mktemp -u)/debug-bundle.tar.gz
+mkdir -p "$(dirname "$bundle")"
+tar -czf "$bundle" -C "$dir" .
+
+key="debug-bundles/$ts.tar.gz"
+echo "uploading bundle to s3://$REPORT_BUCKET/$key"
+aws s3 cp "$bundle" "s3://$REPORT_BUCKET/$key"
+echo "=== Bundles in the archive ==="
+aws s3 ls "s3://$REPORT_BUCKET/debug-bundles/"
+"""
+
+# Bucket name matches the convention in components/pulumi/main.go
+# (periscope-reports-<install id>); the name is used rather than
+# {{...outputs.bucket_name}} because output interpolation inside runbook
+# steps is unverified (plan §5).
+[steps.env_vars]
+REPORT_BUCKET = "periscope-reports-{{.nuon.install.id}}"
