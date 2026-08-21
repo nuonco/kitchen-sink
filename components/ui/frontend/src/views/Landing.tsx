@@ -365,6 +365,12 @@ export function Landing({ config }: { config: UIConfig }) {
               </a>
             </div>
           </div>
+          <div className="row" style={{ marginTop: 16 }}>
+            <a className="btn btn--primary btn--xl" href="#/ops">
+              I can reason about all of this. Just show me the things it can
+              do. <Icon name="arrow-right" />
+            </a>
+          </div>
           <div className="row" style={{ marginTop: 20 }}>
             <button
               className="tour__skip"
