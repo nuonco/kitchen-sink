@@ -5,7 +5,7 @@ default_instance_type = "t3a.medium"
 # the sandbox module creates no access entry for the custom "setup" role). The
 # default maintenance ClusterRole grants namespaced roles/rolebindings but NOT
 # cluster-scoped clusterroles/clusterrolebindings, so deploying the chart's
-# ClusterRole ("kitchen-sink-cluster-role") is denied. Associating the
+# ClusterRole ("periscope-cluster-role") is denied. Associating the
 # cluster-admin access policy with the maintenance access entry grants the
 # cluster-scoped RBAC needed to manage ClusterRole/ClusterRoleBinding resources.
 maintenance_role_eks_access_entry_policy_associations = {
