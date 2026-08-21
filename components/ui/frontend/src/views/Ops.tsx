@@ -141,7 +141,7 @@ export function Ops({ config }: { config: UIConfig }) {
           command={`nuon actions list --app-id ${app}`}
         />
         <CommandBlock
-          label="2 · run it"
+          label="2 · run it with an id from step 1"
           command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
           note={
             config.links.actions && (
@@ -159,8 +159,8 @@ export function Ops({ config }: { config: UIConfig }) {
           named <Mono>{install}-&lt;role&gt;</Mono>.
         </p>
         <CommandBlock
-          label="override the role for one run"
-          command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id> --role-name <role>`}
+          label="override the role for one run — actw id from step 1 above"
+          command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id> --role-name maintenance`}
           note={
             <>
               Roles: {nameList(roles)}.{' '}
