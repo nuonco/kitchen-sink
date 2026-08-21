@@ -1,4 +1,6 @@
 # pulumi
+# Provisions Periscope's report archive: the private S3 bucket where debug
+# bundles and reports land.
 name    = "pulumi_infra"
 type    = "pulumi"
 runtime = "go"
@@ -6,11 +8,13 @@ runtime = "go"
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "components/pulumi"
-branch    = "main"
+# Bucket naming for the Periscope theme lives on this branch; flip back to
+# "main" when ms/theme-periscope merges.
+branch = "ms/theme-periscope"
 
 [config]
-"aws:region"                 = "{{.nuon.install_stack.outputs.region}}"
-"kitchen-sink:install_id"    = "{{.nuon.install.id}}"
+"aws:region"            = "{{.nuon.install_stack.outputs.region}}"
+"periscope:install_id"  = "{{.nuon.install.id}}"
 
 [env_vars]
 PULUMI_SKIP_UPDATE_CHECK = "true"

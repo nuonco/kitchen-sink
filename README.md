@@ -7,7 +7,7 @@ A read-only self-hosted infrastructure console, packaged as a Nuon app that exer
 | Feature | Description |
 |---------|-------------|
 | **Helm Chart** | Deploys the Periscope API, web UI, and collector to EKS |
-| **Pulumi Infrastructure** | Creates an S3 bucket with encryption and versioning |
+| **Pulumi Infrastructure** | Creates the report archive: an encrypted, versioned S3 bucket for debug bundles |
 | **Container Images** | Pre-built images from private ECR |
 | **Actions** | Automated health checks, debugging, and lifecycle hooks |
 | **Policies** | OPA policies for security and compliance |
