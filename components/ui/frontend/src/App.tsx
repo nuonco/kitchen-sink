@@ -8,6 +8,7 @@ import { Customize } from './views/Customize'
 import { Deployed } from './views/Deployed'
 import { Landing } from './views/Landing'
 import { Mapping } from './views/Mapping'
+import { Ops } from './views/Ops'
 import { TicTacToe } from './views/TicTacToe'
 
 function TopBar({
@@ -56,6 +57,8 @@ export default function App() {
     // The old day-2 pages merged into the customize taxonomy; keep the old
     // deep links working.
     view = <Customize config={config} flow={parts[1]} />
+  } else if (parts[0] === 'ops') {
+    view = <Ops config={config} />
   } else if (parts[0] === 'tictactoe') {
     view = <TicTacToe config={config} />
   } else if (parts[0] === 'audit-log') {
