@@ -15,9 +15,10 @@ This app is published on the install's internet-facing load balancer and the
 introspection API has no authentication, so anything the proxy forwards is
 public. `apifilter.go` is that boundary:
 
-- only the four endpoints these views read are forwarded — `/introspect/kube`,
-  `/introspect/helm`, `/introspect/env`, and `/introspect/namespace/<the app's
-  own namespace>`. Everything else answers 403 with an explanation, including
+- only the five endpoints these views read are forwarded — `/introspect/kube`,
+  `/introspect/helm`, `/introspect/env`, `/introspect/namespace/<the app's
+  own namespace>`, and that same namespace's `/events`. Everything else answers
+  403 with an explanation, including
   `/introspect/secrets` and `/introspect/helm-values/...`, which return
   credentials by design.
 - responses are filtered on the way back: Kubernetes Secret values, container
