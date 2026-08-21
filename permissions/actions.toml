@@ -1,6 +1,6 @@
 type         = "custom"
 name         = "{{.nuon.install.id}}-actions"
-description  = "execute actions (healthchecks, debug, cron jobs)"
+description  = "execute actions (healthchecks, debug, cron jobs, delivery-log export)"
 display_name = "actions role"
 
 [[policies]]
@@ -16,6 +16,37 @@ contents = """
                 "eks:DescribeCluster"
             ],
             "Resource": "*"
+        }
+    ]
+}
+"""
+
+# The delivery_log_export action's write path: PutObject scoped to the one
+# archive bucket pulumi_infra creates (relay-<install_id>), and only its
+# delivery-logs/ prefix. The pods themselves carry no IAM — the runner is the
+# only principal that can land archives in the bucket, which is the point.
+[[policies]]
+name = "{{.nuon.install.id}}-actions-archive-write"
+contents = """
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "ArchiveDeliveryLogs",
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject"
+            ],
+            "Resource": "arn:aws:s3:::relay-{{.nuon.install.id}}/delivery-logs/*"
+        },
+        {
+            "Sid": "ArchiveBucketMeta",
+            "Effect": "Allow",
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": "arn:aws:s3:::relay-{{.nuon.install.id}}"
         }
     ]
 }

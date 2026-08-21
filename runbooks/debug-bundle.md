@@ -16,7 +16,8 @@ Read-only: nothing here restarts, applies or deletes anything.
    `relay-alb` ingress, and confirmation that the Nuon-synced secrets
    (`db-password`, `api-key`) exist in the namespace. Names only — never values.
 4. **endpoint-probe** — one verbose curl of the public endpoint with the status code
-   and total time, tolerant of failure so the bundle always completes.
+   and total time, plus the live delivery rollup (`/api/delivery/stats`), tolerant of
+   failure so the bundle always completes.
 
 ## Endpoint probed
 

@@ -7,15 +7,22 @@
 
 ## What it does
 
-1. **capture-state** — pods and recent events before anything changes. The run history
-   is the incident record, so it starts with the evidence.
+1. **capture-state** — pods, recent events, the delivery rollup and the DLQ before
+   anything changes. The run history is the incident record, so it starts with the
+   evidence.
 2. **elevated-remediation** — runs the **break_glass_remediation** action, which assumes
    the install's break-glass IAM role (`{{ .nuon.install.id }}-app-break-glass`), prints
    the assumed caller identity as proof, demonstrates that the role's
-   `secretsmanager:*` Deny boundary holds, and then force-rolls
-   `relay-api`, `relay-ui` and `relay-worker`.
+   `secretsmanager:*` Deny boundary holds, force-rolls
+   `relay-api`, `relay-ui` and `relay-worker`, and then **drains the dead-letter
+   queue**: every dead attempt (up to 25) is replayed through
+   `POST /delivery/dlq/{id}/replay`, re-queuing one real delivery each. A restart
+   un-sticks the pipeline; the drain re-sends what died while it was stuck.
 3. **verify** — curls the public endpoint until it returns healthy, confirming the
    emergency action restored service.
+4. **confirm-deliveries** — fetches `/api/delivery/stats` so the incident record ends
+   with the delivery numbers the remediation left behind (a replayed attempt that fails
+   again returns to the DLQ — visible right here).
 
 ## The role
 

@@ -51,4 +51,7 @@ kubectl get configmap -n relay 2>&1 || true
 name    = "endpoint-probe"
 type    = "action"
 timeout = "2m"
-command = 'curl -sS -o /dev/null -w "livez: HTTP %{http_code} in %{time_total}s\n" https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}/livez || true'
+command = 'curl -sS -o /dev/null -w "livez: HTTP %{http_code} in %{time_total}s\n" "$APP_URL/livez" || true; echo "delivery stats:"; curl -sS --max-time 15 "$APP_URL/api/delivery/stats" || true'
+
+[steps.env_vars]
+APP_URL = "https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}"

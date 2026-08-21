@@ -19,6 +19,11 @@ Read-only: nothing here applies a change.
    target-group and certificate problems.
 5. **endpoint-health** — curls the public endpoint and only passes on a healthy HTTP
    status, retrying while DNS and the target group settle.
+6. **delivery-health** — fetches the live delivery rollup (`/api/delivery/stats`:
+   events and deliveries in the last 24h, success rate, DLQ depth) through the same
+   public endpoint, and lists any dead attempts parked in the DLQ. A non-empty DLQ is
+   reported, not failed — replay from the console, or drain it with
+   [`break-glass`](./break-glass.md) if the pipeline itself was stuck.
 
 ## Target
 

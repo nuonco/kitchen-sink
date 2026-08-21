@@ -1,0 +1,35 @@
+# action
+# Archived delivery logs: exports the recent delivery record (stats, events,
+# DLQ) to the install's private S3 bucket — the bucket pulumi_infra creates.
+# This is the real write path behind the archive story: pods carry no IAM, so
+# the export runs on the RUNNER, whose actions role (permissions/actions.toml)
+# holds a PutObject grant scoped to this one bucket's delivery-logs/ prefix.
+# The toggleable audit_log_exporter component is the per-install entitlement
+# marker for the console's export view; this action is the pipeline that
+# actually lands the archive in S3, every six hours or on demand.
+name         = "delivery_log_export"
+timeout      = "3m"
+dependencies = ["pulumi_infra"]
+
+[[triggers]]
+type          = "cron"
+cron_schedule = "0 */6 * * *"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "export-delivery-logs"
+inline_contents = "./delivery_log_export/script.sh"
+
+[steps.env_vars]
+# Read through the public ALB — the runner cannot resolve in-cluster
+# service names (the same mechanism cron_status and the runbooks use).
+APP_URL = "https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}"
+# Must match the bucket components/pulumi/main.go creates: relay-<install_id>.
+# Derived from the install id rather than the component's outputs so this
+# always-runnable action never takes an .outputs. reference it does not need.
+ARCHIVE_BUCKET = "relay-{{ .nuon.install.id }}"
+
+[labels]
+kind = "export"

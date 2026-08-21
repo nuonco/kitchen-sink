@@ -19,7 +19,15 @@ echo "=== Pods before remediation ==="
 kubectl get pods -n relay -o wide 2>&1 || true
 echo "=== Recent events ==="
 kubectl get events -n relay --sort-by='.lastTimestamp' 2>&1 | tail -50 || true
+echo "=== Delivery rollup and DLQ before remediation ==="
+curl -fsS --max-time 15 "$APP_URL/api/delivery/stats" 2>&1 || true
+echo ""
+curl -fsS --max-time 15 "$APP_URL/api/delivery/dlq" 2>&1 || true
+echo ""
 """
+
+[steps.env_vars]
+APP_URL = "https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}"
 
 # Runs under the break-glass role declared in break_glass.toml.
 [[steps]]
@@ -35,3 +43,15 @@ command = 'curl --fail --show-error --silent --retry $MAX_RETRIES --retry-delay 
 
 [steps.env_vars]
 MAX_RETRIES = "20"
+
+# Service being back is not the same as deliveries flowing: fetch the rollup
+# after the drain, so the incident record ends with the DLQ depth the
+# remediation left behind.
+[[steps]]
+name    = "confirm-deliveries"
+type    = "action"
+timeout = "3m"
+command = 'curl --fail --show-error --silent --retry 5 --retry-delay 15 "$APP_URL/api/delivery/stats"'
+
+[steps.env_vars]
+APP_URL = "https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}"

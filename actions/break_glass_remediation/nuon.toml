@@ -1,7 +1,8 @@
 # action
 # Elevated remediation for a stuck delivery pipeline, run through a recorded
 # action instead of ad-hoc console access — restarts the Relay workloads so
-# queued deliveries drain. `break_glass_role` names the role declared in ../break_glass.toml
+# queued deliveries drain, then replays every dead attempt out of the DLQ.
+# `break_glass_role` names the role declared in ../break_glass.toml
 # (AdministratorAccess with a secretsmanager:* Deny boundary), so every run is
 # attributable in the install's workflow history.
 name               = "break_glass_remediation"
@@ -15,6 +16,13 @@ type = "manual"
 [[steps]]
 name            = "elevated-remediation"
 inline_contents = "./break_glass_remediation/script.sh"
+
+[steps.env_vars]
+# The DLQ drain reads/replays through the public ALB (the runner cannot
+# resolve in-cluster service names); the script falls back to kubectl exec
+# into the api pod if the console proxy refuses the request.
+APP_URL          = "https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}"
+MAX_DLQ_REPLAYS  = "25"
 
 [labels]
 is_break_glass = "true"

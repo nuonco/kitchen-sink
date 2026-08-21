@@ -64,3 +64,35 @@ command = 'curl --fail --show-error --silent --retry $MAX_RETRIES --retry-delay 
 
 [steps.env_vars]
 MAX_RETRIES = "10"
+
+# The check that makes this a *delivery* health sweep: the live rollup from
+# the delivery store, read through the ALB (the runner cannot resolve
+# in-cluster service names). Failing to fetch it fails the step; a non-empty
+# DLQ is reported but does not fail the sweep — that is what break-glass and
+# the console's replay button are for.
+[[steps]]
+name    = "delivery-health"
+type    = "action"
+timeout = "3m"
+inline_contents = """
+#!/usr/bin/env sh
+set -uo pipefail
+
+echo "=== Delivery rollup ==="
+stats=$(curl --fail --show-error --silent --retry 5 --retry-delay 10 "$APP_URL/api/delivery/stats") || exit 1
+echo "$stats"
+
+dlq=$(printf '%s' "$stats" | grep -o '"dlq_depth":[0-9]*' | cut -d: -f2)
+echo "=== Dead-letter queue ==="
+if [ "${dlq:-0}" -gt 0 ]; then
+  echo "$dlq dead attempt(s) parked in the DLQ:"
+  curl --fail --silent "$APP_URL/api/delivery/dlq" || true
+  echo ""
+  echo "Replay them from the console, or run the break-glass runbook to drain the queue."
+else
+  echo "empty"
+fi
+"""
+
+[steps.env_vars]
+APP_URL = "https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}"

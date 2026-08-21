@@ -1,5 +1,6 @@
 # action
-# The delivery-success heartbeat: hourly snapshot of the relay namespace with
+# The delivery-success heartbeat: hourly snapshot of the relay namespace plus
+# the live delivery rollup from the public console API, with
 # pods_ready/pods_total structured outputs (read by the install README).
 name    = "cron_status"
 timeout = "1m"
@@ -14,6 +15,12 @@ type = "manual"
 [[steps]]
 name            = "collect-status"
 inline_contents = "./cron_status/script.sh"
+
+[steps.env_vars]
+# The runner sits outside the cluster, so the delivery rollup is read through
+# the public ALB (the console's /api proxy forwards /delivery/stats) — the
+# same mechanism the runbooks use to resolve the public endpoint.
+APP_URL = "https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}"
 
 [labels]
 is_health_check = "true"
