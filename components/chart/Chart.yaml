@@ -1,6 +1,6 @@
 apiVersion: v2
-name: kitchen-sink
-description: Helm chart for deploying the Kitchen Sink app (API + UI + Worker)
+name: periscope
+description: Helm chart for the Periscope console (API + web UI + collector)
 type: application
 version: v0.0.1
 appVersion: "0.0.1"

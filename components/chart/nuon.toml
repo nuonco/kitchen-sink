@@ -1,8 +1,8 @@
 # helm
-name = "kitchen_sink"
+name = "periscope"
 type = "helm_chart"
-chart_name = "kitchen-sink"
-namespace = "kitchen-sink"
+chart_name = "periscope"
+namespace = "periscope"
 storage_driver = "configmap"
 dependencies = ["img_api", "img_ui"]
 
@@ -52,7 +52,7 @@ helm = "true"
 #
 # `block_deploy` is off, so the deploy step records what health did without
 # gating on it. Flip it to `true` once health is confirmed green on a real
-# install and every kitchen_sink deploy grows a `verify health` step.
+# install and every periscope deploy grows a `verify health` step.
 [health]
 enabled              = true
 stabilization_window = "3m"

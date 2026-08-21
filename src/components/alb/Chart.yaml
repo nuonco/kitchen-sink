@@ -1,4 +1,4 @@
 apiVersion: v2
 name: application-load-balancer
-description: Internet-facing ALB for Kitchen Sink UI
+description: Internet-facing ALB for the Periscope web UI
 version: 0.1.0

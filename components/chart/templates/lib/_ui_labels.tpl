@@ -1,5 +1,5 @@
-{{- define "kitchen-sink.ui.labels" -}}
-app.kubernetes.io/name: {{ include "kitchen-sink.ui.name" . }}
-app.kubernetes.io/component: ui
-{{ include "kitchen-sink.labels" . }}
+{{- define "periscope.web.labels" -}}
+app.kubernetes.io/name: {{ include "periscope.web.name" . }}
+app.kubernetes.io/component: web
+{{ include "periscope.labels" . }}
 {{- end }}

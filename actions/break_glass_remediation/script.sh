@@ -22,26 +22,26 @@ if command -v aws >/dev/null 2>&1; then
 fi
 
 echo "=== Pods before remediation ==="
-kubectl get pods -n kitchen-sink -o wide 2>&1 || true
+kubectl get pods -n periscope -o wide 2>&1 || true
 
-echo "=== Restarting the kitchen-sink workloads ==="
+echo "=== Restarting the Periscope workloads ==="
 restarted=0
-for deploy in kitchen-sink-api kitchen-sink-ui kitchen-sink-worker; do
-  if kubectl rollout restart "deploy/$deploy" -n kitchen-sink 2>&1; then
+for deploy in periscope-api periscope-web periscope-collector; do
+  if kubectl rollout restart "deploy/$deploy" -n periscope 2>&1; then
     restarted=$((restarted + 1))
   fi
 done
 
 echo "=== Waiting for rollouts ==="
 rollouts_ok=0
-for deploy in kitchen-sink-api kitchen-sink-ui kitchen-sink-worker; do
-  if kubectl rollout status "deploy/$deploy" -n kitchen-sink --timeout=4m 2>&1; then
+for deploy in periscope-api periscope-web periscope-collector; do
+  if kubectl rollout status "deploy/$deploy" -n periscope --timeout=4m 2>&1; then
     rollouts_ok=$((rollouts_ok + 1))
   fi
 done
 
 echo "=== Pods after remediation ==="
-kubectl get pods -n kitchen-sink -o wide 2>&1 || true
+kubectl get pods -n periscope -o wide 2>&1 || true
 
 # Structured outputs for Nuon (valid k=v).
 {

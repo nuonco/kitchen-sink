@@ -13,7 +13,7 @@
    the install's break-glass IAM role (`{{ .nuon.install.id }}-app-break-glass`), prints
    the assumed caller identity as proof, demonstrates that the role's
    `secretsmanager:*` Deny boundary holds, and then force-rolls
-   `kitchen-sink-api`, `kitchen-sink-ui` and `kitchen-sink-worker`.
+   `periscope-api`, `periscope-web` and `periscope-collector`.
 3. **verify** — curls the public endpoint until it returns healthy, confirming the
    emergency action restored service.
 

@@ -1,5 +1,5 @@
 name        = "full-health-check"
-description = "Check an install end to end: nodes, the kitchen-sink workloads, the ALB ingress, and the public HTTPS endpoint."
+description = "Check an install end to end: nodes, the Periscope workloads, the ALB ingress, and the public HTTPS endpoint."
 readme      = "./runbooks/full-health-check.md"
 
 [labels]
@@ -33,13 +33,13 @@ inline_contents = """
 #!/usr/bin/env sh
 set -uo pipefail
 
-for deploy in kitchen-sink-api kitchen-sink-ui kitchen-sink-worker; do
+for deploy in periscope-api periscope-web periscope-collector; do
   echo "=== rollout status: $deploy ==="
-  kubectl rollout status "deploy/$deploy" -n kitchen-sink --timeout=90s 2>&1 || true
+  kubectl rollout status "deploy/$deploy" -n periscope --timeout=90s 2>&1 || true
 done
 
 echo "=== Horizontal pod autoscalers ==="
-kubectl get hpa -n kitchen-sink 2>&1 || true
+kubectl get hpa -n periscope 2>&1 || true
 """
 
 [[steps]]
@@ -50,10 +50,10 @@ inline_contents = """
 #!/usr/bin/env sh
 set -uo pipefail
 
-echo "=== Helm releases in kitchen-sink ==="
-helm list -n kitchen-sink 2>&1 || true
+echo "=== Helm releases in periscope ==="
+helm list -n periscope 2>&1 || true
 echo "=== ALB ingress (address, target group state, controller events) ==="
-kubectl describe ingress kitchen-sink-alb -n kitchen-sink 2>&1 || true
+kubectl describe ingress periscope-alb -n periscope 2>&1 || true
 """
 
 [[steps]]

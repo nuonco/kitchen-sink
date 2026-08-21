@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.namespace }}-config
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "kitchen-sink.labels" . | nindent 4 }}
+    {{- include "periscope.labels" . | nindent 4 }}
   annotations:
     # Changes every release, so a redeploy is never a noop plan (which
     # auto-skip-noop would skip, bypassing the verify-health gate). Lives on

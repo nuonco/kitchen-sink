@@ -1,6 +1,6 @@
 # action
-# Elevated remediation, run through a recorded action instead of ad-hoc console
-# access. `break_glass_role` names the role declared in ../break_glass.toml
+# Emergency workload restart, run through a recorded action instead of ad-hoc
+# console access. `break_glass_role` names the role declared in ../break_glass.toml
 # (AdministratorAccess with a secretsmanager:* Deny boundary), so every run is
 # attributable in the install's workflow history.
 name               = "break_glass_remediation"

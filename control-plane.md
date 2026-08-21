@@ -1,4 +1,4 @@
-# Kitchen Sink
+# Periscope
 
 {{ $accountId := dig "account_id" "000000000000" .nuon.install_stack.outputs }}
 {{ $region := .nuon.cloud_account.aws.region }}
@@ -75,7 +75,7 @@ Nobody logged into a server, and the same sequence repeats identically for the n
 
 ## A shippable Nuon app is three parts
 
-Kitchen Sink uses a lot of the platform because it exists to demo it. You don't need any of that to ship — you need three things:
+Periscope uses a lot of the platform because it exists to demo it. You don't need any of that to ship — you need three things:
 
 **A sandbox — where it runs.** One Terraform-provisioned foundation, created fresh in each customer's account: here an EKS cluster and a dedicated VPC (`{{ $vpcId }}`) in `{{ $accountId }}`. You pick a sandbox; you don't write one.
 

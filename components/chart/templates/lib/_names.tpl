@@ -1,11 +1,11 @@
-{{- define "kitchen-sink.api.name" -}}
-kitchen-sink-api
+{{- define "periscope.api.name" -}}
+periscope-api
 {{- end }}
 
-{{- define "kitchen-sink.ui.name" -}}
-kitchen-sink-ui
+{{- define "periscope.web.name" -}}
+periscope-web
 {{- end }}
 
-{{- define "kitchen-sink.worker.name" -}}
-kitchen-sink-worker
+{{- define "periscope.collector.name" -}}
+periscope-collector
 {{- end }}

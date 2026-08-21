@@ -2,10 +2,10 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "kitchen-sink.api.name" . }}-internal
+  name: {{ include "periscope.api.name" . }}-internal
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "kitchen-sink.api.labels" . | nindent 4 }}
+    {{- include "periscope.api.labels" . | nindent 4 }}
   annotations:
     kubernetes.io/ingress.class: "internal-nginx"
 spec:
@@ -17,7 +17,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ include "kitchen-sink.api.name" . }}
+                name: {{ include "periscope.api.name" . }}
                 port:
                   number: {{ .Values.api.port }}
 {{- end }}

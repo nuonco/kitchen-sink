@@ -10,7 +10,9 @@ max_auto_retries = 5
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "src/components/certificate"
-branch    = "main"
+# Pinned with the rest of the Periscope theme; flip back to "main" when
+# ms/theme-periscope merges.
+branch = "ms/theme-periscope"
 
 [vars]
 install_id  = "{{ .nuon.install.id }}"

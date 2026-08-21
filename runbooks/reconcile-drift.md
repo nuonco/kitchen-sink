@@ -11,7 +11,7 @@ Terraform resource removed in the console.
 
 ## What it does
 
-1. **drift-plan** — plans the `kitchen_sink` chart with `plan_only`, so the run records
+1. **drift-plan** — plans the `periscope` chart with `plan_only`, so the run records
    exactly what drifted before anything is applied.
 2. **reconcile-sandbox** — reprovisions the sandbox with `skip_component_deploys`, so
    the EKS cluster, VPC and DNS are brought back to desired state without a blind
@@ -21,7 +21,7 @@ Terraform resource removed in the console.
 4. **reconcile-certificate** — redeploys `certificate`. Its ACM validation records live
    in the sandbox's Route53 zone, so it is re-applied after the sandbox and before the
    load balancer that consumes its ARN.
-5. **reconcile-app** — redeploys `kitchen_sink` with `deploy_dependents`, which rolls
+5. **reconcile-app** — redeploys `periscope` with `deploy_dependents`, which rolls
    `application_load_balancer` out immediately afterwards in dependency order.
 6. **verify** — curls the public endpoint until it returns healthy, retrying while the
    new target group registers.
@@ -40,7 +40,7 @@ The verification target is available once the sandbox is deployed.
 ## Why the order matters
 
 The steps follow this app's real dependency graph: sandbox → `pulumi_infra` →
-`certificate` → `kitchen_sink` → `application_load_balancer`. Reprovisioning the sandbox
+`certificate` → `periscope` → `application_load_balancer`. Reprovisioning the sandbox
 can change the zone ID and outputs that the certificate and load balancer template
 against, so re-applying them in any other order leaves the install pointing at values
 that no longer exist.

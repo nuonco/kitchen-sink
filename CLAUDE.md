@@ -1,6 +1,9 @@
 # Kitchen Sink — agent & contributor guide
 
-Kitchen Sink is Nuon's demo app config: a real web app (UI + API + worker) plus
+Kitchen Sink is Nuon's demo app config, themed as **Periscope** — a read-only
+self-hosted infrastructure console a vendor ships into a customer's cluster
+(the git repo keeps the kitchen-sink name; the product-level naming is
+Periscope): a real web app (web UI + API + collector) plus
 the full surface of the Nuon platform (components, actions, runbooks, an app
 branch, triggers, policies, permissions, break-glass, component health). It is
 installed into AWS accounts via Nuon; `control-plane.md` is the install page's
@@ -34,9 +37,11 @@ deploys as the app itself.
 3. **`branch.toml` must declare the repo the same way components do** — this
    repo resolves as public, so use `[public_repo]`. PR previews depend on the
    org's GitHub App covering the repo owner, not on this block.
-4. **Branch pinning:** `components/chart/nuon.toml`, `components/images/*.toml`
-   comments, and `branch.toml` currently track `ms/onboarding-edit`. When that
-   branch merges, flip each marked `branch =` back to `"main"` (grep for
+4. **Branch pinning:** `components/chart/nuon.toml`, `components/alb.toml`,
+   `components/certificate.toml`, `components/pulumi/nuon.toml`,
+   `components/tictactoe.toml`, `components/audit_log_exporter.toml`, and
+   `branch.toml` currently track `ms/theme-periscope`. When that branch
+   merges, flip each marked `branch =` back to `"main"` (grep for
    "flip back").
 5. `nuon apps validate` requires an authenticated Nuon CLI and the app to exist.
    Without it, check TOML syntax and chart rendering only — note plain

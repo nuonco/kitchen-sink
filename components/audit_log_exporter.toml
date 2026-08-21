@@ -1,15 +1,15 @@
 # The second toggleable component: where tictactoe is the fun surprise, this
-# one carries the commercial framing — an audit-log exporter sold as an
-# entitlement ("included in the Enterprise plan"), enabled per install. Off by
-# default, so a plain install shows the locked upsell tile; toggling it on for
-# one install deploys the marker Service below, which the UI detects live.
+# one carries the commercial framing — Periscope's Enterprise SIEM export,
+# sold as an entitlement and enabled per install. Off by default, so a plain
+# install shows the locked upsell tile; toggling it on for one install deploys
+# the marker Service below, which the console detects live.
 # Toggle rules cut both ways: nothing always-enabled may depend on this
 # component or reference its outputs.
 name = "audit_log_exporter"
 type = "kubernetes_manifest"
 
-namespace    = "kitchen-sink"
-dependencies = ["kitchen_sink"]
+namespace    = "periscope"
+dependencies = ["periscope"]
 
 toggleable      = true
 default_enabled = false

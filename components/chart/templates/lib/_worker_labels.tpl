@@ -1,5 +1,5 @@
-{{- define "kitchen-sink.worker.labels" -}}
-app.kubernetes.io/name: {{ include "kitchen-sink.worker.name" . }}
-app.kubernetes.io/component: worker
-{{ include "kitchen-sink.labels" . }}
+{{- define "periscope.collector.labels" -}}
+app.kubernetes.io/name: {{ include "periscope.collector.name" . }}
+app.kubernetes.io/component: collector
+{{ include "periscope.labels" . }}
 {{- end }}

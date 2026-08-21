@@ -1,5 +1,5 @@
-{{- define "kitchen-sink.api.labels" -}}
-app.kubernetes.io/name: {{ include "kitchen-sink.api.name" . }}
+{{- define "periscope.api.labels" -}}
+app.kubernetes.io/name: {{ include "periscope.api.name" . }}
 app.kubernetes.io/component: api
-{{ include "kitchen-sink.labels" . }}
+{{ include "periscope.labels" . }}
 {{- end }}

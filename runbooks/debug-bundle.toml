@@ -20,13 +20,13 @@ inline_contents = """
 set -uo pipefail
 
 echo "=== Deployments ==="
-kubectl describe deploy -n kitchen-sink 2>&1 || true
+kubectl describe deploy -n periscope 2>&1 || true
 echo "=== Pods (restart counts and termination reasons) ==="
-kubectl get pods -n kitchen-sink -o wide 2>&1 || true
-kubectl get pods -n kitchen-sink \
+kubectl get pods -n periscope -o wide 2>&1 || true
+kubectl get pods -n periscope \
   -o custom-columns='NAME:.metadata.name,RESTARTS:.status.containerStatuses[*].restartCount,LASTSTATE:.status.containerStatuses[*].lastState.terminated.reason' 2>&1 || true
 echo "=== Pod detail ==="
-kubectl describe pods -n kitchen-sink 2>&1 || true
+kubectl describe pods -n periscope 2>&1 || true
 """
 
 [[steps]]
@@ -38,13 +38,13 @@ inline_contents = """
 set -uo pipefail
 
 echo "=== Services and ingresses ==="
-kubectl get svc,ingress -n kitchen-sink -o wide 2>&1 || true
+kubectl get svc,ingress -n periscope -o wide 2>&1 || true
 echo "=== ALB ingress detail ==="
-kubectl describe ingress kitchen-sink-alb -n kitchen-sink 2>&1 || true
+kubectl describe ingress periscope-alb -n periscope 2>&1 || true
 echo "=== Synced secrets present (names only, never values) ==="
-kubectl get secret db-password api-key -n kitchen-sink 2>&1 || true
+kubectl get secret db-password api-key -n periscope 2>&1 || true
 echo "=== Config map ==="
-kubectl get configmap -n kitchen-sink 2>&1 || true
+kubectl get configmap -n periscope 2>&1 || true
 """
 
 [[steps]]

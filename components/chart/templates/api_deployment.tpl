@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kitchen-sink.api.name" . }}
+  name: {{ include "periscope.api.name" . }}
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "kitchen-sink.api.labels" . | nindent 4 }}
+    {{- include "periscope.api.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.api.replicas }}
   selector:
     matchLabels:
-      {{- include "kitchen-sink.api.labels" . | nindent 6 }}
+      {{- include "periscope.api.labels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "kitchen-sink.api.labels" . | nindent 8 }}
+        {{- include "periscope.api.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ .Values.serviceAccount }}
       containers:

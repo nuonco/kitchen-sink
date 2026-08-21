@@ -9,13 +9,13 @@ Read-only: nothing here applies a change.
 
 1. **node-health** — node readiness and capacity (`kubectl get nodes`, `kubectl top nodes`).
 2. **workload-health** — runs the existing **cron_status** action, which reports the
-   `kitchen-sink` namespace's pods, services and ingresses and emits `pods_ready` /
+   `periscope` namespace's pods, services and ingresses and emits `pods_ready` /
    `pods_total` as structured outputs.
-3. **rollout-convergence** — `kubectl rollout status` for `kitchen-sink-api`,
-   `kitchen-sink-ui` and `kitchen-sink-worker`, plus the HPAs. Ready pods are not the
+3. **rollout-convergence** — `kubectl rollout status` for `periscope-api`,
+   `periscope-web` and `periscope-collector`, plus the HPAs. Ready pods are not the
    same as a converged rollout; this step asserts convergence.
 4. **ingress-health** — the Helm releases in the namespace and a full describe of the
-   `kitchen-sink-alb` ingress, which is where the AWS Load Balancer Controller reports
+   `periscope-alb` ingress, which is where the AWS Load Balancer Controller reports
    target-group and certificate problems.
 5. **endpoint-health** — curls the public endpoint and only passes on a healthy HTTP
    status, retrying while DNS and the target group settle.

@@ -6,8 +6,8 @@
 name = "tictactoe"
 type = "kubernetes_manifest"
 
-namespace    = "kitchen-sink"
-dependencies = ["kitchen_sink"]
+namespace    = "periscope"
+dependencies = ["periscope"]
 
 toggleable      = true
 default_enabled = false

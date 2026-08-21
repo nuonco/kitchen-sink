@@ -3,7 +3,7 @@ kind: ClusterRole
 metadata:
   name: {{ .Values.namespace }}-cluster-role
   labels:
-    {{- include "kitchen-sink.labels" . | nindent 4 }}
+    {{- include "periscope.labels" . | nindent 4 }}
 rules:
   - apiGroups: [""]
     resources: ["namespaces", "pods", "services", "secrets", "configmaps", "events"]

@@ -9,13 +9,13 @@ set -uo pipefail
 echo "=== Nodes ==="
 kubectl get nodes -o wide 2>&1 || true
 echo "=== Pods ==="
-kubectl get pods -n kitchen-sink -o wide 2>&1 || true
+kubectl get pods -n periscope -o wide 2>&1 || true
 echo "=== Services ==="
-kubectl get svc -n kitchen-sink -o wide 2>&1 || true
+kubectl get svc -n periscope -o wide 2>&1 || true
 echo "=== Ingresses ==="
-kubectl get ingress -n kitchen-sink -o wide 2>&1 || true
+kubectl get ingress -n periscope -o wide 2>&1 || true
 
-pods=$(kubectl get pods -n kitchen-sink --no-headers 2>/dev/null || true)
+pods=$(kubectl get pods -n periscope --no-headers 2>/dev/null || true)
 total=0
 ready=0
 if [ -n "$pods" ]; then

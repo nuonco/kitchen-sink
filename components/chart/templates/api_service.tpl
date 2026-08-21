@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "kitchen-sink.api.name" . }}
+  name: {{ include "periscope.api.name" . }}
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "kitchen-sink.api.labels" . | nindent 4 }}
+    {{- include "periscope.api.labels" . | nindent 4 }}
 spec:
   type: ClusterIP
   ports:
@@ -12,4 +12,4 @@ spec:
       targetPort: {{ .Values.api.port }}
       protocol: TCP
   selector:
-    {{- include "kitchen-sink.api.labels" . | nindent 4 }}
+    {{- include "periscope.api.labels" . | nindent 4 }}

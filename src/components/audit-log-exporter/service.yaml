@@ -1,15 +1,15 @@
-# Marker Service for the toggleable audit_log_exporter component. The UI
-# checks the kitchen-sink namespace for a Service with this name and unlocks
-# the entitlement view when it exists. It selects the UI pods (the demo has no
-# real exporter workload; the entitlement mechanic is the product being shown)
-# so the Service has real endpoints.
+# Marker Service for the toggleable audit_log_exporter component — Periscope's
+# Enterprise SIEM export entitlement. The console checks the periscope
+# namespace for a Service with this name and unlocks the export view when it
+# exists. It selects the web UI pods (the entitlement mechanic is the product
+# being shown) so the Service has real endpoints.
 apiVersion: v1
 kind: Service
 metadata:
-  name: kitchen-sink-audit-log-exporter
+  name: periscope-audit-log-exporter
   labels:
-    app.kubernetes.io/name: kitchen-sink-audit-log-exporter
-    app.kubernetes.io/part-of: kitchen-sink
+    app.kubernetes.io/name: periscope-audit-log-exporter
+    app.kubernetes.io/part-of: periscope
     nuon.co/purpose: feature-flag-marker
 spec:
   type: ClusterIP
@@ -18,7 +18,7 @@ spec:
       targetPort: 3000
       protocol: TCP
   selector:
-    app.kubernetes.io/name: kitchen-sink-ui
-    app.kubernetes.io/component: ui
+    app.kubernetes.io/name: periscope-web
+    app.kubernetes.io/component: web
     app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/part-of: kitchen-sink
+    app.kubernetes.io/part-of: periscope

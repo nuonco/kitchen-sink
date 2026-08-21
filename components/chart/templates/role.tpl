@@ -3,7 +3,7 @@ kind: ClusterRoleBinding
 metadata:
   name: {{ .Values.namespace }}-cluster-role-binding
   labels:
-    {{- include "kitchen-sink.labels" . | nindent 4 }}
+    {{- include "periscope.labels" . | nindent 4 }}
 subjects:
   - kind: ServiceAccount
     name: {{ .Values.serviceAccount }}

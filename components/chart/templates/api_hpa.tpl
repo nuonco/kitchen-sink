@@ -2,15 +2,15 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "kitchen-sink.api.name" . }}
+  name: {{ include "periscope.api.name" . }}
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "kitchen-sink.api.labels" . | nindent 4 }}
+    {{- include "periscope.api.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "kitchen-sink.api.name" . }}
+    name: {{ include "periscope.api.name" . }}
   minReplicas: {{ .Values.api.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.api.autoscaling.maxReplicas }}
   metrics:
