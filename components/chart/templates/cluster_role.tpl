@@ -6,7 +6,7 @@ metadata:
     {{- include "kitchen-sink.labels" . | nindent 4 }}
 rules:
   - apiGroups: [""]
-    resources: ["namespaces", "pods", "services", "secrets", "configmaps"]
+    resources: ["namespaces", "pods", "services", "secrets", "configmaps", "events"]
     verbs: ["get", "list", "watch"]
   - apiGroups: ["apps"]
     resources: ["deployments", "replicasets"]

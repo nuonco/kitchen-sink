@@ -3,6 +3,8 @@ import {
   AUDIT_LOG_SERVICE,
   hasAuditLogExporter,
   useIntrospectPoll,
+  type NamespaceEvent,
+  type NamespaceEventsResponse,
   type NamespaceResponse,
   type ServiceSummary,
   type UIConfig,
@@ -32,6 +34,9 @@ import {
 
 /** How often the page re-reads the namespace looking for the deploy. */
 const POLL_MS = 10_000
+
+/** How often the unlocked page re-reads the namespace's events. */
+const EVENTS_POLL_MS = 5_000
 
 const component = toggleableComponents.find(
   (c) => c.name === 'audit_log_exporter',
@@ -93,10 +98,12 @@ function EntitlementCard({
 function HowItKnows({
   config,
   namespace,
+  live,
   onDashboardOpen,
 }: {
   config: UIConfig
   namespace: string
+  live?: boolean
   onDashboardOpen?: () => void
 }) {
   const beats = [
@@ -106,7 +113,12 @@ function HowItKnows({
       href: config.links.components,
     },
     { label: 'deploy', detail: `Nuon applies ${AUDIT_LOG_SERVICE}` },
-    { label: 'detect', detail: `this page re-reads ${namespace} every ${POLL_MS / 1000}s` },
+    {
+      label: live ? 'narrate' : 'detect',
+      detail: live
+        ? `this page reads ${namespace} events every ${EVENTS_POLL_MS / 1000}s`
+        : `this page re-reads ${namespace} every ${POLL_MS / 1000}s`,
+    },
   ]
   return (
     <div className="ship" style={{ marginTop: 16 }}>
@@ -135,6 +147,135 @@ function HowItKnows({
           </span>
         )
       })}
+    </div>
+  )
+}
+
+function relativeTime(iso: string | null | undefined, now: number): string {
+  if (!iso) return '—'
+  const t = Date.parse(iso)
+  if (Number.isNaN(t)) return '—'
+  const s = Math.max(0, Math.round((now - t) / 1000))
+  if (s < 60) return `${s}s ago`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
+}
+
+/**
+ * Stable identities for the rows, so a poll can be diffed against the last
+ * one. Kubernetes dedupes events server-side; the suffix covers the rare
+ * identical pair anyway.
+ */
+function eventKeys(events: NamespaceEvent[]): string[] {
+  const used = new Map<string, number>()
+  return events.map((ev) => {
+    const base = [
+      ev.involvedObject?.kind,
+      ev.involvedObject?.name,
+      ev.reason,
+      ev.message,
+      ev.lastTimestamp,
+      ev.count,
+    ].join('|')
+    const n = used.get(base) ?? 0
+    used.set(base, n + 1)
+    return n === 0 ? base : `${base}#${n}`
+  })
+}
+
+/**
+ * The live part: the namespace's own Kubernetes events, re-read every few
+ * seconds for as long as the page is open. Rows that were not in the previous
+ * poll flash once — that is a real operation landing, not a replay.
+ */
+function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig }) {
+  const events = useIntrospectPoll<NamespaceEventsResponse>(
+    `/api/introspect/namespace/${namespace}/events`,
+    EVENTS_POLL_MS,
+    true,
+  )
+  // Keys seen by the previous poll; null until the first one lands, so the
+  // initial render never flashes.
+  const seen = useRef<Set<string> | null>(null)
+  const [fresh, setFresh] = useState<Set<string>>(() => new Set())
+
+  useEffect(() => {
+    if (events.state !== 'ok') return
+    const keys = eventKeys(events.value.response.events ?? [])
+    if (seen.current !== null) {
+      const arrived = keys.filter((k) => !seen.current?.has(k))
+      if (arrived.length > 0) setFresh(new Set(arrived))
+    }
+    seen.current = new Set(keys)
+  }, [events])
+
+  if (events.state !== 'ok') {
+    return <LoadState result={events} what={`events in ${namespace}`} />
+  }
+
+  const list = events.value.response.events ?? []
+  const keys = eventKeys(list)
+  const now = Date.now()
+
+  return (
+    <div className="evtfeed" style={{ marginTop: 16 }}>
+      <div className="evtfeed__head">
+        <span className="evtfeed__dot" aria-hidden="true" />
+        <span>Kubernetes events in {namespace}, newest first</span>
+        <span className="evtfeed__meta mono">
+          re-read every {EVENTS_POLL_MS / 1000}s
+        </span>
+      </div>
+      {list.length === 0 ? (
+        <p className="evtfeed__empty">
+          Nothing yet — Kubernetes expires events after about an hour of quiet.
+        </p>
+      ) : (
+        <ol className="evtfeed__list">
+          {list.map((ev, i) => {
+            const key = keys[i]
+            const cls = [
+              'evt',
+              ev.type === 'Warning' ? 'evt--warning' : '',
+              fresh.has(key) ? 'evt--new' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')
+            const obj = [ev.involvedObject?.kind, ev.involvedObject?.name]
+              .filter(Boolean)
+              .join('/')
+            return (
+              <li key={key} className={cls}>
+                <span className="evt__time mono">
+                  {relativeTime(ev.lastTimestamp ?? ev.firstTimestamp, now)}
+                </span>
+                <span className="evt__reason mono">{ev.reason || '—'}</span>
+                <span className="evt__obj mono">{obj || '—'}</span>
+                <span className="evt__msg">
+                  {ev.message}
+                  {(ev.count ?? 1) > 1 && (
+                    <span className="evt__count mono"> ×{ev.count}</span>
+                  )}
+                </span>
+              </li>
+            )
+          })}
+        </ol>
+      )}
+      <p className="evtfeed__invite">
+        Toggle the component off and on in{' '}
+        {config.links.components ? (
+          <OutLink href={config.links.components} variant="plain">
+            the dashboard
+          </OutLink>
+        ) : (
+          'the dashboard'
+        )}{' '}
+        and the teardown and redeploy land here as they happen.
+      </p>
     </div>
   )
 }
@@ -227,52 +368,26 @@ export function AuditLog({ config }: { config: UIConfig }) {
           <PspSection
             kind="proof"
             title={enabled ? 'What introspection sees' : 'Flip it on and watch'}
-            aside={`GET /introspect/namespace/${namespace}`}
+            aside={
+              enabled
+                ? `GET /introspect/namespace/${namespace}/events`
+                : `GET /introspect/namespace/${namespace}`
+            }
           >
             <HowItKnows
               config={config}
               namespace={namespace}
+              live={enabled}
               onDashboardOpen={enabled ? undefined : () => setWaiting(true)}
             />
             {enabled ? (
               <>
-                <div className="table-wrap" style={{ marginTop: 16 }}>
-                  <table className="data">
-                    <thead>
-                      <tr>
-                        <th>What introspection sees</th>
-                        <th>Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>Service</td>
-                        <td className="mono">
-                          {service?.metadata?.name ?? AUDIT_LOG_SERVICE}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td>Namespace</td>
-                        <td className="mono">{namespace}</td>
-                      </tr>
-                      <tr>
-                        <td>Type</td>
-                        <td className="mono">{service?.spec?.type ?? '—'}</td>
-                      </tr>
-                      <tr>
-                        <td>Ports</td>
-                        <td className="mono">
-                          {(service?.spec?.ports ?? [])
-                            .map((p) => `${p.port ?? '—'}/${p.protocol ?? 'TCP'}`)
-                            .join(', ') || '—'}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <EventsFeed namespace={namespace} config={config} />
                 <Callout label="What actually got deployed">
-                  One marker Service; the table above is the app finding it. A
-                  real exporter puts its workload behind the same switch.
+                  One marker Service —{' '}
+                  {service?.metadata?.name ?? AUDIT_LOG_SERVICE}
+                  {service?.spec?.type ? ` (${service.spec.type})` : ''}. A real
+                  exporter puts its workload behind the same switch.
                 </Callout>
               </>
             ) : (

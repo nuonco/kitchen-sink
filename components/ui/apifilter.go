@@ -62,6 +62,12 @@ func (p apiPolicy) namespacePath() string {
 	return "/introspect/namespace/" + p.namespace
 }
 
+// namespaceEventsPath is the same single namespace's event feed -- an exact
+// path for the same reason.
+func (p apiPolicy) namespaceEventsPath() string {
+	return p.namespacePath() + "/events"
+}
+
 // filtersFor returns the filters for an allowed path, and whether the path is
 // allowed at all. Endpoints the UI does not read are not forwarded: several of
 // them (/introspect/secrets, /introspect/helm-values/..., and
@@ -77,6 +83,10 @@ func (p apiPolicy) filtersFor(path string) ([]filter, bool) {
 	case "/introspect/env":
 		return []filter{redactEnvValues, redactNameValuePairs}, true
 	case p.namespacePath():
+		return []filter{redactSecretData, redactNameValuePairs}, true
+	case p.namespaceEventsPath():
+		// Events carry no credentials by design, but the same walks run anyway
+		// so a change to what the API returns cannot quietly open a leak.
 		return []filter{redactSecretData, redactNameValuePairs}, true
 	}
 	return nil, false
@@ -95,7 +105,7 @@ func (p apiPolicy) deny(w http.ResponseWriter, path string) {
 			"and filters credentials out of those. Run the endpoint from inside " +
 			"the cluster, or through a Nuon action, to see it unfiltered.",
 		"path":      path,
-		"forwarded": []string{"/introspect/kube", "/introspect/helm", "/introspect/env", p.namespacePath()},
+		"forwarded": []string{"/introspect/kube", "/introspect/helm", "/introspect/env", p.namespacePath(), p.namespaceEventsPath()},
 	})
 }
 

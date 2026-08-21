@@ -2847,3 +2847,139 @@ a.fact {
     opacity: 0.3;
   }
 }
+
+/* ============================================================
+   The audit-log live feed: the namespace's own Kubernetes events, re-read
+   every few seconds. A row that was not in the previous poll flashes once.
+   ============================================================ */
+
+.evtfeed {
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+
+.evtfeed__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+}
+
+.evtfeed__dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  animation: watch-pulse 2.4s var(--ease-standard) infinite;
+}
+
+.evtfeed__meta {
+  margin-left: auto;
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-tertiary);
+}
+
+.evtfeed__list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-1) 0;
+  max-height: 440px;
+  overflow-y: auto;
+}
+
+.evt {
+  display: grid;
+  grid-template-columns: 64px 128px minmax(120px, 220px) 1fr;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+}
+
+.evt + .evt {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.evt__time {
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.evt__reason {
+  color: var(--accent);
+  overflow-wrap: anywhere;
+}
+
+.evt--warning .evt__reason {
+  color: var(--status-warning);
+}
+
+.evt__obj {
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.evt__msg {
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.evt__count {
+  color: var(--text-tertiary);
+}
+
+/* The arrival flash: background only, and it ends at transparent. */
+
+.evt--new {
+  animation: evt-arrive 2.4s var(--ease-standard) both;
+}
+
+@keyframes evt-arrive {
+  0% {
+    background: var(--accent-wash-strong);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.evtfeed__empty {
+  padding: var(--space-5) var(--space-4);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+}
+
+.evtfeed__invite {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px dashed var(--border-subtle);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+}
+
+@media (max-width: 720px) {
+  .evt {
+    grid-template-columns: 64px 1fr;
+  }
+
+  .evt__obj,
+  .evt__msg {
+    grid-column: 2 / -1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evtfeed__dot,
+  .evt--new {
+    animation: none;
+  }
+}

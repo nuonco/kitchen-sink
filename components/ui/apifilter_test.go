@@ -119,6 +119,69 @@ func TestNamespaceResponseIsRedacted(t *testing.T) {
 	}
 }
 
+// eventsResponse mirrors GET /introspect/namespace/:namespace/events. The API
+// returns a deliberately minimal event shape today; the extra data map on the
+// last entry stands in for a future response change, to prove the walk-based
+// filters still cover this path.
+func eventsResponse() string {
+	return `{
+	  "description": "Returns recent events in a namespace, newest first",
+	  "response": {
+	    "name": "kitchen-sink",
+	    "events_count": 2,
+	    "events": [
+	      {
+	        "type": "Normal",
+	        "reason": "Scheduled",
+	        "message": "Successfully assigned kitchen-sink/kitchen-sink-api-7c9f4d8b6-x2ptn to node-1",
+	        "count": 1,
+	        "firstTimestamp": "2026-08-21T10:00:00Z",
+	        "lastTimestamp": "2026-08-21T10:00:00Z",
+	        "involvedObject": {"kind": "Pod", "name": "kitchen-sink-api-7c9f4d8b6-x2ptn"}
+	      },
+	      {
+	        "type": "Warning",
+	        "reason": "BackOff",
+	        "message": "Back-off restarting failed container",
+	        "count": 3,
+	        "involvedObject": {"kind": "Pod", "name": "kitchen-sink-api-7c9f4d8b6-x2ptn"},
+	        "data": {"token": "` + secretValue + `"},
+	        "env": [{"name": "DB_PASSWORD", "value": "` + secretValue + `"}]
+	      }
+	    ]
+	  }
+	}`
+}
+
+func TestNamespaceEventsResponseIsRedacted(t *testing.T) {
+	policy := newAPIPolicy("kitchen-sink")
+	payload := filterThrough(t, policy, "/introspect/namespace/kitchen-sink/events", eventsResponse())
+
+	response := payload["response"].(map[string]any)
+	events := response["events"].([]any)
+
+	// The fields the feed renders have to survive.
+	first := events[0].(map[string]any)
+	if got := first["reason"]; got != "Scheduled" {
+		t.Errorf("reason: got %q, want Scheduled", got)
+	}
+	if got := first["lastTimestamp"]; got != "2026-08-21T10:00:00Z" {
+		t.Errorf("lastTimestamp: got %q, want 2026-08-21T10:00:00Z", got)
+	}
+	if got := first["involvedObject"].(map[string]any)["name"]; got != "kitchen-sink-api-7c9f4d8b6-x2ptn" {
+		t.Errorf("involvedObject name: got %q", got)
+	}
+
+	// The defensive shapes are redacted, not forwarded.
+	second := events[1].(map[string]any)
+	if got := second["data"].(map[string]any)["token"]; got != redactedValue {
+		t.Errorf("data value: got %q, want %q", got, redactedValue)
+	}
+	if got := second["env"].([]any)[0].(map[string]any)["value"]; got != redactedValue {
+		t.Errorf("env value: got %q, want %q", got, redactedValue)
+	}
+}
+
 func TestEnvResponseRedactsSensitiveKeys(t *testing.T) {
 	policy := newAPIPolicy("kitchen-sink")
 	body := `{
@@ -199,6 +262,7 @@ func TestOnlyReadEndpointsAreForwarded(t *testing.T) {
 		"/introspect/helm",
 		"/introspect/env",
 		"/introspect/namespace/kitchen-sink",
+		"/introspect/namespace/kitchen-sink/events",
 	}
 	for _, path := range allowed {
 		if _, ok := policy.filtersFor(path); !ok {
@@ -213,6 +277,9 @@ func TestOnlyReadEndpointsAreForwarded(t *testing.T) {
 		"/introspect/helm-values/kitchen-sink/kitchen-sink",
 		"/introspect/helm-rendered/kitchen-sink/kitchen-sink",
 		"/introspect/namespace/kube-system",
+		"/introspect/namespace/kube-system/events",
+		"/introspect/namespace/kitchen-sink/events/anything",
+		"/introspect/namespace/events",
 		"/introspect/nuon",
 		"/introspect/terraform",
 		"/livez",
