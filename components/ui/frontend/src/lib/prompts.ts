@@ -46,7 +46,7 @@ Then walk me through day-2 for real, in this order:
 
 3. BRANCH — my app config is cloned at <path-to-your-clone>. Help me make one small
    visible edit, then from that directory, after my yes:
-   nuon sync --branch ${branchName} --output agent.
+   nuon sync --app-id ${app} --force --branch ${branchName} --output agent.
    This syncs my local files and triggers a real staged branch run — no push needed.
    Report each group's progress; if a group holds for approval, tell me and I will
    approve it in my dashboard.
@@ -80,7 +80,7 @@ export const proofPrompts: Record<string, (install: string, app: string) => stri
       app,
       `my app config is cloned at <path-to-your-clone>. Help me make one small
 visible edit, then from that directory, after my yes:
-nuon sync --branch ${branchName} --output agent.
+nuon sync --app-id ${app} --force --branch ${branchName} --output agent.
 This syncs my local files and triggers a real staged branch run — no push needed.
 Report each group's progress; if a group holds for approval, tell me and I will
 approve it in my dashboard. Then tell me to watch the image tags flip on my
