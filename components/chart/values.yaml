@@ -1,5 +1,5 @@
-namespace: kitchen-sink
-serviceAccount: kitchen-sink
+namespace: conduit
+serviceAccount: conduit
 
 api:
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
@@ -22,6 +22,12 @@ api:
   # (see ui.env.API_URL). An internal ingress here never converges (no cert/DNS
   # for its host), which would keep the component health from ever going green.
   ingress: {}
+  # Display-only: the api's /sync endpoints report which bucket pipelines write
+  # to. The api pod carries NO AWS credentials — only the worker's
+  # ServiceAccount has the IRSA role annotation.
+  env:
+    S3_BUCKET: "{{.nuon.components.destination_bucket.outputs.bucket_name}}"
+    AWS_REGION: "{{.nuon.install_stack.outputs.region}}"
 
 ui:
   image: "{{.nuon.components.img_ui.outputs.image.repository}}:{{.nuon.components.img_ui.outputs.image.tag}}"
@@ -48,7 +54,7 @@ ui:
     enabled: false
     publicHost: "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
   env:
-    API_URL: "http://kitchen-sink-api:8080"
+    API_URL: "http://conduit-api:8080"
     # Runtime config for the UI, served back to the browser at /api/ui-config.
     # These are the only way the frontend can know which install it is running
     # in, which is what its deep links into the Nuon dashboard are built from.
@@ -59,22 +65,32 @@ ui:
     NUON_APP_ID: "{{.nuon.app.id}}"
     NUON_REGION: "{{.nuon.install_stack.outputs.region}}"
     NUON_PUBLIC_DOMAIN: "{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
+    NUON_NAMESPACE: "conduit"
     # Mirrors cluster_name in sandbox.toml.
     NUON_CLUSTER_NAME: "n-{{.nuon.install.id}}"
-    # The audit_log_exporter component's id, so the ops page can deep-link to
-    # that component's page on this install (where its toggle lives). This
-    # reads `.component_id`, deliberately NOT `.outputs.`: Nuon only derives a
+    # The compliance_export component's id, so the UI can deep-link to that
+    # component's page on this install (where its toggle lives). This reads
+    # `.component_id`, deliberately NOT `.outputs.`: Nuon only derives a
     # component dependency (and cascades toggleable disablement) from
     # `.outputs.` references, and nothing always-enabled may depend on this
     # toggleable component. Resolves whether the component is toggled on or
-    # off; if it does not resolve, the server drops it and the ops page falls
-    # back to the install's components list.
-    NUON_AUDIT_LOG_EXPORTER_COMPONENT_ID: "{{.nuon.components.audit_log_exporter.component_id}}"
+    # off; if it does not resolve, the server drops it and the UI falls back
+    # to the install's components list.
+    NUON_COMPLIANCE_EXPORT_COMPONENT_ID: "{{.nuon.components.compliance_export.component_id}}"
 
 worker:
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
   port: 8090
+  # Exactly one sync engine: the scheduler claims due pipelines, and running
+  # two schedulers double-runs them. Advisory locks in the engine are the
+  # backstop for rolling-update overlap; autoscaling stays off (see below).
   replicas: 1
+  # Dedicated ServiceAccount so the IRSA role-arn annotation (and with it the
+  # bucket write credentials) reaches only the sync engine pods.
+  serviceAccount: conduit-worker
+  env:
+    S3_BUCKET: "{{.nuon.components.destination_bucket.outputs.bucket_name}}"
+    AWS_REGION: "{{.nuon.install_stack.outputs.region}}"
   resources:
     requests:
       cpu: 50m
@@ -83,11 +99,37 @@ worker:
       cpu: 200m
       memory: 128Mi
   autoscaling:
-    enabled: true
+    # Off: an HPA on a scheduler double-runs pipelines. The template is kept
+    # and gated on this flag.
+    enabled: false
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
+
+# IRSA: annotates the conduit-worker ServiceAccount with the sync role created
+# by the destination_bucket component. This `.outputs.` ref (and the worker/api
+# env above) is a deliberate DAG edge — destination_bucket is always-on and the
+# edge orders bucket-before-chart.
+workerServiceAccountAnnotations:
+  eks.amazonaws.com/role-arn: "{{.nuon.components.destination_bucket.outputs.sync_role_arn}}"
+
+# The source database. Single replica on an emptyDir: demo installs are
+# recreated nightly and the initdb ConfigMap re-seeds an empty data dir, so a
+# pod restart self-heals (run history restarts; the bucket keeps every object
+# ever written). Switch to a PVC if durability is ever wanted.
+postgres:
+  image: public.ecr.aws/docker/library/postgres:16-alpine
+  port: 5432
+  user: conduit
+  database: conduit
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
 
 probes:
   liveness: /livez

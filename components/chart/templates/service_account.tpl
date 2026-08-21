@@ -4,4 +4,4 @@ metadata:
   name: {{ .Values.serviceAccount }}
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "kitchen-sink.labels" . | nindent 4 }}
+    {{- include "conduit.labels" . | nindent 4 }}

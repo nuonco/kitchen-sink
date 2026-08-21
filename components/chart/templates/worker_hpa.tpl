@@ -2,15 +2,15 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "kitchen-sink.worker.name" . }}
+  name: {{ include "conduit.worker.name" . }}
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "kitchen-sink.worker.labels" . | nindent 4 }}
+    {{- include "conduit.worker.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "kitchen-sink.worker.name" . }}
+    name: {{ include "conduit.worker.name" . }}
   minReplicas: {{ .Values.worker.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.worker.autoscaling.maxReplicas }}
   metrics:

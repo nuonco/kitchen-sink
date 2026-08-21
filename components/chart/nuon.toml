@@ -1,22 +1,23 @@
 # helm
-name = "kitchen_sink"
+name = "conduit"
 type = "helm_chart"
-chart_name = "kitchen-sink"
-namespace = "kitchen-sink"
+chart_name = "conduit"
+namespace = "conduit"
 storage_driver = "configmap"
 dependencies = ["img_api", "img_ui"]
 
 [public_repo]
 repo = "nuonco/kitchen-sink"
 directory = "components/chart"
-# Chart edits for the onboarding restyle live on this branch; flip back to
-# "main" when ms/onboarding-edit merges.
-branch = "ms/onboarding-edit"
+# Chart edits for the Conduit retheme live on this branch; flip back to
+# "main" when ms/theme-conduit merges.
+branch = "ms/theme-conduit"
 
 [[values_file]]
 # Path resolves relative to the `components/` directory. This is the chart's
-# own values.yaml — Nuon interpolates it (img_api/img_ui outputs, sandbox DNS)
-# and layers it over the chart defaults, so there's a single values file.
+# own values.yaml — Nuon interpolates it (img_api/img_ui/destination_bucket
+# outputs, sandbox DNS) and layers it over the chart defaults, so there's a
+# single values file.
 contents = "./chart/values.yaml"
 
 [values]
@@ -52,7 +53,7 @@ helm = "true"
 #
 # `block_deploy` is off, so the deploy step records what health did without
 # gating on it. Flip it to `true` once health is confirmed green on a real
-# install and every kitchen_sink deploy grows a `verify health` step.
+# install and every conduit deploy grows a `verify health` step.
 [health]
 enabled              = true
 stabilization_window = "3m"

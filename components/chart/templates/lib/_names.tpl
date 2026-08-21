@@ -1,11 +1,15 @@
-{{- define "kitchen-sink.api.name" -}}
-kitchen-sink-api
+{{- define "conduit.api.name" -}}
+conduit-api
 {{- end }}
 
-{{- define "kitchen-sink.ui.name" -}}
-kitchen-sink-ui
+{{- define "conduit.ui.name" -}}
+conduit-ui
 {{- end }}
 
-{{- define "kitchen-sink.worker.name" -}}
-kitchen-sink-worker
+{{- define "conduit.worker.name" -}}
+conduit-worker
+{{- end }}
+
+{{- define "conduit.postgres.name" -}}
+conduit-postgres
 {{- end }}
