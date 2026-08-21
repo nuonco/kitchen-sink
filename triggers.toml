@@ -31,8 +31,8 @@ event_types = ["push"]
 from  = "payload"
 op    = "eq"
 path  = "$.ref"
-# Flip to "refs/heads/main" when ms/onboarding-edit merges (match branch.toml).
-value = "refs/heads/ms/onboarding-edit"
+# Flip to "refs/heads/main" when ms/theme-conduit merges (match branch.toml).
+value = "refs/heads/ms/theme-conduit"
 
 [[rules.filters]]
 from  = "payload"
@@ -42,7 +42,7 @@ value = "nuonco/kitchen-sink"
 
 [rules.target]
 type       = "app_branch_run"
-app_branch = "ms/onboarding-edit"
+app_branch = "ms/theme-conduit"
 
 # Cutting a GitHub release is the deliberate "ship this to customers" signal, as
 # opposed to every commit on the tracked branch. Each install group still holds
@@ -66,7 +66,7 @@ value = "nuonco/kitchen-sink"
 
 [rules.target]
 type       = "app_branch_run"
-app_branch = "ms/onboarding-edit"
+app_branch = "ms/theme-conduit"
 
 # A version tag is the other ship signal. Tag pushes do not match the tracked
 # branch, so they start no run on their own — this makes `git push --tags` roll
@@ -90,7 +90,7 @@ value = "nuonco/kitchen-sink"
 
 [rules.target]
 type       = "app_branch_run"
-app_branch = "ms/onboarding-edit"
+app_branch = "ms/theme-conduit"
 
 # Two more patterns, left commented out because each needs a resource that does
 # not exist yet and a rule referencing a missing resource fails the sync.
@@ -131,7 +131,7 @@ app_branch = "ms/onboarding-edit"
 #
 # [rules.target]
 # type       = "app_branch_run"
-# app_branch = "ms/onboarding-edit"
+# app_branch = "ms/theme-conduit"
 #
 # 2. A `runbook` target runs on one named install rather than a branch, which is
 #    how an alert becomes a diagnostic bundle. The `install` below is real

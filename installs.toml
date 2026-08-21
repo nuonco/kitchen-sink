@@ -4,5 +4,5 @@
 # branch would group the fleet by labels that are not the ones in this checkout.
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
-branch    = "ms/onboarding-edit"
+branch    = "ms/theme-conduit"
 directory = "install-configs"
