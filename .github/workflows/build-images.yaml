@@ -17,6 +17,7 @@ on:
     branches:
       - main
       - ms/onboarding-edit # flip to main-only when the branch merges
+      - ms/theme-periscope # Periscope theme build; flip to main-only when merged
     paths:
       - components/api/**
       - components/ui/**

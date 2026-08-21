@@ -15,9 +15,9 @@ default_enabled = false
 [public_repo]
 directory = "."
 repo      = "nuonco/kitchen-sink"
-# Ships with the onboarding restyle; flip back to "main" when
-# ms/onboarding-edit merges.
-branch = "ms/onboarding-edit"
+# Ships with the Periscope theme; flip back to "main" when
+# ms/theme-periscope merges.
+branch = "ms/theme-periscope"
 
 [kustomize]
 path        = "./src/components/tictactoe"
