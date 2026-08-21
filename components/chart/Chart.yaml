@@ -1,6 +1,6 @@
 apiVersion: v2
 name: relay
-description: Helm chart for the Relay webhook delivery platform (ingest API + console + delivery engine)
+description: Helm chart for the Relay webhook delivery platform (ingest API + console + delivery engine + Postgres store + echo receiver + event generator)
 type: application
 version: v0.0.1
 appVersion: "0.0.1"

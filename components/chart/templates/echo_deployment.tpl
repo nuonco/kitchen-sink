@@ -1,43 +1,44 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "relay.api.name" . }}
+  name: {{ include "relay.echo.name" . }}
   namespace: {{ .Values.namespace }}
   labels:
-    {{- include "relay.api.labels" . | nindent 4 }}
+    {{- include "relay.echo.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.api.replicas }}
+  replicas: {{ .Values.echo.replicas }}
   selector:
     matchLabels:
-      {{- include "relay.api.labels" . | nindent 6 }}
+      {{- include "relay.echo.labels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "relay.api.labels" . | nindent 8 }}
+        {{- include "relay.echo.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ .Values.serviceAccount }}
       containers:
-        - name: api
-          image: {{ .Values.api.image }}
+        - name: echo
+          image: {{ .Values.echo.image }}
           command: ["/bin/api"]
           env:
             - name: RELAY_MODE
-              value: "api"
-            {{- include "relay.db.env" . | nindent 12 }}
+              value: "echo"
+            - name: ECHO_ADDR
+              value: ":{{ .Values.echo.port }}"
           ports:
-            - containerPort: {{ .Values.api.port }}
+            - containerPort: {{ .Values.echo.port }}
               protocol: TCP
           livenessProbe:
             httpGet:
               path: {{ .Values.probes.liveness }}
-              port: {{ .Values.api.port }}
+              port: {{ .Values.echo.port }}
             initialDelaySeconds: 5
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: {{ .Values.probes.readiness }}
-              port: {{ .Values.api.port }}
+              port: {{ .Values.echo.port }}
             initialDelaySeconds: 5
             periodSeconds: 10
           resources:
-            {{- toYaml .Values.api.resources | nindent 12 }}
+            {{- toYaml .Values.echo.resources | nindent 12 }}

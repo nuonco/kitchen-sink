@@ -85,12 +85,71 @@ worker:
     limits:
       cpu: 200m
       memory: 128Mi
+  # Pinned to a single replica: the queue is claim-safe (FOR UPDATE SKIP
+  # LOCKED), but one worker keeps the demo's delivery timeline trivially
+  # readable — one attempt, one log line, no interleaving.
   autoscaling:
-    enabled: true
+    enabled: false
     minReplicas: 1
-    maxReplicas: 3
+    maxReplicas: 1
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
+
+# The delivery store: an in-chart Postgres 16 behind Service relay-db:5432.
+# Its password is the Nuon-synced db-password Secret (secrets.toml) — the same
+# secretKeyRef the api and worker consume. Storage is an emptyDir ON PURPOSE:
+# a database pod restart wipes the rows, and that is acceptable here BECAUSE
+# the api/worker run idempotent embedded migrations + seed data on every
+# start, so the store rebuilds itself into a working, populated state within
+# seconds. A durable install would swap the emptyDir for a PVC or RDS; the
+# delivery mechanics would not change.
+db:
+  image: "postgres:16-alpine"
+  port: 5432
+  database: relay
+  user: relay
+  passwordSecret:
+    name: db-password
+    # The synced Secret keys the value by the Nuon secret's name.
+    key: db_password
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# The echo receiver: Relay's pre-registered default destination (seeded as
+# endpoint ep_echo_default -> http://relay-echo:8081/webhook). Same image and
+# binary as the api, running in RELAY_MODE=echo — every delivery to it is a
+# real HTTP round-trip inside the cluster.
+echo:
+  image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
+  port: 8081
+  replicas: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
+
+# Demo traffic: a CronJob that POSTs 1-3 generated events to /ingest every
+# two minutes (RELAY_MODE=generate, one-shot). The events are synthetic and
+# say so in their payload (source: relay-event-generator); the deliveries
+# they trigger are real.
+generator:
+  image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
+  schedule: "*/2 * * * *"
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 100m
+      memory: 64Mi
 
 probes:
   liveness: /livez

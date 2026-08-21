@@ -19,10 +19,15 @@ spec:
       containers:
         - name: worker
           image: {{ .Values.worker.image }}
-          command: ["/bin/worker"]
+          # Same image and binary as the api; RELAY_MODE selects the delivery
+          # engine (/bin/worker still exists as a compat shim for old charts).
+          command: ["/bin/api"]
           env:
+            - name: RELAY_MODE
+              value: "worker"
             - name: HEALTH_ADDR
               value: ":{{ .Values.worker.port }}"
+            {{- include "relay.db.env" . | nindent 12 }}
           ports:
             - name: health
               containerPort: {{ .Values.worker.port }}
