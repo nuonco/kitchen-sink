@@ -29,12 +29,12 @@ func (s *svc) GetHelmHandler(ctx *gin.Context) {
 }
 
 type helmChartResponse struct {
-	Name          string           `json:"name,omitempty"`
-	Info          *release.Info    `json:"info,omitempty"`
-	ChartMetadata *chart.Metadata  `json:"chart_metadata,omitempty"`
-	Hooks         []*release.Hook  `json:"hooks,omitempty"`
-	Version       int              `json:"version,omitempty"`
-	Namespace     string           `json:"namespace,omitempty"`
+	Name          string            `json:"name,omitempty"`
+	Info          *release.Info     `json:"info,omitempty"`
+	ChartMetadata *chart.Metadata   `json:"chart_metadata,omitempty"`
+	Hooks         []*release.Hook   `json:"hooks,omitempty"`
+	Version       int               `json:"version,omitempty"`
+	Namespace     string            `json:"namespace,omitempty"`
 	Labels        map[string]string `json:"-"`
 }
 
