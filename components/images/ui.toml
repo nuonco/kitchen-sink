@@ -1,8 +1,9 @@
 # container-image
-# Pre-built image from Nuon's public ECR gallery. Source lives in
-# components/ui; pushes touching it are built and published by
+# Pre-built Relay console image from Nuon's public ECR gallery. Source lives
+# in components/ui; pushes touching it are built and published by
 # .github/workflows/build-images.yaml, which then stamps the tag below — that
-# stamp commit is what starts the staged rollout.
+# stamp commit is what starts the staged rollout. The ECR repo name is
+# AWS-side and predates the Relay retheme.
 name     = "img_ui"
 type     = "container_image"
 var_name = "img_ui"

@@ -1,15 +1,15 @@
 # The second toggleable component: where tictactoe is the fun surprise, this
-# one carries the commercial framing — an audit-log exporter sold as an
-# entitlement ("included in the Enterprise plan"), enabled per install. Off by
-# default, so a plain install shows the locked upsell tile; toggling it on for
-# one install deploys the marker Service below, which the UI detects live.
-# Toggle rules cut both ways: nothing always-enabled may depend on this
-# component or reference its outputs.
+# one carries the commercial framing — delivery-log export to a customer's
+# SIEM, sold as an entitlement ("included in the Enterprise plan") and enabled
+# per install. Off by default, so a plain install shows the locked upsell
+# tile; toggling it on for one install deploys the marker Service below,
+# which the console detects live. Toggle rules cut both ways: nothing
+# always-enabled may depend on this component or reference its outputs.
 name = "audit_log_exporter"
 type = "kubernetes_manifest"
 
-namespace    = "kitchen-sink"
-dependencies = ["kitchen_sink"]
+namespace    = "relay"
+dependencies = ["relay"]
 
 toggleable      = true
 default_enabled = false
@@ -17,9 +17,9 @@ default_enabled = false
 [public_repo]
 directory = "."
 repo      = "nuonco/kitchen-sink"
-# Ships with the onboarding restyle; flip back to "main" when
-# ms/onboarding-edit merges.
-branch = "ms/onboarding-edit"
+# Ships with the Relay retheme; flip back to "main" when
+# ms/theme-relay merges.
+branch = "ms/theme-relay"
 
 [kustomize]
 path        = "./src/components/audit-log-exporter"

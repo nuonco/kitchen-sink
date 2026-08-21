@@ -1,5 +1,5 @@
 name        = "break-glass"
-description = "Emergency, elevated-access remediation run as a recorded procedure instead of ad-hoc console access."
+description = "Emergency, elevated-access remediation of a stuck delivery pipeline, run as a recorded procedure instead of ad-hoc console access."
 readme      = "./runbooks/break-glass.md"
 
 [labels]
@@ -16,9 +16,9 @@ inline_contents = """
 set -uo pipefail
 
 echo "=== Pods before remediation ==="
-kubectl get pods -n kitchen-sink -o wide 2>&1 || true
+kubectl get pods -n relay -o wide 2>&1 || true
 echo "=== Recent events ==="
-kubectl get events -n kitchen-sink --sort-by='.lastTimestamp' 2>&1 | tail -50 || true
+kubectl get events -n relay --sort-by='.lastTimestamp' 2>&1 | tail -50 || true
 """
 
 # Runs under the break-glass role declared in break_glass.toml.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build the kitchen-sink api image (which also runs the worker) as a single-
+# Build the Relay api image (which also runs the delivery worker) as a single-
 # platform image so the pushed manifest stays simple for the Nuon builder.
 #
 # Usage: scripts/build-image.sh [--tag TAG] [--repo-name NAME] [--context DIR]

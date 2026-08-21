@@ -10,7 +10,7 @@ kind = "drift"
 [[steps]]
 name           = "drift-plan"
 type           = "component_deploy"
-component_name = "kitchen_sink"
+component_name = "relay"
 plan_only      = true
 
 # Infrastructure only — components are redeployed by the later steps in the
@@ -32,12 +32,12 @@ name           = "reconcile-certificate"
 type           = "component_deploy"
 component_name = "certificate"
 
-# application_load_balancer depends on kitchen_sink, so deploy_dependents rolls
+# application_load_balancer depends on relay, so deploy_dependents rolls
 # it out immediately after the chart.
 [[steps]]
 name              = "reconcile-app"
 type              = "component_deploy"
-component_name    = "kitchen_sink"
+component_name    = "relay"
 deploy_dependents = true
 
 [[steps]]

@@ -1,17 +1,18 @@
 # helm
-name = "kitchen_sink"
+# Relay itself: the ingest API, the console, and the delivery engine.
+name = "relay"
 type = "helm_chart"
-chart_name = "kitchen-sink"
-namespace = "kitchen-sink"
+chart_name = "relay"
+namespace = "relay"
 storage_driver = "configmap"
 dependencies = ["img_api", "img_ui"]
 
 [public_repo]
 repo = "nuonco/kitchen-sink"
 directory = "components/chart"
-# Chart edits for the onboarding restyle live on this branch; flip back to
-# "main" when ms/onboarding-edit merges.
-branch = "ms/onboarding-edit"
+# Chart edits for the Relay retheme live on this branch; flip back to
+# "main" when ms/theme-relay merges.
+branch = "ms/theme-relay"
 
 [[values_file]]
 # Path resolves relative to the `components/` directory. This is the chart's
@@ -52,7 +53,7 @@ helm = "true"
 #
 # `block_deploy` is off, so the deploy step records what health did without
 # gating on it. Flip it to `true` once health is confirmed green on a real
-# install and every kitchen_sink deploy grows a `verify health` step.
+# install and every relay deploy grows a `verify health` step.
 [health]
 enabled              = true
 stabilization_window = "3m"

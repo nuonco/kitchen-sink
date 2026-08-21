@@ -1,3 +1,6 @@
+# The premium ingest image: same binaries, pulled from a private ECR repo via
+# a cross-account IAM role — the "customers on the premium plan get the
+# private build" story. Repo name is AWS-side and predates the Relay retheme.
 name     = "img_api_two"
 type     = "container_image"
 var_name = "img_api_two"

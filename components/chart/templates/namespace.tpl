@@ -3,4 +3,4 @@ kind: Namespace
 metadata:
   name: {{ .Values.namespace }}
   labels:
-    {{- include "kitchen-sink.labels" . | nindent 4 }}
+    {{- include "relay.labels" . | nindent 4 }}

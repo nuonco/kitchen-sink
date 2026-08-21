@@ -1,7 +1,7 @@
 # full-health-check
 
-Checks install `{{ .nuon.install.id }}` at every layer that has to be working for the
-app to serve traffic — from the nodes up to the public HTTPS endpoint.
+Checks install `{{ .nuon.install.id }}` at every layer that has to be working for
+Relay to accept and deliver events — from the nodes up to the public HTTPS endpoint.
 
 Read-only: nothing here applies a change.
 
@@ -9,13 +9,13 @@ Read-only: nothing here applies a change.
 
 1. **node-health** — node readiness and capacity (`kubectl get nodes`, `kubectl top nodes`).
 2. **workload-health** — runs the existing **cron_status** action, which reports the
-   `kitchen-sink` namespace's pods, services and ingresses and emits `pods_ready` /
+   `relay` namespace's pods, services and ingresses and emits `pods_ready` /
    `pods_total` as structured outputs.
-3. **rollout-convergence** — `kubectl rollout status` for `kitchen-sink-api`,
-   `kitchen-sink-ui` and `kitchen-sink-worker`, plus the HPAs. Ready pods are not the
+3. **rollout-convergence** — `kubectl rollout status` for `relay-api`,
+   `relay-ui` and `relay-worker`, plus the HPAs. Ready pods are not the
    same as a converged rollout; this step asserts convergence.
 4. **ingress-health** — the Helm releases in the namespace and a full describe of the
-   `kitchen-sink-alb` ingress, which is where the AWS Load Balancer Controller reports
+   `relay-alb` ingress, which is where the AWS Load Balancer Controller reports
    target-group and certificate problems.
 5. **endpoint-health** — curls the public endpoint and only passes on a healthy HTTP
    status, retrying while DNS and the target group settle.
@@ -34,7 +34,7 @@ The target URL is available once the sandbox is deployed.
 ## When to run it
 
 After a deploy you want to confirm by hand, before handing an install to a customer,
-or as the first thing you do when someone reports the app is slow. If it comes back
+or as the first thing you do when someone reports deliveries are slow. If it comes back
 clean and the customer still sees a problem, the problem is above this stack —
 go to [`debug-bundle`](./debug-bundle.md) next.
 

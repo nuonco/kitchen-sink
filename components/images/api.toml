@@ -1,9 +1,11 @@
 # container-image
-# Pre-built image from Nuon's public ECR gallery, containing BOTH /bin/api and
-# /bin/worker (the api and worker deployments run different entrypoints out of
-# this one image). Source lives in components/api; pushes touching it are built
-# and published by .github/workflows/build-images.yaml, which then stamps the
-# tag below — that stamp commit is what starts the staged rollout.
+# Pre-built image from Nuon's public ECR gallery, containing BOTH /bin/api
+# (the Relay ingest API) and /bin/worker (the delivery engine) — the two
+# deployments run different entrypoints out of this one image. Source lives in
+# components/api; pushes touching it are built and published by
+# .github/workflows/build-images.yaml, which then stamps the tag below — that
+# stamp commit is what starts the staged rollout. The ECR repo name is
+# AWS-side and predates the Relay retheme.
 #
 # img_api_two stays as the app's private-ECR (cross-account IAM role) example.
 name     = "img_api"

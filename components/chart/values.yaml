@@ -1,5 +1,5 @@
-namespace: kitchen-sink
-serviceAccount: kitchen-sink
+namespace: relay
+serviceAccount: relay
 
 api:
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
@@ -48,7 +48,10 @@ ui:
     enabled: false
     publicHost: "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
   env:
-    API_URL: "http://kitchen-sink-api:8080"
+    API_URL: "http://relay-api:8080"
+    # The namespace the console inspects (its /api proxy allowlist is built
+    # from this). Matches `namespace` above.
+    NUON_NAMESPACE: "relay"
     # Runtime config for the UI, served back to the browser at /api/ui-config.
     # These are the only way the frontend can know which install it is running
     # in, which is what its deep links into the Nuon dashboard are built from.

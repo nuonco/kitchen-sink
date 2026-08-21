@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build and push the kitchen-sink api image in one step. This is the common
+# Build and push the Relay api image (ECR repo kitchen-sink-app) in one step. This is the common
 # loop when iterating on the api/worker code so a new image lands in ECR for
 # the img_api / img_api_two components to resolve.
 #

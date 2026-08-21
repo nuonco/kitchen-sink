@@ -1,27 +1,29 @@
 # helm
-# Internet-facing application load balancer for the UI. The sandbox's
-# ingress-nginx sits behind an internal-scheme NLB, so this ALB (plus the ACM
-# cert from the certificate component) is what makes the app reachable at
-# https://app.<install domain>.
+# Internet-facing application load balancer for the Relay console. The
+# sandbox's ingress-nginx sits behind an internal-scheme NLB, so this ALB
+# (plus the ACM cert from the certificate component) is what makes Relay
+# reachable at https://app.<install domain>.
 name         = "application_load_balancer"
 type         = "helm_chart"
 chart_name   = "application-load-balancer"
-dependencies = ["certificate", "kitchen_sink"]
+dependencies = ["certificate", "relay"]
 max_auto_retries = 5
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "src/components/alb"
-branch    = "main"
+# The relay-alb ingress rename lives on this branch; flip back to "main" when
+# ms/theme-relay merges.
+branch    = "ms/theme-relay"
 
 [values]
 domain_certificate = "{{.nuon.components.certificate.outputs.public_domain_certificate_arn}}"
 domain             = "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
 https_port         = "443"
-service_name       = "kitchen-sink-ui"
+service_name       = "relay-ui"
 service_port       = "3000"
 install_name       = "{{.nuon.install.id}}"
-namespace          = "kitchen-sink"
+namespace          = "relay"
 healthcheck_path   = "/livez"
 
 # The public HTTPS endpoint is what this component provides, so this is where

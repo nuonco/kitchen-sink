@@ -8,12 +8,12 @@ Read-only: nothing here restarts, applies or deletes anything.
 ## What it collects
 
 1. **collect-diagnostics** — runs the existing **debug** action: pods, recent events,
-   Helm releases, and the last 100 log lines from the API and UI deployments.
+   Helm releases, and the last 100 log lines from the ingest API and console deployments.
 2. **workload-detail** — `describe` for every deployment and pod, plus a restart-count
    and last-terminated-reason table. This is where `OOMKilled`, `ImagePullBackOff` and
    `CrashLoopBackOff` show up with their reasons attached.
 3. **ingress-and-secrets** — services and ingresses, a full describe of the
-   `kitchen-sink-alb` ingress, and confirmation that the Nuon-synced secrets
+   `relay-alb` ingress, and confirmation that the Nuon-synced secrets
    (`db-password`, `api-key`) exist in the namespace. Names only — never values.
 4. **endpoint-probe** — one verbose curl of the public endpoint with the status code
    and total time, tolerant of failure so the bundle always completes.

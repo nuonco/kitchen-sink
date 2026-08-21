@@ -1,6 +1,6 @@
 name         = "lifecycle_hooks"
 timeout      = "1m"
-dependencies = ["kitchen_sink"]
+dependencies = ["relay"]
 
 [[triggers]]
 type = "manual"
@@ -10,11 +10,11 @@ type = "post-provision"
 
 [[triggers]]
 type           = "post-deploy-component"
-component_name = "kitchen_sink"
+component_name = "relay"
 
 [[triggers]]
 type           = "pre-deploy-component"
-component_name = "kitchen_sink"
+component_name = "relay"
 
 [[steps]]
 name            = "log-lifecycle-hook"

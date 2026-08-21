@@ -5,7 +5,7 @@ usage() {
   cat <<EOF
 Usage: $0 [OPTIONS]
 
-Push the kitchen-sink-app API image to a private ECR repository.
+Push the Relay API image to a private ECR repository (repo: kitchen-sink-app).
 Creates the ECR repository and Nuon pull access IAM role if they don't exist.
 
 Options:

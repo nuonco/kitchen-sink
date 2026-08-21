@@ -6,8 +6,8 @@
 name = "tictactoe"
 type = "kubernetes_manifest"
 
-namespace    = "kitchen-sink"
-dependencies = ["kitchen_sink"]
+namespace    = "relay"
+dependencies = ["relay"]
 
 toggleable      = true
 default_enabled = false
@@ -15,9 +15,9 @@ default_enabled = false
 [public_repo]
 directory = "."
 repo      = "nuonco/kitchen-sink"
-# Ships with the onboarding restyle; flip back to "main" when
-# ms/onboarding-edit merges.
-branch = "ms/onboarding-edit"
+# Ships with the Relay retheme; flip back to "main" when
+# ms/theme-relay merges.
+branch = "ms/theme-relay"
 
 [kustomize]
 path        = "./src/components/tictactoe"

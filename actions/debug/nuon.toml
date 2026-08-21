@@ -1,4 +1,6 @@
 # action
+# Read-only diagnostics for the delivery pipeline: pods, events, Helm state,
+# and recent API/console logs.
 name    = "debug"
 timeout = "2m"
 

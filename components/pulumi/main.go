@@ -10,17 +10,17 @@ import (
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
-		cfg := config.New(ctx, "kitchen-sink")
+		cfg := config.New(ctx, "relay")
 		installID := cfg.Require("install_id")
 
-		bucketName := fmt.Sprintf("kitchen-sink-%s", installID)
+		bucketName := fmt.Sprintf("relay-%s", installID)
 
-		// Create a private S3 bucket for the app
+		// Private S3 bucket for archived delivery logs
 		bucket, err := s3.NewBucket(ctx, "app-bucket", &s3.BucketArgs{
 			Bucket: pulumi.String(bucketName),
 			Tags: pulumi.StringMap{
 				"install.nuon.co/id": pulumi.String(installID),
-				"app":                pulumi.String("kitchen-sink"),
+				"app":                pulumi.String("relay"),
 				"managed-by":         pulumi.String("pulumi"),
 			},
 		})

@@ -31,8 +31,8 @@ event_types = ["push"]
 from  = "payload"
 op    = "eq"
 path  = "$.ref"
-# Flip to "refs/heads/main" when ms/onboarding-edit merges (match branch.toml).
-value = "refs/heads/ms/onboarding-edit"
+# Flip back to "refs/heads/main" when ms/theme-relay merges (match branch.toml).
+value = "refs/heads/ms/theme-relay"
 
 [[rules.filters]]
 from  = "payload"
@@ -42,7 +42,7 @@ value = "nuonco/kitchen-sink"
 
 [rules.target]
 type       = "app_branch_run"
-app_branch = "ms/onboarding-edit"
+app_branch = "ms/theme-relay"
 
 # Cutting a GitHub release is the deliberate "ship this to customers" signal, as
 # opposed to every commit on the tracked branch. Each install group still holds
@@ -66,7 +66,7 @@ value = "nuonco/kitchen-sink"
 
 [rules.target]
 type       = "app_branch_run"
-app_branch = "ms/onboarding-edit"
+app_branch = "ms/theme-relay"
 
 # A version tag is the other ship signal. Tag pushes do not match the tracked
 # branch, so they start no run on their own — this makes `git push --tags` roll
@@ -90,7 +90,7 @@ value = "nuonco/kitchen-sink"
 
 [rules.target]
 type       = "app_branch_run"
-app_branch = "ms/onboarding-edit"
+app_branch = "ms/theme-relay"
 
 # Two more patterns, left commented out because each needs a resource that does
 # not exist yet and a rule referencing a missing resource fails the sync.
@@ -100,15 +100,15 @@ app_branch = "ms/onboarding-edit"
 #    431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-app, and a build
 #    there is not a config commit. Needs an EventBridge trigger first:
 #
-#      nuon triggers create kitchen-sink-ecr --preset aws-eventbridge \
-#        --description "ECR image actions for kitchen-sink-app"
+#      nuon triggers create relay-ecr --preset aws-eventbridge \
+#        --description "ECR image actions for the private Relay image repo"
 #
 #    then an EventBridge rule on source aws.ecr, detail-type "ECR Image Action",
 #    with an API destination pointing at the trigger's ingress URL.
 #
 # [[rules]]
 # name        = "ecr-image-push"
-# trigger     = "kitchen-sink-ecr"
+# trigger     = "relay-ecr"
 # event_types = ["ECR Image Action"]
 #
 # [[rules.filters]]
@@ -131,18 +131,18 @@ app_branch = "ms/onboarding-edit"
 #
 # [rules.target]
 # type       = "app_branch_run"
-# app_branch = "ms/onboarding-edit"
+# app_branch = "ms/theme-relay"
 #
 # 2. A `runbook` target runs on one named install rather than a branch, which is
 #    how an alert becomes a diagnostic bundle. The `install` below is real
 #    ("Onboarding demo", inlpveun7eotfjad96chbu1vq7); what is missing is the
 #    trigger, so create it first and then uncomment:
 #
-#      nuon triggers create kitchen-sink-datadog --preset datadog
+#      nuon triggers create relay-datadog --preset datadog
 #
 # [[rules]]
 # name        = "alert-collect-debug-bundle"
-# trigger     = "kitchen-sink-datadog"
+# trigger     = "relay-datadog"
 # event_types = ["alert"]
 #
 # [[rules.filters]]

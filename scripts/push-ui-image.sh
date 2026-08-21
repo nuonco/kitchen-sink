@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Push the kitchen-sink UI image to the kitchen-sink-ui ECR repo.
+# Push the Relay console image to the kitchen-sink-ui ECR repo.
 # Thin wrapper over push-image.sh with the UI repo name.
 #
 # Usage: scripts/push-ui-image.sh [--region R] [--profile P] [--tag TAG]

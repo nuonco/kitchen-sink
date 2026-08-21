@@ -1,4 +1,6 @@
 # action
+# The delivery-success heartbeat: hourly snapshot of the relay namespace with
+# pods_ready/pods_total structured outputs (read by the install README).
 name    = "cron_status"
 timeout = "1m"
 

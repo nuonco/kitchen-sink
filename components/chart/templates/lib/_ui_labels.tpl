@@ -1,5 +1,5 @@
-{{- define "kitchen-sink.ui.labels" -}}
-app.kubernetes.io/name: {{ include "kitchen-sink.ui.name" . }}
+{{- define "relay.ui.labels" -}}
+app.kubernetes.io/name: {{ include "relay.ui.name" . }}
 app.kubernetes.io/component: ui
-{{ include "kitchen-sink.labels" . }}
+{{ include "relay.labels" . }}
 {{- end }}

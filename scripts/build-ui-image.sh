@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build the kitchen-sink UI image from components/ui (repo: kitchen-sink-ui).
+# Build the Relay console image from components/ui (ECR repo: kitchen-sink-ui).
 # Thin wrapper over build-image.sh with the UI context and repo name.
 #
 # Usage: scripts/build-ui-image.sh [--tag TAG]

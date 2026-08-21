@@ -1,11 +1,11 @@
-{{- define "kitchen-sink.api.name" -}}
-kitchen-sink-api
+{{- define "relay.api.name" -}}
+relay-api
 {{- end }}
 
-{{- define "kitchen-sink.ui.name" -}}
-kitchen-sink-ui
+{{- define "relay.ui.name" -}}
+relay-ui
 {{- end }}
 
-{{- define "kitchen-sink.worker.name" -}}
-kitchen-sink-worker
+{{- define "relay.worker.name" -}}
+relay-worker
 {{- end }}
