@@ -300,11 +300,11 @@ export function useUIConfig(): UIConfig {
  * this install.
  */
 export function hasTicTacToe(services: ServiceSummary[]): boolean {
-  return services.some((svc) => svc.metadata?.name === 'kitchen-sink-tictactoe')
+  return services.some((svc) => svc.metadata?.name === 'periscope-tictactoe')
 }
 
 /** The marker Service name the toggleable `audit_log_exporter` deploys. */
-export const AUDIT_LOG_SERVICE = 'kitchen-sink-audit-log-exporter'
+export const AUDIT_LOG_SERVICE = 'periscope-audit-log-exporter'
 
 /**
  * Same mechanic as hasTicTacToe, for the audit-log exporter: the toggleable

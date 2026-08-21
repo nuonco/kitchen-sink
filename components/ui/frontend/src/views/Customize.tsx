@@ -151,7 +151,7 @@ function imageTag(image?: string): string {
 }
 
 function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'periscope'
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     EVIDENCE_POLL_MS,
@@ -480,19 +480,19 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
 
 /** Editorial context per action; the facts next to it come from the config. */
 const actionNotes: Record<string, string> = {
-  cron_status:
+  uptime_heartbeat:
     'Collects pod status and publishes pods_ready / pods_total as structured outputs; the install readme reads them as its health pulse.',
   debug:
     'What support runs when an install misbehaves: pods, events, and recent logs, with nobody handed a kubeconfig.',
   lifecycle_hooks:
-    'Brackets every chart deploy, which is where a migration or a cache warm goes. Depends on kitchen_sink.',
+    'Brackets every chart deploy, which is where a migration or a cache warm goes. Depends on periscope.',
   break_glass_remediation:
     'Elevated remediation through a recorded action instead of ad-hoc console access. Assumes the break-glass role from break_glass.toml.',
 }
 
 /** What a real run of each action puts on the record. */
 function actionOutcome(name: string, installID: string): ReactNode {
-  if (name === 'cron_status') {
+  if (name === 'uptime_heartbeat') {
     return (
       <>
         The run&rsquo;s transcript lists this namespace&rsquo;s pods and
@@ -517,7 +517,7 @@ function actionOutcome(name: string, installID: string): ReactNode {
       <>
         The transcript logs which hook fired. The same script runs
         automatically post-provision and before and after every{' '}
-        <span className="mono">kitchen_sink</span> deploy.
+        <span className="mono">periscope</span> deploy.
       </>
     )
   }
@@ -639,7 +639,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
         </p>
         <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
           One of these is already on the record:{' '}
-          <span className="mono">cron_status</span> has run hourly since this
+          <span className="mono">uptime_heartbeat</span> has run hourly since this
           install provisioned.{' '}
           {config.links.actions && (
             <OutLink href={config.links.actions} variant="plain">
@@ -667,7 +667,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
    ============================================================ */
 
 function HealthFlow({ config }: { config: UIConfig }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'periscope'
   const ns = useIntrospect<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
   )
@@ -696,7 +696,7 @@ function HealthFlow({ config }: { config: UIConfig }) {
               The API has no ingress: an internal ingress never converges (no
               cert, no DNS), so the component would sit un-green forever. The
               UI reaches it in-cluster at{' '}
-              <code>http://kitchen-sink-api:8080</code>.
+              <code>http://periscope-api:8080</code>.
             </li>
             <li>
               The chart&rsquo;s ConfigMap carries a <code>nuon.co/roll</code>{' '}
@@ -828,7 +828,7 @@ function TriggersFlow({ config }: { config: UIConfig }) {
         </div>
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           <span className="mono">lifecycle_hooks</span> fires post-provision
-          and around every <span className="mono">kitchen_sink</span> deploy,
+          and around every <span className="mono">periscope</span> deploy,
           which is where a migration or a cache warm goes.
         </p>
         <CodeBlock
@@ -847,7 +847,7 @@ function TriggersFlow({ config }: { config: UIConfig }) {
           manual={
             <>
               <CommandBlock
-                label="1 · resolve cron_status to its workflow id"
+                label="1 · resolve uptime_heartbeat to its workflow id"
                 command={`nuon actions list --app-id ${appIdOf(config)}`}
               />
               <CommandBlock
@@ -1148,7 +1148,7 @@ function flowLinks(flow: string, config: UIConfig) {
  * re-reading the namespace so a dashboard toggle flips the switch here.
  */
 function CustomizeIndex({ config }: { config: UIConfig }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'periscope'
   const probe = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     20_000,

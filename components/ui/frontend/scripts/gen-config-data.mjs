@@ -68,7 +68,7 @@ const triggerText = (t) => {
   return t.component_name ? `${t.type} ${t.component_name}` : t.type
 }
 
-const actionOrder = ['cron_status', 'debug', 'lifecycle_hooks', 'break_glass_remediation']
+const actionOrder = ['uptime_heartbeat', 'debug', 'lifecycle_hooks', 'break_glass_remediation']
 const actionDirs = readdirSync(join(repoRoot, 'actions'), { withFileTypes: true })
   .filter((e) => e.isDirectory())
   .map((e) => e.name)

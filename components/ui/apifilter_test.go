@@ -19,7 +19,7 @@ func namespaceResponse() string {
 	return `{
 	  "description": "Returns details about a namespace",
 	  "response": {
-	    "name": "kitchen-sink",
+	    "name": "periscope",
 	    "secrets_count": 1,
 	    "secrets": [
 	      {
@@ -31,14 +31,14 @@ func namespaceResponse() string {
 	    "pods_count": 1,
 	    "pods": [
 	      {
-	        "metadata": {"name": "kitchen-sink-api-7c9f4d8b6-x2ptn"},
+	        "metadata": {"name": "periscope-api-7c9f4d8b6-x2ptn"},
 	        "spec": {
 	          "containers": [
 	            {
 	              "name": "api",
 	              "image": "example/api:v1",
 	              "env": [
-	                {"name": "API_URL", "value": "http://kitchen-sink-api:8080"},
+	                {"name": "API_URL", "value": "http://periscope-api:8080"},
 	                {"name": "DB_PASSWORD", "value": "hunter2"}
 	              ]
 	            }
@@ -86,8 +86,8 @@ func filterThrough(t *testing.T, policy apiPolicy, path, body string) map[string
 }
 
 func TestNamespaceResponseIsRedacted(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
-	payload := filterThrough(t, policy, "/introspect/namespace/kitchen-sink", namespaceResponse())
+	policy := newAPIPolicy("periscope")
+	payload := filterThrough(t, policy, "/introspect/namespace/periscope", namespaceResponse())
 
 	response := payload["response"].(map[string]any)
 
@@ -105,7 +105,7 @@ func TestNamespaceResponseIsRedacted(t *testing.T) {
 	container := pod["spec"].(map[string]any)["containers"].([]any)[0].(map[string]any)
 	env := container["env"].([]any)
 
-	if got := env[0].(map[string]any)["value"]; got != "http://kitchen-sink-api:8080" {
+	if got := env[0].(map[string]any)["value"]; got != "http://periscope-api:8080" {
 		t.Errorf("API_URL was redacted but is not sensitive: got %q", got)
 	}
 	if got := env[1].(map[string]any)["value"]; got != redactedValue {
@@ -127,24 +127,24 @@ func eventsResponse() string {
 	return `{
 	  "description": "Returns recent events in a namespace, newest first",
 	  "response": {
-	    "name": "kitchen-sink",
+	    "name": "periscope",
 	    "events_count": 2,
 	    "events": [
 	      {
 	        "type": "Normal",
 	        "reason": "Scheduled",
-	        "message": "Successfully assigned kitchen-sink/kitchen-sink-api-7c9f4d8b6-x2ptn to node-1",
+	        "message": "Successfully assigned periscope/periscope-api-7c9f4d8b6-x2ptn to node-1",
 	        "count": 1,
 	        "firstTimestamp": "2026-08-21T10:00:00Z",
 	        "lastTimestamp": "2026-08-21T10:00:00Z",
-	        "involvedObject": {"kind": "Pod", "name": "kitchen-sink-api-7c9f4d8b6-x2ptn"}
+	        "involvedObject": {"kind": "Pod", "name": "periscope-api-7c9f4d8b6-x2ptn"}
 	      },
 	      {
 	        "type": "Warning",
 	        "reason": "BackOff",
 	        "message": "Back-off restarting failed container",
 	        "count": 3,
-	        "involvedObject": {"kind": "Pod", "name": "kitchen-sink-api-7c9f4d8b6-x2ptn"},
+	        "involvedObject": {"kind": "Pod", "name": "periscope-api-7c9f4d8b6-x2ptn"},
 	        "data": {"token": "` + secretValue + `"},
 	        "env": [{"name": "DB_PASSWORD", "value": "` + secretValue + `"}]
 	      }
@@ -154,8 +154,8 @@ func eventsResponse() string {
 }
 
 func TestNamespaceEventsResponseIsRedacted(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
-	payload := filterThrough(t, policy, "/introspect/namespace/kitchen-sink/events", eventsResponse())
+	policy := newAPIPolicy("periscope")
+	payload := filterThrough(t, policy, "/introspect/namespace/periscope/events", eventsResponse())
 
 	response := payload["response"].(map[string]any)
 	events := response["events"].([]any)
@@ -168,7 +168,7 @@ func TestNamespaceEventsResponseIsRedacted(t *testing.T) {
 	if got := first["lastTimestamp"]; got != "2026-08-21T10:00:00Z" {
 		t.Errorf("lastTimestamp: got %q, want 2026-08-21T10:00:00Z", got)
 	}
-	if got := first["involvedObject"].(map[string]any)["name"]; got != "kitchen-sink-api-7c9f4d8b6-x2ptn" {
+	if got := first["involvedObject"].(map[string]any)["name"]; got != "periscope-api-7c9f4d8b6-x2ptn" {
 		t.Errorf("involvedObject name: got %q", got)
 	}
 
@@ -183,11 +183,11 @@ func TestNamespaceEventsResponseIsRedacted(t *testing.T) {
 }
 
 func TestEnvResponseRedactsSensitiveKeys(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
+	policy := newAPIPolicy("periscope")
 	body := `{
 	  "description": "Returns the entire environment of the running service.",
 	  "response": {
-	    "HOSTNAME": "kitchen-sink-api-7c9f4d8b6-x2ptn",
+	    "HOSTNAME": "periscope-api-7c9f4d8b6-x2ptn",
 	    "KUBERNETES_SERVICE_PORT": "443",
 	    "DATABASE_PASSWORD": "` + secretValue + `",
 	    "SESSION_TOKEN": "abc123"
@@ -197,7 +197,7 @@ func TestEnvResponseRedactsSensitiveKeys(t *testing.T) {
 	payload := filterThrough(t, policy, "/introspect/env", body)
 	response := payload["response"].(map[string]any)
 
-	if got := response["HOSTNAME"]; got != "kitchen-sink-api-7c9f4d8b6-x2ptn" {
+	if got := response["HOSTNAME"]; got != "periscope-api-7c9f4d8b6-x2ptn" {
 		t.Errorf("HOSTNAME was redacted but is not sensitive: got %q", got)
 	}
 	if got := response["KUBERNETES_SERVICE_PORT"]; got != "443" {
@@ -211,14 +211,14 @@ func TestEnvResponseRedactsSensitiveKeys(t *testing.T) {
 }
 
 func TestHelmRenderedTextIsStripped(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
+	policy := newAPIPolicy("periscope")
 	body := `{
 	  "description": "Returns details about the helm charts installed, and their values.",
 	  "response": {
 	    "Charts": {
-	      "kitchen-sink.kitchen-sink": {
-	        "name": "kitchen-sink",
-	        "namespace": "kitchen-sink",
+	      "periscope.periscope": {
+	        "name": "periscope",
+	        "namespace": "periscope",
 	        "info": {
 	          "status": "deployed",
 	          "last_deployed": "2026-08-13T17:44:02Z",
@@ -231,7 +231,7 @@ func TestHelmRenderedTextIsStripped(t *testing.T) {
 	}`
 
 	payload := filterThrough(t, policy, "/introspect/helm", body)
-	chart := payload["response"].(map[string]any)["Charts"].(map[string]any)["kitchen-sink.kitchen-sink"].(map[string]any)
+	chart := payload["response"].(map[string]any)["Charts"].(map[string]any)["periscope.periscope"].(map[string]any)
 
 	if _, present := chart["hooks"]; present {
 		t.Error("hooks survived the filter")
@@ -243,7 +243,7 @@ func TestHelmRenderedTextIsStripped(t *testing.T) {
 	}
 
 	// The metadata the UI actually renders has to survive.
-	if chart["name"] != "kitchen-sink" {
+	if chart["name"] != "periscope" {
 		t.Errorf("release name did not survive: got %q", chart["name"])
 	}
 	if info["status"] != "deployed" {
@@ -255,14 +255,14 @@ func TestHelmRenderedTextIsStripped(t *testing.T) {
 }
 
 func TestOnlyReadEndpointsAreForwarded(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
+	policy := newAPIPolicy("periscope")
 
 	allowed := []string{
 		"/introspect/kube",
 		"/introspect/helm",
 		"/introspect/env",
-		"/introspect/namespace/kitchen-sink",
-		"/introspect/namespace/kitchen-sink/events",
+		"/introspect/namespace/periscope",
+		"/introspect/namespace/periscope/events",
 	}
 	for _, path := range allowed {
 		if _, ok := policy.filtersFor(path); !ok {
@@ -274,11 +274,11 @@ func TestOnlyReadEndpointsAreForwarded(t *testing.T) {
 	// simply does not read.
 	denied := []string{
 		"/introspect/secrets",
-		"/introspect/helm-values/kitchen-sink/kitchen-sink",
-		"/introspect/helm-rendered/kitchen-sink/kitchen-sink",
+		"/introspect/helm-values/periscope/periscope",
+		"/introspect/helm-rendered/periscope/periscope",
 		"/introspect/namespace/kube-system",
 		"/introspect/namespace/kube-system/events",
-		"/introspect/namespace/kitchen-sink/events/anything",
+		"/introspect/namespace/periscope/events/anything",
 		"/introspect/namespace/events",
 		"/introspect/nuon",
 		"/introspect/terraform",
@@ -294,8 +294,8 @@ func TestOnlyReadEndpointsAreForwarded(t *testing.T) {
 
 // A filter that cannot parse what it was given must not let the body through.
 func TestUnparseableResponseFailsClosed(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
-	req := httptest.NewRequest(http.MethodGet, "/introspect/namespace/kitchen-sink", nil)
+	policy := newAPIPolicy("periscope")
+	req := httptest.NewRequest(http.MethodGet, "/introspect/namespace/periscope", nil)
 	resp := &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     http.Header{},

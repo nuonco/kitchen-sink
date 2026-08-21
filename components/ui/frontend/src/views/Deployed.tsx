@@ -38,9 +38,9 @@ function namespaceOwner(
   installID: string | undefined,
 ): { label: string; app: boolean } {
   if (!name) return { label: '', app: false }
-  if (name === 'kitchen-sink') return { label: 'This app', app: true }
-  if (installID && name === `${installID}-dne`)
-    return { label: 'The kustomize component', app: true }
+  if (name === 'periscope') return { label: 'This app', app: true }
+  if (installID && name === `${installID}-observed`)
+    return { label: 'The observed workload', app: true }
   if (name === 'nuon') return { label: 'The Nuon runner', app: true }
   if (name.startsWith('kube-') || name === 'default')
     return { label: 'Kubernetes', app: false }
@@ -77,11 +77,11 @@ function GlanceFact({
   )
 }
 
-/** "kitchen-sink-api :8080 · kitchen-sink-ui :3000", trimmed for a tile note. */
+/** "periscope-api :8080 · periscope-web :3000", trimmed for a tile note. */
 function servingNote(data: NamespaceResponse): string {
   return (data.services ?? [])
     .map((svc) => {
-      const name = svc.metadata?.name?.replace(/^kitchen-sink-/, '') ?? '?'
+      const name = svc.metadata?.name?.replace(/^periscope-/, '') ?? '?'
       const port = svc.spec?.ports?.[0]?.port
       return port ? `${name} :${port}` : name
     })
@@ -264,7 +264,7 @@ function ThisNamespace({
       aside={`GET /introspect/namespace/${namespace}`}
     >
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        Everything the <span className="mono">kitchen_sink</span> Helm component
+        Everything the <span className="mono">periscope</span> Helm component
         created, including the Kubernetes secrets Nuon syncs into the
         namespace.
       </p>
@@ -394,12 +394,12 @@ function HelmReleases({ config }: { config: UIConfig }) {
   const helm = useIntrospect<HelmResponse>('/api/introspect/helm')
   const releases =
     helm.state === 'ok' ? Object.entries(helm.value.response.Charts ?? {}) : []
-  const hasThisApp = releases.some(([, rel]) => rel.name === 'kitchen-sink')
+  const hasThisApp = releases.some(([, rel]) => rel.name === 'periscope')
 
   return (
     <Section id="helm" title="Helm releases" aside="GET /introspect/helm">
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        Nuon deploys the <span className="mono">kitchen_sink</span> component by
+        Nuon deploys the <span className="mono">periscope</span> component by
         running Helm from the runner, so Helm&rsquo;s own release history is the record
         of what was deployed and when.
       </p>
@@ -573,7 +573,7 @@ export function Deployed({
   /** Optional deep-link target: #/deployed/cluster scrolls to that section. */
   section?: string
 }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'periscope'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
   const ns = useIntrospect<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,

@@ -119,7 +119,7 @@ kitchen-sink health page — both read the same cluster.`,
       install,
       app,
       `NUON_READ_ONLY=1 nuon actions list -a ${app} --output agent;
-resolve cron_status to its workflow ID (actw...). After my yes:
+resolve uptime_heartbeat to its workflow ID (actw...). After my yes:
 nuon actions create-run -i ${install} -w <actw-id> --output agent — the same
 action its cron trigger has run hourly since this install provisioned.
 Show me its structured outputs: pods_ready, pods_total, checked_at.`,

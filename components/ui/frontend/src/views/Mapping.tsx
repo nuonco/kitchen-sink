@@ -35,23 +35,23 @@ const types: ComponentType[] = [
   {
     type: 'helm_chart',
     purpose: 'Deploy a Helm chart',
-    uses: 'kitchen_sink',
+    uses: 'periscope',
     what:
       'Deploys a Helm chart into the install cluster. Nuon interpolates your values file first, so image tags and sandbox outputs are filled in per install.',
     here:
-      'kitchen_sink: the API, the worker, and this UI. One chart, three deployments.',
+      'periscope: the API, the collector, and this web UI. One chart, three deployments.',
     file: 'components/chart/nuon.toml',
-    toml: `name = "kitchen_sink"
+    toml: `name = "periscope"
 type = "helm_chart"
-chart_name = "kitchen-sink"
-namespace = "kitchen-sink"
+chart_name = "periscope"
+namespace = "periscope"
 storage_driver = "configmap"
 dependencies = ["img_api", "img_ui"]
 
 [public_repo]
 repo = "nuonco/kitchen-sink"
 directory = "components/chart"
-branch = "ms/onboarding-edit"
+branch = "ms/theme-periscope"
 
 [[values_file]]
 contents = "./chart/values.yaml"`,
@@ -63,7 +63,7 @@ contents = "./chart/values.yaml"`,
     what:
       'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
     here:
-      'img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_api_two shows the private-registry variant, pulled with an IAM role Nuon assumes.',
+      'img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_collector_premium shows the private-registry variant, pulled with an IAM role Nuon assumes.',
     file: 'components/images/ui.toml',
     toml: `name     = "img_ui"
 type     = "container_image"
@@ -105,7 +105,7 @@ domain_name = "*.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}
     what:
       'Runs a Pulumi program in Go, TypeScript or Python. Same contract as Terraform: your code, the customer’s account, the runner in between.',
     here:
-      'pulumi_infra: an S3 bucket with encryption and versioning, named from the install id.',
+      'pulumi_infra: the report archive — an encrypted, versioned S3 bucket named from the install id.',
     file: 'components/pulumi/nuon.toml',
     toml: `name    = "pulumi_infra"
 type    = "pulumi"
@@ -114,26 +114,26 @@ runtime = "go"
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "components/pulumi"
-branch    = "main"
+branch    = "ms/theme-periscope"
 
 [config]
 "aws:region"              = "{{.nuon.install_stack.outputs.region}}"
-"kitchen-sink:install_id" = "{{.nuon.install.id}}"`,
+"periscope:install_id"  = "{{.nuon.install.id}}"`,
   },
   {
     type: 'kubernetes_manifest',
     purpose: 'Apply raw YAML or a kustomize overlay',
-    uses: 'kustomizeapp',
+    uses: 'observed_workload',
     what:
       'Applies raw YAML or a kustomize overlay. The escape hatch for anything that is not packaged as a chart.',
     here:
-      'kustomizeapp: the Argo CD guestbook example, applied straight from a public repo into its own namespace.',
+      'observed_workload: the sample workload the console observes, applied straight from a public repo into its own namespace.',
     file: 'components/kustomize.toml',
-    toml: `name = "kustomizeapp"
+    toml: `name = "observed_workload"
 type = "kubernetes_manifest"
 
-namespace    = "{{.nuon.install.id}}-dne"
-dependencies = ["kustomize_namespace"]
+namespace    = "{{.nuon.install.id}}-observed"
+dependencies = ["observed_namespace"]
 
 [public_repo]
 directory = "."
@@ -215,12 +215,12 @@ const deployOrder = [
     detail: 'container_image — nothing to wait for',
   },
   {
-    label: 'kitchen_sink',
+    label: 'periscope',
     detail: 'dependencies = ["img_api", "img_ui"]',
   },
   {
     label: 'application_load_balancer',
-    detail: 'dependencies = ["certificate", "kitchen_sink"]',
+    detail: 'dependencies = ["certificate", "periscope"]',
   },
 ]
 

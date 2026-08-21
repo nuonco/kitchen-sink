@@ -177,7 +177,7 @@ function GoldenPath({
           >
             <span className="arch__num">02</span>
             <span className="arch__name">Components</span>
-            <span className="arch__hint">kitchen_sink chart</span>
+            <span className="arch__hint">periscope chart</span>
           </button>
           <div
             className={revealed < 2 ? 'arch__edge arch__edge--ghost' : 'arch__edge'}
@@ -215,7 +215,7 @@ export function Landing({ config }: { config: UIConfig }) {
     rememberStep(step)
   }, [step])
 
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'periscope'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
 
   // The namespace read doubles as the toggleable-component watcher: while the
@@ -494,7 +494,7 @@ export function Landing({ config }: { config: UIConfig }) {
             'Components are your product.',
             <>
               One component is one deployable piece of your product. Here the{' '}
-              <span className="mono">kitchen_sink</span> Helm chart deploys the
+              <span className="mono">periscope</span> Helm chart deploys the
               API, the worker, and the UI you&rsquo;re reading.
             </>,
           )}

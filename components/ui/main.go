@@ -59,7 +59,7 @@ func buildUIConfig() uiConfig {
 		Links:        map[string]string{},
 	}
 	if cfg.Namespace == "" {
-		cfg.Namespace = "kitchen-sink"
+		cfg.Namespace = "periscope"
 	}
 
 	base := resolvedEnv("NUON_DASHBOARD_URL")

@@ -282,7 +282,7 @@ function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig
 
 export function AuditLog({ config }: { config: UIConfig }) {
   useMarkStepSeen('/audit-log')
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'periscope'
   const [enabled, setEnabled] = useState(false)
   const [justEnabled, setJustEnabled] = useState(false)
   const [waiting, setWaiting] = useState(false)
