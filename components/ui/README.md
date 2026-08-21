@@ -5,19 +5,22 @@ The web app the install publishes at `https://app.<install domain>`. A Go server
 things:
 
 - serves the SPA, falling back to `index.html` for unknown paths
-- proxies `/api/*` to the introspection API in the cluster (`API_URL`), through
-  the allowlist and response filter in `apifilter.go`
+- proxies `/api/*` to the app's API in the cluster (`API_URL`) — sync status
+  and cluster introspection — through the allowlist and response filter in
+  `apifilter.go`
 - serves `/api/ui-config`, `/livez` and `/readyz` itself
 
 ## The /api/ boundary
 
 This app is published on the install's internet-facing load balancer and the
-introspection API has no authentication, so anything the proxy forwards is
+API has no authentication, so anything the proxy forwards is
 public. `apifilter.go` is that boundary:
 
-- only the five endpoints these views read are forwarded — `/introspect/kube`,
-  `/introspect/helm`, `/introspect/env`, `/introspect/namespace/<the app's
-  own namespace>`, and that same namespace's `/events`. Everything else answers
+- only the endpoints these views read are forwarded — five introspection
+  endpoints (`/introspect/kube`, `/introspect/helm`, `/introspect/env`,
+  `/introspect/namespace/<the app's own namespace>`, and that same namespace's
+  `/events`) plus the two read-only sync status endpoints (`/sync/pipelines`
+  and `/sync/runs` — exact paths, query strings only). Everything else answers
   403 with an explanation, including
   `/introspect/secrets` and `/introspect/helm-values/...`, which return
   credentials by design.

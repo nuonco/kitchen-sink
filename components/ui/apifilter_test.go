@@ -19,7 +19,7 @@ func namespaceResponse() string {
 	return `{
 	  "description": "Returns details about a namespace",
 	  "response": {
-	    "name": "kitchen-sink",
+	    "name": "conduit",
 	    "secrets_count": 1,
 	    "secrets": [
 	      {
@@ -31,14 +31,14 @@ func namespaceResponse() string {
 	    "pods_count": 1,
 	    "pods": [
 	      {
-	        "metadata": {"name": "kitchen-sink-api-7c9f4d8b6-x2ptn"},
+	        "metadata": {"name": "conduit-api-7c9f4d8b6-x2ptn"},
 	        "spec": {
 	          "containers": [
 	            {
 	              "name": "api",
 	              "image": "example/api:v1",
 	              "env": [
-	                {"name": "API_URL", "value": "http://kitchen-sink-api:8080"},
+	                {"name": "API_URL", "value": "http://conduit-api:8080"},
 	                {"name": "DB_PASSWORD", "value": "hunter2"}
 	              ]
 	            }
@@ -86,8 +86,8 @@ func filterThrough(t *testing.T, policy apiPolicy, path, body string) map[string
 }
 
 func TestNamespaceResponseIsRedacted(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
-	payload := filterThrough(t, policy, "/introspect/namespace/kitchen-sink", namespaceResponse())
+	policy := newAPIPolicy("conduit")
+	payload := filterThrough(t, policy, "/introspect/namespace/conduit", namespaceResponse())
 
 	response := payload["response"].(map[string]any)
 
@@ -105,7 +105,7 @@ func TestNamespaceResponseIsRedacted(t *testing.T) {
 	container := pod["spec"].(map[string]any)["containers"].([]any)[0].(map[string]any)
 	env := container["env"].([]any)
 
-	if got := env[0].(map[string]any)["value"]; got != "http://kitchen-sink-api:8080" {
+	if got := env[0].(map[string]any)["value"]; got != "http://conduit-api:8080" {
 		t.Errorf("API_URL was redacted but is not sensitive: got %q", got)
 	}
 	if got := env[1].(map[string]any)["value"]; got != redactedValue {
@@ -127,24 +127,24 @@ func eventsResponse() string {
 	return `{
 	  "description": "Returns recent events in a namespace, newest first",
 	  "response": {
-	    "name": "kitchen-sink",
+	    "name": "conduit",
 	    "events_count": 2,
 	    "events": [
 	      {
 	        "type": "Normal",
 	        "reason": "Scheduled",
-	        "message": "Successfully assigned kitchen-sink/kitchen-sink-api-7c9f4d8b6-x2ptn to node-1",
+	        "message": "Successfully assigned conduit/conduit-api-7c9f4d8b6-x2ptn to node-1",
 	        "count": 1,
 	        "firstTimestamp": "2026-08-21T10:00:00Z",
 	        "lastTimestamp": "2026-08-21T10:00:00Z",
-	        "involvedObject": {"kind": "Pod", "name": "kitchen-sink-api-7c9f4d8b6-x2ptn"}
+	        "involvedObject": {"kind": "Pod", "name": "conduit-api-7c9f4d8b6-x2ptn"}
 	      },
 	      {
 	        "type": "Warning",
 	        "reason": "BackOff",
 	        "message": "Back-off restarting failed container",
 	        "count": 3,
-	        "involvedObject": {"kind": "Pod", "name": "kitchen-sink-api-7c9f4d8b6-x2ptn"},
+	        "involvedObject": {"kind": "Pod", "name": "conduit-api-7c9f4d8b6-x2ptn"},
 	        "data": {"token": "` + secretValue + `"},
 	        "env": [{"name": "DB_PASSWORD", "value": "` + secretValue + `"}]
 	      }
@@ -154,8 +154,8 @@ func eventsResponse() string {
 }
 
 func TestNamespaceEventsResponseIsRedacted(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
-	payload := filterThrough(t, policy, "/introspect/namespace/kitchen-sink/events", eventsResponse())
+	policy := newAPIPolicy("conduit")
+	payload := filterThrough(t, policy, "/introspect/namespace/conduit/events", eventsResponse())
 
 	response := payload["response"].(map[string]any)
 	events := response["events"].([]any)
@@ -168,7 +168,7 @@ func TestNamespaceEventsResponseIsRedacted(t *testing.T) {
 	if got := first["lastTimestamp"]; got != "2026-08-21T10:00:00Z" {
 		t.Errorf("lastTimestamp: got %q, want 2026-08-21T10:00:00Z", got)
 	}
-	if got := first["involvedObject"].(map[string]any)["name"]; got != "kitchen-sink-api-7c9f4d8b6-x2ptn" {
+	if got := first["involvedObject"].(map[string]any)["name"]; got != "conduit-api-7c9f4d8b6-x2ptn" {
 		t.Errorf("involvedObject name: got %q", got)
 	}
 
@@ -182,14 +182,83 @@ func TestNamespaceEventsResponseIsRedacted(t *testing.T) {
 	}
 }
 
+// syncRunsResponse mirrors GET /sync/runs. Runs carry no credentials by
+// design -- object keys, counts, timestamps, an error string -- but the last
+// entry is poisoned with a name/value pair and a data map to prove the
+// defensive walks cover this path too, exactly like the events precedent.
+func syncRunsResponse() string {
+	return `{
+	  "description": "Returns recent sync runs, newest first.",
+	  "response": {
+	    "runs": [
+	      {
+	        "id": 42,
+	        "pipeline": "orders",
+	        "status": "succeeded",
+	        "started_at": "2026-08-21T17:05:00Z",
+	        "finished_at": "2026-08-21T17:05:02Z",
+	        "rows_copied": 85,
+	        "bytes_written": 12345,
+	        "objects": ["orders/orders/2026-08-21T17:05:00Z-run42.csv"],
+	        "error": ""
+	      },
+	      {
+	        "id": 41,
+	        "pipeline": "events",
+	        "status": "failed",
+	        "started_at": "2026-08-21T17:00:00Z",
+	        "finished_at": "2026-08-21T17:00:01Z",
+	        "rows_copied": 0,
+	        "bytes_written": 0,
+	        "objects": [],
+	        "error": "unable to write s3://conduit-inst123/events/: AccessDenied",
+	        "env": [{"name": "PGPASSWORD", "value": "` + secretValue + `"}],
+	        "data": {"token": "` + secretValue + `"}
+	      }
+	    ]
+	  }
+	}`
+}
+
+func TestSyncRunsResponseIsRedacted(t *testing.T) {
+	policy := newAPIPolicy("conduit")
+	payload := filterThrough(t, policy, "/sync/runs", syncRunsResponse())
+
+	response := payload["response"].(map[string]any)
+	runs := response["runs"].([]any)
+
+	// Everything the UI renders has to survive: keys, counts, error text.
+	first := runs[0].(map[string]any)
+	if got := first["objects"].([]any)[0]; got != "orders/orders/2026-08-21T17:05:00Z-run42.csv" {
+		t.Errorf("object key did not survive: got %q", got)
+	}
+	if got := first["rows_copied"]; got != float64(85) {
+		t.Errorf("rows_copied: got %v, want 85", got)
+	}
+
+	second := runs[1].(map[string]any)
+	if got := second["error"]; got != "unable to write s3://conduit-inst123/events/: AccessDenied" {
+		t.Errorf("error text did not survive: got %q", got)
+	}
+
+	// The poisoned shapes are redacted, not forwarded.
+	if got := second["env"].([]any)[0].(map[string]any)["value"]; got != redactedValue {
+		t.Errorf("env value: got %q, want %q", got, redactedValue)
+	}
+	if got := second["data"].(map[string]any)["token"]; got != redactedValue {
+		t.Errorf("data value: got %q, want %q", got, redactedValue)
+	}
+}
+
 func TestEnvResponseRedactsSensitiveKeys(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
+	policy := newAPIPolicy("conduit")
 	body := `{
 	  "description": "Returns the entire environment of the running service.",
 	  "response": {
-	    "HOSTNAME": "kitchen-sink-api-7c9f4d8b6-x2ptn",
+	    "HOSTNAME": "conduit-api-7c9f4d8b6-x2ptn",
 	    "KUBERNETES_SERVICE_PORT": "443",
 	    "DATABASE_PASSWORD": "` + secretValue + `",
+	    "PGPASSWORD": "` + secretValue + `",
 	    "SESSION_TOKEN": "abc123"
 	  }
 	}`
@@ -197,13 +266,16 @@ func TestEnvResponseRedactsSensitiveKeys(t *testing.T) {
 	payload := filterThrough(t, policy, "/introspect/env", body)
 	response := payload["response"].(map[string]any)
 
-	if got := response["HOSTNAME"]; got != "kitchen-sink-api-7c9f4d8b6-x2ptn" {
+	if got := response["HOSTNAME"]; got != "conduit-api-7c9f4d8b6-x2ptn" {
 		t.Errorf("HOSTNAME was redacted but is not sensitive: got %q", got)
 	}
 	if got := response["KUBERNETES_SERVICE_PORT"]; got != "443" {
 		t.Errorf("KUBERNETES_SERVICE_PORT was redacted but is not sensitive: got %q", got)
 	}
-	for _, key := range []string{"DATABASE_PASSWORD", "SESSION_TOKEN"} {
+	// PGPASSWORD is the credential the chart now actually forwards to the api
+	// pod (secretKeyRef db-password/db_password); the PASSWORD fragment must
+	// keep catching it.
+	for _, key := range []string{"DATABASE_PASSWORD", "PGPASSWORD", "SESSION_TOKEN"} {
 		if got := response[key]; got != redactedValue {
 			t.Errorf("%s: got %q, want %q", key, got, redactedValue)
 		}
@@ -211,14 +283,14 @@ func TestEnvResponseRedactsSensitiveKeys(t *testing.T) {
 }
 
 func TestHelmRenderedTextIsStripped(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
+	policy := newAPIPolicy("conduit")
 	body := `{
 	  "description": "Returns details about the helm charts installed, and their values.",
 	  "response": {
 	    "Charts": {
-	      "kitchen-sink.kitchen-sink": {
-	        "name": "kitchen-sink",
-	        "namespace": "kitchen-sink",
+	      "conduit.conduit": {
+	        "name": "conduit",
+	        "namespace": "conduit",
 	        "info": {
 	          "status": "deployed",
 	          "last_deployed": "2026-08-13T17:44:02Z",
@@ -231,7 +303,7 @@ func TestHelmRenderedTextIsStripped(t *testing.T) {
 	}`
 
 	payload := filterThrough(t, policy, "/introspect/helm", body)
-	chart := payload["response"].(map[string]any)["Charts"].(map[string]any)["kitchen-sink.kitchen-sink"].(map[string]any)
+	chart := payload["response"].(map[string]any)["Charts"].(map[string]any)["conduit.conduit"].(map[string]any)
 
 	if _, present := chart["hooks"]; present {
 		t.Error("hooks survived the filter")
@@ -243,7 +315,7 @@ func TestHelmRenderedTextIsStripped(t *testing.T) {
 	}
 
 	// The metadata the UI actually renders has to survive.
-	if chart["name"] != "kitchen-sink" {
+	if chart["name"] != "conduit" {
 		t.Errorf("release name did not survive: got %q", chart["name"])
 	}
 	if info["status"] != "deployed" {
@@ -255,14 +327,16 @@ func TestHelmRenderedTextIsStripped(t *testing.T) {
 }
 
 func TestOnlyReadEndpointsAreForwarded(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
+	policy := newAPIPolicy("conduit")
 
 	allowed := []string{
 		"/introspect/kube",
 		"/introspect/helm",
 		"/introspect/env",
-		"/introspect/namespace/kitchen-sink",
-		"/introspect/namespace/kitchen-sink/events",
+		"/introspect/namespace/conduit",
+		"/introspect/namespace/conduit/events",
+		"/sync/pipelines",
+		"/sync/runs",
 	}
 	for _, path := range allowed {
 		if _, ok := policy.filtersFor(path); !ok {
@@ -271,17 +345,23 @@ func TestOnlyReadEndpointsAreForwarded(t *testing.T) {
 	}
 
 	// Endpoints that return credentials, dump empty env prefixes, or that the UI
-	// simply does not read.
+	// simply does not read. /sync is exact-paths only: anything else under it --
+	// including anything that even sounds mutating -- is denied.
 	denied := []string{
 		"/introspect/secrets",
-		"/introspect/helm-values/kitchen-sink/kitchen-sink",
-		"/introspect/helm-rendered/kitchen-sink/kitchen-sink",
+		"/introspect/helm-values/conduit/conduit",
+		"/introspect/helm-rendered/conduit/conduit",
 		"/introspect/namespace/kube-system",
 		"/introspect/namespace/kube-system/events",
-		"/introspect/namespace/kitchen-sink/events/anything",
+		"/introspect/namespace/conduit/events/anything",
 		"/introspect/namespace/events",
 		"/introspect/nuon",
 		"/introspect/terraform",
+		"/sync",
+		"/sync/",
+		"/sync/pipelines/orders",
+		"/sync/runs/42",
+		"/sync/pause",
 		"/livez",
 		"/",
 	}
@@ -294,8 +374,8 @@ func TestOnlyReadEndpointsAreForwarded(t *testing.T) {
 
 // A filter that cannot parse what it was given must not let the body through.
 func TestUnparseableResponseFailsClosed(t *testing.T) {
-	policy := newAPIPolicy("kitchen-sink")
-	req := httptest.NewRequest(http.MethodGet, "/introspect/namespace/kitchen-sink", nil)
+	policy := newAPIPolicy("conduit")
+	req := httptest.NewRequest(http.MethodGet, "/introspect/namespace/conduit", nil)
 	resp := &http.Response{
 		StatusCode: http.StatusOK,
 		Header:     http.Header{},

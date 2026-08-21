@@ -5,8 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"github.com/nuonco/kitchen-sink-app/api/internal/health"
-	"github.com/nuonco/kitchen-sink-app/api/internal/introspection"
+	"github.com/nuonco/conduit-app/api/internal/health"
+	"github.com/nuonco/conduit-app/api/internal/introspection"
+	"github.com/nuonco/conduit-app/api/internal/syncengine"
 	"go.uber.org/zap"
 )
 
@@ -44,6 +45,16 @@ func main() {
 	r.GET("/introspect/nuon", svc.GetNuonHandler)
 	r.GET("/introspect/docker-build", svc.GetDockerBuildHandler)
 	r.GET("/introspect/external-image", svc.GetExternalImageHandler)
+
+	// sync engine status (read-only; the state lives in postgres, written by
+	// the worker binary from this same image)
+	syncStore, err := syncengine.OpenStoreFromEnv()
+	if err != nil {
+		log.Fatalf("unable to open the sync store: %s", err)
+	}
+	syncSvc := newSyncAPI(syncStore)
+	r.GET("/sync/pipelines", syncSvc.GetPipelinesHandler)
+	r.GET("/sync/runs", syncSvc.GetRunsHandler)
 
 	r.GET("/", discoverHandler)
 	r.GET("/livez", healthSvc.GetLivezHandler)

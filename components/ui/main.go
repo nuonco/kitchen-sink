@@ -59,7 +59,7 @@ func buildUIConfig() uiConfig {
 		Links:        map[string]string{},
 	}
 	if cfg.Namespace == "" {
-		cfg.Namespace = "kitchen-sink"
+		cfg.Namespace = "conduit"
 	}
 
 	base := resolvedEnv("NUON_DASHBOARD_URL")
@@ -97,13 +97,13 @@ func buildUIConfig() uiConfig {
 		// App branches: the staged rollout's runs and pending approvals.
 		cfg.Links["branches"] = org + "/apps/" + cfg.AppID + "/branches"
 	}
-	// The audit_log_exporter component's page on this install, where its
+	// The compliance_export component's page on this install, where its
 	// per-install toggle lives. The component id arrives through the chart env
 	// like every other identity fact (see values.yaml for why it is
 	// `.component_id`, never `.outputs.`); when it is absent the link is not
 	// shipped and the frontend falls back to the components list.
-	if id := resolvedEnv("NUON_AUDIT_LOG_EXPORTER_COMPONENT_ID"); id != "" {
-		cfg.Links["audit_log_exporter"] = install + "/components/" + id
+	if id := resolvedEnv("NUON_COMPLIANCE_EXPORT_COMPONENT_ID"); id != "" {
+		cfg.Links["compliance_export"] = install + "/components/" + id
 	}
 	return cfg
 }

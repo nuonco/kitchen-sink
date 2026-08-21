@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/nuonco/kitchen-sink-app/api/internal/introspection"
+	"github.com/nuonco/conduit-app/api/internal/introspection"
 )
 
 type discoverEndpoint struct {
@@ -19,7 +19,7 @@ type discoverResponse struct {
 
 func discoverHandler(ctx *gin.Context) {
 	resp := &discoverResponse{
-		Description: "This api exposes introspection details of a Nuon app running in a customer's cloud account.",
+		Description: "This api exposes Conduit's sync status and introspection details of a Nuon app running in a customer's cloud account.",
 		Endpoints: []discoverEndpoint{
 			{
 				Description: introspection.KubeDescription,
@@ -72,6 +72,14 @@ func discoverHandler(ctx *gin.Context) {
 			{
 				Description: introspection.ExternalImageDescription,
 				Path:        "/introspect/external-image",
+			},
+			{
+				Description: SyncPipelinesDescription,
+				Path:        "/sync/pipelines",
+			},
+			{
+				Description: SyncRunsDescription,
+				Path:        "/sync/runs",
 			},
 			{
 				Description: "/livez check",

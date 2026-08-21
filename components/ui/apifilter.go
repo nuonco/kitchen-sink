@@ -88,6 +88,12 @@ func (p apiPolicy) filtersFor(path string) ([]filter, bool) {
 		// Events carry no credentials by design, but the same walks run anyway
 		// so a change to what the API returns cannot quietly open a leak.
 		return []filter{redactSecretData, redactNameValuePairs}, true
+	case "/sync/pipelines", "/sync/runs":
+		// The app's own sync status: read-only, database-backed, served by the
+		// same api binary. Exact paths only -- filters take query strings, not
+		// path parameters. The responses carry no credentials by design, but
+		// the same defensive walks run anyway, matching the events precedent.
+		return []filter{redactSecretData, redactNameValuePairs}, true
 	}
 	return nil, false
 }
@@ -99,13 +105,13 @@ func (p apiPolicy) deny(w http.ResponseWriter, path string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusForbidden)
 	writeJSON(w, map[string]any{
-		"description": "This app does not publish that introspection endpoint.",
-		"err": "The introspection API is unauthenticated and this UI is reachable " +
+		"description": "This app does not publish that API endpoint.",
+		"err": "The API is unauthenticated and this UI is reachable " +
 			"from the internet, so /api/ forwards only the endpoints the UI reads " +
 			"and filters credentials out of those. Run the endpoint from inside " +
 			"the cluster, or through a Nuon action, to see it unfiltered.",
 		"path":      path,
-		"forwarded": []string{"/introspect/kube", "/introspect/helm", "/introspect/env", p.namespacePath(), p.namespaceEventsPath()},
+		"forwarded": []string{"/introspect/kube", "/introspect/helm", "/introspect/env", p.namespacePath(), p.namespaceEventsPath(), "/sync/pipelines", "/sync/runs"},
 	})
 }
 
