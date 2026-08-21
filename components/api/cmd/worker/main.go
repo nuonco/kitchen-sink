@@ -1,11 +1,12 @@
+// The /bin/worker compat entrypoint: identical to running /bin/api with
+// RELAY_MODE=worker. Kept so an older chart revision that still runs
+// /bin/worker gets the real delivery engine, not an idle loop.
 package main
 
 import (
 	"log"
-	"net/http"
-	"os"
-	"time"
 
+	"github.com/nuonco/kitchen-sink-app/api/internal/delivery"
 	"go.uber.org/zap"
 )
 
@@ -14,31 +15,5 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to create logger: %s", err)
 	}
-
-	listenAddr := os.Getenv("HEALTH_ADDR")
-	if listenAddr == "" {
-		listenAddr = ":8090"
-	}
-
-	mux := http.NewServeMux()
-	mux.HandleFunc("/livez", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
-	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte("ok"))
-	})
-
-	go func() {
-		l.Info("worker health server listening", zap.String("addr", listenAddr))
-		if err := http.ListenAndServe(listenAddr, mux); err != nil {
-			l.Fatal("worker health server failed", zap.Error(err))
-		}
-	}()
-
-	for {
-		l.Info("worker")
-		time.Sleep(time.Second * 5)
-	}
+	delivery.RunWorker(l)
 }

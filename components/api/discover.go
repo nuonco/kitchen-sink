@@ -19,8 +19,36 @@ type discoverResponse struct {
 
 func discoverHandler(ctx *gin.Context) {
 	resp := &discoverResponse{
-		Description: "This api exposes introspection details of a Nuon app running in a customer's cloud account.",
+		Description: "Relay's API: webhook ingest and delivery state, plus introspection details of the Nuon app it runs as in your cloud account.",
 		Endpoints: []discoverEndpoint{
+			{
+				Description: "Ingest a webhook event (in-cluster only; POST {type, payload}) and enqueue delivery to every active endpoint",
+				Path:        "/ingest",
+			},
+			{
+				Description: "Delivery rollup: events/delivered in 24h, success rate, DLQ depth, active endpoints",
+				Path:        "/delivery/stats",
+			},
+			{
+				Description: "Registered delivery endpoints",
+				Path:        "/delivery/endpoints",
+			},
+			{
+				Description: "Recent events, newest first (?limit=N, max 200)",
+				Path:        "/delivery/events",
+			},
+			{
+				Description: "One event and its delivery attempt history",
+				Path:        "/delivery/events/:id/attempts",
+			},
+			{
+				Description: "The dead-letter queue: attempts that exhausted their retries",
+				Path:        "/delivery/dlq",
+			},
+			{
+				Description: "Re-queue a dead attempt for one more real delivery (POST)",
+				Path:        "/delivery/dlq/:id/replay",
+			},
 			{
 				Description: introspection.KubeDescription,
 				Path:        "/introspect/kube",

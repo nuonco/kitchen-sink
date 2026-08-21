@@ -21,10 +21,12 @@ RUN rm -rf /go/pkg/mod /root/.cache/go-build \
 
 COPY . .
 
-# Both binaries ship in this image: the chart runs /bin/api in its api
-# deployment and /bin/worker in its worker deployment, from the same image
-# (components/chart/values.yaml points worker.image at img_api too). -a rebuilds
-# every package instead of trusting the build cache.
+# One image, every Relay role: /bin/api dispatches on RELAY_MODE (api /
+# worker / echo / generate — see main.go), which is how the chart runs the
+# ingest API, the delivery engine, the echo receiver and the event-generator
+# CronJob from this single image (components/chart/values.yaml points them all
+# at img_api). /bin/worker is a compat shim identical to RELAY_MODE=worker.
+# -a rebuilds every package instead of trusting the build cache.
 RUN CGO_ENABLED=0 go build -a -trimpath -ldflags="-s -w" -o /out/api . \
     && CGO_ENABLED=0 go build -a -trimpath -ldflags="-s -w" -o /out/worker ./cmd/worker \
     && test -x /out/api \
