@@ -65,13 +65,16 @@ ui:
     NUON_CLUSTER_NAME: "n-{{.nuon.install.id}}"
     # The audit_log_exporter component's id, so the ops page can deep-link to
     # that component's page on this install (where its toggle lives). This
-    # reads `.component_id`, deliberately NOT `.outputs.`: Nuon only derives a
+    # reads `component_id`, deliberately NOT `.outputs.`: Nuon only derives a
     # component dependency (and cascades toggleable disablement) from
     # `.outputs.` references, and nothing always-enabled may depend on this
-    # toggleable component. Resolves whether the component is toggled on or
-    # off; if it does not resolve, the server drops it and the ops page falls
-    # back to the install's components list.
-    NUON_AUDIT_LOG_EXPORTER_COMPONENT_ID: "{{.nuon.components.audit_log_exporter.component_id}}"
+    # toggleable component. Guarded with `index`/`dig` (same idiom as
+    # control-plane.md) because Nuon renders with missingkey=error: a bare
+    # `.nuon.components.audit_log_exporter` fails the whole kitchen_sink
+    # render on installs where the exporter has never deployed ("map has no
+    # entry for key"). Renders empty there instead; the server drops empty
+    # values and the ops page falls back to the install's components list.
+    NUON_AUDIT_LOG_EXPORTER_COMPONENT_ID: '{{ dig "component_id" "" (default dict (index .nuon.components "audit_log_exporter")) }}'
 
 worker:
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
