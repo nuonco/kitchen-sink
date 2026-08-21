@@ -37,16 +37,28 @@ const component = toggleableComponents.find(
   (c) => c.name === 'audit_log_exporter',
 )
 
-/** The plan/toggle state, drawn: one card, one switch, one badge. */
-function EntitlementCard({ on }: { on: boolean }) {
+/** The plan state, drawn: a live readout up top (never a switch — the real
+ * control is in the dashboard) and the dashboard deep link as the one action. */
+function EntitlementCard({
+  on,
+  config,
+  onDashboardOpen,
+}: {
+  on: boolean
+  config: UIConfig
+  onDashboardOpen: () => void
+}) {
   return (
     <div className={on ? 'ent ent--on' : 'ent'}>
       <div className="ent__head">
         <span className="ent__plan">Enterprise plan</span>
-        <span
-          className={on ? 'switch switch--on' : 'switch'}
-          aria-hidden="true"
-        />
+        <span className="entstat mono" role="status">
+          <span
+            className={on ? 'entstat__dot entstat__dot--on' : 'entstat__dot'}
+            aria-hidden="true"
+          />
+          {on ? 'on' : 'off · watching'}
+        </span>
       </div>
       <div className="ent__name mono">audit_log_exporter</div>
       <p className="ent__pitch">
@@ -59,14 +71,20 @@ function EntitlementCard({ on }: { on: boolean }) {
             included in this install
           </Badge>
         ) : (
-          <Badge tone="warning" dot>
-            not in this install&rsquo;s plan
-          </Badge>
+          <OutLink href={config.links.components} onClick={onDashboardOpen}>
+            Turn it on in Nuon
+          </OutLink>
         )}
         <span className="ent__facts mono">
           toggleable = true · default_enabled = false
         </span>
       </div>
+      {!on && (
+        <p className="ent__how">
+          The switch lives in the Nuon dashboard — enable the component there
+          and this page flips by itself within {POLL_MS / 1000}s of the deploy.
+        </p>
+      )}
     </div>
   )
 }
@@ -192,7 +210,11 @@ export function AuditLog({ config }: { config: UIConfig }) {
                   </span>
                 </div>
               )}
-              <EntitlementCard on={enabled} />
+              <EntitlementCard
+                on={enabled}
+                config={config}
+                onDashboardOpen={() => setWaiting(true)}
+              />
             </div>
             {component && (
               <CodeBlock
@@ -255,14 +277,6 @@ export function AuditLog({ config }: { config: UIConfig }) {
               </>
             ) : (
               <>
-                <div className="row" style={{ marginTop: 20 }}>
-                  <OutLink
-                    href={config.links.components}
-                    onClick={() => setWaiting(true)}
-                  >
-                    Open components in Nuon
-                  </OutLink>
-                </div>
                 <div className="ttt-watch">
                   {waiting ? (
                     <>

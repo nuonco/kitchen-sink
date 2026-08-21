@@ -141,7 +141,7 @@ function Locked({
         </p>
         <div className="row" style={{ marginTop: 20 }}>
           <OutLink href={config.links.components} onClick={onDashboardOpen}>
-            Open components in Nuon
+            Turn it on in Nuon
           </OutLink>
           <OutLink
             href="https://docs.nuon.co/concepts/components"
