@@ -1,18 +1,18 @@
-name = "kustomize_namespace"
+name = "observed_namespace"
 type = "kubernetes_manifest"
 
 # Required by the schema; ignored for the cluster-scoped Namespace resource below.
 namespace = "default"
 
-# The kustomize-guestbook base applies into {{.nuon.install.id}}-dne but does not
-# create that namespace, and kubernetes_manifest components have no
-# create_namespace option (unlike helm_chart). Create it here so kustomizeapp
-# has a namespace to deploy into.
+# The kustomize-guestbook base applies into {{.nuon.install.id}}-observed but
+# does not create that namespace, and kubernetes_manifest components have no
+# create_namespace option (unlike helm_chart). Create it here so
+# observed_workload has a namespace to deploy into.
 manifest = """
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{.nuon.install.id}}-dne
+  name: {{.nuon.install.id}}-observed
 """
 
 [labels]
