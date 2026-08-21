@@ -287,7 +287,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           manual={
             <CommandBlock
               label="edit any file in your clone, then sync and trigger the run"
-              command={`nuon sync --branch ${branchName}`}
+              command={`nuon sync --app-id ${appIdOf(config)} --force --branch ${branchName}`}
               note={
                 <>
                   Syncs your local files exactly as they are (even uncommitted,
@@ -1083,7 +1083,7 @@ function AgentFlow({ config }: { config: UIConfig }) {
             />
             <CommandBlock
               label="ship a change through the staged groups (from your clone)"
-              command={`nuon sync --branch ${branchName}`}
+              command={`nuon sync --app-id ${app} --force --branch ${branchName}`}
               note={
                 <>
                   Syncs your local edit — no push needed — and triggers a real
