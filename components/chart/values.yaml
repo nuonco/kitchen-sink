@@ -63,6 +63,15 @@ ui:
     NUON_PUBLIC_DOMAIN: "{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
     # Mirrors cluster_name in sandbox.toml.
     NUON_CLUSTER_NAME: "n-{{.nuon.install.id}}"
+    # The audit_log_exporter component's id, so the ops page can deep-link to
+    # that component's page on this install (where its toggle lives). This
+    # reads `.component_id`, deliberately NOT `.outputs.`: Nuon only derives a
+    # component dependency (and cascades toggleable disablement) from
+    # `.outputs.` references, and nothing always-enabled may depend on this
+    # toggleable component. Resolves whether the component is toggled on or
+    # off; if it does not resolve, the server drops it and the ops page falls
+    # back to the install's components list.
+    NUON_AUDIT_LOG_EXPORTER_COMPONENT_ID: "{{.nuon.components.audit_log_exporter.component_id}}"
 
 worker:
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"
