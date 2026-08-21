@@ -204,6 +204,23 @@ export interface NamespaceResponse {
   secrets: SecretSummary[]
 }
 
+/** One Kubernetes event, as GET /introspect/namespace/:ns/events returns it. */
+export interface NamespaceEvent {
+  type?: string
+  reason?: string
+  message?: string
+  count?: number
+  firstTimestamp?: string | null
+  lastTimestamp?: string | null
+  involvedObject?: { kind?: string; name?: string }
+}
+
+export interface NamespaceEventsResponse {
+  name: string
+  events_count: number
+  events: NamespaceEvent[]
+}
+
 export interface HelmRelease {
   name?: string
   namespace?: string

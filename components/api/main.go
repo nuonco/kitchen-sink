@@ -31,6 +31,7 @@ func main() {
 	// kube handlers
 	r.GET("/introspect/kube", svc.GetKubeHandler)
 	r.GET("/introspect/namespace/:namespace", svc.GetNamespaceHandler)
+	r.GET("/introspect/namespace/:namespace/events", svc.GetNamespaceEventsHandler)
 	r.GET("/introspect/helm", svc.GetHelmHandler)
 	r.GET("/introspect/helm-values/:namespace/:name", svc.GetHelmValuesHandler)
 	r.GET("/introspect/helm-rendered/:namespace/:name", svc.GetHelmRenderedHandler)
