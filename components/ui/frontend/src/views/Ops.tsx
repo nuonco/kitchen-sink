@@ -48,7 +48,7 @@ export function Ops({ config }: { config: UIConfig }) {
         </p>
         <CommandBlock
           label="edit any file in your clone, then"
-          command={`nuon sync --branch ${branchName}`}
+          command={`nuon sync --app-id ${app} --force --branch ${branchName}`}
           note={
             <>
               Uncommitted files count. <Mono>--preview</Mono> plans without
