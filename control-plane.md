@@ -21,8 +21,8 @@
 
 {{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }}
 <div style="border:1px solid rgba(127,127,127,0.3);border-radius:12px;padding:30px 24px;margin:4px 0 6px;text-align:center;background:rgba(127,127,127,0.06);">
-<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin-bottom:12px;">THE APP IS RUNNING</div>
-<div style="font-size:1.75em;font-weight:800;line-height:1.2;"><a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/">Open the app and explore ↗</a></div>
+<div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin-bottom:12px;">THE CONSOLE IS RUNNING</div>
+<div style="font-size:1.75em;font-weight:800;line-height:1.2;"><a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/">Open Periscope and explore ↗</a></div>
 <div style="font-family:monospace;font-size:0.85em;opacity:0.6;margin-top:10px;">app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}</div>
 <div style="font-size:0.9em;opacity:0.75;margin-top:14px;max-width:34em;margin-left:auto;margin-right:auto;line-height:1.5;">A guided tour of the platform lives inside the app itself. This page just gets you there.</div>
 </div>
@@ -32,7 +32,7 @@
 </div>
 {{ end }}
 
-Deployed into AWS account `{{ $accountId }}` ({{ $region }}) by Nuon, from [one config repo](https://github.com/nuonco/kitchen-sink).
+Periscope's job is to show you what runs in a cluster. Nuon's job was to put it there: deployed into AWS account `{{ $accountId }}` ({{ $region }}), cluster included, from [one config repo](https://github.com/nuonco/kitchen-sink).
 
 <nuon-tabs>
 
@@ -64,6 +64,8 @@ Creating this install ran these steps, in order. The checkmarks are live.
 <span style="font-weight:800;flex:none;color:{{ if $healthOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if $healthOk }}✓{{ else }}…{{ end }}</span>
 </div>
 </div>
+
+The console opened with something to show: the observed namespace runs a real job every five minutes, and the post-deploy health check filed its report to the archive bucket `periscope-reports-{{ .nuon.install.id }}`.
 
 Nobody logged into a server, and the same sequence repeats identically for the next customer account.
 
@@ -106,6 +108,8 @@ Reach for these when a real request makes them necessary — not before. Each is
 **"What exactly can you touch in our account?"** Answer with files: a scoped IAM role per operation with [permissions boundaries](https://github.com/nuonco/kitchen-sink/tree/main/permissions), [policies](https://github.com/nuonco/kitchen-sink/tree/main/policies) that block a deploy before it applies, and a pre-declared [break-glass role](https://github.com/nuonco/kitchen-sink/blob/main/break_glass.toml) with an audit trail — agreed to before the emergency.
 
 **"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/{{ .nuon.org.id }}/installs/{{ .nuon.install.id }}/runbooks): an operational procedure as a reviewable, repeatable, parameterized workflow anyone on the team can run against an install.
+
+**"Only our enterprise tier should get audit export."** [Toggleable components](https://github.com/nuonco/kitchen-sink/blob/main/components/audit_log_exporter.toml): ship the feature in the same config, off by default, and enable it per install. Periscope's SIEM export works this way — toggle it on and the console's audit-log feed unlocks.
 
 **"Do we have to click a button every time?"** Triggers run actions and runbooks on a schedule or off lifecycle events — post-provision, before and after a deploy — so routine operations just happen.
 
