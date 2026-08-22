@@ -86,7 +86,7 @@ export const branchConfigAbridged = "name = \"ms/theme-periscope\"\n\npost_deplo
 export const runbooks: Runbook[] = [
   {
     "name": "full-health-check",
-    "description": "Check an install end to end: nodes, the Periscope workloads, the ALB ingress, and the public HTTPS endpoint.",
+    "description": "Check an install end to end: nodes, the Periscope workloads, the ALB ingress, and the public HTTPS endpoint — then write the report to the install's report archive.",
     "kind": "health-check",
     "mutates": false,
     "steps": [
@@ -114,12 +114,17 @@ export const runbooks: Runbook[] = [
         "name": "endpoint-health",
         "type": "action",
         "detail": "probe the public HTTPS endpoint · 5m"
+      },
+      {
+        "name": "archive-report",
+        "type": "action",
+        "detail": "Nodes, Pods, Helm releases, Ingress, Reports in the archive · 3m"
       }
     ]
   },
   {
     "name": "debug-bundle",
-    "description": "Something's gone wrong — collect a read-only diagnostic bundle: pod state, events, logs, restart reasons, and a verbose endpoint probe.",
+    "description": "Something's gone wrong — collect a diagnostic bundle (pod state, events, logs, restart reasons, endpoint probe) and upload it to the install's report archive.",
     "kind": "debug",
     "mutates": false,
     "steps": [
@@ -142,6 +147,11 @@ export const runbooks: Runbook[] = [
         "name": "endpoint-probe",
         "type": "action",
         "detail": "probe the public HTTPS endpoint · 2m"
+      },
+      {
+        "name": "archive-bundle",
+        "type": "action",
+        "detail": "Bundles in the archive · 4m"
       }
     ]
   },
