@@ -14,14 +14,9 @@ import {
   type SecretSummary,
   type UIConfig,
 } from '../lib/api'
-import { stepEyebrow } from '../lib/taxonomy'
-import { useMarkStepSeen } from '../lib/progress'
-import { StepNav } from '../ui/CapabilityGrid'
 import {
-  BackLink,
   Callout,
   Disclosure,
-  Eyebrow,
   EmptyState,
   LoadState,
   OutLink,
@@ -31,10 +26,9 @@ import {
 } from '../ui/Primitives'
 
 /* ============================================================
-   Under the hood: what Nuon actually put in the account to make the product
-   pages upstairs true. Live reads through the same fail-closed proxy the
-   sync endpoints use; nothing here is required to use Conduit, all of it is
-   available when you want to check its work.
+   System: what Nuon actually put in the account to make the product pages
+   true — cluster, namespace, events, Helm, pod environment, all read live
+   through the same fail-closed proxy the sync endpoints use.
    ============================================================ */
 
 /**
@@ -736,12 +730,12 @@ function Events({ namespace, config }: { namespace: string; config: UIConfig }) 
   )
 }
 
-export function UnderTheHood({
+export function System({
   config,
   section,
 }: {
   config: UIConfig
-  /** Optional deep-link target: #/under-the-hood/cluster scrolls there. */
+  /** Optional deep-link target: #/system/cluster scrolls there. */
   section?: string
 }) {
   const namespace = config.namespace ?? 'conduit'
@@ -755,18 +749,14 @@ export function UnderTheHood({
     document.getElementById(section)?.scrollIntoView({ block: 'start' })
   }, [section])
 
-  useMarkStepSeen('/under-the-hood')
-
   return (
     <>
-      <BackLink to="/">Conduit</BackLink>
       <header className="page-header">
-        <Eyebrow>{stepEyebrow('/under-the-hood')}</Eyebrow>
-        <h1>Under the hood</h1>
+        <h1>System</h1>
         <p className="lede">
-          The pipelines page shows what Conduit did; this one shows what Nuon
-          actually put in the account to make that true. Live reads &mdash;
-          the summary first, every table and raw response one click deeper.
+          What is actually running in this account, read live from the
+          cluster. Nothing here is needed to use Conduit; all of it checks
+          its work.
         </p>
       </header>
 
@@ -777,7 +767,6 @@ export function UnderTheHood({
       <Events namespace={namespace} config={config} />
       <HelmReleases config={config} />
       <PodEnvironment />
-      <StepNav current="/under-the-hood" />
     </>
   )
 }

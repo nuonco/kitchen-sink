@@ -122,60 +122,6 @@ body::before {
   flex-direction: column;
 }
 
-.topbar {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  height: var(--topbar-height);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: 0 var(--space-6);
-  border-bottom: 1px solid var(--border-subtle);
-  background: rgba(2, 7, 8, 0.88);
-  backdrop-filter: blur(8px);
-}
-
-.topbar__brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  color: var(--text-primary);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-
-.topbar__brand:hover {
-  text-decoration: none;
-}
-
-.topbar__brand-name {
-  font-size: var(--text-body);
-  font-weight: var(--weight-strong);
-}
-
-.topbar__divider {
-  width: 1px;
-  height: 20px;
-  background: var(--border-default);
-}
-
-.topbar__meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-width: 0;
-  font-family: var(--font-mono);
-  font-size: var(--text-subtext);
-  color: var(--text-tertiary);
-  letter-spacing: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
 .topbar__spacer {
   flex: 1;
 }
@@ -349,18 +295,6 @@ body::before {
   border-color: var(--border-strong);
 }
 
-.btn--ghost {
-  background: transparent;
-  border-color: transparent;
-  color: var(--text-secondary);
-  padding: var(--space-2);
-}
-
-.btn--ghost:hover {
-  background: var(--surface-hover);
-  color: var(--text-primary);
-}
-
 .btn--sm {
   padding: var(--space-1) var(--space-3);
   font-size: var(--text-subtext);
@@ -464,22 +398,6 @@ body::before {
    Landing
    ============================================================ */
 
-.hero {
-  padding-bottom: var(--space-4);
-}
-
-.hero h1 {
-  margin: var(--space-3) 0 var(--space-4);
-  max-width: 22ch;
-}
-
-.hero__lede {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 64ch;
-}
-
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -534,26 +452,6 @@ body::before {
 }
 
 /* Golden path */
-
-.golden {
-  margin-top: var(--space-12);
-  border: 2px solid var(--border-subtle);
-  border-left: 2px solid var(--accent-dim);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    100deg,
-    var(--accent-wash) 0%,
-    rgba(11, 18, 21, 0) 55%
-  );
-  padding: var(--space-6);
-}
-
-.golden__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  margin: var(--space-2) 0 var(--space-5);
-}
 
 /* The three-part architecture diagram: the sandbox drawn as the containing
    boundary, the components and the runner as nodes inside it. Each element is
@@ -734,575 +632,11 @@ body::before {
   }
 }
 
-.golden__aside {
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border-subtle);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  max-width: 76ch;
-}
-
-/* ============================================================
-   Guided tour (the landing walkthrough)
-   ============================================================ */
-
-.tour__step {
-  animation: tour-in 480ms var(--ease-standard) both;
-}
-
-@keyframes tour-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.tour__topline {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-10);
-}
-
-.tour__progress {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.tour__dots {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Dots are buttons: reached steps can be jumped back to; steps ahead stay
-   disabled — the tour reveals, it doesn't preview. */
-.tour__dot {
-  width: 7px;
-  height: 7px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-full);
-  background: var(--border-strong);
-  cursor: pointer;
-}
-
-.tour__dot:disabled {
-  cursor: default;
-}
-
-.tour__dot:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
-
-.tour__dot--done {
-  background: var(--accent-dim);
-}
-
-.tour__dot--active {
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-ring);
-}
-
-.tour__skip {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-}
-
-.tour__skip:hover {
-  color: var(--text-primary);
-}
-
-.tour__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-10);
-}
-
-.tour__aside {
-  margin-top: var(--space-6);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-tertiary);
-  max-width: 64ch;
-}
-
-/* The arrival moment */
-
-.arrive {
-  min-height: 52vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.arrive h1 {
-  font-size: var(--display-lg);
-  line-height: 1.08;
-  margin: var(--space-4) 0 var(--space-5);
-  max-width: 18ch;
-}
-
-.arrive__lede {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 58ch;
-}
-
-.arrive__chips {
-  margin-top: var(--space-6);
-}
-
-.arrive__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  margin-top: var(--space-8);
-}
-
-.arrive__actions .tour__skip {
-  margin-left: 0;
-}
-
-@media (max-width: 720px) {
-  .arrive h1 {
-    font-size: var(--display-md);
-  }
-}
-
-/* Step headers */
-
-.step-header {
-  margin-bottom: var(--space-8);
-}
-
-.step-header h2 {
-  font-size: var(--text-display);
-  line-height: var(--text-display-line);
-  margin: var(--space-3) 0 var(--space-4);
-  letter-spacing: var(--tracking-tight);
-}
-
-.step-header__lede {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 64ch;
-}
-
-/* Diagram parts the tour has not reached yet */
-
-.arch__node--ghost {
-  opacity: 0.35;
-  border-style: dashed;
-  cursor: default;
-}
-
-.arch__node--ghost:hover {
-  border-color: var(--border-default);
-  background: var(--surface-card);
-}
-
-.arch__edge--ghost {
-  opacity: 0.35;
-}
-
-/* Staggered reveal for the live facts */
-
-.fact--in {
-  animation: fact-in 560ms var(--ease-standard) both;
-}
-
-@keyframes fact-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* The end-of-tour CTA block on the deployed step */
-
-.cta-block {
-  margin-top: var(--space-8);
-  padding: var(--space-6);
-  border: 2px solid var(--border-subtle);
-  border-left: 2px solid var(--accent-dim);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    100deg,
-    var(--accent-wash) 0%,
-    rgba(11, 18, 21, 0) 60%
-  );
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-4);
-}
-
-.cta-block__kicker {
-  font-family: var(--font-mono);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.btn--xl {
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  border-radius: var(--radius-lg);
-}
-
-/* The live toggle switch (drawn, not interactive) */
-
-.switch {
-  position: relative;
-  flex: none;
-  margin-left: auto;
-  width: 44px;
-  height: 24px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-strong);
-  background: var(--surface-sunken);
-}
-
-.switch::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: var(--radius-full);
-  background: var(--text-tertiary);
-  transition: left var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard);
-}
-
-.switch--on {
-  border-color: var(--accent);
-  background: var(--accent-wash-strong);
-}
-
-.switch--on::after {
-  left: 23px;
-  background: var(--accent);
-}
-
-/* Small variant, used as the "Enable custom features" tile icon */
-
-.switch--sm {
-  width: 28px;
-  height: 16px;
-  margin-left: 0;
-}
-
-.switch--sm::after {
-  top: 2px;
-  left: 2px;
-  width: 10px;
-  height: 10px;
-}
-
-.switch--sm.switch--on::after {
-  left: 14px;
-}
-
-/* ============================================================
-   The evaluation checklist: one ordered path, rendered as numbered rows.
-   Hover treatment keeps nuon.co/product's PixelCard look: the row lifts,
-   a cyan border snaps on, the title turns cyan with a pixel arrow.
-   ============================================================ */
-
-.pathlist {
-  list-style: none;
-  margin: var(--space-8) 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.pathlist__phase {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin: var(--space-5) 0 var(--space-1);
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.pathlist__phase::after {
-  content: "";
-  flex: 1;
-  height: 2px;
-  background: var(--border-subtle);
-}
-
-.pathrow {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 44px 1fr auto;
-  align-items: center;
-  gap: var(--space-4);
-  text-align: left;
-  padding: var(--space-4) var(--space-5);
-  border: 2px solid var(--border-subtle);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: transform 0.1s steps(2), border-color 0.1s steps(2),
-    background-color 0.1s steps(2);
-}
-
-.pathrow:hover {
-  transform: translate(-4px, -4px);
-  border-color: var(--accent);
-  background: rgba(76, 201, 240, 0.03);
-}
-
-.pathrow--bonus {
-  border-style: dashed;
-}
-
-.pathrow__num {
-  font-family: var(--font-mono);
-  font-size: var(--text-title);
-  line-height: var(--text-title-line);
-  color: var(--accent-dim);
-}
-
-.pathrow__body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.pathrow__title {
-  display: flex;
-  align-items: center;
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  color: var(--text-primary);
-  transition: color 300ms var(--ease-standard);
-}
-
-.pathrow:hover .pathrow__title {
-  color: var(--accent-hover);
-}
-
-.pathrow__arrow {
-  display: flex;
-  align-items: center;
-  width: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: width 300ms var(--ease-standard),
-    opacity 300ms var(--ease-standard);
-}
-
-.pathrow:hover .pathrow__arrow {
-  width: 20px;
-  opacity: 1;
-}
-
-.pathrow__desc {
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-secondary);
-}
-
-.pathrow__meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.pathrow__meta .switch {
-  margin-left: 0;
-}
-
-@media (max-width: 640px) {
-  .pathrow {
-    grid-template-columns: 32px 1fr;
-  }
-
-  .pathrow__meta {
-    grid-column: 2;
-    justify-content: flex-start;
-  }
-}
-
-/* ---------- The checklist's memory ---------- */
-
-/* How far this browser has been: a counted label and a thin track. The label
-   says "explored", not "done" — opening a page is all the app can honestly
-   claim. */
-.pathmeter {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-top: var(--space-8);
-}
-
-.pathmeter__label {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
-.pathmeter__track {
-  flex: 1;
-  max-width: 220px;
-  height: 6px;
-  background: var(--border-subtle);
-  overflow: hidden;
-}
-
-.pathmeter__fill {
-  display: block;
-  height: 100%;
-  background: var(--accent);
-  transition: width 400ms var(--ease-standard);
-}
-
 /* A step this visitor has opened: the number goes green and a pixel check
    joins the badges. The row stays fully readable — done is a fact, not a
    dimmer. */
-.pathrow--seen .pathrow__num {
-  color: var(--status-positive);
-}
-
-.pathrow__seen {
-  display: inline-flex;
-  align-items: center;
-  color: var(--status-positive);
-}
 
 /* The first step not yet opened: where to pick the path back up. */
-.pathrow--next {
-  border-color: var(--accent-dim);
-}
-
-.pathrow__next {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* ---------- Prev / next along the path ---------- */
-
-.stepnav {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
-  margin-top: var(--space-10);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--border-subtle);
-}
-
-.stepnav__link {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: var(--space-4) var(--space-5);
-  border: 2px solid var(--border-subtle);
-  background: var(--surface-card);
-  text-decoration: none;
-  transition: transform 0.1s steps(2), border-color 0.1s steps(2);
-}
-
-.stepnav__link:hover {
-  transform: translate(-4px, -4px);
-  border-color: var(--accent);
-}
-
-.stepnav__link--next {
-  text-align: right;
-}
-
-.stepnav__dir {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.stepnav__title {
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  font-weight: var(--weight-stronger);
-  color: var(--text-primary);
-}
-
-.stepnav__link:hover .stepnav__title {
-  color: var(--accent-hover);
-}
-
-@media (max-width: 640px) {
-  .stepnav {
-    grid-template-columns: 1fr;
-  }
-
-  .stepnav__link--next {
-    text-align: left;
-  }
-}
 
 /* ---------- The two ways to run a proof ---------- */
 
@@ -1345,78 +679,6 @@ body::before {
 
 
 /* Path cards */
-
-.paths {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-4);
-  margin-top: var(--space-5);
-}
-
-.path {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  text-align: left;
-  padding: var(--space-6);
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard),
-    transform var(--duration-base) var(--ease-standard);
-}
-
-.path:hover {
-  border-color: var(--accent-dim);
-  background: var(--surface-raised);
-  text-decoration: none;
-}
-
-.path__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--accent-wash-strong);
-  background: var(--accent-wash);
-  color: var(--accent);
-  font-size: 20px;
-}
-
-.path__q {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  letter-spacing: var(--tracking-normal);
-}
-
-.path__body {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  flex: 1;
-}
-
-.path__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-body);
-  font-weight: var(--weight-strong);
-  color: var(--accent);
-}
-
-.path:hover .path__cta .icon {
-  transform: translateX(2px);
-}
-
-.path__cta .icon {
-  transition: transform var(--duration-base) var(--ease-standard);
-}
 
 /* ============================================================
    Data views
@@ -1602,10 +864,6 @@ pre.raw {
 
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
-    animation: none;
-  }
-  .tour__step,
-  .fact--in {
     animation: none;
   }
   * {
@@ -1861,41 +1119,6 @@ pre.raw {
 
 /* The landing tile's locked state: still clickable (it leads to the pitch),
    but visibly not part of the install. */
-.path--locked {
-  border-style: dashed;
-  background: var(--surface-sunken);
-}
-
-.path--locked:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-sunken);
-}
-
-.path--locked .path__icon {
-  border-color: var(--border-subtle);
-  background: var(--surface-hover);
-  color: var(--text-tertiary);
-}
-
-.path--locked .path__q,
-.path--locked .path__body {
-  color: var(--text-tertiary);
-}
-
-.path__lock {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-}
-
-.path__lock .icon {
-  flex: none;
-  font-size: 14px;
-  margin-top: 1px;
-}
 
 .ttt {
   display: flex;
@@ -2365,7 +1588,9 @@ tr.row-select--active td {
   filter: drop-shadow(0 0 5px rgba(1, 108, 255, 0.25));
 }
 
-@media (max-width: 1200px) {
+/* With the sidebar in the layout the content column sits further right, so
+   the mark needs a wider viewport before it has clear space. */
+@media (max-width: 1580px) {
   .ambient {
     display: none;
   }
@@ -2391,19 +1616,11 @@ tr.row-select--active td {
   .main {
     padding: var(--space-8) var(--space-4) var(--space-14);
   }
-
-  .topbar {
-    padding: 0 var(--space-4);
-  }
-
-  .topbar__meta {
-    display: none;
-  }
 }
 
 /* ============================================================
-   Lifecycle visibility (phase 2): the beat strip, the live tictactoe
-   unlock, and the checklist-row flip highlight.
+   Lifecycle visibility: the beat strip and the live toggle-unlock
+   moments.
    ============================================================ */
 
 /* A strip of numbered beats (used by the destinations page's mechanism). */
@@ -2471,14 +1688,6 @@ tr.row-select--active td {
 }
 
 /* The arrive step's config-versions line. */
-
-.arrive__versions {
-  margin-top: var(--space-4);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-  max-width: 60ch;
-}
 
 /* The tictactoe watcher: the locked tile is polling the namespace. */
 
@@ -2561,30 +1770,9 @@ tr.row-select--active td {
   }
 }
 
-/* The checklist row the moment its component flips on while on screen. */
-
-.pathrow--flipped {
-  animation: action-flip 1400ms var(--ease-standard) both;
-}
-
-@keyframes action-flip {
-  0% {
-    box-shadow: 0 0 0 0 var(--accent-ring);
-    border-color: var(--accent);
-  }
-  60% {
-    box-shadow: 0 0 26px 2px var(--accent-ring);
-    border-color: var(--accent);
-  }
-  100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .ttt--just-unlocked,
   .ttt-unlocked-note,
-  .pathrow--flipped,
   .entstat__dot,
   .ttt-watch .badge--accent .badge__dot {
     animation: none;
@@ -2592,12 +1780,11 @@ tr.row-select--active td {
 }
 
 /* ============================================================
-   Review edits (Matt): clickable tour facts, the agent-prompt CTA, the
-   problem / solution / proof tags, per-proof prompts, and the destinations
-   entitlement card.
+   Linkable facts, the agent-prompt CTA, the problem / solution / proof
+   tags, per-proof prompts, and the destinations entitlement card.
    ============================================================ */
 
-/* Tour facts double as links: internal ones open the deep page, the install
+/* Facts double as links: internal ones open the deep page, the install
    fact opens the dashboard. */
 
 a.fact {
@@ -2629,8 +1816,6 @@ a.fact {
 .fact--link:hover .fact__go {
   color: var(--accent);
 }
-
-/* The hub's default action: hand the checklist to a coding agent. */
 
 .agent-cta {
   margin-top: var(--space-6);
@@ -2725,7 +1910,7 @@ a.fact {
   margin-right: auto;
 }
 
-/* A single proof's agent prompt: shorter pane than the full checklist. */
+/* A single proof's agent prompt: shorter pane than the full prompt. */
 
 .proof-prompt__pre {
   max-height: 240px;
@@ -3674,8 +2859,14 @@ table.pltable td {
   font-weight: var(--weight-stronger);
 }
 
+table.pltable th,
+table.pltable td {
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+}
+
 .pltable__sources {
-  max-width: 26ch;
+  max-width: 20ch;
   overflow: hidden;
   text-overflow: ellipsis;
 }

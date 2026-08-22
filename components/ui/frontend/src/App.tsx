@@ -8,12 +8,11 @@ import { MobileNav, PausedBanner, Sidebar } from './ui/Shell'
 import { Dashboard } from './views/Dashboard'
 import { Deployment } from './views/Deployment'
 import { Destinations } from './views/Destinations'
-import { Landing } from './views/Landing'
 import { Operate } from './views/Operate'
 import { PipelineDetail } from './views/PipelineDetail'
 import { Pipelines } from './views/Pipelines'
+import { System } from './views/System'
 import { TicTacToe } from './views/TicTacToe'
-import { UnderTheHood } from './views/UnderTheHood'
 
 /** The shell-level pipeline poll: feeds the sidebar's status dot and the
     global paused banner. Additive to the pages' own 10s polls. */
@@ -43,7 +42,7 @@ export default function App() {
       <Pipelines config={config} />
     )
   } else if (parts[0] === 'system') {
-    view = <UnderTheHood config={config} section={parts[1]} />
+    view = <System config={config} section={parts[1]} />
   } else if (parts[0] === 'destinations') {
     view = <Destinations config={config} />
   } else if (parts[0] === 'deployment') {
@@ -52,8 +51,6 @@ export default function App() {
     view = <Operate config={config} flow={parts[1]} />
   } else if (parts[0] === 'tictactoe') {
     view = <TicTacToe config={config} />
-  } else if (parts[0] === 'tour') {
-    view = <Landing config={config} />
   }
 
   return (
