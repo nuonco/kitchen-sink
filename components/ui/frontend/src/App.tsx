@@ -7,9 +7,9 @@ import { OutLink } from './ui/Primitives'
 import { MobileNav, PausedBanner, Sidebar } from './ui/Shell'
 import { Customize } from './views/Customize'
 import { Dashboard } from './views/Dashboard'
+import { Deployment } from './views/Deployment'
 import { Destinations } from './views/Destinations'
 import { Landing } from './views/Landing'
-import { Mapping } from './views/Mapping'
 import { Ops } from './views/Ops'
 import { PipelineDetail } from './views/PipelineDetail'
 import { Pipelines } from './views/Pipelines'
@@ -48,8 +48,7 @@ export default function App() {
   } else if (parts[0] === 'destinations') {
     view = <Destinations config={config} />
   } else if (parts[0] === 'deployment') {
-    // The Deployment page replaces Mapping here in a later chunk.
-    view = <Mapping config={config} />
+    view = <Deployment config={config} />
   } else if (parts[0] === 'operate') {
     view = parts[1] ? <Customize config={config} flow={parts[1]} /> : <Ops config={config} />
   } else if (parts[0] === 'tictactoe') {

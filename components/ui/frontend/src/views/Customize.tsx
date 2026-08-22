@@ -10,11 +10,9 @@ import {
 } from '../lib/api'
 import {
   adhocActions,
-  branchConfigAbridged,
   branchName,
   breakGlassToml,
   guardrails,
-  installGroups,
   lifecycleHooksToml,
   roles,
   runbooks,
@@ -254,114 +252,6 @@ function PipelineEvidence({ lead }: { lead: ReactNode }) {
       </p>
       <PipelineStrip />
     </section>
-  )
-}
-
-/* ============================================================
-   Ship: app branches (branch.toml)
-   ============================================================ */
-
-const groupNotes: Record<string, string> = {
-  staging: 'use_for_previews: PR preview plans run here',
-  customers: 'the production fleet',
-  enterprise: 'the installs with change windows',
-}
-
-function BranchesFlow({ config }: { config: UIConfig }) {
-  return (
-    <>
-      <FlowHeader
-        to="/customize/branches"
-        title="Ship through app branches"
-        problem="Without staging, one bad config change reaches every customer at once."
-      />
-
-      <PspSection
-        kind="solution"
-        title="One branch, a staged rollout"
-        aside="branch.toml · [[install_groups]]"
-      >
-        <div className="groups">
-          {installGroups.map((group) => (
-            <div key={group.name} className="group-card">
-              <div className="group-card__head">
-                <span className="arch__num">0{group.order}</span>
-                <span className="group-card__name">{group.name}</span>
-              </div>
-              <div className="group-card__selector mono">{group.selector}</div>
-              <div className="group-card__note">
-                {groupNotes[group.name] ??
-                  (group.preview ? 'PR preview plans run here' : '')}
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Every push to <span className="mono">{branchName}</span> builds the
-          config at that commit and rolls it across these groups in order.
-          Each group&rsquo;s plan holds for a human approval, and the{' '}
-          <span className="mono">pipeline-health-sweep</span> runbook runs on
-          every install after its group deploys.
-        </p>
-        <CodeBlock
-          label="branch.toml (the real config, comments stripped)"
-          code={branchConfigAbridged}
-        />
-      </PspSection>
-
-      <PspSection
-        kind="proof"
-        title="Ship a change to this install"
-        aside="one command from your terminal"
-      >
-        <Tracks
-          agent={<ProofPrompt flow="branches" config={config} />}
-          manual={
-            <CommandBlock
-              label="edit any file in your clone, then sync and trigger the run"
-              command={`nuon sync --app-id ${appIdOf(config)} --force --branch ${branchName}`}
-              note={
-                <>
-                  Syncs your local files exactly as they are (even uncommitted,
-                  no push) and triggers a real branch run through the groups
-                  above. <span className="mono">--preview</span> plans every
-                  group with nothing applied.
-                </>
-              }
-            />
-          }
-        />
-        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Each group&rsquo;s approval is a person in the dashboard; there is
-          deliberately no CLI command for it.{' '}
-          {config.links.branches && (
-            <OutLink href={config.links.branches} variant="plain">
-              Watch the run and approve each group
-            </OutLink>
-          )}
-        </p>
-        <LiveEvidence
-          config={config}
-          lead={
-            <>
-              When the run&rsquo;s deploy reaches this install, the image tags
-              below flip to the new <span className="mono">sha-*</span> stamp
-              and the pods churn as the new version rolls in.
-            </>
-          }
-        />
-        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Rolling back: there is no CLI command yet. Re-deploy a previous
-          version from the dashboard&rsquo;s version history (plan first),
-          or revert the commit and let the same staged rollout replay.{' '}
-          {config.links.versions && (
-            <OutLink href={config.links.versions} variant="plain">
-              Open this install&rsquo;s version history
-            </OutLink>
-          )}
-        </p>
-      </PspSection>
-    </>
   )
 }
 
@@ -1169,8 +1059,6 @@ function AgentFlow({ config }: { config: UIConfig }) {
  */
 function flowLinks(flow: string, config: UIConfig) {
   const links = config.links
-  if (flow === 'branches')
-    return { href: links.branches ?? links.install, label: 'See branch runs & approvals in Nuon' }
   if (flow === 'runbooks')
     return { href: links.runbooks ?? links.install, label: 'Open runbook runs & transcripts in Nuon' }
   if (flow === 'actions')
@@ -1231,7 +1119,6 @@ export function Customize({
     <>
       <BackLink to="/">Conduit</BackLink>
 
-      {flow === 'branches' && <BranchesFlow config={config} />}
       {flow === 'runbooks' && <RunbooksFlow config={config} />}
       {flow === 'actions' && <ActionsFlow config={config} />}
       {flow === 'health' && <HealthFlow config={config} />}

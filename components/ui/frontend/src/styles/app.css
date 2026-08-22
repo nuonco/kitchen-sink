@@ -3755,3 +3755,34 @@ table.pltable td {
   padding: 2px 0;
   overflow-wrap: anywhere;
 }
+
+/* ============================================================
+   Deployment page (phase 2)
+   ============================================================ */
+
+/* The static rendition of the golden-path diagram: the boundary is a label,
+   not a control. */
+.arch__boundary--static {
+  cursor: default;
+}
+
+.arch__boundary--static:hover {
+  background: none;
+}
+
+.archnotes {
+  margin: var(--space-4) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+  max-width: 76ch;
+}
+
+.typerow__chip {
+  margin-left: var(--space-3);
+}

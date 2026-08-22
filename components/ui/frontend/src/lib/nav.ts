@@ -27,7 +27,7 @@ export const navItems: NavItem[] = [
  * Maps an old hash's segments onto the canonical route. Every route this app
  * has ever served keeps rendering something sensible:
  *
- *   #/map                                  -> /deployment
+ *   #/map, #/customize/branches, #/day2/branches -> /deployment
  *   #/compliance, #/audit-log              -> /destinations
  *   #/under-the-hood[/:s], #/deployed[/:s] -> /system[/:s]
  *   #/ops, #/customize, #/day2             -> /operate
@@ -48,7 +48,8 @@ export function canonicalize(parts: string[]): string[] {
       return ['operate']
     case 'customize':
     case 'day2':
-      // NOTE: 'branches' moves to /deployment when the Deployment page lands.
+      // The ship/version surface lives on Deployment now.
+      if (rest[0] === 'branches') return ['deployment']
       return ['operate', ...rest]
     default:
       return parts
