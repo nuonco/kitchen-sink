@@ -6,9 +6,9 @@ import { AppShell } from './ui/AppShell'
 import { tourDone } from './ui/Drawer'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { OutLink } from './ui/Primitives'
-import { AuditLog } from './views/AuditLog'
 import { Customize } from './views/Customize'
 import { Dashboard } from './views/Dashboard'
+import { Events } from './views/Events'
 import { Workloads } from './views/Workloads'
 import { Mapping } from './views/Mapping'
 import { Ops } from './views/Ops'
@@ -120,7 +120,7 @@ export default function App() {
   if (parts[0] === 'workloads') {
     view = <Workloads config={config} section={parts[1]} />
   } else if (parts[0] === 'events') {
-    view = <AuditLog config={config} />
+    view = <Events config={config} />
   } else if (parts[0] === 'reports') {
     view = <ReportsInterim />
   } else if (parts[0] === 'operations') {

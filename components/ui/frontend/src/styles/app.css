@@ -3337,6 +3337,10 @@ a.fact {
   max-width: 560px;
 }
 
+.ent--panel {
+  max-width: 720px;
+}
+
 .ent--on {
   border-color: var(--accent-dim);
   background: linear-gradient(
