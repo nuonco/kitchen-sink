@@ -33,7 +33,7 @@ import {
  * A row with no name is a malformed response; a public demo page must
  * degrade to a muted cell, never a crash.
  */
-function namespaceOwner(
+export function namespaceOwner(
   name: string | undefined,
   installID: string | undefined,
 ): { label: string; app: boolean } {

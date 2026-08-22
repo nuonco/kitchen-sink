@@ -58,6 +58,60 @@ export function Mono({ children }: { children: ReactNode }) {
   return <span className="mono">{children}</span>
 }
 
+/**
+ * A dashboard stat tile: label over a hero number over a note, live counts
+ * only. A missing value renders an em-dash (the read has not resolved), never
+ * a spinner. Status is never color-alone: `warn` pairs the warning color with
+ * a drawn dot, and the label carries the word.
+ */
+export function StatTile({
+  label,
+  value,
+  note,
+  href,
+  external = false,
+  warn = false,
+}: {
+  label: string
+  value?: ReactNode
+  note?: ReactNode
+  href?: string
+  external?: boolean
+  warn?: boolean
+}) {
+  const pending = value === null || value === undefined || value === ''
+  const cls = ['stat', href ? 'stat--link' : ''].filter(Boolean).join(' ')
+  const valueCls = [
+    'stat__value',
+    pending ? 'stat__value--pending' : '',
+    warn && !pending ? 'stat__value--warn' : '',
+  ]
+    .filter(Boolean)
+    .join(' ')
+  const body = (
+    <>
+      <span className="stat__label">{label}</span>
+      <span className={valueCls}>
+        {warn && !pending && <span className="stat__dot" aria-hidden="true" />}
+        {pending ? '—' : value}
+      </span>
+      {note && <span className="stat__note">{note}</span>}
+    </>
+  )
+  if (href) {
+    return (
+      <a
+        className={cls}
+        href={href}
+        {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
+      >
+        {body}
+      </a>
+    )
+  }
+  return <div className={cls}>{body}</div>
+}
+
 type Tone = 'neutral' | 'positive' | 'negative' | 'warning' | 'accent'
 
 export function Badge({
