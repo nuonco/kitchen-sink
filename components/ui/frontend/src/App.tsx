@@ -10,7 +10,7 @@ import { Customize } from './views/Customize'
 import { Dashboard } from './views/Dashboard'
 import { Events } from './views/Events'
 import { Workloads } from './views/Workloads'
-import { Mapping } from './views/Mapping'
+import { Nuon } from './views/Nuon'
 import { Operations } from './views/Operations'
 import { Reports } from './views/Reports'
 import { TicTacToe } from './views/TicTacToe'
@@ -118,7 +118,7 @@ export default function App() {
   } else if (parts[0] === 'settings') {
     view = <SettingsInterim config={config} />
   } else if (parts[0] === 'nuon') {
-    view = <Mapping config={config} />
+    view = <Nuon config={config} />
   } else if (parts[0] === 'guide') {
     view = <Customize config={config} flow={parts[1]} />
   } else if (parts[0] === 'tictactoe') {

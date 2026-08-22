@@ -1343,6 +1343,22 @@ a.stat:hover {
   background: var(--accent-wash);
 }
 
+/* The static, complete rendition on #/nuon: same drawing, nothing to click. */
+
+.arch--static .arch__boundary,
+.arch--static .arch__node {
+  cursor: default;
+}
+
+.arch--static .arch__boundary:hover {
+  background: none;
+}
+
+.arch--static .arch__node:hover {
+  border-color: var(--border-default);
+  background: var(--surface-card);
+}
+
 .arch__edge {
   flex: none;
   align-self: center;

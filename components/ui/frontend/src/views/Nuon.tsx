@@ -1,17 +1,29 @@
 import { useState } from 'react'
 import type { UIConfig } from '../lib/api'
-import { branchName, repoName } from '../lib/config-data.gen'
-import { stepEyebrow } from '../lib/taxonomy'
-import { useMarkStepSeen } from '../lib/progress'
-import { StepNav } from '../ui/CapabilityGrid'
 import {
-  BackLink,
+  branchName,
+  installGroups,
+  repoName,
+  roles,
+} from '../lib/config-data.gen'
+import { useMarkStepSeen } from '../lib/progress'
+import { GoldenPathStatic } from '../ui/GoldenPath'
+import {
   Callout,
-  Eyebrow,
+  CommandBlock,
   Icon,
+  Mono,
   OutLink,
+  PageHeader,
   Section,
 } from '../ui/Primitives'
+
+/* ============================================================
+   The product-inside-product surface: one screen a buyer can point at and
+   say "that's what Nuon did". The component map is the config that produced
+   this install; rollout, roles, and the entitlement pointer are the levers
+   around it.
+   ============================================================ */
 
 interface ComponentType {
   type: string
@@ -224,19 +236,25 @@ const deployOrder = [
   },
 ]
 
-export function Mapping({ config }: { config: UIConfig }) {
+export function Nuon({ config }: { config: UIConfig }) {
   useMarkStepSeen('/map')
+  const app = config.app_id ?? '<your-app-id>'
+
   return (
     <>
-      <BackLink to="/">Customize Periscope</BackLink>
-      <header className="page-header">
-        <Eyebrow>{stepEyebrow('/map')}</Eyebrow>
-        <h1>How Periscope maps onto components</h1>
-        <p className="lede">
-          A component is one deployable piece of a product, described by a
-          small TOML file in the repo. Every piece of this console is one.
-        </p>
-      </header>
+      <PageHeader
+        title="Deployed by Nuon"
+        lede={
+          <>
+            Periscope&rsquo;s job is to show you what runs here; Nuon&rsquo;s
+            job was to put it here.
+          </>
+        }
+      />
+
+      <Section title="The golden path" aside="sandbox · components · runner">
+        <GoldenPathStatic config={config} />
+      </Section>
 
       <Section title="The component types" aside="Five of them, in this app">
         <TypeMatrix />
@@ -274,7 +292,91 @@ export function Mapping({ config }: { config: UIConfig }) {
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"`}
         />
       </Section>
-      <StepNav current="/map" />
+
+      <Section title="Rollout" aside="branch.toml · [[install_groups]]">
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Every push to <Mono>{branchName}</Mono> rolls out through these
+          groups in order, holding for a human approval per group.
+        </p>
+        <div className="ship" style={{ marginTop: 12 }}>
+          {installGroups.map((group) => (
+            <span key={group.name} className="ship__beat">
+              <span className="ship__num">0{group.order}</span>
+              <span className="ship__label">{group.name}</span>
+              <span className="ship__detail mono">{group.selector}</span>
+            </span>
+          ))}
+        </div>
+        <CommandBlock
+          label="edit any file in your clone, then"
+          command={`nuon sync --app-id ${app} --force --branch ${branchName}`}
+          note={
+            <>
+              Uncommitted files count. <Mono>--preview</Mono> plans without
+              applying.
+              {config.links.branches && (
+                <>
+                  {' '}
+                  <OutLink href={config.links.branches} variant="plain">
+                    Watch the run and approve each group
+                  </OutLink>
+                </>
+              )}
+            </>
+          }
+        />
+      </Section>
+
+      <Section title="Access" aside="permissions/* · break_glass.toml">
+        <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
+          Every operation assumes its own scoped IAM role in the account,
+          named <Mono>&lt;install&gt;-&lt;role&gt;</Mono>.
+        </p>
+        <div className="table-wrap">
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Role</th>
+                <th>Boundary</th>
+                <th>Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              {roles.map((r) => (
+                <tr key={r.name}>
+                  <td className="mono">{r.name}</td>
+                  <td className="mono subtext">{r.boundary}</td>
+                  <td>
+                    {r.desc}
+                    {r.name === 'app-break-glass' && (
+                      <>
+                        {' '}
+                        <a href="#/operations">Emergency restart</a> uses it.
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Section>
+
+      <p className="small muted" style={{ maxWidth: '72ch' }}>
+        Toggleable components appear as entitlements in{' '}
+        <a href="#/settings">Settings</a>.
+      </p>
+
+      <div className="row" style={{ marginTop: 32 }}>
+        {config.links.install && (
+          <OutLink href={config.links.install}>
+            Open this install in Nuon
+          </OutLink>
+        )}
+        <a className="btn btn--secondary" href="#/guide">
+          Evaluation guide <Icon name="arrow-right" />
+        </a>
+      </div>
     </>
   )
 }
