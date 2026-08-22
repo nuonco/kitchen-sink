@@ -24,7 +24,7 @@ function TopBar({
     <header className="topbar">
       <button className="topbar__brand" onClick={() => navigate('/')}>
         <NuonMark />
-        <span className="topbar__brand-name">Kitchen sink</span>
+        <span className="topbar__brand-name">Periscope</span>
       </button>
       {installID && (
         <>
@@ -78,7 +78,8 @@ export default function App() {
           <span className="mono">nuonco/kitchen-sink</span>
           <span className="topbar__divider" />
           <span>
-            This app and the Nuon dashboard are two halves of the same tour.
+            This console and the Nuon dashboard are two halves of the same
+            tour.
           </span>
           <span className="topbar__spacer" />
           <OutLink href="https://docs.nuon.co" variant="plain">
