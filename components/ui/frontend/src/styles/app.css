@@ -431,14 +431,6 @@ body::before {
    Primitives
    ============================================================ */
 
-.eyebrow {
-  font-family: var(--font-mono);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  letter-spacing: 0;
-  color: var(--text-tertiary);
-}
-
 .mono {
   font-family: var(--font-mono);
   letter-spacing: 0;
@@ -588,48 +580,7 @@ body::before {
   line-height: var(--text-subtext-line);
 }
 
-.backlink {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  background: none;
-  border: none;
-  padding: 0;
-  margin-bottom: var(--space-5);
-  color: var(--text-tertiary);
-  font-size: var(--text-body);
-  cursor: pointer;
-}
-
-.backlink:hover {
-  color: var(--text-primary);
-}
-
 /* Cards */
-
-.card {
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-01);
-}
-
-.card__header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-2);
-}
-
-.card__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-}
-
-/* Page header */
 
 .page-header {
   margin-bottom: var(--space-8);
@@ -721,79 +672,6 @@ body::before {
   align-items: center;
   gap: var(--space-3);
   flex-wrap: wrap;
-}
-
-/* ============================================================
-   Landing
-   ============================================================ */
-
-.hero {
-  padding-bottom: var(--space-4);
-}
-
-.hero h1 {
-  margin: var(--space-3) 0 var(--space-4);
-  max-width: 22ch;
-}
-
-.hero__lede {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 64ch;
-}
-
-.facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 1px;
-  margin-top: var(--space-8);
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--border-subtle);
-  overflow: hidden;
-}
-
-.fact {
-  background: var(--surface-card);
-  padding: var(--space-4) var(--space-5);
-  min-width: 0;
-}
-
-.fact__label {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.fact__value {
-  margin-top: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  letter-spacing: 0;
-  color: var(--text-primary);
-  overflow-wrap: anywhere;
-}
-
-.fact__value--num {
-  font-size: var(--text-title);
-  line-height: var(--text-title-line);
-  font-weight: var(--weight-strong);
-}
-
-.fact__note {
-  margin-top: var(--space-1);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-}
-
-.fact--pending .fact__value {
-  color: var(--text-tertiary);
 }
 
 /* ============================================================
@@ -1070,6 +948,39 @@ a.stat:hover {
   color: var(--text-tertiary);
 }
 
+/* Panel pager dots (taken over from the retired tour). Every dot is a
+   button; any panel can be jumped to. */
+
+.drawer__dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawer__dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--border-strong);
+  cursor: pointer;
+}
+
+.drawer__dot:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow-focus);
+}
+
+.drawer__dot--done {
+  background: var(--accent-dim);
+}
+
+.drawer__dot--active {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-ring);
+}
+
 .drawer__foot {
   display: flex;
   align-items: center;
@@ -1234,26 +1145,6 @@ a.stat:hover {
 
 /* Golden path */
 
-.golden {
-  margin-top: var(--space-12);
-  border: 2px solid var(--border-subtle);
-  border-left: 2px solid var(--accent-dim);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    100deg,
-    var(--accent-wash) 0%,
-    rgba(11, 18, 21, 0) 55%
-  );
-  padding: var(--space-6);
-}
-
-.golden__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  margin: var(--space-2) 0 var(--space-5);
-}
-
 /* The three-part architecture diagram: the sandbox drawn as the containing
    boundary, the components and the runner as nodes inside it. Each element is
    a button; clicking one opens its detail panel below the diagram. */
@@ -1266,10 +1157,6 @@ a.stat:hover {
   transition: border-color var(--duration-base) var(--ease-standard);
 }
 
-.arch__sandbox--active {
-  border-color: var(--accent);
-}
-
 .arch__boundary {
   display: inline-flex;
   align-items: baseline;
@@ -1279,12 +1166,6 @@ a.stat:hover {
   border-radius: var(--radius-sm);
   padding: var(--space-1) var(--space-2);
   margin-left: calc(-1 * var(--space-2));
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard);
-}
-
-.arch__boundary:hover {
-  background: var(--surface-hover);
 }
 
 .arch__num {
@@ -1327,35 +1208,6 @@ a.stat:hover {
   padding: var(--space-4);
   border: 2px solid var(--border-default);
   border-radius: var(--radius-md);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard);
-}
-
-.arch__node:hover {
-  border-color: var(--accent-dim);
-  background: var(--surface-raised);
-}
-
-.arch__node--active {
-  border-color: var(--accent);
-  background: var(--accent-wash);
-}
-
-/* The static, complete rendition on #/nuon: same drawing, nothing to click. */
-
-.arch--static .arch__boundary,
-.arch--static .arch__node {
-  cursor: default;
-}
-
-.arch--static .arch__boundary:hover {
-  background: none;
-}
-
-.arch--static .arch__node:hover {
-  border-color: var(--border-default);
   background: var(--surface-card);
 }
 
@@ -1447,254 +1299,6 @@ a.stat:hover {
     border-right: 3.5px solid transparent;
     border-bottom: 5px solid var(--border-strong);
   }
-}
-
-.golden__aside {
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border-subtle);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  max-width: 76ch;
-}
-
-/* ============================================================
-   Guided tour (the landing walkthrough)
-   ============================================================ */
-
-.tour__step {
-  animation: tour-in 480ms var(--ease-standard) both;
-}
-
-@keyframes tour-in {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-.tour__topline {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-10);
-}
-
-.tour__progress {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.tour__dots {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Dots are buttons: reached steps can be jumped back to; steps ahead stay
-   disabled — the tour reveals, it doesn't preview. */
-.tour__dot {
-  width: 7px;
-  height: 7px;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-full);
-  background: var(--border-strong);
-  cursor: pointer;
-}
-
-.tour__dot:disabled {
-  cursor: default;
-}
-
-.tour__dot:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
-
-.tour__dot--done {
-  background: var(--accent-dim);
-}
-
-.tour__dot--active {
-  background: var(--accent);
-  box-shadow: 0 0 8px var(--accent-ring);
-}
-
-.tour__skip {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-}
-
-.tour__skip:hover {
-  color: var(--text-primary);
-}
-
-.tour__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: var(--space-10);
-}
-
-.tour__aside {
-  margin-top: var(--space-6);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-tertiary);
-  max-width: 64ch;
-}
-
-/* The arrival moment */
-
-.arrive {
-  min-height: 52vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.arrive h1 {
-  font-size: var(--display-lg);
-  line-height: 1.08;
-  margin: var(--space-4) 0 var(--space-5);
-  max-width: 18ch;
-}
-
-.arrive__lede {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 58ch;
-}
-
-.arrive__chips {
-  margin-top: var(--space-6);
-}
-
-.arrive__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  margin-top: var(--space-8);
-}
-
-.arrive__actions .tour__skip {
-  margin-left: 0;
-}
-
-@media (max-width: 720px) {
-  .arrive h1 {
-    font-size: var(--display-md);
-  }
-}
-
-/* Step headers */
-
-.step-header {
-  margin-bottom: var(--space-8);
-}
-
-.step-header h2 {
-  font-size: var(--text-display);
-  line-height: var(--text-display-line);
-  margin: var(--space-3) 0 var(--space-4);
-  letter-spacing: var(--tracking-tight);
-}
-
-.step-header__lede {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 64ch;
-}
-
-/* Diagram parts the tour has not reached yet */
-
-.arch__node--ghost {
-  opacity: 0.35;
-  border-style: dashed;
-  cursor: default;
-}
-
-.arch__node--ghost:hover {
-  border-color: var(--border-default);
-  background: var(--surface-card);
-}
-
-.arch__edge--ghost {
-  opacity: 0.35;
-}
-
-/* Staggered reveal for the live facts */
-
-.fact--in {
-  animation: fact-in 560ms var(--ease-standard) both;
-}
-
-@keyframes fact-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* The end-of-tour CTA block on the deployed step */
-
-.cta-block {
-  margin-top: var(--space-8);
-  padding: var(--space-6);
-  border: 2px solid var(--border-subtle);
-  border-left: 2px solid var(--accent-dim);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    100deg,
-    var(--accent-wash) 0%,
-    rgba(11, 18, 21, 0) 60%
-  );
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-4);
-}
-
-.cta-block__kicker {
-  font-family: var(--font-mono);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.btn--xl {
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  border-radius: var(--radius-lg);
 }
 
 /* The live toggle switch (drawn, not interactive) */
@@ -2051,78 +1655,6 @@ a.stat:hover {
 
 /* Path cards */
 
-.paths {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-4);
-  margin-top: var(--space-5);
-}
-
-.path {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  text-align: left;
-  padding: var(--space-6);
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard),
-    transform var(--duration-base) var(--ease-standard);
-}
-
-.path:hover {
-  border-color: var(--accent-dim);
-  background: var(--surface-raised);
-  text-decoration: none;
-}
-
-.path__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--accent-wash-strong);
-  background: var(--accent-wash);
-  color: var(--accent);
-  font-size: 20px;
-}
-
-.path__q {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  letter-spacing: var(--tracking-normal);
-}
-
-.path__body {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  flex: 1;
-}
-
-.path__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-body);
-  font-weight: var(--weight-strong);
-  color: var(--accent);
-}
-
-.path:hover .path__cta .icon {
-  transform: translateX(2px);
-}
-
-.path__cta .icon {
-  transition: transform var(--duration-base) var(--ease-standard);
-}
-
 /* ============================================================
    Data views
    ============================================================ */
@@ -2307,10 +1839,6 @@ pre.raw {
 
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
-    animation: none;
-  }
-  .tour__step,
-  .fact--in {
     animation: none;
   }
   * {
@@ -2566,42 +2094,6 @@ pre.raw {
 
 /* The landing tile's locked state: still clickable (it leads to the pitch),
    but visibly not part of the install. */
-.path--locked {
-  border-style: dashed;
-  background: var(--surface-sunken);
-}
-
-.path--locked:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-sunken);
-}
-
-.path--locked .path__icon {
-  border-color: var(--border-subtle);
-  background: var(--surface-hover);
-  color: var(--text-tertiary);
-}
-
-.path--locked .path__q,
-.path--locked .path__body {
-  color: var(--text-tertiary);
-}
-
-.path__lock {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-}
-
-.path__lock .icon {
-  flex: none;
-  font-size: 14px;
-  margin-top: 1px;
-}
-
 .ttt {
   display: flex;
   flex-direction: column;
@@ -3206,16 +2698,6 @@ tr.row-select--active td {
 
 /* The arrive step's config-versions line. */
 
-.arrive__versions {
-  margin-top: var(--space-4);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-  max-width: 60ch;
-}
-
-/* The tictactoe watcher: the locked tile is polling the namespace. */
-
 .ttt-watch {
   display: flex;
   align-items: flex-start;
@@ -3326,93 +2808,9 @@ tr.row-select--active td {
 }
 
 /* ============================================================
-   Review edits (Matt): clickable tour facts, the agent-prompt CTA, the
-   problem / solution / proof tags, per-proof prompts, and the audit-log
+   The problem / solution / proof tags, per-proof prompts, and the
    entitlement card.
    ============================================================ */
-
-/* Tour facts double as links: internal ones open the deep page, the install
-   fact opens the dashboard. */
-
-a.fact {
-  color: inherit;
-  text-decoration: none;
-}
-
-.fact--link {
-  position: relative;
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard);
-}
-
-.fact--link:hover {
-  text-decoration: none;
-  border-color: var(--accent-dim);
-  background: var(--surface-raised);
-}
-
-.fact__go {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
-  color: var(--text-tertiary);
-  font-size: 12px;
-}
-
-.fact--link:hover .fact__go {
-  color: var(--accent);
-}
-
-/* The hub's default action: hand the checklist to a coding agent. */
-
-.agent-cta {
-  margin-top: var(--space-6);
-  padding: var(--space-5) var(--space-6);
-  border: 2px solid var(--border-subtle);
-  border-left: 2px solid var(--accent-dim);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    100deg,
-    var(--accent-wash) 0%,
-    rgba(11, 18, 21, 0) 60%
-  );
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);
-  flex-wrap: wrap;
-}
-
-.agent-cta__body {
-  flex: 1 1 320px;
-}
-
-.agent-cta__title {
-  font-size: var(--text-body);
-  font-weight: var(--weight-stronger);
-}
-
-.agent-cta__desc {
-  margin-top: var(--space-1);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-secondary);
-  max-width: 60ch;
-}
-
-.agent-cta__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  white-space: nowrap;
-}
-
-.copy-btn--big {
-  padding: var(--space-3) var(--space-5);
-  font-size: var(--text-body);
-}
-
-/* The three beats every feature page runs. */
 
 .psp-tag {
   display: inline-block;

@@ -263,17 +263,17 @@ export function OnboardingDrawer({
         </div>
 
         <div className="drawer__foot">
-          <span className="tour__dots">
+          <span className="drawer__dots">
             {panelTitles.map((t, i) => (
               <button
                 key={t}
                 type="button"
                 className={
                   i === panel
-                    ? 'tour__dot tour__dot--active'
+                    ? 'drawer__dot drawer__dot--active'
                     : i < panel
-                      ? 'tour__dot tour__dot--done'
-                      : 'tour__dot'
+                      ? 'drawer__dot drawer__dot--done'
+                      : 'drawer__dot'
                 }
                 aria-label={`Panel ${i + 1} of ${panelTitles.length}`}
                 {...(i === panel ? { 'aria-current': 'step' as const } : {})}

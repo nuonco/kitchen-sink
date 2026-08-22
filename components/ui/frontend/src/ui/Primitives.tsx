@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Loadable } from '../lib/api'
-import { useNavigate } from '../lib/router'
 import { iconPaths } from './icons'
 
 /** The Nuon mark's outline, shared with the boot loader's 3D rendition. */
@@ -30,12 +29,6 @@ export function Icon({ name }: { name: string }) {
       <path d={path} />
     </svg>
   )
-}
-
-/** @deprecated Product pages carry no kickers; the guide index keeps plain
- * numerals via the class directly. Left for the pages not yet migrated. */
-export function Eyebrow({ children }: { children: ReactNode }) {
-  return <div className="eyebrow">{children}</div>
 }
 
 /** Every product page opens the same way: a 24px h1 and one sentence. */
@@ -148,16 +141,6 @@ export function PhaseBadge({ phase }: { phase?: string }) {
     <Badge tone={tone} dot>
       {value}
     </Badge>
-  )
-}
-
-export function BackLink({ to, children }: { to: string; children: ReactNode }) {
-  const navigate = useNavigate()
-  return (
-    <button className="backlink" onClick={() => navigate(to)}>
-      <Icon name="arrow-left" />
-      {children}
-    </button>
   )
 }
 
@@ -324,21 +307,15 @@ export function CopyButton({
   text,
   label = 'Copy',
   doneLabel = 'Copied',
-  big = false,
 }: {
   text: string
   label?: string
   doneLabel?: string
-  big?: boolean
 }) {
   const [copied, setCopied] = useState(false)
   const timer = useRef<number | undefined>(undefined)
   useEffect(() => () => window.clearTimeout(timer.current), [])
-  const cls = [
-    'copy-btn',
-    copied ? 'copy-btn--done' : '',
-    big ? 'copy-btn--big' : '',
-  ]
+  const cls = ['copy-btn', copied ? 'copy-btn--done' : '']
     .filter(Boolean)
     .join(' ')
   return (
