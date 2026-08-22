@@ -63,7 +63,9 @@
   --radius-full: 99px;
 
   --topbar-height: 56px;
-  --content-max: 1080px;
+  --content-max: 1200px;
+  --sidebar-width: 240px;
+  --sidebar-rail: 64px;
 
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --duration-fast: 120ms;
