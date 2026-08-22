@@ -39,7 +39,7 @@ const types: ComponentType[] = [
     what:
       'Deploys a Helm chart into the install cluster. Nuon interpolates your values file first, so image tags and sandbox outputs are filled in per install.',
     here:
-      'periscope: the API, the collector, and this web UI. One chart, three deployments.',
+      'periscope — the console itself: the API, the collector, and this web UI. One chart, three deployments.',
     file: 'components/chart/nuon.toml',
     toml: `name = "periscope"
 type = "helm_chart"
@@ -63,7 +63,7 @@ contents = "./chart/values.yaml"`,
     what:
       'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
     here:
-      'img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_collector_premium shows the private-registry variant, pulled with an IAM role Nuon assumes.',
+      'img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_collector_premium is the premium collector, distributed from a private ECR that Nuon assumes an IAM role to pull from — how an enterprise-only build ships.',
     file: 'components/images/ui.toml',
     toml: `name     = "img_ui"
 type     = "container_image"
@@ -105,7 +105,7 @@ domain_name = "*.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}
     what:
       'Runs a Pulumi program in Go, TypeScript or Python. Same contract as Terraform: your code, the customer’s account, the runner in between.',
     here:
-      'pulumi_infra: the report archive — an encrypted, versioned S3 bucket named from the install id.',
+      'pulumi_infra: the report archive — an encrypted, versioned S3 bucket, periscope-reports-<install-id>. It holds real objects from the first deploy on: health-reports/ after every deploy, heartbeats/ hourly, debug-bundles/ from the support SOP.',
     file: 'components/pulumi/nuon.toml',
     toml: `name    = "pulumi_infra"
 type    = "pulumi"
@@ -123,11 +123,11 @@ branch    = "ms/theme-periscope"
   {
     type: 'kubernetes_manifest',
     purpose: 'Apply raw YAML or a kustomize overlay',
-    uses: 'observed_workload',
+    uses: 'observed_workload · activity_generator',
     what:
       'Applies raw YAML or a kustomize overlay. The escape hatch for anything that is not packaged as a chart.',
     here:
-      'observed_workload: the sample workload the console observes, applied straight from a public repo into its own namespace.',
+      'observed_workload: the sample workload the console observes, applied straight from a public repo into its own namespace. activity_generator runs a real job there every five minutes, so the live view always has activity.',
     file: 'components/kustomize.toml',
     toml: `name = "observed_workload"
 type = "kubernetes_manifest"
@@ -228,13 +228,13 @@ export function Mapping({ config }: { config: UIConfig }) {
   useMarkStepSeen('/map')
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Customize Periscope</BackLink>
       <header className="page-header">
         <Eyebrow>{stepEyebrow('/map')}</Eyebrow>
-        <h1>How does my product map onto this?</h1>
+        <h1>How Periscope maps onto components</h1>
         <p className="lede">
-          A component is one deployable piece of your product, described by a
-          small TOML file in your repo.
+          A component is one deployable piece of a product, described by a
+          small TOML file in the repo. Every piece of this console is one.
         </p>
       </header>
 
@@ -242,8 +242,8 @@ export function Mapping({ config }: { config: UIConfig }) {
         <TypeMatrix />
         <Callout label="A first config needs one, not five">
           Pick the type that matches how you already ship — a chart, a prebuilt
-          image, a Terraform module. The other four are here because this app
-          exists to show them.
+          image, a Terraform module. Periscope uses all five so you can see
+          each one running.
         </Callout>
         {config.links.components && (
           <div className="row" style={{ marginTop: 24 }}>
