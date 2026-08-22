@@ -1194,6 +1194,44 @@ a.stat:hover {
   max-width: 76ch;
 }
 
+/* ============================================================
+   Operations: the emergency-restart card — break-glass at its point of
+   use, visually distinct from the routine SOPs.
+   ============================================================ */
+
+.breakglass {
+  padding: var(--space-5);
+  border: 2px solid var(--border-default);
+  border-left: 3px solid var(--status-warning);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+
+.breakglass__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.breakglass__name {
+  font-size: var(--text-base);
+  font-weight: var(--weight-stronger);
+  color: var(--text-primary);
+}
+
+.breakglass__body {
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+  max-width: 76ch;
+}
+
+.breakglass .cmd {
+  margin-bottom: 0;
+}
+
 /* Golden path */
 
 .golden {

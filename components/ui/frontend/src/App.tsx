@@ -11,7 +11,7 @@ import { Dashboard } from './views/Dashboard'
 import { Events } from './views/Events'
 import { Workloads } from './views/Workloads'
 import { Mapping } from './views/Mapping'
-import { Ops } from './views/Ops'
+import { Operations } from './views/Operations'
 import { Reports } from './views/Reports'
 import { TicTacToe } from './views/TicTacToe'
 
@@ -114,7 +114,7 @@ export default function App() {
   } else if (parts[0] === 'reports') {
     view = <Reports config={config} />
   } else if (parts[0] === 'operations') {
-    view = <Ops config={config} />
+    view = <Operations config={config} />
   } else if (parts[0] === 'settings') {
     view = <SettingsInterim config={config} />
   } else if (parts[0] === 'nuon') {
