@@ -8,6 +8,7 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
+import { OnboardingDrawer } from '../ui/Drawer'
 import { OutLink, PageHeader, StatTile } from '../ui/Primitives'
 import { namespaceOwner } from './Deployed'
 
@@ -154,7 +155,15 @@ function InstallPanel({ config }: { config: UIConfig }) {
   )
 }
 
-export function Dashboard({ config }: { config: UIConfig }) {
+export function Dashboard({
+  config,
+  drawerOpen,
+  onDrawerClose,
+}: {
+  config: UIConfig
+  drawerOpen: boolean
+  onDrawerClose: () => void
+}) {
   const namespace = config.namespace ?? 'periscope'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
   const ns = useIntrospect<NamespaceResponse>(
@@ -215,6 +224,14 @@ export function Dashboard({ config }: { config: UIConfig }) {
         <LatestEvents events={eventList} now={now} />
         <InstallPanel config={config} />
       </div>
+
+      <OnboardingDrawer
+        open={drawerOpen}
+        onClose={onDrawerClose}
+        config={config}
+        kube={kube}
+        ns={ns}
+      />
     </>
   )
 }

@@ -885,6 +885,206 @@ a.stat:hover {
   border-top: 1px solid var(--border-subtle);
 }
 
+/* ============================================================
+   Onboarding drawer: a right-side sheet over the Dashboard.
+   ============================================================ */
+
+.drawer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.55);
+}
+
+.drawer {
+  position: fixed;
+  z-index: 41;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(480px, 100vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-card);
+  border-left: 2px solid var(--border-default);
+  box-shadow: var(--shadow-03);
+  outline: none;
+  animation: drawer-in 260ms var(--ease-standard) both;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.drawer__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 2px solid var(--border-subtle);
+}
+
+.drawer__title {
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
+  font-weight: var(--weight-stronger);
+}
+
+.drawer__close {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--text-tertiary);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.drawer__close:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+.drawer__lede {
+  font-size: var(--text-base);
+  line-height: 26px;
+  color: var(--text-secondary);
+}
+
+.drawer__lines {
+  margin: var(--space-5) 0 0;
+  padding-left: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+}
+
+.drawer__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+@media (max-width: 480px) {
+  .drawer__stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.drawer__places {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.drawer__place {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  color: inherit;
+  text-decoration: none;
+}
+
+.drawer__place:hover {
+  text-decoration: none;
+  border-color: var(--accent-dim);
+  background: var(--surface-raised);
+}
+
+.drawer__place-name {
+  font-size: var(--text-body);
+  font-weight: var(--weight-stronger);
+  color: var(--text-primary);
+}
+
+.drawer__place-line {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+}
+
+.drawer__foot {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  border-top: 2px solid var(--border-subtle);
+}
+
+/* The mini golden path inside the drawer: static, compact. */
+
+.arch--mini .arch__boundary--static {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  cursor: default;
+}
+
+.arch--mini .arch__node--static {
+  cursor: default;
+}
+
+.arch--mini .arch__node--static:hover {
+  border-color: var(--border-default);
+  background: var(--surface-card);
+}
+
+.arch--mini .arch__nodes {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.arch--mini .arch__edge {
+  align-self: center;
+  min-width: 0;
+  padding: var(--space-2) 0;
+}
+
+.arch--mini .arch__edge-line {
+  width: 1px;
+  height: 20px;
+}
+
+.arch--mini .arch__edge-line::before {
+  left: -3px;
+  top: auto;
+  bottom: 0;
+  border-top: 5px solid var(--border-strong);
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-bottom: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer {
+    animation: none;
+  }
+}
+
 /* Golden path */
 
 .golden {

@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useUIConfig, type UIConfig } from './lib/api'
 import { segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
 import { AppShell } from './ui/AppShell'
+import { tourDone } from './ui/Drawer'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { OutLink } from './ui/Primitives'
 import { AuditLog } from './views/AuditLog'
@@ -94,6 +95,7 @@ export default function App() {
   const path = canonicalize(rawPath)
   const parts = segments(path)
   const navigate = useNavigate()
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   // Rewrite legacy hashes in place so bookmarks land on the new URLs.
   useEffect(() => {
@@ -102,7 +104,19 @@ export default function App() {
     }
   }, [path, rawPath])
 
-  let view = <Dashboard config={config} />
+  // First visit: the onboarding drawer opens over the Dashboard. Dismissing
+  // writes the tour key, so it never reopens on its own.
+  useEffect(() => {
+    if (path === '/' && !tourDone()) setDrawerOpen(true)
+  }, [path])
+
+  let view = (
+    <Dashboard
+      config={config}
+      drawerOpen={drawerOpen}
+      onDrawerClose={() => setDrawerOpen(false)}
+    />
+  )
   if (parts[0] === 'workloads') {
     view = <Deployed config={config} section={parts[1]} />
   } else if (parts[0] === 'events') {
@@ -128,7 +142,10 @@ export default function App() {
       <AppShell
         config={config}
         path={path}
-        onGettingStarted={() => navigate('/')}
+        onGettingStarted={() => {
+          navigate('/')
+          setDrawerOpen(true)
+        }}
       >
         {view}
       </AppShell>
