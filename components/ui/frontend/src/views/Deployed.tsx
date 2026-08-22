@@ -38,7 +38,7 @@ function namespaceOwner(
   installID: string | undefined,
 ): { label: string; app: boolean } {
   if (!name) return { label: '', app: false }
-  if (name === 'periscope') return { label: 'This app', app: true }
+  if (name === 'periscope') return { label: 'The console', app: true }
   if (installID && name === `${installID}-observed`)
     return { label: 'The observed workload', app: true }
   if (name === 'nuon') return { label: 'The Nuon runner', app: true }
@@ -120,7 +120,7 @@ function Glance({
         numeric
       />
       <GlanceFact
-        label="This app's namespace"
+        label="The console's namespace"
         value={kubeRows ? namespace : undefined}
         note={thisNs?.status?.phase ?? undefined}
       />
@@ -201,6 +201,14 @@ function Namespaces({ kube, config }: { kube: KubeResult; config: UIConfig }) {
       {kube.state === 'ok' && (
         <>
           <NamespaceTable rows={mine} installID={config.install_id} />
+          {config.install_id && (
+            <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
+              <span className="mono">{config.install_id}-observed</span> is the
+              sample workload Periscope observes. A generator there starts a
+              real job every five minutes, so the console always has live
+              activity to show.
+            </p>
+          )}
           {infra.length > 0 && (
             <Disclosure
               summary={`Show the ${infra.length} infrastructure namespaces (${preview}${
@@ -373,10 +381,12 @@ function ThisNamespace({
             <Callout label="Where the secret values went">
               This endpoint returns whole Secret objects, values included, and
               this page sits on the install&rsquo;s internet-facing load
-              balancer. So the server strips every secret value before the
-              response leaves the cluster, and proxies only the four endpoints
-              these views read. Filtering in the browser instead would protect
-              nobody: you could just call the endpoint yourself.
+              balancer. Periscope&rsquo;s proxy is the boundary: it forwards
+              only the endpoints these views read, strips every secret value
+              before a response leaves the cluster, and fails closed &mdash; a
+              response it cannot parse is never forwarded. Filtering in the
+              browser instead would protect nobody: you could just call the
+              endpoint yourself.
             </Callout>
           </Disclosure>
 
@@ -453,8 +463,8 @@ function HelmReleases({ config }: { config: UIConfig }) {
           )}
 
           {!hasThisApp && (
-            <Callout label="Why this app is missing from the list">
-              This app&rsquo;s release is stored with Helm&rsquo;s{' '}
+            <Callout label="Why the console is missing from the list">
+              Periscope&rsquo;s release is stored with Helm&rsquo;s{' '}
               <code>configmap</code> driver (
               <span className="mono">components/chart/nuon.toml</span> sets{' '}
               <span className="mono">storage_driver = &quot;configmap&quot;</span>;{' '}
@@ -527,10 +537,10 @@ function PodEnvironment() {
                   {'{{.nuon.install.sandbox.outputs...}}'}
                 </span>
                 , into your Helm values file at deploy time. Getting them into a
-                container is still your chart&rsquo;s job. This app&rsquo;s API deployment
-                forwards none of them, so its environment has none. The UI you&rsquo;re
-                reading does forward them, which is how this page knows which
-                install it belongs to.
+                container is still your chart&rsquo;s job. Periscope&rsquo;s API
+                deployment forwards none of them, so its environment has none.
+                The web UI you&rsquo;re reading does forward them, which is how
+                this page knows which install it belongs to.
               </Callout>
             ) : (
               <dl className="kv">
@@ -588,13 +598,14 @@ export function Deployed({
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Customize Periscope</BackLink>
       <header className="page-header">
         <Eyebrow>{stepEyebrow('/deployed')}</Eyebrow>
-        <h1>What did Nuon actually deploy?</h1>
+        <h1>The live view</h1>
         <p className="lede">
-          Live reads from this install — the summary first; every table and raw
-          response is one click deeper.
+          Periscope&rsquo;s main screen: live reads from the cluster, and
+          everything it shows, Nuon deployed. Summary first; every table and
+          raw response is one click deeper.
         </p>
       </header>
 
