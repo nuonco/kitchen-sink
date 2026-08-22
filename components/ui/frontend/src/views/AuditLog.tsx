@@ -67,8 +67,8 @@ function EntitlementCard({
       </div>
       <div className="ent__name mono">audit_log_exporter</div>
       <p className="ent__pitch">
-        Streams every operation Nuon performs in this install to your SIEM.
-        Events never leave your cloud.
+        Streams the events this console collects to your SIEM. They never
+        leave your cloud.
       </p>
       <div className="ent__foot">
         {on ? (
@@ -318,7 +318,7 @@ export function AuditLog({ config }: { config: UIConfig }) {
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Customize Periscope</BackLink>
       <header className="page-header">
         <Eyebrow>{stepEyebrow('/audit-log')}</Eyebrow>
         <h1>Sell an entitlement</h1>
@@ -367,7 +367,7 @@ export function AuditLog({ config }: { config: UIConfig }) {
 
           <PspSection
             kind="proof"
-            title={enabled ? 'What introspection sees' : 'Flip it on and watch'}
+            title={enabled ? 'The events feed, live' : 'Flip it on and watch'}
             aside={
               enabled
                 ? `GET /introspect/namespace/${namespace}/events`

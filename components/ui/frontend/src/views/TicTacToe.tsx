@@ -213,7 +213,7 @@ export function TicTacToe({ config }: { config: UIConfig }) {
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Customize Periscope</BackLink>
       <header className="page-header">
         <Eyebrow>Toggleable component</Eyebrow>
         <h1>One config, per-install features</h1>

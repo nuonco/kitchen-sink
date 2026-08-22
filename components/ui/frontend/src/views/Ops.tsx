@@ -37,7 +37,7 @@ export function Ops({ config }: { config: UIConfig }) {
 
   return (
     <>
-      <BackLink to="/">Kitchen Sink</BackLink>
+      <BackLink to="/">Periscope</BackLink>
 
       <header className="page-header">
         <h1>The things it can do.</h1>
@@ -78,7 +78,8 @@ export function Ops({ config }: { config: UIConfig }) {
       >
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           A component with <Mono>toggleable = true</Mono> is a per-install
-          entitlement: flip it on and Nuon deploys it.
+          entitlement — here, the Enterprise SIEM export: flip it on and Nuon
+          deploys it.
         </p>
         {toggleLink && (
           <div className="row" style={{ marginTop: 16 }}>
@@ -106,10 +107,11 @@ export function Ops({ config }: { config: UIConfig }) {
         />
       </Section>
 
-      <Section title="Runbooks" aside="runbooks/*.toml">
+      <Section title="Console SOPs" aside="runbooks/*.toml">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           Multi-step procedures, versioned with the app config, run on the
-          install&rsquo;s runner.
+          install&rsquo;s runner. The two read-only ones archive their output
+          to the install&rsquo;s report bucket.
         </p>
         <CommandBlock
           label="runbooks take their name directly"
