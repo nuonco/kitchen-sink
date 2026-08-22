@@ -5,12 +5,11 @@ import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { OutLink } from './ui/Primitives'
 import { MobileNav, PausedBanner, Sidebar } from './ui/Shell'
-import { Customize } from './views/Customize'
 import { Dashboard } from './views/Dashboard'
 import { Deployment } from './views/Deployment'
 import { Destinations } from './views/Destinations'
 import { Landing } from './views/Landing'
-import { Ops } from './views/Ops'
+import { Operate } from './views/Operate'
 import { PipelineDetail } from './views/PipelineDetail'
 import { Pipelines } from './views/Pipelines'
 import { TicTacToe } from './views/TicTacToe'
@@ -50,7 +49,7 @@ export default function App() {
   } else if (parts[0] === 'deployment') {
     view = <Deployment config={config} />
   } else if (parts[0] === 'operate') {
-    view = parts[1] ? <Customize config={config} flow={parts[1]} /> : <Ops config={config} />
+    view = <Operate config={config} flow={parts[1]} />
   } else if (parts[0] === 'tictactoe') {
     view = <TicTacToe config={config} />
   } else if (parts[0] === 'tour') {

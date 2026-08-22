@@ -1,8 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import {
   countReady,
-  hasComplianceExport,
-  hasTicTacToe,
   useIntrospect,
   useIntrospectPoll,
   type NamespaceResponse,
@@ -18,18 +16,15 @@ import {
   runbooks,
 } from '../lib/config-data.gen'
 import { agentPrompt, proofPrompts } from '../lib/prompts'
-import { stepEyebrow } from '../lib/taxonomy'
-import { EvalPath, StepNav, type SwitchStates } from '../ui/CapabilityGrid'
-import { useMarkStepSeen } from '../lib/progress'
 import {
   BackLink,
   Badge,
   CodeBlock,
   CommandBlock,
   CopyButton,
-  Eyebrow,
   Icon,
   LoadState,
+  Mono,
   OutLink,
   PhaseBadge,
   PspSection,
@@ -39,12 +34,14 @@ import {
 import { PipelineStrip } from './Pipelines'
 
 /* ============================================================
-   The feature pages, one per step in lib/taxonomy.ts. Every page runs the
-   same three beats: Problem (where this bites), Solution (the config that
-   answers it, from lib/config-data.gen.ts so it cannot drift), Proof (test
-   it on this install, right now — your coding agent by default, the raw
-   commands underneath, and the cluster-side evidence live where the
-   operation has one).
+   Operations: monitor and fix. The index is the digest — every operating
+   feature as one card, the command that tries it, the agent prompt that
+   drives all of it. Each sub-page runs the same three beats: Problem
+   (where this bites), Solution (the config that answers it, from
+   lib/config-data.gen.ts so it cannot drift), Proof (test it on this
+   install, right now — your coding agent by default, the raw commands
+   underneath, and the cluster-side evidence live where the operation has
+   one).
 
    One honest exception on the proof sections: `nuon runbooks create-run` is
    broken platform-side today (empty request body), so runbook runs start
@@ -52,17 +49,14 @@ import { PipelineStrip } from './Pipelines'
    ============================================================ */
 
 function FlowHeader({
-  to,
   title,
   problem,
 }: {
-  to: string
   title: string
   problem: ReactNode
 }) {
   return (
     <header className="page-header">
-      <Eyebrow>{stepEyebrow(to)}</Eyebrow>
       <h1>{title}</h1>
       <p className="lede psp-lede">
         <PspTag kind="problem" /> {problem}
@@ -278,7 +272,6 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/runbooks"
         title="Run runbooks"
         problem="A customer's pipelines stall at 2am, in an install you cannot log into."
       />
@@ -460,7 +453,6 @@ function ActionsFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/actions"
         title="Run adhoc actions"
         problem="Support needs to fix a customer install without holding its credentials."
       />
@@ -593,7 +585,6 @@ function HealthFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/health"
         title="Watch component health"
         problem="A deploy can succeed while the sync engine it shipped is down."
       />
@@ -713,7 +704,6 @@ function TriggersFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/triggers"
         title="Wire up triggers"
         problem="Operational scripts need to run at the right moment with nobody remembering them."
       />
@@ -833,7 +823,6 @@ function RolesFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/roles"
         title="Scope operation roles"
         problem="Your customer's security team asks exactly what Nuon may do in their account."
       />
@@ -958,8 +947,8 @@ function RolesFlow({ config }: { config: UIConfig }) {
 }
 
 /* ============================================================
-   The agent page: the full checklist prompt and the command menu it wraps.
-   Both use this install's real ids, filled in from ui-config at render time.
+   The agent page: the full prompt and the command menu it wraps. Both use
+   this install's real ids, filled in from ui-config at render time.
    ============================================================ */
 
 function AgentFlow({ config }: { config: UIConfig }) {
@@ -972,8 +961,8 @@ function AgentFlow({ config }: { config: UIConfig }) {
       <header className="page-header">
         <h1>Operate Conduit from your terminal</h1>
         <p className="lede">
-          One prompt walks Claude Code or Codex through every proof on the
-          checklist: it must show you each command and wait for your yes
+          One prompt walks Claude Code or Codex through every proof under
+          Operations: it must show you each command and wait for your yes
           before anything mutates. The command menu below is the same walk,
           one command per flow.
         </p>
@@ -1048,8 +1037,9 @@ function AgentFlow({ config }: { config: UIConfig }) {
 }
 
 /* ============================================================
-   The view. Bare #/customize renders the checklist for deep links; the
-   landing's hub is the full front door.
+   The index: the operating digest. Every feature as one card — what it
+   does, the command or deep link that tries it — with the agent prompt as
+   the default way to drive all of it.
    ============================================================ */
 
 /**
@@ -1072,52 +1062,179 @@ function flowLinks(flow: string, config: UIConfig) {
   return { href: links.install, label: 'Open this install in Nuon' }
 }
 
-/**
- * The bare index doubles as a watcher for the toggleable components' rows,
- * the same way the landing hub does: while either component is off, keep
- * re-reading the namespace so a dashboard toggle flips the switch here.
- */
-function CustomizeIndex({ config }: { config: UIConfig }) {
-  const namespace = config.namespace ?? 'conduit'
-  const probe = useIntrospectPoll<NamespaceResponse>(
-    `/api/introspect/namespace/${namespace}`,
-    20_000,
-    true,
+/** " · "-joined names, mutating ones marked. */
+function nameList(items: Array<{ name: string; mutates?: boolean }>) {
+  return items
+    .map((item) => (item.mutates ? `${item.name} (mutates)` : item.name))
+    .join(' · ')
+}
+
+function OpCard({
+  to,
+  title,
+  aside,
+  children,
+}: {
+  to: string
+  title: string
+  aside?: string
+  children: ReactNode
+}) {
+  return (
+    <section className="opcard">
+      <div className="opcard__head">
+        <a className="opcard__title" href={`#${to}`}>
+          {title} <Icon name="arrow-right" />
+        </a>
+        {aside && <span className="subtext muted">{aside}</span>}
+      </div>
+      {children}
+    </section>
   )
-  const services =
-    probe.state === 'ok' ? (probe.value.response.services ?? []) : []
-  const switches: SwitchStates = {
-    '/tictactoe': { on: hasTicTacToe(services) },
-    '/destinations': { on: hasComplianceExport(services) },
-  }
+}
+
+function OperateIndex({ config }: { config: UIConfig }) {
+  const install = installIdOf(config)
+  const app = appIdOf(config)
 
   return (
     <>
-      <header className="page-header">
-        <h1>The evaluation checklist</h1>
-        <p className="lede">
-          Live pages read this install right now; guides explain the config it
-          ships.
-        </p>
+      <header className="page-header page-header--slim">
+        <h1>Operations</h1>
       </header>
-      <EvalPath switches={switches} />
+
+      <div className="agent-cta">
+        <div className="agent-cta__body">
+          <div className="agent-cta__title">
+            The default way to run it: your coding agent
+          </div>
+          <p className="agent-cta__desc">
+            One prompt covers every proof below, ids filled in. The agent
+            shows every command and waits for your yes before anything
+            mutates.
+          </p>
+        </div>
+        <div className="agent-cta__actions">
+          <CopyButton
+            text={agentPrompt(install, app)}
+            label="Copy the agent prompt"
+            doneLabel="Copied"
+            big
+          />
+          <a href="#/operate/agent">
+            Read it first <Icon name="arrow-right" />
+          </a>
+        </div>
+      </div>
+
+      <OpCard to="/operate/health" title="Health" aside="probes run on the runner">
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Component health probes gate every deploy;{' '}
+          <Mono>pipeline-health-sweep</Mono> re-checks nodes, workloads,
+          ingress, the public endpoint, and sync freshness on demand.
+          Runbook runs start from the dashboard (<Mono>runbooks
+          create-run</Mono> has a known CLI bug, fix in flight)
+          {config.links.runbooks ? (
+            <>
+              {' '}
+              &mdash;{' '}
+              <OutLink href={config.links.runbooks} variant="plain">
+                run it there
+              </OutLink>
+            </>
+          ) : (
+            '.'
+          )}
+        </p>
+      </OpCard>
+
+      <OpCard to="/operate/runbooks" title="Runbooks" aside="runbooks/*.toml">
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Multi-step procedures — {nameList(runbooks)} — versioned with the
+          app config, run on the install&rsquo;s runner. Start them from the
+          dashboard; follow them with{' '}
+          <Mono>nuon runbooks get-run</Mono>.
+          {config.links.runbooks && (
+            <>
+              {' '}
+              <OutLink href={config.links.runbooks} variant="plain">
+                Runs &amp; transcripts
+              </OutLink>
+            </>
+          )}
+        </p>
+      </OpCard>
+
+      <OpCard to="/operate/actions" title="Actions" aside="actions/*">
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          One-off operational scripts &mdash; {nameList(adhocActions)} &mdash;
+          run on the runner.
+        </p>
+        <CommandBlock
+          label="1 · create-run takes the workflow id (actw…), not the name"
+          command={`nuon actions list --app-id ${app}`}
+        />
+        <CommandBlock
+          label="2 · run it"
+          command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
+          note={
+            config.links.actions && (
+              <OutLink href={config.links.actions} variant="plain">
+                Run history
+              </OutLink>
+            )
+          }
+        />
+      </OpCard>
+
+      <OpCard to="/operate/roles" title="Roles" aside="permissions/*">
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Every operation assumes its own scoped IAM role in the account,
+          named <Mono>{install}-&lt;role&gt;</Mono>: {nameList(roles)}.{' '}
+          <Mono>pause_pipelines</Mono> runs as <Mono>app-break-glass</Mono> —
+          AdministratorAccess minus an explicit Secrets Manager Deny; the
+          drill&rsquo;s transcript shows the denial while it pauses and
+          resumes every pipeline.
+        </p>
+        <CommandBlock
+          label="override the role for one run"
+          command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id> --role-name <role>`}
+        />
+      </OpCard>
+
+      <OpCard
+        to="/operate/triggers"
+        title="Triggers"
+        aside="actions/*/nuon.toml · [[triggers]]"
+      >
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Cron, lifecycle, and manual triggers decide when actions run;{' '}
+          <Mono>sync_heartbeat</Mono> has fired hourly since this install
+          provisioned.
+          {config.links.actions && (
+            <>
+              {' '}
+              <OutLink href={config.links.actions} variant="plain">
+                Run history
+              </OutLink>
+            </>
+          )}
+        </p>
+      </OpCard>
     </>
   )
 }
 
-export function Customize({
+export function Operate({
   config,
   flow,
 }: {
   config: UIConfig
   flow?: string
 }) {
-  const route = flow ? `/customize/${flow}` : undefined
-  useMarkStepSeen(route)
-
   return (
     <>
-      <BackLink to="/">Conduit</BackLink>
+      {flow && <BackLink to="/operate">Operations</BackLink>}
 
       {flow === 'runbooks' && <RunbooksFlow config={config} />}
       {flow === 'actions' && <ActionsFlow config={config} />}
@@ -1126,7 +1243,7 @@ export function Customize({
       {flow === 'roles' && <RolesFlow config={config} />}
       {flow === 'agent' && <AgentFlow config={config} />}
 
-      {!flow && <CustomizeIndex config={config} />}
+      {!flow && <OperateIndex config={config} />}
 
       {flow && (
         <div className="row" style={{ marginTop: 32 }}>
@@ -1138,8 +1255,6 @@ export function Customize({
           </OutLink>
         </div>
       )}
-
-      {route && <StepNav current={route} />}
     </>
   )
 }

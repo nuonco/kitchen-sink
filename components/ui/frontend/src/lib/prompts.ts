@@ -2,7 +2,7 @@ import { branchName } from './config-data.gen'
 
 /**
  * The copy-paste prompts for a visitor's coding agent (Claude Code, Codex).
- * One full prompt walks every proof on the checklist; each feature page also
+ * One full prompt walks every proof under Operations; each feature page also
  * carries a scoped prompt for just its own proof. All of them share the same
  * guardrails: scoped to this app and install, read-only reads, every command
  * shown, an explicit "yes" before anything mutates.
@@ -26,7 +26,7 @@ Hard limits:
   and wait for my explicit "yes". After every command, show me the result.`
 }
 
-/** The full checklist prompt: every proof, in order, one run per flow. */
+/** The full prompt: every proof, in order, one run per flow. */
 export function agentPrompt(install: string, app: string): string {
   return `${guardrails(install, app)}
 
@@ -140,8 +140,8 @@ endpoint, and sync freshness. "nuon runbooks create-run" is broken
 platform-side right now (empty request body; fix in flight), so tell me to
 start it from my dashboard's runbooks page. Poll
 NUON_READ_ONLY=1 nuon runbooks get-run until it finishes, then read me its
-pod checks next to the live table on my Conduit health page — both read the
-same cluster.`,
+pod checks next to the live table on my Conduit operations health page — both
+read the same cluster.`,
     ),
   triggers: (install, app) =>
     proofPrompt(
