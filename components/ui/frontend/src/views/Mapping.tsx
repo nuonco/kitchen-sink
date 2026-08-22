@@ -35,23 +35,23 @@ const types: ComponentType[] = [
   {
     type: 'helm_chart',
     purpose: 'Deploy a Helm chart',
-    uses: 'kitchen_sink',
+    uses: 'relay',
     what:
       'Deploys a Helm chart into the install cluster. Nuon interpolates your values file first, so image tags and sandbox outputs are filled in per install.',
     here:
-      'kitchen_sink: the API, the worker, and this UI. One chart, three deployments.',
+      'relay: the whole pipeline — ingest API, delivery worker, Postgres, echo receiver, this console, and the event-generator CronJob. One chart, one component.',
     file: 'components/chart/nuon.toml',
-    toml: `name = "kitchen_sink"
+    toml: `name = "relay"
 type = "helm_chart"
-chart_name = "kitchen-sink"
-namespace = "kitchen-sink"
+chart_name = "relay"
+namespace = "relay"
 storage_driver = "configmap"
 dependencies = ["img_api", "img_ui"]
 
 [public_repo]
 repo = "nuonco/kitchen-sink"
 directory = "components/chart"
-branch = "ms/onboarding-edit"
+branch = "ms/theme-relay"
 
 [[values_file]]
 contents = "./chart/values.yaml"`,
@@ -59,18 +59,18 @@ contents = "./chart/values.yaml"`,
   {
     type: 'container_image',
     purpose: 'Sync an image your CI already built',
-    uses: 'img_ui · img_api',
+    uses: 'img_api · img_ui',
     what:
       'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
     here:
-      'img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_api_two shows the private-registry variant, pulled with an IAM role Nuon assumes.',
-    file: 'components/images/ui.toml',
-    toml: `name     = "img_ui"
+      'img_api is one binary in four modes: ingest api, delivery worker, echo receiver, event generator. img_ui is this console. CI builds both from this repo; Nuon pulls the tag the config pins. img_api_two is the private-registry variant — the premium ingest image, pulled with an IAM role Nuon assumes.',
+    file: 'components/images/api.toml',
+    toml: `name     = "img_api"
 type     = "container_image"
-var_name = "img_ui"
+var_name = "img_api"
 
 [public]
-image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-ui"
+image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-app"
 # CI stamps the pinned tag on every image build
 tag       = "sha-…"`,
   },
@@ -81,7 +81,7 @@ tag       = "sha-…"`,
     what:
       'Runs a Terraform module. The runner holds the state and the credentials, so your customer keeps both.',
     here:
-      'certificate: a DNS-validated wildcard ACM certificate for *.<install domain>, which the load balancer then terminates HTTPS with.',
+      'certificate: a DNS-validated wildcard ACM certificate for *.<install domain>, which the load balancer terminates HTTPS with — the same URL your endpoints would be registered against.',
     file: 'components/certificate.toml',
     toml: `name              = "certificate"
 type              = "terraform_module"
@@ -105,7 +105,7 @@ domain_name = "*.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}
     what:
       'Runs a Pulumi program in Go, TypeScript or Python. Same contract as Terraform: your code, the customer’s account, the runner in between.',
     here:
-      'pulumi_infra: an S3 bucket with encryption and versioning, named from the install id.',
+      'pulumi_infra: the S3 bucket (relay-<install-id>, versioned, encrypted) where the delivery_log_export action archives the delivery record.',
     file: 'components/pulumi/nuon.toml',
     toml: `name    = "pulumi_infra"
 type    = "pulumi"
@@ -114,34 +114,37 @@ runtime = "go"
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "components/pulumi"
-branch    = "main"
+branch    = "ms/theme-relay"
 
 [config]
-"aws:region"              = "{{.nuon.install_stack.outputs.region}}"
-"kitchen-sink:install_id" = "{{.nuon.install.id}}"`,
+"aws:region"        = "{{.nuon.install_stack.outputs.region}}"
+"relay:install_id"  = "{{.nuon.install.id}}"`,
   },
   {
     type: 'kubernetes_manifest',
     purpose: 'Apply raw YAML or a kustomize overlay',
-    uses: 'kustomizeapp',
+    uses: 'audit_log_exporter · tictactoe',
     what:
       'Applies raw YAML or a kustomize overlay. The escape hatch for anything that is not packaged as a chart.',
     here:
-      'kustomizeapp: the Argo CD guestbook example, applied straight from a public repo into its own namespace.',
-    file: 'components/kustomize.toml',
-    toml: `name = "kustomizeapp"
+      'The two toggleable components. audit_log_exporter marks the Enterprise delivery-log export entitlement; each deploys a marker Service this console detects live.',
+    file: 'components/audit_log_exporter.toml',
+    toml: `name = "audit_log_exporter"
 type = "kubernetes_manifest"
 
-namespace    = "{{.nuon.install.id}}-dne"
-dependencies = ["kustomize_namespace"]
+namespace    = "relay"
+dependencies = ["relay"]
+
+toggleable      = true
+default_enabled = false
 
 [public_repo]
 directory = "."
-repo      = "argoproj/argocd-example-apps"
-branch    = "master"
+repo      = "nuonco/kitchen-sink"
+branch    = "ms/theme-relay"
 
 [kustomize]
-path        = "./kustomize-guestbook"
+path        = "./src/components/audit-log-exporter"
 enable_helm = false`,
   },
 ]
@@ -215,28 +218,68 @@ const deployOrder = [
     detail: 'container_image — nothing to wait for',
   },
   {
-    label: 'kitchen_sink',
+    label: 'relay',
     detail: 'dependencies = ["img_api", "img_ui"]',
   },
   {
     label: 'application_load_balancer',
-    detail: 'dependencies = ["certificate", "kitchen_sink"]',
+    detail: 'dependencies = ["certificate", "relay"]',
   },
+]
+
+/**
+ * What the chart put in the relay namespace, one row per workload: the
+ * product role next to the Kubernetes name, so #/deployed's pod list reads
+ * as a pipeline instead of five anonymous deployments.
+ */
+const topology = [
+  { name: 'relay-api :8080', role: 'Ingest API — POST /ingest (in-cluster only) plus the delivery reads this console shows' },
+  { name: 'relay-worker', role: 'Delivery engine — polls due attempts, POSTs to endpoints, backs off, dead-letters' },
+  { name: 'relay-db :5432', role: 'Postgres — the queue and delivery record. Consumes the db-password Secret Nuon syncs in' },
+  { name: 'relay-echo :8081', role: 'Echo receiver — the seeded default endpoint, so a fresh install delivers end to end' },
+  { name: 'relay-ui :3000', role: 'This console, published through the ALB at https://app.<install domain>' },
+  { name: 'relay-event-generator', role: 'CronJob — POSTs sample events to /ingest every 2 minutes; the deliveries are real' },
 ]
 
 export function Mapping({ config }: { config: UIConfig }) {
   useMarkStepSeen('/map')
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Relay</BackLink>
       <header className="page-header">
         <Eyebrow>{stepEyebrow('/map')}</Eyebrow>
         <h1>How does my product map onto this?</h1>
         <p className="lede">
           A component is one deployable piece of your product, described by a
-          small TOML file in your repo.
+          small TOML file in your repo. Relay uses all five types.
         </p>
       </header>
+
+      <Section title="What the chart deployed" aside="namespace relay">
+        <div className="table-wrap">
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Workload</th>
+                <th>Role in Relay</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topology.map((t) => (
+                <tr key={t.name}>
+                  <td className="mono">{t.name}</td>
+                  <td>{t.role}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
+          Around the namespace: the ALB and certificate publish the console,
+          and pulumi_infra&rsquo;s S3 bucket holds the archived delivery logs.
+          Watch it all work at <a href="#/delivery">#/delivery</a>.
+        </p>
+      </Section>
 
       <Section title="The component types" aside="Five of them, in this app">
         <TypeMatrix />

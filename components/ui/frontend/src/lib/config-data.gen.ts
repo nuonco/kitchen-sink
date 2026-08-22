@@ -52,7 +52,7 @@ export interface ToggleableComponent {
   toml: string
 }
 
-export const branchName = "ms/onboarding-edit"
+export const branchName = "ms/theme-relay"
 
 export const repoName = "nuonco/kitchen-sink"
 
@@ -81,12 +81,12 @@ export const installGroups: InstallGroup[] = [
   }
 ]
 
-export const branchConfigAbridged = "name = \"ms/onboarding-edit\"\n\npost_deploy_runbooks = [\"full-health-check\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"ms/onboarding-edit\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\nuse_for_previews = true\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
+export const branchConfigAbridged = "name = \"ms/theme-relay\"\n\npost_deploy_runbooks = [\"full-health-check\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"ms/theme-relay\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\nuse_for_previews = true\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
 
 export const runbooks: Runbook[] = [
   {
     "name": "full-health-check",
-    "description": "Check an install end to end: nodes, the kitchen-sink workloads, the ALB ingress, and the public HTTPS endpoint.",
+    "description": "Delivery health sweep: check an install end to end — nodes, the Relay workloads, the ALB ingress, and the public HTTPS endpoint.",
     "kind": "health-check",
     "mutates": false,
     "steps": [
@@ -108,18 +108,23 @@ export const runbooks: Runbook[] = [
       {
         "name": "ingress-health",
         "type": "action",
-        "detail": "Helm releases in kitchen-sink, ALB ingress · 3m"
+        "detail": "Helm releases in relay, ALB ingress · 3m"
       },
       {
         "name": "endpoint-health",
         "type": "action",
         "detail": "probe the public HTTPS endpoint · 5m"
+      },
+      {
+        "name": "delivery-health",
+        "type": "action",
+        "detail": "Delivery rollup, Dead-letter queue · 3m"
       }
     ]
   },
   {
     "name": "debug-bundle",
-    "description": "Something's gone wrong — collect a read-only diagnostic bundle: pod state, events, logs, restart reasons, and a verbose endpoint probe.",
+    "description": "Deliveries failing — collect a read-only diagnostic bundle: pod state, events, logs, restart reasons, and a verbose endpoint probe.",
     "kind": "debug",
     "mutates": false,
     "steps": [
@@ -154,7 +159,7 @@ export const runbooks: Runbook[] = [
       {
         "name": "drift-plan",
         "type": "component_deploy",
-        "detail": "kitchen_sink, plan only"
+        "detail": "relay, plan only"
       },
       {
         "name": "reconcile-sandbox",
@@ -174,7 +179,7 @@ export const runbooks: Runbook[] = [
       {
         "name": "reconcile-app",
         "type": "component_deploy",
-        "detail": "kitchen_sink, dependents follow"
+        "detail": "relay, dependents follow"
       },
       {
         "name": "verify",
@@ -185,14 +190,14 @@ export const runbooks: Runbook[] = [
   },
   {
     "name": "break-glass",
-    "description": "Emergency, elevated-access remediation run as a recorded procedure instead of ad-hoc console access.",
+    "description": "Emergency, elevated-access remediation of a stuck delivery pipeline, run as a recorded procedure instead of ad-hoc console access.",
     "kind": "break-glass",
     "mutates": true,
     "steps": [
       {
         "name": "capture-state",
         "type": "action",
-        "detail": "Pods before remediation, Recent events · 3m"
+        "detail": "Pods before remediation, Recent events, Delivery rollup and DLQ before remediation · 3m"
       },
       {
         "name": "elevated-remediation",
@@ -203,6 +208,11 @@ export const runbooks: Runbook[] = [
         "name": "verify",
         "type": "action",
         "detail": "probe the public HTTPS endpoint · 8m"
+      },
+      {
+        "name": "confirm-deliveries",
+        "type": "action",
+        "detail": "probe the public HTTPS endpoint · 3m"
       }
     ]
   }
@@ -234,8 +244,8 @@ export const adhocActions: AdhocAction[] = [
     "triggers": [
       "manual",
       "post-provision",
-      "post-deploy-component kitchen_sink",
-      "pre-deploy-component kitchen_sink"
+      "post-deploy-component relay",
+      "pre-deploy-component relay"
     ],
     "labels": null,
     "breakGlass": false
@@ -248,10 +258,20 @@ export const adhocActions: AdhocAction[] = [
     ],
     "labels": "is_break_glass = \"true\"",
     "breakGlass": true
+  },
+  {
+    "name": "delivery_log_export",
+    "timeout": "3m",
+    "triggers": [
+      "cron 0 */6 * * *",
+      "manual"
+    ],
+    "labels": "kind = \"export\"",
+    "breakGlass": false
   }
 ]
 
-export const lifecycleHooksToml = "name         = \"lifecycle_hooks\"\ntimeout      = \"1m\"\ndependencies = [\"kitchen_sink\"]\n\n[[triggers]]\ntype = \"manual\"\n\n[[triggers]]\ntype = \"post-provision\"\n\n[[triggers]]\ntype           = \"post-deploy-component\"\ncomponent_name = \"kitchen_sink\"\n\n[[triggers]]\ntype           = \"pre-deploy-component\"\ncomponent_name = \"kitchen_sink\"\n\n[[steps]]\nname            = \"log-lifecycle-hook\"\ninline_contents = \"./lifecycle_hooks/script.sh\"\n\n[steps.env_vars]\nHOOK_VERSION = \"v1\""
+export const lifecycleHooksToml = "name         = \"lifecycle_hooks\"\ntimeout      = \"1m\"\ndependencies = [\"relay\"]\n\n[[triggers]]\ntype = \"manual\"\n\n[[triggers]]\ntype = \"post-provision\"\n\n[[triggers]]\ntype           = \"post-deploy-component\"\ncomponent_name = \"relay\"\n\n[[triggers]]\ntype           = \"pre-deploy-component\"\ncomponent_name = \"relay\"\n\n[[steps]]\nname            = \"log-lifecycle-hook\"\ninline_contents = \"./lifecycle_hooks/script.sh\"\n\n[steps.env_vars]\nHOOK_VERSION = \"v1\""
 
 export const roles: Role[] = [
   {
@@ -282,7 +302,7 @@ export const roles: Role[] = [
     "name": "actions",
     "type": "custom",
     "boundary": "inline policy",
-    "desc": "Execute actions (healthchecks, debug, cron jobs)."
+    "desc": "Execute actions (healthchecks, debug, cron jobs, delivery-log export)."
   },
   {
     "name": "deprovision",
@@ -309,7 +329,7 @@ export const guardrails: Guardrail[] = [
   {
     "name": "deny-public-api-ingress",
     "type": "helm_chart",
-    "target": "kitchen_sink"
+    "target": "relay"
   },
   {
     "name": "deny-public-s3-bucket",
@@ -328,12 +348,12 @@ export const toggleableComponents: ToggleableComponent[] = [
     "name": "audit_log_exporter",
     "type": "kubernetes_manifest",
     "defaultEnabled": false,
-    "toml": "name = \"audit_log_exporter\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/onboarding-edit\"\n\n[kustomize]\npath        = \"./src/components/audit-log-exporter\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
+    "toml": "name = \"audit_log_exporter\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"relay\"\ndependencies = [\"relay\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/theme-relay\"\n\n[kustomize]\npath        = \"./src/components/audit-log-exporter\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
   },
   {
     "name": "tictactoe",
     "type": "kubernetes_manifest",
     "defaultEnabled": false,
-    "toml": "name = \"tictactoe\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/onboarding-edit\"\n\n[kustomize]\npath        = \"./src/components/tictactoe\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
+    "toml": "name = \"tictactoe\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"relay\"\ndependencies = [\"relay\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/theme-relay\"\n\n[kustomize]\npath        = \"./src/components/tictactoe\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
   }
 ]

@@ -67,8 +67,8 @@ function EntitlementCard({
       </div>
       <div className="ent__name mono">audit_log_exporter</div>
       <p className="ent__pitch">
-        Streams every operation Nuon performs in this install to your SIEM.
-        Events never leave your cloud.
+        Delivery-log export: Relay&rsquo;s full delivery record, archived to
+        the S3 bucket in this install. The logs never leave your cloud.
       </p>
       <div className="ent__foot">
         {on ? (
@@ -282,7 +282,7 @@ function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig
 
 export function AuditLog({ config }: { config: UIConfig }) {
   useMarkStepSeen('/audit-log')
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'relay'
   const [enabled, setEnabled] = useState(false)
   const [justEnabled, setJustEnabled] = useState(false)
   const [waiting, setWaiting] = useState(false)
@@ -318,13 +318,14 @@ export function AuditLog({ config }: { config: UIConfig }) {
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Relay</BackLink>
       <header className="page-header">
         <Eyebrow>{stepEyebrow('/audit-log')}</Eyebrow>
         <h1>Sell an entitlement</h1>
         <p className="lede psp-lede">
-          <PspTag kind="problem" /> One plan tier includes a feature the
-          others don&rsquo;t, and every install runs the same config.
+          <PspTag kind="problem" /> Enterprise customers want the delivery
+          log archived; other plans don&rsquo;t pay for it. Every install runs
+          the same config.
         </p>
       </header>
 
@@ -386,8 +387,12 @@ export function AuditLog({ config }: { config: UIConfig }) {
                 <Callout label="What actually got deployed">
                   One marker Service —{' '}
                   {service?.metadata?.name ?? AUDIT_LOG_SERVICE}
-                  {service?.spec?.type ? ` (${service.spec.type})` : ''}. A real
-                  exporter puts its workload behind the same switch.
+                  {service?.spec?.type ? ` (${service.spec.type})` : ''} — the
+                  entitlement flag. The export itself is the{' '}
+                  <span className="mono">delivery_log_export</span> action,
+                  which archives the delivery record to this install&rsquo;s
+                  S3 bucket every six hours; a full exporter would put its
+                  workload behind this same switch.
                 </Callout>
               </>
             ) : (

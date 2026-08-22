@@ -7,7 +7,7 @@ import { useEffect } from 'react'
  * "explored", never "done".
  */
 
-const KEY = 'kitchen-sink-path-seen'
+const KEY = 'relay-path-seen'
 
 export function seenSteps(): Set<string> {
   try {

@@ -5,6 +5,7 @@ import { LoadingOverlay } from './ui/LoadingOverlay'
 import { Icon, NuonMark, OutLink } from './ui/Primitives'
 import { AuditLog } from './views/AuditLog'
 import { Customize } from './views/Customize'
+import { Delivery } from './views/Delivery'
 import { Deployed } from './views/Deployed'
 import { Landing } from './views/Landing'
 import { Mapping } from './views/Mapping'
@@ -24,7 +25,7 @@ function TopBar({
     <header className="topbar">
       <button className="topbar__brand" onClick={() => navigate('/')}>
         <NuonMark />
-        <span className="topbar__brand-name">Kitchen sink</span>
+        <span className="topbar__brand-name">Relay</span>
       </button>
       {installID && (
         <>
@@ -49,7 +50,9 @@ export default function App() {
   const parts = segments(path)
 
   let view = <Landing config={config} />
-  if (parts[0] === 'deployed') {
+  if (parts[0] === 'delivery') {
+    view = <Delivery config={config} />
+  } else if (parts[0] === 'deployed') {
     view = <Deployed config={config} section={parts[1]} />
   } else if (parts[0] === 'map') {
     view = <Mapping config={config} />
@@ -78,7 +81,7 @@ export default function App() {
           <span className="mono">nuonco/kitchen-sink</span>
           <span className="topbar__divider" />
           <span>
-            This app and the Nuon dashboard are two halves of the same tour.
+            Relay and the Nuon dashboard are two halves of the same tour.
           </span>
           <span className="topbar__spacer" />
           <OutLink href="https://docs.nuon.co" variant="plain">

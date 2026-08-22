@@ -33,14 +33,9 @@ import {
  * A row with no name is a malformed response; a public demo page must
  * degrade to a muted cell, never a crash.
  */
-function namespaceOwner(
-  name: string | undefined,
-  installID: string | undefined,
-): { label: string; app: boolean } {
+function namespaceOwner(name: string | undefined): { label: string; app: boolean } {
   if (!name) return { label: '', app: false }
-  if (name === 'kitchen-sink') return { label: 'This app', app: true }
-  if (installID && name === `${installID}-dne`)
-    return { label: 'The kustomize component', app: true }
+  if (name === 'relay') return { label: 'Relay', app: true }
   if (name === 'nuon') return { label: 'The Nuon runner', app: true }
   if (name.startsWith('kube-') || name === 'default')
     return { label: 'Kubernetes', app: false }
@@ -77,11 +72,11 @@ function GlanceFact({
   )
 }
 
-/** "kitchen-sink-api :8080 · kitchen-sink-ui :3000", trimmed for a tile note. */
+/** "relay-api :8080 · relay-ui :3000", trimmed for a tile note. */
 function servingNote(data: NamespaceResponse): string {
   return (data.services ?? [])
     .map((svc) => {
-      const name = svc.metadata?.name?.replace(/^kitchen-sink-/, '') ?? '?'
+      const name = svc.metadata?.name?.replace(/^relay-/, '') ?? '?'
       const port = svc.spec?.ports?.[0]?.port
       return port ? `${name} :${port}` : name
     })
@@ -92,17 +87,15 @@ function Glance({
   kube,
   ns,
   namespace,
-  installID,
 }: {
   kube: KubeResult
   ns: NsResult
   namespace: string
-  installID?: string
 }) {
   const nsData = ns.state === 'ok' ? ns.value.response : undefined
   const pods = nsData?.pods ?? []
   const kubeRows = kube.state === 'ok' ? (kube.value.response.namespaces ?? []) : undefined
-  const appRows = kubeRows?.filter((row) => namespaceOwner(row.name, installID).app)
+  const appRows = kubeRows?.filter((row) => namespaceOwner(row.name).app)
   const thisNs = kubeRows?.find((row) => row.name === namespace)
 
   return (
@@ -138,13 +131,7 @@ function Glance({
   )
 }
 
-function NamespaceTable({
-  rows,
-  installID,
-}: {
-  rows: KubeResponse['namespaces']
-  installID?: string
-}) {
+function NamespaceTable({ rows }: { rows: KubeResponse['namespaces'] }) {
   return (
     <div className="table-wrap">
       <table className="data">
@@ -157,7 +144,7 @@ function NamespaceTable({
         </thead>
         <tbody>
           {rows.map((row, i) => {
-            const owner = namespaceOwner(row.name, installID)
+            const owner = namespaceOwner(row.name)
             return (
               <tr key={row.name ?? i}>
                 <td className="mono">{row.name}</td>
@@ -176,10 +163,10 @@ function NamespaceTable({
   )
 }
 
-function Namespaces({ kube, config }: { kube: KubeResult; config: UIConfig }) {
+function Namespaces({ kube }: { kube: KubeResult }) {
   const rows = kube.state === 'ok' ? (kube.value.response.namespaces ?? []) : []
-  const mine = rows.filter((row) => namespaceOwner(row.name, config.install_id).app)
-  const infra = rows.filter((row) => !namespaceOwner(row.name, config.install_id).app)
+  const mine = rows.filter((row) => namespaceOwner(row.name).app)
+  const infra = rows.filter((row) => !namespaceOwner(row.name).app)
   const preview = infra
     .slice(0, 3)
     .map((row) => row.name)
@@ -200,14 +187,14 @@ function Namespaces({ kube, config }: { kube: KubeResult; config: UIConfig }) {
 
       {kube.state === 'ok' && (
         <>
-          <NamespaceTable rows={mine} installID={config.install_id} />
+          <NamespaceTable rows={mine} />
           {infra.length > 0 && (
             <Disclosure
               summary={`Show the ${infra.length} infrastructure namespaces (${preview}${
                 infra.length > 3 ? ', …' : ''
               })`}
             >
-              <NamespaceTable rows={infra} installID={config.install_id} />
+              <NamespaceTable rows={infra} />
             </Disclosure>
           )}
           <RawJSON value={kube.value} />
@@ -264,9 +251,9 @@ function ThisNamespace({
       aside={`GET /introspect/namespace/${namespace}`}
     >
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        Everything the <span className="mono">kitchen_sink</span> Helm component
-        created, including the Kubernetes secrets Nuon syncs into the
-        namespace.
+        Everything the <span className="mono">relay</span> Helm component
+        created &mdash; the pipeline&rsquo;s five workloads &mdash; plus the
+        Kubernetes secrets Nuon syncs into the namespace.
       </p>
 
       <LoadState result={ns} what={`the ${namespace} namespace`} />
@@ -394,12 +381,12 @@ function HelmReleases({ config }: { config: UIConfig }) {
   const helm = useIntrospect<HelmResponse>('/api/introspect/helm')
   const releases =
     helm.state === 'ok' ? Object.entries(helm.value.response.Charts ?? {}) : []
-  const hasThisApp = releases.some(([, rel]) => rel.name === 'kitchen-sink')
+  const hasThisApp = releases.some(([, rel]) => rel.name === 'relay')
 
   return (
     <Section id="helm" title="Helm releases" aside="GET /introspect/helm">
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        Nuon deploys the <span className="mono">kitchen_sink</span> component by
+        Nuon deploys the <span className="mono">relay</span> component by
         running Helm from the runner, so Helm&rsquo;s own release history is the record
         of what was deployed and when.
       </p>
@@ -573,7 +560,7 @@ export function Deployed({
   /** Optional deep-link target: #/deployed/cluster scrolls to that section. */
   section?: string
 }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'relay'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
   const ns = useIntrospect<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
@@ -588,7 +575,7 @@ export function Deployed({
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Relay</BackLink>
       <header className="page-header">
         <Eyebrow>{stepEyebrow('/deployed')}</Eyebrow>
         <h1>What did Nuon actually deploy?</h1>
@@ -598,9 +585,9 @@ export function Deployed({
         </p>
       </header>
 
-      <Glance kube={kube} ns={ns} namespace={namespace} installID={config.install_id} />
+      <Glance kube={kube} ns={ns} namespace={namespace} />
 
-      <Namespaces kube={kube} config={config} />
+      <Namespaces kube={kube} />
       <ThisNamespace ns={ns} namespace={namespace} openPods={section === 'namespace'} />
       <HelmReleases config={config} />
       <PodEnvironment />

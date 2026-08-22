@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { trackBoot } from './boot'
 
 /** Every introspection endpoint wraps its payload the same way. */
@@ -300,11 +300,11 @@ export function useUIConfig(): UIConfig {
  * this install.
  */
 export function hasTicTacToe(services: ServiceSummary[]): boolean {
-  return services.some((svc) => svc.metadata?.name === 'kitchen-sink-tictactoe')
+  return services.some((svc) => svc.metadata?.name === 'relay-tictactoe')
 }
 
 /** The marker Service name the toggleable `audit_log_exporter` deploys. */
-export const AUDIT_LOG_SERVICE = 'kitchen-sink-audit-log-exporter'
+export const AUDIT_LOG_SERVICE = 'relay-audit-log-exporter'
 
 /**
  * Same mechanic as hasTicTacToe, for the audit-log exporter: the toggleable
@@ -320,4 +320,180 @@ export function countReady(pods: PodSummary[]): number {
     const statuses = pod.status?.containerStatuses ?? []
     return statuses.length > 0 && statuses.every((c) => c.ready)
   }).length
+}
+
+/* ============================================================
+   The delivery API: Relay's own data, served by relay-api and forwarded by
+   this app's proxy. Unlike the introspection endpoints these responses are
+   not enveloped, and the store connects in the background after the api pod
+   starts, answering 503 until Postgres is reachable — a state worth naming
+   in the UI rather than reporting as an error.
+   ============================================================ */
+
+export interface DeliveryStats {
+  events_24h: number
+  delivered_24h: number
+  /** 0..1 over attempts resolved in the last 24h. */
+  success_rate: number
+  dlq_depth: number
+  endpoints_active: number
+}
+
+export interface DeliveryEndpoint {
+  id: string
+  name: string
+  url: string
+  active: boolean
+  created_at: string
+}
+
+export type DeliveryEventStatus = 'pending' | 'delivered' | 'dead'
+
+export interface DeliveryEvent {
+  id: string
+  type: string
+  payload: unknown
+  status: DeliveryEventStatus
+  created_at: string
+}
+
+export type DeliveryAttemptStatus = 'pending' | 'success' | 'failed' | 'dead'
+
+export interface DeliveryAttempt {
+  id: string
+  event_id: string
+  endpoint_id: string
+  attempt_number: number
+  status: DeliveryAttemptStatus
+  /** null until the attempt resolves; 0 means a connection error. */
+  response_code: number | null
+  latency_ms: number | null
+  next_retry_at: string | null
+  created_at: string
+  event_type: string
+  endpoint_name: string
+  endpoint_url: string
+}
+
+export type DeliveryLoadable<T> =
+  | { state: 'loading' }
+  /** The api answered 503: Postgres is still coming up. Normal on a fresh
+      deploy; the store self-heals and the next poll gets data. */
+  | { state: 'starting' }
+  | { state: 'error'; message: string }
+  | { state: 'ok'; value: T }
+
+class StoreStartingError extends Error {}
+
+async function deliveryGet<T>(path: string): Promise<T> {
+  const res = await fetch(path, { headers: { Accept: 'application/json' } })
+  const text = await res.text()
+  if (res.status === 503) throw new StoreStartingError()
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try {
+      const parsed = JSON.parse(text) as ErrEnvelope
+      if (parsed.err) detail = parsed.err
+    } catch {
+      if (text.trim()) detail = text.trim().slice(0, 400)
+    }
+    throw new Error(detail)
+  }
+  return JSON.parse(text) as T
+}
+
+/**
+ * Reads a delivery endpoint and keeps it fresh while the tab is visible.
+ * Returns the result plus a refresh function for the moment right after a
+ * replay, when waiting out the poll interval would feel broken.
+ */
+export function useDelivery<T>(
+  path: string,
+  intervalMs: number,
+): [DeliveryLoadable<T>, () => void] {
+  const [result, setResult] = useState<DeliveryLoadable<T>>({ state: 'loading' })
+  const [refreshTick, setRefreshTick] = useState(0)
+
+  useEffect(() => {
+    let live = true
+    let inFlight = false
+
+    const refresh = (first: boolean) => {
+      if (inFlight) return
+      inFlight = true
+      const fetched = deliveryGet<T>(path)
+      ;(first ? trackBoot(fetched) : fetched)
+        .then((value) => {
+          if (live) setResult({ state: 'ok', value })
+        })
+        .catch((err: unknown) => {
+          if (!live) return
+          if (err instanceof StoreStartingError) {
+            setResult((prev) =>
+              prev.state === 'ok' ? prev : { state: 'starting' },
+            )
+            return
+          }
+          setResult((prev) => {
+            if (prev.state === 'ok') return prev // silent refresh failure
+            const message = err instanceof Error ? err.message : String(err)
+            return { state: 'error', message }
+          })
+        })
+        .finally(() => {
+          inFlight = false
+        })
+    }
+
+    refresh(refreshTick === 0)
+
+    const tick = () => {
+      if (document.visibilityState === 'visible') refresh(false)
+    }
+    const timer = window.setInterval(tick, intervalMs)
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') refresh(false)
+    }
+    document.addEventListener('visibilitychange', onVisible)
+
+    return () => {
+      live = false
+      window.clearInterval(timer)
+      document.removeEventListener('visibilitychange', onVisible)
+    }
+  }, [path, intervalMs, refreshTick])
+
+  const refreshNow = useCallback(() => setRefreshTick((n) => n + 1), [])
+  return [result, refreshNow]
+}
+
+/** One-shot read, for on-demand loads like an event's attempt timeline. */
+export async function fetchDelivery<T>(path: string): Promise<T> {
+  return deliveryGet<T>(path)
+}
+
+/**
+ * Replays one dead attempt: the only write this app's proxy forwards. The
+ * server re-queues the delivery (a real new attempt, due immediately) and the
+ * dead attempt leaves the DLQ.
+ */
+export async function replayAttempt(
+  id: string,
+): Promise<{ replayed: boolean; attempt: DeliveryAttempt }> {
+  const res = await fetch(`/api/delivery/dlq/${encodeURIComponent(id)}/replay`, {
+    method: 'POST',
+    headers: { Accept: 'application/json' },
+  })
+  const text = await res.text()
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`
+    try {
+      const parsed = JSON.parse(text) as ErrEnvelope
+      if (parsed.err) detail = parsed.err
+    } catch {
+      // keep the status line
+    }
+    throw new Error(detail)
+  }
+  return JSON.parse(text) as { replayed: boolean; attempt: DeliveryAttempt }
 }

@@ -1,4 +1,4 @@
-import type { UIConfig } from '../lib/api'
+import { useDelivery, type DeliveryStats, type UIConfig } from '../lib/api'
 import {
   adhocActions,
   branchName,
@@ -31,18 +31,52 @@ function nameList(items: Array<{ name: string; mutates?: boolean }>) {
 export function Ops({ config }: { config: UIConfig }) {
   const install = installIdOf(config)
   const app = appIdOf(config)
+  const [stats] = useDelivery<DeliveryStats>('/api/delivery/stats', 15_000)
+  const s = stats.state === 'ok' ? stats.value : undefined
+  const appURL = config.public_domain
+    ? `https://app.${config.public_domain}`
+    : 'https://app.<your-install-domain>'
   // Straight to the component's own page on this install (its toggle lives
   // there); the components list is the fallback when the id didn't resolve.
   const toggleLink = config.links.audit_log_exporter ?? config.links.components
 
   return (
     <>
-      <BackLink to="/">Kitchen Sink</BackLink>
+      <BackLink to="/">Relay</BackLink>
 
       <header className="page-header">
-        <h1>The things it can do.</h1>
+        <h1>Delivery operations.</h1>
         <p className="lede">Real commands against this install, ids filled in.</p>
+        {s && (
+          <div className="row" style={{ marginTop: 8 }}>
+            <span className="chip">{s.events_24h} events 24h</span>
+            <span className="chip">{s.delivered_24h} delivered</span>
+            <span className="chip">
+              {(s.success_rate * 100).toFixed(1)}% success
+            </span>
+            <span className="chip">{s.dlq_depth} dead</span>
+            <span className="chip">{s.endpoints_active} active endpoints</span>
+          </div>
+        )}
       </header>
+
+      <Section title="The pipeline" aside="GET /delivery/*">
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Events, per-attempt retries, and the DLQ are at{' '}
+          <a href="#/delivery">#/delivery</a>. The same data is on the public
+          API, and the DLQ replay is its one write:
+        </p>
+        <CommandBlock
+          label="drain one dead delivery (ids in the DLQ table or GET /api/delivery/dlq)"
+          command={`curl -X POST ${appURL}/api/delivery/dlq/<att-id>/replay`}
+          note={
+            <>
+              Re-queues a real attempt, due immediately.{' '}
+              <Mono>break-glass</Mono> below does this for the whole queue.
+            </>
+          }
+        />
+      </Section>
 
       <Section title="App branches" aside="branch.toml">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
@@ -78,7 +112,8 @@ export function Ops({ config }: { config: UIConfig }) {
       >
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           A component with <Mono>toggleable = true</Mono> is a per-install
-          entitlement: flip it on and Nuon deploys it.
+          entitlement. <Mono>audit_log_exporter</Mono> marks the Enterprise
+          delivery-log export: flip it on and Nuon deploys it.
         </p>
         {toggleLink && (
           <div className="row" style={{ marginTop: 16 }}>
@@ -97,8 +132,8 @@ export function Ops({ config }: { config: UIConfig }) {
       <Section title="Health checks" aside="probes run on the runner">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           Component health probes gate every deploy;{' '}
-          <Mono>full-health-check</Mono> re-checks nodes, workloads, ingress,
-          and the public endpoint on demand.
+          <Mono>full-health-check</Mono> is the delivery health sweep: nodes,
+          workloads, ingress, the public endpoint, and live delivery stats.
         </p>
         <CommandBlock
           label="check this install now"
@@ -167,7 +202,7 @@ export function Ops({ config }: { config: UIConfig }) {
               <Mono>break_glass_remediation</Mono> runs as{' '}
               <Mono>app-break-glass</Mono>: AdministratorAccess minus an
               explicit Secrets Manager Deny &mdash; the transcript shows the
-              denial.
+              denial, then the pipeline restart and DLQ drain.
             </>
           }
         />

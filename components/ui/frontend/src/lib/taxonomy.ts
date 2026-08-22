@@ -28,6 +28,14 @@ export interface PathStep {
 
 export const pathSteps: PathStep[] = [
   {
+    to: '/delivery',
+    icon: 'lightning',
+    title: 'Watch Relay deliver',
+    desc: 'Events, per-attempt retries, and the dead-letter queue — with a real replay.',
+    mode: 'live',
+    phase: 'Read',
+  },
+  {
     to: '/deployed',
     icon: 'magnifying-glass',
     title: 'Read your live install',
@@ -39,7 +47,7 @@ export const pathSteps: PathStep[] = [
     to: '/map',
     icon: 'puzzle-piece',
     title: 'Map your product onto components',
-    desc: 'The five component types against the pieces you already ship.',
+    desc: 'Every piece of Relay, and the component type that ships it.',
     mode: 'guide',
     phase: 'Read',
   },
@@ -63,7 +71,7 @@ export const pathSteps: PathStep[] = [
     to: '/customize/runbooks',
     icon: 'book-open',
     title: 'Run runbooks',
-    desc: 'Four recorded procedures; two of them apply changes.',
+    desc: 'Recorded procedures, from a health sweep to a DLQ drain.',
     mode: 'live',
     phase: 'Operate',
   },
@@ -95,7 +103,7 @@ export const pathSteps: PathStep[] = [
     to: '/audit-log',
     icon: 'toggle',
     title: 'Sell an entitlement',
-    desc: 'One component, deployed only where the plan includes it.',
+    desc: 'Delivery-log export to S3, deployed only where the plan includes it.',
     mode: 'live',
     phase: 'Govern',
   },

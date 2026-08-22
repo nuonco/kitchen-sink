@@ -3,8 +3,10 @@ import {
   countReady,
   hasAuditLogExporter,
   hasTicTacToe,
+  useDelivery,
   useIntrospect,
   useIntrospectPoll,
+  type DeliveryStats,
   type KubeResponse,
   type NamespaceResponse,
   type UIConfig,
@@ -33,7 +35,7 @@ const steps = [
 
 type Step = (typeof steps)[number]
 
-const TOUR_KEY = 'kitchen-sink-tour'
+const TOUR_KEY = 'relay-tour'
 
 function storedStep(): Step {
   try {
@@ -177,7 +179,7 @@ function GoldenPath({
           >
             <span className="arch__num">02</span>
             <span className="arch__name">Components</span>
-            <span className="arch__hint">kitchen_sink chart</span>
+            <span className="arch__hint">the relay chart</span>
           </button>
           <div
             className={revealed < 2 ? 'arch__edge arch__edge--ghost' : 'arch__edge'}
@@ -215,8 +217,9 @@ export function Landing({ config }: { config: UIConfig }) {
     rememberStep(step)
   }, [step])
 
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'relay'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
+  const [stats] = useDelivery<DeliveryStats>('/api/delivery/stats', 15_000)
 
   // The namespace read doubles as the toggleable-component watcher: while the
   // hub is on screen and either component is still off, keep re-reading so
@@ -292,11 +295,12 @@ export function Landing({ config }: { config: UIConfig }) {
     return (
       <div className="tour__step" key="arrive">
         <div className="arrive">
-          <h1>You&rsquo;re inside a BYOC install.</h1>
+          <h1>Relay is running in your account.</h1>
           <p className="arrive__lede">
-            This page is served by a container in an EKS cluster, in an AWS
-            account, that Nuon provisioned and deployed into when you
-            installed.
+            A webhook delivery platform &mdash; ingest, Postgres queue,
+            retries, dead-letter queue &mdash; deployed by Nuon into an EKS
+            cluster in your AWS account when you installed. This console is
+            one of its pods.
           </p>
           {(config.install_id || config.cluster_name) && (
             <div className="row arrive__chips">
@@ -337,7 +341,7 @@ export function Landing({ config }: { config: UIConfig }) {
     return (
       <div className="tour__step" key="explore">
         <header className="hero">
-          <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
+          <h1 style={{ maxWidth: '28ch' }}>Customize Relay.</h1>
           <p className="hero__lede">
             Each step names a problem, shows the config that answers it, and
             hands you the commands to prove it on this install.
@@ -494,8 +498,9 @@ export function Landing({ config }: { config: UIConfig }) {
             'Components are your product.',
             <>
               One component is one deployable piece of your product. Here the{' '}
-              <span className="mono">kitchen_sink</span> Helm chart deploys the
-              API, the worker, and the UI you&rsquo;re reading.
+              <span className="mono">relay</span> Helm chart deploys the ingest
+              API, the delivery worker, Postgres, an echo receiver, and the
+              console you&rsquo;re reading.
             </>,
           )}
           <GoldenPath stage="components" onPick={(p) => go(p)} />
@@ -561,15 +566,25 @@ export function Landing({ config }: { config: UIConfig }) {
             <Fact
               label={`Pods ready in ${namespace}`}
               value={podSummary}
-              note="api, ui, worker"
+              note="api, worker, db, echo, ui"
               numeric
               delay={420}
               href="#/deployed/namespace"
             />
+            <Fact
+              label="Events delivered (24h)"
+              value={
+                stats.state === 'ok' ? String(stats.value.delivered_24h) : undefined
+              }
+              note="Read from Relay's own delivery store"
+              numeric
+              delay={560}
+              href="#/delivery"
+            />
           </div>
           <div className="cta-block">
             <button className="btn btn--primary btn--xl" onClick={next}>
-              Customize the Kitchen Sink <Icon name="arrow-right" />
+              Customize Relay <Icon name="arrow-right" />
             </button>
           </div>
           <div className="tour__actions" style={{ marginTop: 24 }}>

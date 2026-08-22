@@ -14,7 +14,7 @@ I have already run "nuon auth login" on this machine, so the CLI is authenticate
 (session in ~/.nuon). Do not ask me for, print, or export any token.
 
 Hard limits:
-- Only this app and install: app kitchen-sink (${app}), install ${install}.
+- Only this app and install: app relay (${app}), install ${install}.
 - NEVER create, delete, or tear down installs, apps, components, or branches.
 - Add --output agent to every nuon command; prefix every read with NUON_READ_ONLY=1.
 - Before EVERY mutating command: show me the exact command, say what it will change,
@@ -40,9 +40,10 @@ Then walk me through day-2 for real, in this order:
    After my yes:
    nuon actions create-run -i ${install} -w <actw-id> --output agent
    (if overriding the role: the flag is --role-name, not --role). Fetch the run logs
-   and point out the assumed role ARN (...-app-break-glass) and the expected Secrets
-   Manager deny — that is the per-operation IAM proof. Then tell me to open my
-   kitchen-sink page and watch the pod ages reset.
+   and point out the assumed role ARN (...-app-break-glass), the expected Secrets
+   Manager deny — that is the per-operation IAM proof — and the dlq_replayed output:
+   the run drains Relay's dead-letter queue with real replays. Then tell me to open
+   my Relay console (#/delivery) and watch the DLQ empty and the pod ages reset.
 
 3. BRANCH — my app config is cloned at <path-to-your-clone>. Help me make one small
    visible edit, then from that directory, after my yes:
@@ -84,7 +85,7 @@ nuon sync --app-id ${app} --force --branch ${branchName} --output agent.
 This syncs my local files and triggers a real staged branch run — no push needed.
 Report each group's progress; if a group holds for approval, tell me and I will
 approve it in my dashboard. Then tell me to watch the image tags flip on my
-kitchen-sink branches page.`,
+Relay console's branches page.`,
     ),
   runbooks: (install, app) =>
     proofPrompt(
@@ -111,8 +112,8 @@ warning events, recent API logs. Nothing in my cluster changes.`,
       app,
       `after my yes:
 nuon runbooks create-run -i ${install} -r full-health-check --output agent.
-When it finishes, read me its pod checks next to the live table on my
-kitchen-sink health page — both read the same cluster.`,
+When it finishes, read me its pod checks and delivery stats next to the live
+numbers on my Relay console — both read the same install.`,
     ),
   triggers: (install, app) =>
     proofPrompt(
@@ -134,6 +135,6 @@ restarts my app's three deployments. After my yes:
 nuon actions create-run -i ${install} -w <actw-id> --output agent.
 In the run logs, point out the assumed role ARN (${install}-app-break-glass)
 and the denied Secrets Manager call, then tell me to watch the pod ages reset
-on my kitchen-sink roles page.`,
+and the DLQ drain on my Relay console.`,
     ),
 }

@@ -151,7 +151,7 @@ function imageTag(image?: string): string {
 }
 
 function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'relay'
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     EVIDENCE_POLL_MS,
@@ -359,7 +359,7 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
       <FlowHeader
         to="/customize/runbooks"
         title="Run runbooks"
-        problem="Something breaks at 2am, in an install you cannot log into."
+        problem="Deliveries back up at 2am, in an install you cannot log into."
       />
 
       <PspSection
@@ -464,8 +464,9 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
               The two runbooks that apply changes land right here:{' '}
               <span className="mono">reconcile-drift</span> redeploys the chart
               and <span className="mono">break-glass</span> restarts the
-              app&rsquo;s deployments, so pod names change and ages reset as
-              the run works.
+              pipeline and drains the DLQ, so pod names change here and dead
+              deliveries leave <a href="#/delivery">#/delivery</a> as the run
+              works.
             </>
           }
         />
@@ -481,13 +482,15 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
 /** Editorial context per action; the facts next to it come from the config. */
 const actionNotes: Record<string, string> = {
   cron_status:
-    'Collects pod status and publishes pods_ready / pods_total as structured outputs; the install readme reads them as its health pulse.',
+    'The delivery-success heartbeat: reads pod status and GETs /api/delivery/stats through the ALB, publishing pods_ready / pods_total and the delivery_* numbers as structured outputs the install readme renders.',
   debug:
     'What support runs when an install misbehaves: pods, events, and recent logs, with nobody handed a kubeconfig.',
   lifecycle_hooks:
-    'Brackets every chart deploy, which is where a migration or a cache warm goes. Depends on kitchen_sink.',
+    'Brackets every chart deploy, which is where a migration or a cache warm goes. Depends on relay.',
   break_glass_remediation:
-    'Elevated remediation through a recorded action instead of ad-hoc console access. Assumes the break-glass role from break_glass.toml.',
+    'Elevated remediation through a recorded action instead of ad-hoc console access: restarts the pipeline, then drains the DLQ by replaying dead deliveries. Assumes the break-glass role from break_glass.toml.',
+  delivery_log_export:
+    "Exports the delivery record (stats, events, DLQ) to the install's S3 archive bucket. Pods carry no IAM; the runner's actions role holds the one PutObject grant.",
 }
 
 /** What a real run of each action puts on the record. */
@@ -517,7 +520,18 @@ function actionOutcome(name: string, installID: string): ReactNode {
       <>
         The transcript logs which hook fired. The same script runs
         automatically post-provision and before and after every{' '}
-        <span className="mono">kitchen_sink</span> deploy.
+        <span className="mono">relay</span> deploy.
+      </>
+    )
+  }
+  if (name === 'delivery_log_export') {
+    return (
+      <>
+        The transcript prints the S3 key it wrote (
+        <span className="mono">delivery-logs/&lt;timestamp&gt;.json</span> in
+        the <span className="mono">relay-&lt;install-id&gt;</span> bucket) —
+        the real write behind the archive story, on its 6-hour cron or on
+        demand.
       </>
     )
   }
@@ -527,8 +541,9 @@ function actionOutcome(name: string, installID: string): ReactNode {
       <span className="mono">aws sts get-caller-identity</span> &rarr;{' '}
       <span className="mono">{installID}-app-break-glass</span>), then a{' '}
       <em>denied</em> Secrets Manager call — the permissions boundary doing its
-      job — and then restarts the app&rsquo;s three deployments. Watch the pod
-      table below while it runs.
+      job — then restarts the pipeline&rsquo;s deployments and replays every
+      dead delivery. Watch the pod table below, and the DLQ on{' '}
+      <a href="#/delivery">#/delivery</a> empty out.
     </>
   )
 }
@@ -667,7 +682,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
    ============================================================ */
 
 function HealthFlow({ config }: { config: UIConfig }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'relay'
   const ns = useIntrospect<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
   )
@@ -678,7 +693,7 @@ function HealthFlow({ config }: { config: UIConfig }) {
       <FlowHeader
         to="/customize/health"
         title="Watch component health"
-        problem="A deploy can succeed while the app it shipped is down."
+        problem="A deploy can succeed while the pipeline it shipped has stopped delivering."
       />
 
       <PspSection
@@ -693,10 +708,10 @@ function HealthFlow({ config }: { config: UIConfig }) {
         <div className="prose" style={{ marginTop: 12 }}>
           <ul>
             <li>
-              The API has no ingress: an internal ingress never converges (no
-              cert, no DNS), so the component would sit un-green forever. The
-              UI reaches it in-cluster at{' '}
-              <code>http://kitchen-sink-api:8080</code>.
+              The ingest API has no ingress: an internal ingress never
+              converges (no cert, no DNS), so the component would sit un-green
+              forever. This console reaches it in-cluster at{' '}
+              <code>http://relay-api:8080</code>.
             </li>
             <li>
               The chart&rsquo;s ConfigMap carries a <code>nuon.co/roll</code>{' '}
@@ -769,7 +784,7 @@ function HealthFlow({ config }: { config: UIConfig }) {
             agent={<ProofPrompt flow="health" config={config} />}
             manual={
               <CommandBlock
-                label="run the same checks the deploy gate relies on (read-only)"
+                label="run the delivery health sweep (read-only): nodes, workloads, ingress, live delivery stats"
                 command={`nuon runbooks create-run --install-id ${installIdOf(config)} --runbook-id full-health-check`}
               />
             }
@@ -828,7 +843,7 @@ function TriggersFlow({ config }: { config: UIConfig }) {
         </div>
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           <span className="mono">lifecycle_hooks</span> fires post-provision
-          and around every <span className="mono">kitchen_sink</span> deploy,
+          and around every <span className="mono">relay</span> deploy,
           which is where a migration or a cache warm goes.
         </p>
         <CodeBlock
@@ -1148,7 +1163,7 @@ function flowLinks(flow: string, config: UIConfig) {
  * re-reading the namespace so a dashboard toggle flips the switch here.
  */
 function CustomizeIndex({ config }: { config: UIConfig }) {
-  const namespace = config.namespace ?? 'kitchen-sink'
+  const namespace = config.namespace ?? 'relay'
   const probe = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     20_000,
@@ -1187,7 +1202,7 @@ export function Customize({
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Relay</BackLink>
 
       {flow === 'branches' && <BranchesFlow config={config} />}
       {flow === 'runbooks' && <RunbooksFlow config={config} />}
