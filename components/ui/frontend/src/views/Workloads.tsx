@@ -11,17 +11,15 @@ import {
   type SecretSummary,
   type UIConfig,
 } from '../lib/api'
-import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
-import { StepNav } from '../ui/CapabilityGrid'
+import { useNavigate } from '../lib/router'
 import {
-  BackLink,
   Callout,
   Disclosure,
-  Eyebrow,
   EmptyState,
   LoadState,
   OutLink,
+  PageHeader,
   PhaseBadge,
   RawJSON,
   Section,
@@ -49,94 +47,6 @@ export function namespaceOwner(
 
 type KubeResult = Loadable<Envelope<KubeResponse>>
 type NsResult = Loadable<Envelope<NamespaceResponse>>
-
-/* ============================================================
-   The page's summary: the few facts an evaluator checks first, live from the
-   same two introspection reads the sections below break down.
-   ============================================================ */
-
-function GlanceFact({
-  label,
-  value,
-  note,
-  numeric = false,
-}: {
-  label: string
-  value?: string
-  note?: string
-  numeric?: boolean
-}) {
-  return (
-    <div className={value ? 'fact' : 'fact fact--pending'}>
-      <div className="fact__label">{label}</div>
-      <div className={numeric ? 'fact__value fact__value--num' : 'fact__value'}>
-        {value ?? '…'}
-      </div>
-      {note && <div className="fact__note">{note}</div>}
-    </div>
-  )
-}
-
-/** "periscope-api :8080 · periscope-web :3000", trimmed for a tile note. */
-function servingNote(data: NamespaceResponse): string {
-  return (data.services ?? [])
-    .map((svc) => {
-      const name = svc.metadata?.name?.replace(/^periscope-/, '') ?? '?'
-      const port = svc.spec?.ports?.[0]?.port
-      return port ? `${name} :${port}` : name
-    })
-    .join(' · ')
-}
-
-function Glance({
-  kube,
-  ns,
-  namespace,
-  installID,
-}: {
-  kube: KubeResult
-  ns: NsResult
-  namespace: string
-  installID?: string
-}) {
-  const nsData = ns.state === 'ok' ? ns.value.response : undefined
-  const pods = nsData?.pods ?? []
-  const kubeRows = kube.state === 'ok' ? (kube.value.response.namespaces ?? []) : undefined
-  const appRows = kubeRows?.filter((row) => namespaceOwner(row.name, installID).app)
-  const thisNs = kubeRows?.find((row) => row.name === namespace)
-
-  return (
-    <div className="facts" style={{ marginTop: 0 }}>
-      <GlanceFact
-        label="Pods ready"
-        value={nsData ? `${countReady(pods)} of ${pods.length}` : undefined}
-        note={`in ${namespace}`}
-        numeric
-      />
-      <GlanceFact
-        label="Serving"
-        value={nsData ? `${(nsData.services ?? []).length} services` : undefined}
-        note={nsData ? servingNote(nsData) : undefined}
-        numeric
-      />
-      <GlanceFact
-        label="The console's namespace"
-        value={kubeRows ? namespace : undefined}
-        note={thisNs?.status?.phase ?? undefined}
-      />
-      <GlanceFact
-        label="Namespaces in the cluster"
-        value={kubeRows ? String(kubeRows.length) : undefined}
-        note={
-          kubeRows && appRows
-            ? `${appRows.length} from this install · ${kubeRows.length - appRows.length} infrastructure`
-            : undefined
-        }
-        numeric
-      />
-    </div>
-  )
-}
 
 function NamespaceTable({
   rows,
@@ -378,7 +288,7 @@ function ThisNamespace({
                 </tbody>
               </table>
             </div>
-            <Callout label="Where the secret values went">
+            <Callout label="The redaction boundary">
               This endpoint returns whole Secret objects, values included, and
               this page sits on the install&rsquo;s internet-facing load
               balancer. Periscope&rsquo;s proxy is the boundary: it forwards
@@ -575,12 +485,42 @@ function PodEnvironment() {
   )
 }
 
-export function Deployed({
+const sections = [
+  { id: 'cluster', label: 'Namespaces' },
+  { id: 'namespace', label: 'This namespace' },
+  { id: 'helm', label: 'Helm' },
+  { id: 'env', label: 'Environment' },
+]
+
+function SectionNav({ section }: { section?: string }) {
+  const navigate = useNavigate()
+  return (
+    <nav className="subnav" aria-label="Workloads sections">
+      {sections.map((sec) => (
+        <a
+          key={sec.id}
+          className={
+            section === sec.id ? 'subnav__link subnav__link--active' : 'subnav__link'
+          }
+          href={`#/workloads/${sec.id}`}
+          onClick={(e) => {
+            e.preventDefault()
+            navigate(`/workloads/${sec.id}`)
+          }}
+        >
+          {sec.label}
+        </a>
+      ))}
+    </nav>
+  )
+}
+
+export function Workloads({
   config,
   section,
 }: {
   config: UIConfig
-  /** Optional deep-link target: #/deployed/cluster scrolls to that section. */
+  /** Optional deep-link target: #/workloads/cluster scrolls to that section. */
   section?: string
 }) {
   const namespace = config.namespace ?? 'periscope'
@@ -598,24 +538,17 @@ export function Deployed({
 
   return (
     <>
-      <BackLink to="/">Customize Periscope</BackLink>
-      <header className="page-header">
-        <Eyebrow>{stepEyebrow('/deployed')}</Eyebrow>
-        <h1>The live view</h1>
-        <p className="lede">
-          Periscope&rsquo;s main screen: live reads from the cluster, and
-          everything it shows, Nuon deployed. Summary first; every table and
-          raw response is one click deeper.
-        </p>
-      </header>
+      <PageHeader
+        title="Workloads"
+        lede="Live reads from the cluster this console runs in."
+      />
 
-      <Glance kube={kube} ns={ns} namespace={namespace} installID={config.install_id} />
+      <SectionNav section={section} />
 
       <Namespaces kube={kube} config={config} />
       <ThisNamespace ns={ns} namespace={namespace} openPods={section === 'namespace'} />
       <HelmReleases config={config} />
       <PodEnvironment />
-      <StepNav current="/deployed" />
     </>
   )
 }

@@ -641,10 +641,54 @@ body::before {
   margin: var(--space-2) 0 var(--space-3);
 }
 
+/* In-page section tabs (Workloads): sticky under the topbar. */
+
+.subnav {
+  position: sticky;
+  top: var(--topbar-height);
+  z-index: 5;
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+  margin: 0 0 var(--space-2);
+  background: var(--surface-page);
+}
+
+.subnav__link {
+  padding: var(--space-1) var(--space-3);
+  border: 2px solid transparent;
+  border-radius: var(--radius-full);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-strong);
+  color: var(--text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.subnav__link:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+  text-decoration: none;
+}
+
+.subnav__link--active {
+  color: var(--text-primary);
+  background: var(--accent-wash-strong);
+  border-color: var(--accent-dim);
+}
+
+@media (max-width: 680px) {
+  .subnav {
+    overflow-x: auto;
+  }
+}
+
 /* Section */
 
 .section {
   margin-top: var(--space-10);
+  scroll-margin-top: calc(var(--topbar-height) + 56px);
 }
 
 .section__head {

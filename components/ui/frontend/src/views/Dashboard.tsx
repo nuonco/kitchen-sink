@@ -10,7 +10,7 @@ import {
 } from '../lib/api'
 import { OnboardingDrawer } from '../ui/Drawer'
 import { OutLink, PageHeader, StatTile } from '../ui/Primitives'
-import { namespaceOwner } from './Deployed'
+import { namespaceOwner } from './Workloads'
 
 /* ============================================================
    The landing: state at a glance, from live reads only. Four stat tiles,

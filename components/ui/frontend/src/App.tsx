@@ -9,7 +9,7 @@ import { OutLink } from './ui/Primitives'
 import { AuditLog } from './views/AuditLog'
 import { Customize } from './views/Customize'
 import { Dashboard } from './views/Dashboard'
-import { Deployed } from './views/Deployed'
+import { Workloads } from './views/Workloads'
 import { Mapping } from './views/Mapping'
 import { Ops } from './views/Ops'
 import { TicTacToe } from './views/TicTacToe'
@@ -118,7 +118,7 @@ export default function App() {
     />
   )
   if (parts[0] === 'workloads') {
-    view = <Deployed config={config} section={parts[1]} />
+    view = <Workloads config={config} section={parts[1]} />
   } else if (parts[0] === 'events') {
     view = <AuditLog config={config} />
   } else if (parts[0] === 'reports') {
