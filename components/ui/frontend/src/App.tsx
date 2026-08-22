@@ -1,9 +1,12 @@
-import { useUIConfig } from './lib/api'
-import { segments, useNavigate, useRoute } from './lib/router'
+import { useIntrospectPoll, useUIConfig, type SyncPipelinesResponse } from './lib/api'
+import { canonicalize } from './lib/nav'
+import { segments, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
-import { Icon, NuonMark, OutLink } from './ui/Primitives'
+import { OutLink } from './ui/Primitives'
+import { MobileNav, PausedBanner, Sidebar } from './ui/Shell'
 import { Customize } from './views/Customize'
+import { Dashboard } from './views/Dashboard'
 import { Destinations } from './views/Destinations'
 import { Landing } from './views/Landing'
 import { Mapping } from './views/Mapping'
@@ -12,85 +15,65 @@ import { Pipelines } from './views/Pipelines'
 import { TicTacToe } from './views/TicTacToe'
 import { UnderTheHood } from './views/UnderTheHood'
 
-function TopBar({
-  installID,
-  dashboardURL,
-}: {
-  installID?: string
-  dashboardURL?: string
-}) {
-  const navigate = useNavigate()
-
-  return (
-    <header className="topbar">
-      <button className="topbar__brand" onClick={() => navigate('/')}>
-        <NuonMark />
-        <span className="topbar__brand-name">Conduit</span>
-      </button>
-      {installID && (
-        <>
-          <span className="topbar__divider" />
-          <span className="topbar__meta" title={installID}>
-            <Icon name="cube" />
-            {installID}
-          </span>
-        </>
-      )}
-      <span className="topbar__spacer" />
-      <OutLink href={dashboardURL} variant="secondary">
-        Open in Nuon
-      </OutLink>
-    </header>
-  )
-}
+/** The shell-level pipeline poll: feeds the sidebar's status dot and the
+    global paused banner. Additive to the pages' own 10s polls. */
+const SHELL_POLL_MS = 15_000
 
 export default function App() {
   const config = useUIConfig()
   const path = useRoute()
-  const parts = segments(path)
+  const parts = canonicalize(segments(path))
 
-  let view = <Landing config={config} />
+  const sync = useIntrospectPoll<SyncPipelinesResponse>(
+    '/api/sync/pipelines',
+    SHELL_POLL_MS,
+    true,
+  )
+  const shellData = sync.state === 'ok' ? sync.value.response : undefined
+  const shellPipelines = shellData?.pipelines ?? []
+
+  let view = <Dashboard config={config} />
   if (parts[0] === 'pipelines') {
     view = <Pipelines config={config} />
-  } else if (parts[0] === 'under-the-hood' || parts[0] === 'deployed') {
-    // #/deployed[/:section] is the old name for the same page.
+  } else if (parts[0] === 'system') {
     view = <UnderTheHood config={config} section={parts[1]} />
-  } else if (parts[0] === 'destinations' || parts[0] === 'compliance' || parts[0] === 'audit-log') {
-    // The entitlement moved from the old audit-log page into destinations.
+  } else if (parts[0] === 'destinations') {
     view = <Destinations config={config} />
-  } else if (parts[0] === 'map') {
+  } else if (parts[0] === 'deployment') {
+    // The Deployment page replaces Mapping here in a later chunk.
     view = <Mapping config={config} />
-  } else if (parts[0] === 'day2') {
-    // The old day-2 pages merged into the customize taxonomy; keep the old
-    // deep links working.
-    view = <Customize config={config} flow={parts[1]} />
-  } else if (parts[0] === 'ops') {
-    view = <Ops config={config} />
+  } else if (parts[0] === 'operate') {
+    view = parts[1] ? <Customize config={config} flow={parts[1]} /> : <Ops config={config} />
   } else if (parts[0] === 'tictactoe') {
     view = <TicTacToe config={config} />
-  } else if (parts[0] === 'customize') {
-    view = <Customize config={config} flow={parts[1]} />
+  } else if (parts[0] === 'tour') {
+    view = <Landing config={config} />
   }
 
   return (
     <div className="shell">
       <LoadingOverlay />
       <AmbientMark />
-      <TopBar installID={config.install_id} dashboardURL={config.links.install} />
-      <main className="main">{view}</main>
-      <footer className="footer">
-        <div className="footer__inner">
-          <span className="mono">nuonco/kitchen-sink</span>
-          <span className="topbar__divider" />
-          <span>
-            This app and the Nuon dashboard are two halves of the same tour.
-          </span>
-          <span className="topbar__spacer" />
-          <OutLink href="https://docs.nuon.co" variant="plain">
-            docs.nuon.co
-          </OutLink>
+      <MobileNav config={config} pipelines={shellPipelines} parts={parts} />
+      <div className="appgrid">
+        <Sidebar config={config} pipelines={shellPipelines} parts={parts} />
+        <div className="shell__col">
+          <PausedBanner
+            pipelines={shellPipelines}
+            count={shellData?.pipelines_count ?? 0}
+          />
+          <main className="main">{view}</main>
+          <footer className="footer">
+            <div className="footer__inner">
+              <span className="mono">nuonco/kitchen-sink</span>
+              <span className="topbar__spacer" />
+              <OutLink href="https://docs.nuon.co" variant="plain">
+                docs.nuon.co
+              </OutLink>
+            </div>
+          </footer>
         </div>
-      </footer>
+      </div>
     </div>
   )
 }

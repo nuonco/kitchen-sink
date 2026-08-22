@@ -65,6 +65,13 @@
   --topbar-height: 56px;
   --content-max: 1080px;
 
+  /* Product shell */
+  --sidebar-width: 232px; /* fixed; collapses below 860px */
+  /* Density (product tables and data cells) */
+  --row-h: 40px; /* table + list row height */
+  --text-data: 13px; /* mono data cells, between subtext 12 and body 14 */
+  --strip-square: 8px; /* run-outcome squares; 2px gaps */
+
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
   --duration-fast: 120ms;
   --duration-base: 180ms;

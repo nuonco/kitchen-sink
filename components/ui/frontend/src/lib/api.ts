@@ -293,6 +293,75 @@ export interface SyncRunsResponse {
   runs: SyncRun[]
 }
 
+/**
+ * The merged recent-runs feed: one bounded fan-out — GET /sync/runs per
+ * pipeline name (the list itself comes from /sync/pipelines, so the fan-out
+ * is self-limiting) — merged and sorted newest first. Refreshes every 10s
+ * while the tab is visible; a failed refresh keeps each pipeline's last good
+ * list rather than dropping rows. Returns undefined until the first round
+ * lands, so tiles can render their pending state.
+ */
+export function useSyncRecentRuns(
+  names: string[],
+  limit = 20,
+): SyncRun[] | undefined {
+  const [runs, setRuns] = useState<SyncRun[] | undefined>(undefined)
+  const key = names.join(',')
+
+  useEffect(() => {
+    if (key === '') {
+      // Pipeline names not known yet (or none registered): nothing to fetch.
+      setRuns(undefined)
+      return
+    }
+    let live = true
+    let inFlight = false
+    // Last good runs per pipeline, so one failed fetch never empties a column.
+    const lastGood = new Map<string, SyncRun[]>()
+
+    const refresh = () => {
+      if (inFlight) return
+      inFlight = true
+      Promise.all(
+        key.split(',').map((name) =>
+          get<SyncRunsResponse>(
+            `/api/sync/runs?pipeline=${encodeURIComponent(name)}&limit=${limit}`,
+          )
+            .then((env) => {
+              lastGood.set(name, env.response.runs ?? [])
+            })
+            .catch(() => {
+              // silent: keep the last good value for this pipeline
+            }),
+        ),
+      )
+        .then(() => {
+          if (!live || lastGood.size === 0) return
+          const merged = [...lastGood.values()]
+            .flat()
+            .sort((a, b) => Date.parse(b.started_at) - Date.parse(a.started_at))
+          setRuns(merged)
+        })
+        .finally(() => {
+          inFlight = false
+        })
+    }
+
+    refresh()
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') refresh()
+    }, 10_000)
+    return () => {
+      live = false
+      window.clearInterval(timer)
+    }
+    // `key` is the identity of `names`: a new array with the same names must
+    // not restart the poll.
+  }, [key, limit])
+
+  return runs
+}
+
 /* ============================================================
    Runtime config served by the Go server, not the introspection API.
    ============================================================ */

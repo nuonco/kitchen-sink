@@ -50,7 +50,7 @@ export function timeAgo(iso: string | null | undefined, now: number): string {
   return `${Math.floor(h / 24)}d ago`
 }
 
-function durationOf(started: string, finished: string | null): string {
+export function durationOf(started: string, finished: string | null): string {
   if (!finished) return 'running'
   const ms = Date.parse(finished) - Date.parse(started)
   if (!Number.isFinite(ms) || ms < 0) return '—'
@@ -60,20 +60,20 @@ function durationOf(started: string, finished: string | null): string {
   return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`
 }
 
-function fmtBytes(n: number): string {
+export function fmtBytes(n: number): string {
   if (!Number.isFinite(n)) return '—'
   if (n < 1024) return `${n} B`
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
   return `${(n / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function fmtInterval(seconds: number): string {
+export function fmtInterval(seconds: number): string {
   if (seconds % 3600 === 0) return `${seconds / 3600}h`
   if (seconds % 60 === 0) return `${seconds / 60}m`
   return `${seconds}s`
 }
 
-function RunStatusBadge({ status }: { status: SyncRunStatus }) {
+export function RunStatusBadge({ status }: { status: SyncRunStatus }) {
   if (status === 'succeeded') {
     return (
       <Badge tone="positive" dot>
