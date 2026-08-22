@@ -353,7 +353,7 @@ body::before {
   align-items: center;
   gap: var(--space-4);
   padding: 0 var(--space-6);
-  border-bottom: 1px solid var(--border-subtle);
+  border-bottom: 2px solid var(--border-default);
   background: rgba(2, 7, 8, 0.88);
   backdrop-filter: blur(8px);
 }
@@ -435,8 +435,7 @@ body::before {
   font-family: var(--font-mono);
   font-size: var(--text-subtext);
   line-height: var(--text-subtext-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
+  letter-spacing: 0;
   color: var(--text-tertiary);
 }
 
@@ -645,7 +644,7 @@ body::before {
 /* Section */
 
 .section {
-  margin-top: var(--space-12);
+  margin-top: var(--space-10);
 }
 
 .section__head {
@@ -654,14 +653,12 @@ body::before {
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
-  padding-bottom: var(--space-3);
-  border-bottom: 1px solid var(--border-subtle);
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-4);
 }
 
 .section__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
+  font-size: var(--text-base);
+  line-height: var(--text-base-line);
   font-weight: var(--weight-stronger);
 }
 
@@ -782,7 +779,7 @@ body::before {
    a button; clicking one opens its detail panel below the diagram. */
 
 .arch__sandbox {
-  border: 1px dashed var(--accent-dim);
+  border: 2px dashed var(--accent-dim);
   border-radius: var(--radius-lg);
   background: rgba(2, 7, 8, 0.35);
   padding: var(--space-3) var(--space-4) var(--space-4);
@@ -2182,7 +2179,7 @@ pre.raw {
 /* The upsell shown at #/tictactoe while the component is disabled */
 .ttt-locked {
   padding: var(--space-8) var(--space-6);
-  border: 1px dashed var(--border-default);
+  border: 2px dashed var(--border-default);
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
 }

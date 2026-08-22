@@ -32,8 +32,26 @@ export function Icon({ name }: { name: string }) {
   )
 }
 
+/** @deprecated Product pages carry no kickers; the guide index keeps plain
+ * numerals via the class directly. Left for the pages not yet migrated. */
 export function Eyebrow({ children }: { children: ReactNode }) {
   return <div className="eyebrow">{children}</div>
+}
+
+/** Every product page opens the same way: a 24px h1 and one sentence. */
+export function PageHeader({
+  title,
+  lede,
+}: {
+  title: string
+  lede?: ReactNode
+}) {
+  return (
+    <header className="page-header">
+      <h1>{title}</h1>
+      {lede && <p className="lede">{lede}</p>}
+    </header>
+  )
 }
 
 export function Mono({ children }: { children: ReactNode }) {

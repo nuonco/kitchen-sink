@@ -5,6 +5,10 @@
  *
  * To add an icon, copy its path out of
  * node_modules/@phosphor-icons/web/src/regular/selection.json.
+ *
+ * Weight audit: every glyph here is a filled outline (fill="currentColor" in
+ * Primitives' Icon), not a stroked path — there are no sub-2px strokes to
+ * bump. Any future icon must be a filled glyph too.
  */
 export const iconPaths: Record<string, string> = {
   "arrow-left": "M896 512c0 17.673-14.327 32-32 32v0h-626.76l233.4 233.36c5.794 5.794 9.378 13.799 9.378 22.64 0 17.683-14.335 32.018-32.018 32.018-8.841 0-16.846-3.584-22.64-9.378l-288-288c-5.798-5.792-9.385-13.797-9.385-22.64s3.587-16.848 9.385-22.64l0-0 288-288c5.794-5.794 13.799-9.378 22.64-9.378 17.683 0 32.018 14.335 32.018 32.018 0 8.841-3.584 16.846-9.378 22.64v0l-233.4 233.36h626.76c17.673 0 32 14.327 32 32v0z",
