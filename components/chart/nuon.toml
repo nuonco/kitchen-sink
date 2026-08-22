@@ -26,7 +26,7 @@ contents = "./chart/values.yaml"
 # chart is classified "unchanged" and skipped, leaving installs on the old
 # baked-in tags — `dependencies` above only orders deploys, it never cascades
 # them. Surfaced as the nuon.co/image-stamp annotation on the ConfigMap.
-image_stamp = "sha-25f2b1a"
+image_stamp = "sha-ed7cf07"
 
 [[operation_roles]]
 operation = "deploy"
