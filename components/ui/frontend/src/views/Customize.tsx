@@ -358,7 +358,7 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
     <>
       <FlowHeader
         to="/customize/runbooks"
-        title="Run runbooks"
+        title="Run the console SOPs"
         problem="Something breaks at 2am, in an install you cannot log into."
       />
 
@@ -450,7 +450,10 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           This install already has real runs on record:{' '}
           <span className="mono">full-health-check</span> runs after every
-          staged deploy (<span className="mono">post_deploy_runbooks</span>).{' '}
+          staged deploy (<span className="mono">post_deploy_runbooks</span>),
+          so the report archive has held a real health report since the first
+          deploy. The two read-only SOPs&rsquo; only write is their archive
+          object.{' '}
           {config.links.runbooks && (
             <OutLink href={config.links.runbooks} variant="plain">
               Open the latest full-health-check transcript
@@ -461,11 +464,11 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
           config={config}
           lead={
             <>
-              The two runbooks that apply changes land right here:{' '}
+              The two SOPs that apply changes land right here:{' '}
               <span className="mono">reconcile-drift</span> redeploys the chart
               and <span className="mono">break-glass</span> restarts the
-              app&rsquo;s deployments, so pod names change and ages reset as
-              the run works.
+              console&rsquo;s deployments, so pod names change and ages reset
+              as the run works.
             </>
           }
         />
@@ -481,13 +484,13 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
 /** Editorial context per action; the facts next to it come from the config. */
 const actionNotes: Record<string, string> = {
   uptime_heartbeat:
-    'Collects pod status and publishes pods_ready / pods_total as structured outputs; the install readme reads them as its health pulse.',
+    'Collects pod status and publishes pods_ready / pods_total as structured outputs; the install readme reads them as its health pulse, and each hourly run drops a snapshot into the report archive under heartbeats/.',
   debug:
     'What support runs when an install misbehaves: pods, events, and recent logs, with nobody handed a kubeconfig.',
   lifecycle_hooks:
     'Brackets every chart deploy, which is where a migration or a cache warm goes. Depends on periscope.',
   break_glass_remediation:
-    'Elevated remediation through a recorded action instead of ad-hoc console access. Assumes the break-glass role from break_glass.toml.',
+    'The emergency workload restart: elevated remediation through a recorded action instead of ad-hoc console access. Assumes the break-glass role from break_glass.toml.',
 }
 
 /** What a real run of each action puts on the record. */
@@ -527,8 +530,8 @@ function actionOutcome(name: string, installID: string): ReactNode {
       <span className="mono">aws sts get-caller-identity</span> &rarr;{' '}
       <span className="mono">{installID}-app-break-glass</span>), then a{' '}
       <em>denied</em> Secrets Manager call — the permissions boundary doing its
-      job — and then restarts the app&rsquo;s three deployments. Watch the pod
-      table below while it runs.
+      job — and then restarts Periscope&rsquo;s three deployments. Watch the
+      pod table below while it runs.
     </>
   )
 }
@@ -885,7 +888,7 @@ const roleNotes: Record<string, string> = {
   'sandbox-updates':
     'Sandbox reprovisions and upgrades, separated from app-level maintenance.',
   actions:
-    'The narrowest role here: a single inline policy allowing eks:DescribeCluster, because actions run in-cluster and need almost nothing from AWS.',
+    'The narrowest role here: inline policies allowing eks:DescribeCluster plus put-and-list scoped to the report archive bucket — exactly what SOPs and actions do, nothing more.',
   deprovision:
     'Teardown only. Separating it means routine operations can never delete the install.',
   'app-break-glass':
@@ -1014,9 +1017,9 @@ function RolesFlow({ config }: { config: UIConfig }) {
           config={config}
           lead={
             <>
-              The same run&rsquo;s last act is a rollout restart of the
-              app&rsquo;s three deployments: pod names change and ages reset
-              the moment it lands.
+              The same run&rsquo;s last act is a rollout restart of
+              Periscope&rsquo;s three deployments: pod names change and ages
+              reset the moment it lands.
             </>
           }
         />
@@ -1187,7 +1190,7 @@ export function Customize({
 
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      <BackLink to="/">Customize Periscope</BackLink>
 
       {flow === 'branches' && <BranchesFlow config={config} />}
       {flow === 'runbooks' && <RunbooksFlow config={config} />}

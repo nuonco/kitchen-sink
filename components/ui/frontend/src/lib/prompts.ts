@@ -36,13 +36,13 @@ Then walk me through day-2 for real, in this order:
 
 2. ACTION + ROLE PROOF — NUON_READ_ONLY=1 nuon actions list -a ${app} --output agent;
    create-run needs the workflow ID (actw...), not the name — resolve
-   break_glass_remediation here. Warn me it restarts my app's three deployments.
+   break_glass_remediation here. Warn me it restarts Periscope's three deployments.
    After my yes:
    nuon actions create-run -i ${install} -w <actw-id> --output agent
    (if overriding the role: the flag is --role-name, not --role). Fetch the run logs
    and point out the assumed role ARN (...-app-break-glass) and the expected Secrets
    Manager deny — that is the per-operation IAM proof. Then tell me to open my
-   kitchen-sink page and watch the pod ages reset.
+   Periscope page and watch the pod ages reset.
 
 3. BRANCH — my app config is cloned at <path-to-your-clone>. Help me make one small
    visible edit, then from that directory, after my yes:
@@ -84,7 +84,7 @@ nuon sync --app-id ${app} --force --branch ${branchName} --output agent.
 This syncs my local files and triggers a real staged branch run — no push needed.
 Report each group's progress; if a group holds for approval, tell me and I will
 approve it in my dashboard. Then tell me to watch the image tags flip on my
-kitchen-sink branches page.`,
+Periscope branches page.`,
     ),
   runbooks: (install, app) =>
     proofPrompt(
@@ -112,7 +112,7 @@ warning events, recent API logs. Nothing in my cluster changes.`,
       `after my yes:
 nuon runbooks create-run -i ${install} -r full-health-check --output agent.
 When it finishes, read me its pod checks next to the live table on my
-kitchen-sink health page — both read the same cluster.`,
+Periscope health page — both read the same cluster.`,
     ),
   triggers: (install, app) =>
     proofPrompt(
@@ -130,10 +130,10 @@ Show me its structured outputs: pods_ready, pods_total, checked_at.`,
       app,
       `NUON_READ_ONLY=1 nuon actions list -a ${app} --output agent;
 resolve break_glass_remediation to its workflow ID (actw...). Warn me it
-restarts my app's three deployments. After my yes:
+restarts Periscope's three deployments. After my yes:
 nuon actions create-run -i ${install} -w <actw-id> --output agent.
 In the run logs, point out the assumed role ARN (${install}-app-break-glass)
 and the denied Secrets Manager call, then tell me to watch the pod ages reset
-on my kitchen-sink roles page.`,
+on my Periscope roles page.`,
     ),
 }
