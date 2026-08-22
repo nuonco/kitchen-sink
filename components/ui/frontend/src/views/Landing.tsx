@@ -292,11 +292,12 @@ export function Landing({ config }: { config: UIConfig }) {
     return (
       <div className="tour__step" key="arrive">
         <div className="arrive">
-          <h1>You&rsquo;re inside a BYOC install.</h1>
+          <h1>This is Periscope.</h1>
           <p className="arrive__lede">
-            This page is served by a container in an EKS cluster, in an AWS
-            account, that Nuon provisioned and deployed into when you
-            installed.
+            A read-only console for the cluster it runs in. Periscope&rsquo;s
+            job is to show you what runs here; Nuon&rsquo;s job was to put it
+            here &mdash; this page is served from an EKS cluster Nuon
+            provisioned when you installed.
           </p>
           {(config.install_id || config.cluster_name) && (
             <div className="row arrive__chips">
@@ -337,7 +338,7 @@ export function Landing({ config }: { config: UIConfig }) {
     return (
       <div className="tour__step" key="explore">
         <header className="hero">
-          <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
+          <h1 style={{ maxWidth: '28ch' }}>Customize Periscope.</h1>
           <p className="hero__lede">
             Each step names a problem, shows the config that answers it, and
             hands you the commands to prove it on this install.
@@ -388,8 +389,9 @@ export function Landing({ config }: { config: UIConfig }) {
           <section className="section">
             <div className="card">
               <p className="small muted" style={{ maxWidth: '70ch' }}>
-                This app reads the install from the inside. The Nuon dashboard
-                operates it, and every other install, from the outside.
+                Periscope reads the install from the inside. The Nuon
+                dashboard operates it, and every other install, from the
+                outside.
               </p>
               <div className="row" style={{ marginTop: 20 }}>
                 <OutLink href={config.links.install}>
@@ -495,7 +497,8 @@ export function Landing({ config }: { config: UIConfig }) {
             <>
               One component is one deployable piece of your product. Here the{' '}
               <span className="mono">periscope</span> Helm chart deploys the
-              API, the worker, and the UI you&rsquo;re reading.
+              console: the API, the collector, and the web UI you&rsquo;re
+              reading.
             </>,
           )}
           <GoldenPath stage="components" onPick={(p) => go(p)} />
@@ -561,7 +564,7 @@ export function Landing({ config }: { config: UIConfig }) {
             <Fact
               label={`Pods ready in ${namespace}`}
               value={podSummary}
-              note="api, ui, worker"
+              note="api, web, collector"
               numeric
               delay={420}
               href="#/deployed/namespace"
@@ -569,7 +572,7 @@ export function Landing({ config }: { config: UIConfig }) {
           </div>
           <div className="cta-block">
             <button className="btn btn--primary btn--xl" onClick={next}>
-              Customize the Kitchen Sink <Icon name="arrow-right" />
+              Customize Periscope <Icon name="arrow-right" />
             </button>
           </div>
           <div className="tour__actions" style={{ marginTop: 24 }}>
