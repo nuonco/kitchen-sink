@@ -361,7 +361,7 @@ function ThisNamespace({
               This endpoint returns whole Secret objects, values included, and
               this page sits on the install&rsquo;s internet-facing load
               balancer. So the server strips every secret value before the
-              response leaves the cluster, and proxies only the four endpoints
+              response leaves the cluster, and proxies only the endpoints
               these views read. Filtering in the browser instead would protect
               nobody: you could just call the endpoint yourself.
             </Callout>
