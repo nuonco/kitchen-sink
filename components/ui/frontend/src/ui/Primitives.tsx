@@ -437,3 +437,12 @@ export function LoadState({
 export function EmptyState({ children }: { children: ReactNode }) {
   return <div className="status">{children}</div>
 }
+
+/**
+ * A surface that is empty on purpose, stated as a fact — distinct from
+ * EmptyState, which implies data was expected and did not come. Never a
+ * spinner, never a placeholder table.
+ */
+export function EmptyByDesign({ children }: { children: ReactNode }) {
+  return <div className="empty-design">{children}</div>
+}

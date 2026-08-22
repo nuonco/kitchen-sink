@@ -124,6 +124,16 @@ nuon actions create-run -i ${install} -w <actw-id> --output agent — the same
 action its cron trigger has run hourly since this install provisioned.
 Show me its structured outputs: pods_ready, pods_total, checked_at.`,
     ),
+  reports: (install, app) =>
+    proofPrompt(
+      install,
+      app,
+      `after my yes:
+nuon runbooks create-run -i ${install} -r full-health-check --output agent.
+Poll get-run until it finishes, then read me the archive-report step's output —
+its closing \`aws s3 ls\` of the report archive — so I can see the bucket's
+contents in the run transcript. Nothing in my cluster changes.`,
+    ),
   roles: (install, app) =>
     proofPrompt(
       install,

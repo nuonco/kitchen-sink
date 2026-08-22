@@ -12,6 +12,7 @@ import { Events } from './views/Events'
 import { Workloads } from './views/Workloads'
 import { Mapping } from './views/Mapping'
 import { Ops } from './views/Ops'
+import { Reports } from './views/Reports'
 import { TicTacToe } from './views/TicTacToe'
 
 /* ============================================================
@@ -35,17 +36,6 @@ function canonicalize(path: string): string {
     return `/${[legacyAliases[head], ...parts.slice(1)].join('/')}`
   }
   return path
-}
-
-/** Interim: the Reports surface lands with its own view; until then the
- * route resolves and names itself. */
-function ReportsInterim() {
-  return (
-    <header className="page-header">
-      <h1>Reports</h1>
-      <p className="lede">The install&rsquo;s report archive.</p>
-    </header>
-  )
 }
 
 /** Interim: the instance facts, until the full Settings view lands. */
@@ -122,7 +112,7 @@ export default function App() {
   } else if (parts[0] === 'events') {
     view = <Events config={config} />
   } else if (parts[0] === 'reports') {
-    view = <ReportsInterim />
+    view = <Reports config={config} />
   } else if (parts[0] === 'operations') {
     view = <Ops config={config} />
   } else if (parts[0] === 'settings') {

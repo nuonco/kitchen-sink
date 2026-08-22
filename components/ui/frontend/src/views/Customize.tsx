@@ -77,7 +77,7 @@ const appIdOf = (config: UIConfig) => config.app_id ?? '<your-app-id>'
  * coding agent, or type the commands yourself. Same pattern on every proof
  * section, agent first — that is the default action everywhere else too.
  */
-function Tracks({ agent, manual }: { agent: ReactNode; manual: ReactNode }) {
+export function Tracks({ agent, manual }: { agent: ReactNode; manual: ReactNode }) {
   const [track, setTrack] = useState<'agent' | 'manual'>('agent')
   return (
     <div className="tracks">
@@ -107,7 +107,7 @@ function Tracks({ agent, manual }: { agent: ReactNode; manual: ReactNode }) {
 }
 
 /** The default way to run a proof: paste it into a coding agent. */
-function ProofPrompt({ flow, config }: { flow: string; config: UIConfig }) {
+export function ProofPrompt({ flow, config }: { flow: string; config: UIConfig }) {
   const build = proofPrompts[flow]
   if (!build) return null
   const prompt = build(installIdOf(config), appIdOf(config))

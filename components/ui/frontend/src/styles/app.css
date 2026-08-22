@@ -1129,6 +1129,71 @@ a.stat:hover {
   }
 }
 
+/* ============================================================
+   Reports: by-design prefix cards and the empty-on-purpose block.
+   ============================================================ */
+
+.prefixes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+}
+
+.prefixcard {
+  padding: var(--space-5);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+
+.prefixcard__name {
+  font-size: var(--text-base);
+  line-height: var(--text-base-line);
+  font-weight: var(--weight-stronger);
+  color: var(--text-primary);
+}
+
+.prefixcard__facts {
+  margin: var(--space-3) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.prefixcard__fact {
+  display: flex;
+  gap: var(--space-3);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+}
+
+.prefixcard__fact dt {
+  flex: none;
+  width: 56px;
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  letter-spacing: 0;
+}
+
+.prefixcard__fact dd {
+  margin: 0;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.empty-design {
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 2px solid var(--border-default);
+  border-left: 3px solid var(--accent-dim);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+  max-width: 76ch;
+}
+
 /* Golden path */
 
 .golden {
