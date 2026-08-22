@@ -12,7 +12,7 @@ import {
   PageHeader,
   Section,
 } from '../ui/Primitives'
-import { ProofPrompt, Tracks } from './Customize'
+import { ProofPrompt, Tracks } from './Guide'
 
 /* ============================================================
    The report archive, narrated honestly: the console holds no cloud

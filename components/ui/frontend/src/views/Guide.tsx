@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import {
+  AUDIT_LOG_SERVICE,
   countReady,
   hasAuditLogExporter,
   hasTicTacToe,
@@ -18,18 +19,16 @@ import {
   lifecycleHooksToml,
   roles,
   runbooks,
+  toggleableComponents,
 } from '../lib/config-data.gen'
 import { agentPrompt, proofPrompts } from '../lib/prompts'
-import { stepEyebrow } from '../lib/taxonomy'
 import { EvalPath, StepNav, type SwitchStates } from '../ui/CapabilityGrid'
 import { useMarkStepSeen } from '../lib/progress'
 import {
-  BackLink,
   Badge,
   CodeBlock,
   CommandBlock,
   CopyButton,
-  Eyebrow,
   Icon,
   LoadState,
   OutLink,
@@ -48,17 +47,14 @@ import {
    ============================================================ */
 
 function FlowHeader({
-  to,
   title,
   problem,
 }: {
-  to: string
   title: string
   problem: ReactNode
 }) {
   return (
     <header className="page-header">
-      <Eyebrow>{stepEyebrow(to)}</Eyebrow>
       <h1>{title}</h1>
       <p className="lede psp-lede">
         <PspTag kind="problem" /> {problem}
@@ -239,7 +235,6 @@ function BranchesFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/branches"
         title="Ship through app branches"
         problem="Without staging, one bad config change reaches every customer at once."
       />
@@ -357,7 +352,6 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/runbooks"
         title="Run the console SOPs"
         problem="Something breaks at 2am, in an install you cannot log into."
       />
@@ -545,7 +539,6 @@ function ActionsFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/actions"
         title="Run adhoc actions"
         problem="Support needs to fix a customer install without holding its credentials."
       />
@@ -679,7 +672,6 @@ function HealthFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/health"
         title="Watch component health"
         problem="A deploy can succeed while the app it shipped is down."
       />
@@ -791,7 +783,6 @@ function TriggersFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/triggers"
         title="Wire up triggers"
         problem="Operational scripts need to run at the right moment with nobody remembering them."
       />
@@ -904,7 +895,6 @@ function RolesFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <FlowHeader
-        to="/customize/roles"
         title="Scope operation roles"
         problem="Your customer's security team asks exactly what Nuon may do in their account."
       />
@@ -1119,8 +1109,213 @@ function AgentFlow({ config }: { config: UIConfig }) {
 }
 
 /* ============================================================
-   The view. Bare #/customize renders the checklist for deep links; the
-   landing's hub is the full front door.
+   Govern: the entitlement lesson (components/audit_log_exporter.toml). The
+   product screen (#/events) states the entitlement at its point of use;
+   this page teaches the config behind it, reading the same live marker.
+   ============================================================ */
+
+/** How often this page re-reads the namespace looking for the deploy. */
+const ENTITLEMENT_POLL_MS = 10_000
+
+const auditLogComponent = toggleableComponents.find(
+  (c) => c.name === 'audit_log_exporter',
+)
+
+/** The mechanism, as three beats instead of a paragraph. */
+function HowItKnows({
+  config,
+  namespace,
+  live,
+  onDashboardOpen,
+}: {
+  config: UIConfig
+  namespace: string
+  live?: boolean
+  onDashboardOpen?: () => void
+}) {
+  const beats = [
+    {
+      label: 'toggle',
+      detail: 'component on, in the dashboard',
+      href: config.links.audit_log_exporter ?? config.links.components,
+    },
+    { label: 'deploy', detail: `Nuon applies ${AUDIT_LOG_SERVICE}` },
+    {
+      label: live ? 'narrate' : 'detect',
+      detail: live
+        ? `#/events reads ${namespace} events every 5s`
+        : `this page re-reads ${namespace} every ${ENTITLEMENT_POLL_MS / 1000}s`,
+    },
+  ]
+  return (
+    <div className="ship" style={{ marginTop: 16 }}>
+      {beats.map((beat, i) => {
+        const body = (
+          <>
+            <span className="ship__num">0{i + 1}</span>
+            <span className="ship__label">{beat.label}</span>
+            <span className="ship__detail mono">{beat.detail}</span>
+          </>
+        )
+        return beat.href ? (
+          <a
+            key={beat.label}
+            className="ship__beat ship__beat--link"
+            href={beat.href}
+            target="_blank"
+            rel="noreferrer"
+            onClick={onDashboardOpen}
+          >
+            {body}
+          </a>
+        ) : (
+          <span key={beat.label} className="ship__beat">
+            {body}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
+function EntitlementFlow({ config }: { config: UIConfig }) {
+  const namespace = config.namespace ?? 'periscope'
+  const [enabled, setEnabled] = useState(false)
+  const [justEnabled, setJustEnabled] = useState(false)
+  const [waiting, setWaiting] = useState(false)
+  // True once the visitor has actually seen the off state, so an unlock
+  // detected later is a real on-screen moment rather than the initial load.
+  const sawOff = useRef(false)
+
+  const ns = useIntrospectPoll<NamespaceResponse>(
+    `/api/introspect/namespace/${namespace}`,
+    ENTITLEMENT_POLL_MS,
+    !enabled,
+  )
+
+  useEffect(() => {
+    if (ns.state !== 'ok') return
+    const found = hasAuditLogExporter(ns.value.response.services ?? [])
+    if (found) {
+      if (sawOff.current) setJustEnabled(true)
+      setEnabled(true)
+    } else {
+      sawOff.current = true
+    }
+  }, [ns])
+
+  return (
+    <>
+      <FlowHeader
+        title="Sell an entitlement"
+        problem={
+          <>
+            One plan tier includes a feature the others don&rsquo;t, and every
+            install runs the same config.
+          </>
+        }
+      />
+
+      <LoadState result={ns} what={`the ${namespace} namespace`} />
+
+      {ns.state === 'ok' && (
+        <>
+          <PspSection
+            kind="solution"
+            title="A toggleable component"
+            aside="components/audit_log_exporter.toml"
+          >
+            <p className="small muted" style={{ maxWidth: '72ch' }}>
+              A component with <span className="mono">toggleable = true</span>{' '}
+              is a per-install entitlement — here, the Enterprise SIEM export:
+              flip it on and Nuon deploys it, and this app detects the deploy
+              by watching for the component&rsquo;s marker Service.
+            </p>
+            <div className="row" style={{ marginTop: 12 }}>
+              <span className="entstat mono" role="status">
+                <span
+                  className={
+                    enabled ? 'entstat__dot entstat__dot--on' : 'entstat__dot'
+                  }
+                  aria-hidden="true"
+                />
+                {enabled ? 'on, on this install' : 'off on this install · watching'}
+              </span>
+              {justEnabled && (
+                <Badge tone="positive" dot>
+                  just deployed — no reload
+                </Badge>
+              )}
+            </div>
+            {auditLogComponent && (
+              <CodeBlock
+                label="the real config, comments stripped"
+                code={auditLogComponent.toml}
+              />
+            )}
+          </PspSection>
+
+          <PspSection
+            kind="proof"
+            title={enabled ? 'The feature it gates, live' : 'Flip it on and watch'}
+            aside={`GET /introspect/namespace/${namespace}`}
+          >
+            <HowItKnows
+              config={config}
+              namespace={namespace}
+              live={enabled}
+              onDashboardOpen={enabled ? undefined : () => setWaiting(true)}
+            />
+            {enabled ? (
+              <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+                The marker Service <span className="mono">{AUDIT_LOG_SERVICE}</span>{' '}
+                is in the namespace, so the export panel on{' '}
+                <a href="#/events">Events</a> reads &ldquo;Enabled on this
+                install&rdquo; — the proof is that live screen, not a copy of
+                it here.
+              </p>
+            ) : (
+              <>
+                <div className="ttt-watch">
+                  {waiting ? (
+                    <>
+                      <Badge tone="warning" dot>
+                        waiting for the deploy
+                      </Badge>
+                      <span>
+                        Toggle the component on in the dashboard tab and deploy
+                        it; this page switches over when the Service appears.
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <Badge tone="accent" dot>
+                        watching live
+                      </Badge>
+                      <span>
+                        Checking this namespace for the exporter&rsquo;s
+                        Service every {ENTITLEMENT_POLL_MS / 1000} seconds.
+                      </span>
+                    </>
+                  )}
+                </div>
+                <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+                  The export panel on <a href="#/events">Events</a> shows the
+                  same state at the feature&rsquo;s point of use, with the CLI
+                  toggle alongside the dashboard one.
+                </p>
+              </>
+            )}
+          </PspSection>
+        </>
+      )}
+    </>
+  )
+}
+
+/* ============================================================
+   The view. Bare #/guide renders the checklist index; #/guide/:flow is one
+   docs-style page per step.
    ============================================================ */
 
 /**
@@ -1142,15 +1337,20 @@ function flowLinks(flow: string, config: UIConfig) {
     return { href: links.actions ?? links.install, label: 'Open the actions for this install' }
   if (flow === 'agent')
     return { href: links.tokens ?? links.install, label: 'API tokens for CI & agents in Nuon' }
+  if (flow === 'entitlement')
+    return {
+      href: links.audit_log_exporter ?? links.components ?? links.install,
+      label: 'Open the component in Nuon',
+    }
   return { href: links.install, label: 'Open this install in Nuon' }
 }
 
 /**
- * The bare index doubles as a watcher for the toggleable components' rows,
- * the same way the landing hub does: while either component is off, keep
- * re-reading the namespace so a dashboard toggle flips the switch here.
+ * The index doubles as a watcher for the toggleable components' rows: while
+ * either component is off, keep re-reading the namespace so a dashboard
+ * toggle flips the switch here.
  */
-function CustomizeIndex({ config }: { config: UIConfig }) {
+function GuideIndex({ config }: { config: UIConfig }) {
   const namespace = config.namespace ?? 'periscope'
   const probe = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
@@ -1161,37 +1361,45 @@ function CustomizeIndex({ config }: { config: UIConfig }) {
     probe.state === 'ok' ? (probe.value.response.services ?? []) : []
   const switches: SwitchStates = {
     '/tictactoe': { on: hasTicTacToe(services) },
-    '/audit-log': { on: hasAuditLogExporter(services) },
+    '/guide/entitlement': { on: hasAuditLogExporter(services) },
   }
+  const install = installIdOf(config)
+  const app = appIdOf(config)
 
   return (
     <>
       <header className="page-header">
-        <h1>The evaluation checklist</h1>
-        <p className="lede">
-          Live pages read this install right now; guides explain the config it
-          ships.
-        </p>
+        <h1>Evaluate Nuon on this install</h1>
       </header>
+      <div className="agent-row">
+        <span className="agent-row__text">
+          One prompt walks your coding agent through every proof, ids filled
+          in.
+        </span>
+        <span className="agent-row__actions">
+          <CopyButton text={agentPrompt(install, app)} label="Copy the agent prompt" />
+          <a href="#/guide/agent">
+            Read it first <Icon name="arrow-right" />
+          </a>
+        </span>
+      </div>
       <EvalPath switches={switches} />
     </>
   )
 }
 
-export function Customize({
+export function Guide({
   config,
   flow,
 }: {
   config: UIConfig
   flow?: string
 }) {
-  const route = flow ? `/customize/${flow}` : undefined
+  const route = flow ? `/guide/${flow}` : undefined
   useMarkStepSeen(route)
 
   return (
     <>
-      <BackLink to="/">Customize Periscope</BackLink>
-
       {flow === 'branches' && <BranchesFlow config={config} />}
       {flow === 'runbooks' && <RunbooksFlow config={config} />}
       {flow === 'actions' && <ActionsFlow config={config} />}
@@ -1199,8 +1407,9 @@ export function Customize({
       {flow === 'triggers' && <TriggersFlow config={config} />}
       {flow === 'roles' && <RolesFlow config={config} />}
       {flow === 'agent' && <AgentFlow config={config} />}
+      {flow === 'entitlement' && <EntitlementFlow config={config} />}
 
-      {!flow && <CustomizeIndex config={config} />}
+      {!flow && <GuideIndex config={config} />}
 
       {flow && (
         <div className="row" style={{ marginTop: 32 }}>

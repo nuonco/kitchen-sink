@@ -237,7 +237,7 @@ const deployOrder = [
 ]
 
 export function Nuon({ config }: { config: UIConfig }) {
-  useMarkStepSeen('/map')
+  useMarkStepSeen('/nuon')
   const app = config.app_id ?? '<your-app-id>'
 
   return (

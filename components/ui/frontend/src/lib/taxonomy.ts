@@ -1,7 +1,7 @@
 /**
- * The one path through this app. The landing hub and the bare #/customize
- * index both render it, and each feature page takes its step number from it,
- * so there is exactly one list and one order.
+ * The one path through the evaluation guide. The guide index renders it, and
+ * each flow page takes its place in the order from it, so there is exactly
+ * one list and one order.
  *
  * The order is how an engineer sizes up a BYOC system: read what it put in
  * the account, ship to it, operate it, govern it, then charge for it. Each
@@ -28,7 +28,7 @@ export interface PathStep {
 
 export const pathSteps: PathStep[] = [
   {
-    to: '/deployed',
+    to: '/workloads',
     icon: 'magnifying-glass',
     title: 'Open the live view',
     desc: 'The console’s main screen: namespaces, pods, services, and secrets, straight from the cluster.',
@@ -36,7 +36,7 @@ export const pathSteps: PathStep[] = [
     phase: 'Read',
   },
   {
-    to: '/map',
+    to: '/nuon',
     icon: 'puzzle-piece',
     title: 'Map the product onto components',
     desc: 'Every piece of Periscope, and the component type that ships it.',
@@ -44,7 +44,7 @@ export const pathSteps: PathStep[] = [
     phase: 'Read',
   },
   {
-    to: '/customize/branches',
+    to: '/guide/branches',
     icon: 'git-branch',
     title: 'Ship through app branches',
     desc: 'A staged rollout with an approval on each group.',
@@ -52,7 +52,7 @@ export const pathSteps: PathStep[] = [
     phase: 'Ship',
   },
   {
-    to: '/customize/health',
+    to: '/guide/health',
     icon: 'heartbeat',
     title: 'Watch component health',
     desc: 'The gate a deploy has to pass before it counts.',
@@ -60,7 +60,7 @@ export const pathSteps: PathStep[] = [
     phase: 'Operate',
   },
   {
-    to: '/customize/runbooks',
+    to: '/guide/runbooks',
     icon: 'book-open',
     title: 'Run the console SOPs',
     desc: 'Four recorded procedures; two apply changes, two archive reports.',
@@ -68,7 +68,7 @@ export const pathSteps: PathStep[] = [
     phase: 'Operate',
   },
   {
-    to: '/customize/actions',
+    to: '/guide/actions',
     icon: 'lightning',
     title: 'Run adhoc actions',
     desc: 'Scripts the runner executes, with no kubeconfig handed out.',
@@ -76,7 +76,7 @@ export const pathSteps: PathStep[] = [
     phase: 'Operate',
   },
   {
-    to: '/customize/triggers',
+    to: '/guide/triggers',
     icon: 'gauge',
     title: 'Wire up triggers',
     desc: 'When scripts run: cron, lifecycle, or on demand.',
@@ -84,7 +84,7 @@ export const pathSteps: PathStep[] = [
     phase: 'Operate',
   },
   {
-    to: '/customize/roles',
+    to: '/guide/roles',
     icon: 'lock',
     title: 'Scope operation roles',
     desc: 'Seven per-operation IAM roles and the guardrails on top.',
@@ -92,7 +92,7 @@ export const pathSteps: PathStep[] = [
     phase: 'Govern',
   },
   {
-    to: '/audit-log',
+    to: '/guide/entitlement',
     icon: 'toggle',
     title: 'Sell an entitlement',
     desc: 'SIEM export: one component, deployed only where the plan includes it.',
@@ -116,12 +116,4 @@ const numbered = pathSteps.filter((step) => !step.bonus)
 export function stepNumber(to: string): string | undefined {
   const i = numbered.findIndex((step) => step.to === to)
   return i === -1 ? undefined : String(i + 1).padStart(2, '0')
-}
-
-/** The eyebrow a feature page wears: "Step 03 of 09 · Ship". */
-export function stepEyebrow(to: string): string {
-  const step = pathSteps.find((s) => s.to === to)
-  const num = stepNumber(to)
-  if (!step || !num) return 'Customize'
-  return `Step ${num} of ${String(numbered.length).padStart(2, '0')} · ${step.phase}`
 }

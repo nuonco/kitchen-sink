@@ -6,7 +6,7 @@ import { AppShell } from './ui/AppShell'
 import { tourDone } from './ui/Drawer'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { OutLink } from './ui/Primitives'
-import { Customize } from './views/Customize'
+import { Guide } from './views/Guide'
 import { Dashboard } from './views/Dashboard'
 import { Events } from './views/Events'
 import { Workloads } from './views/Workloads'
@@ -120,7 +120,7 @@ export default function App() {
   } else if (parts[0] === 'nuon') {
     view = <Nuon config={config} />
   } else if (parts[0] === 'guide') {
-    view = <Customize config={config} flow={parts[1]} />
+    view = <Guide config={config} flow={parts[1]} />
   } else if (parts[0] === 'tictactoe') {
     view = <TicTacToe config={config} />
   }

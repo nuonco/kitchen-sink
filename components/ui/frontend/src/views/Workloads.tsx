@@ -534,7 +534,7 @@ export function Workloads({
     document.getElementById(section)?.scrollIntoView({ block: 'start' })
   }, [section])
 
-  useMarkStepSeen('/deployed')
+  useMarkStepSeen('/workloads')
 
   return (
     <>

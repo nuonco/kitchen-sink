@@ -1964,25 +1964,15 @@ a.stat:hover {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-3);
-  margin-top: var(--space-10);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--border-subtle);
+  margin-top: var(--space-12);
 }
 
 .stepnav__link {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: var(--space-4) var(--space-5);
-  border: 2px solid var(--border-subtle);
-  background: var(--surface-card);
+  padding: var(--space-2) 0;
   text-decoration: none;
-  transition: transform 0.1s steps(2), border-color 0.1s steps(2);
-}
-
-.stepnav__link:hover {
-  transform: translate(-4px, -4px);
-  border-color: var(--accent);
 }
 
 .stepnav__link--next {
@@ -2978,6 +2968,35 @@ pre.raw {
   border: 2px solid var(--border-default);
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
+}
+
+/* The guide index's one-row agent CTA: a sentence, the copy button, the
+   read-first link. */
+
+.agent-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  padding: var(--space-4) var(--space-5);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+}
+
+.agent-row__text {
+  flex: 1 1 260px;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+}
+
+.agent-row__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  white-space: nowrap;
 }
 
 .agent-prompt__pre {

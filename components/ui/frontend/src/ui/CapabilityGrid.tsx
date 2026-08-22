@@ -229,21 +229,21 @@ export function StepNav({ current }: { current: string }) {
       {prev ? (
         <StepNavLink
           to={prev.to}
-          dir={<>&larr; Step {stepNumber(prev.to)}</>}
+          dir={<>&larr; {stepNumber(prev.to)}</>}
           title={prev.title}
         />
       ) : (
-        <StepNavLink to="/" dir={<>&larr; Checklist</>} title="Customize Periscope" />
+        <StepNavLink to="/guide" dir={<>&larr;</>} title="Evaluation guide" />
       )}
       {next ? (
         <StepNavLink
           to={next.to}
-          dir={<>Step {stepNumber(next.to)} &rarr;</>}
+          dir={<>{stepNumber(next.to)} &rarr;</>}
           title={next.title}
           next
         />
       ) : (
-        <StepNavLink to="/" dir={<>Done &rarr;</>} title="Back to the checklist" next />
+        <StepNavLink to="/guide" dir={<>&rarr;</>} title="Back to the guide" next />
       )}
     </nav>
   )

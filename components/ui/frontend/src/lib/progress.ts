@@ -9,13 +9,33 @@ import { useEffect } from 'react'
 
 const KEY = 'kitchen-sink-path-seen'
 
+/**
+ * The phase-3 routes these steps lived at. Translated on read (the key never
+ * changes), so a returning visitor's progress survives the product IA.
+ */
+const legacyRoutes: Record<string, string> = {
+  '/deployed': '/workloads',
+  '/map': '/nuon',
+  '/audit-log': '/guide/entitlement',
+  '/customize/branches': '/guide/branches',
+  '/customize/health': '/guide/health',
+  '/customize/runbooks': '/guide/runbooks',
+  '/customize/actions': '/guide/actions',
+  '/customize/triggers': '/guide/triggers',
+  '/customize/roles': '/guide/roles',
+}
+
 export function seenSteps(): Set<string> {
   try {
     const raw = window.localStorage.getItem(KEY)
     if (!raw) return new Set()
     const parsed: unknown = JSON.parse(raw)
     if (Array.isArray(parsed)) {
-      return new Set(parsed.filter((v): v is string => typeof v === 'string'))
+      return new Set(
+        parsed
+          .filter((v): v is string => typeof v === 'string')
+          .map((v) => legacyRoutes[v] ?? v),
+      )
     }
   } catch {
     // No storage (private mode) or bad data: the checklist just has no memory.
