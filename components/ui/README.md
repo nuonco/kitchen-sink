@@ -1,6 +1,6 @@
-# UI
+# UI — the Relay console
 
-The web app the install publishes at `https://app.<install domain>`. A Go server
+The Relay console, published by the install at `https://app.<install domain>`. A Go server
 (`main.go`) embeds a Vite + TypeScript SPA from `frontend/` and does three
 things:
 
