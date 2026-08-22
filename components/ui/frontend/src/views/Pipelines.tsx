@@ -1,41 +1,36 @@
-import { useState } from 'react'
 import {
   useIntrospectPoll,
+  useSyncRecentRuns,
   type SyncPipeline,
-  type SyncRun,
   type SyncPipelinesResponse,
-  type SyncRunsResponse,
+  type SyncRun,
   type SyncRunStatus,
   type UIConfig,
 } from '../lib/api'
 import { pipelinesPrompt } from '../lib/prompts'
-import { stepEyebrow } from '../lib/taxonomy'
-import { useMarkStepSeen } from '../lib/progress'
-import { StepNav } from '../ui/CapabilityGrid'
+import { useNavigate } from '../lib/router'
 import {
-  BackLink,
   Badge,
   CommandBlock,
   CopyButton,
-  Eyebrow,
-  Icon,
   LoadState,
+  EmptyState,
   OutLink,
   Section,
   Tracks,
 } from '../ui/Primitives'
 
 /* ============================================================
-   The product page: what Conduit's sync engine has actually done, read from
-   its own run history (GET /sync/pipelines, GET /sync/runs). Nothing here is
-   simulated — the rows counted were read from the source Postgres and the
-   object keys listed were written to the install's bucket.
+   The pipelines list: every registered pipeline, its config and last
+   outcome — the front door to run history. Nothing here is simulated: the
+   rows counted were read from the source Postgres and the object keys
+   listed were written to the install's bucket.
    ============================================================ */
 
 /** How often the page re-reads the engine's state. */
 const POLL_MS = 10_000
 
-/* ---------- formatting ---------- */
+/* ---------- formatting, shared with the detail page and the dashboard ---------- */
 
 export function timeAgo(iso: string | null | undefined, now: number): string {
   if (!iso) return '—'
@@ -73,6 +68,19 @@ export function fmtInterval(seconds: number): string {
   return `${seconds}s`
 }
 
+/** When the scheduler owes this pipeline its next run. */
+export function nextRunOf(p: SyncPipeline, now: number): string {
+  if (p.paused) return 'paused'
+  if (!p.last_run) return 'due now'
+  const due = Date.parse(p.last_run.started_at) + p.interval_seconds * 1000
+  if (!Number.isFinite(due) || due <= now) return 'due now'
+  const s = Math.round((due - now) / 1000)
+  if (s < 60) return `in ${s}s`
+  const m = Math.floor(s / 60)
+  if (m < 60) return `in ${m}m`
+  return `in ${Math.floor(m / 60)}h ${m % 60}m`
+}
+
 export function RunStatusBadge({ status }: { status: SyncRunStatus }) {
   if (status === 'succeeded') {
     return (
@@ -96,8 +104,9 @@ export function RunStatusBadge({ status }: { status: SyncRunStatus }) {
 }
 
 /* ============================================================
-   The compact live strip: one line per pipeline, shared with the landing.
-   Polls on its own so the pages that embed it stay one-liners.
+   The compact live strip: one line per pipeline, embedded by the operate
+   flows as live evidence. Polls on its own so the pages that embed it stay
+   one-liners.
    ============================================================ */
 
 export function PipelineStrip() {
@@ -139,156 +148,31 @@ export function PipelineStrip() {
 }
 
 /* ============================================================
-   Run history for one pipeline: every recorded run, newest first, with the
-   object keys it wrote. A failed run is part of the record, not an apology —
-   the error text is the same one the engine stored.
+   The outcome strip: the pipeline's last 20 runs as squares, newest on the
+   right, with the count in words next to it so state is never color-alone.
    ============================================================ */
 
-function Run({ run, now }: { run: SyncRun; now: number }) {
-  return (
-    <details className="run">
-      <summary>
-        <span className="run__caret" aria-hidden="true">
-          <Icon name="caret-right" />
-        </span>
-        <span className="run__id mono">run {run.id}</span>
-        <RunStatusBadge status={run.status} />
-        <span className="run__meta mono">{timeAgo(run.started_at, now)}</span>
-        <span className="run__meta mono">
-          {durationOf(run.started_at, run.finished_at)}
-        </span>
-        <span className="run__meta mono">{run.rows_copied} rows</span>
-        <span className="run__meta mono">{fmtBytes(run.bytes_written)}</span>
-      </summary>
-      <div className="run__body">
-        {run.error && (
-          <div className="run__error">
-            <span className="run__error-label">error</span>
-            <span className="mono">{run.error}</span>
-          </div>
-        )}
-        {run.objects.length > 0 ? (
-          <>
-            <div className="run__objhead">
-              <span className="subtext muted">
-                {run.objects.length} object{run.objects.length === 1 ? '' : 's'}{' '}
-                written to the bucket
-              </span>
-              <CopyButton text={run.objects.join('\n')} label="Copy keys" />
-            </div>
-            <ul className="run__objects">
-              {run.objects.map((key) => (
-                <li key={key} className="mono">
-                  {key}
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <p className="small muted" style={{ margin: 0 }}>
-            No objects written
-            {run.status === 'running' ? ' yet' : ''}.
-          </p>
-        )}
-      </div>
-    </details>
-  )
-}
-
-function RunHistory({ pipeline }: { pipeline: string }) {
-  const runs = useIntrospectPoll<SyncRunsResponse>(
-    `/api/sync/runs?pipeline=${encodeURIComponent(pipeline)}&limit=50`,
-    POLL_MS,
-    true,
-  )
-
-  if (runs.state !== 'ok') {
-    return <LoadState result={runs} what={`runs of ${pipeline}`} />
+function OutcomeStrip({ runs, now }: { runs: SyncRun[]; now: number }) {
+  const recent = runs.slice(0, 20)
+  if (recent.length === 0) {
+    return <span className="subtext muted">no runs yet</span>
   }
-
-  const list = runs.value.response.runs ?? []
-  const now = Date.now()
-
-  if (list.length === 0) {
-    return (
-      <p className="small muted" style={{ margin: 0 }}>
-        No runs recorded yet — the first one starts within seconds of the
-        worker seeing a due pipeline.
-      </p>
-    )
-  }
-
+  const ok = recent.filter((r) => r.status === 'succeeded').length
   return (
-    <div className="runlist">
-      <div className="runlist__head subtext muted">
-        {list.length} run{list.length === 1 ? '' : 's'} on record, newest
-        first · GET /sync/runs?pipeline={pipeline}
-      </div>
-      {list.map((run) => (
-        <Run key={run.id} run={run} now={now} />
-      ))}
-    </div>
-  )
-}
-
-/* ============================================================
-   One pipeline row: the registered config on the left, the last run on the
-   right, the full history one click in.
-   ============================================================ */
-
-function PipelineRow({
-  pipeline,
-  open,
-  onToggle,
-  now,
-}: {
-  pipeline: SyncPipeline
-  open: boolean
-  onToggle: () => void
-  now: number
-}) {
-  const last = pipeline.last_run
-  return (
-    <div className={open ? 'piperow piperow--open' : 'piperow'}>
-      <button className="piperow__head" aria-expanded={open} onClick={onToggle}>
-        <span className="piperow__name mono">{pipeline.name}</span>
-        <span className="piperow__sources mono">
-          {pipeline.source_tables.join(', ')} &rarr; {pipeline.destination_prefix}
-        </span>
-        <span className="piperow__interval mono">
-          every {fmtInterval(pipeline.interval_seconds)}
-        </span>
-        <span className="piperow__state">
-          {pipeline.paused ? (
-            <Badge tone="warning" dot>
-              paused
-            </Badge>
-          ) : last ? (
-            <RunStatusBadge status={last.status} />
-          ) : (
-            <Badge>first run pending</Badge>
-          )}
-        </span>
-        <span className="piperow__last mono">
-          {last
-            ? `${timeAgo(last.started_at, now)} · ${last.rows_copied} rows`
-            : '—'}
-        </span>
-        <span className="piperow__caret" aria-hidden="true">
-          <Icon name="caret-right" />
-        </span>
-      </button>
-      {open && (
-        <div className="piperow__body">
-          {pipeline.description && (
-            <p className="small muted" style={{ marginBottom: 12 }}>
-              {pipeline.description}
-            </p>
-          )}
-          <RunHistory pipeline={pipeline.name} />
-        </div>
-      )}
-    </div>
+    <span className="outcomes">
+      <span className="outcomes__strip" aria-hidden="true">
+        {[...recent].reverse().map((r) => (
+          <span
+            key={r.id}
+            className={`outcomes__sq outcomes__sq--${r.status}`}
+            title={`run ${r.id} · ${r.status} · ${timeAgo(r.started_at, now)}`}
+          />
+        ))}
+      </span>
+      <span className="outcomes__count mono">
+        {ok}/{recent.length} ok
+      </span>
+    </span>
   )
 }
 
@@ -296,107 +180,101 @@ function PipelineRow({
    The page.
    ============================================================ */
 
-function GlanceFact({
-  label,
-  value,
-  note,
-  mono = false,
-}: {
-  label: string
-  value?: string
-  note?: string
-  mono?: boolean
-}) {
-  return (
-    <div className={value ? 'fact' : 'fact fact--pending'}>
-      <div className="fact__label">{label}</div>
-      <div className={mono ? 'fact__value mono' : 'fact__value fact__value--num'}>
-        {value ?? '…'}
-      </div>
-      {note && <div className="fact__note">{note}</div>}
-    </div>
-  )
-}
-
 export function Pipelines({ config }: { config: UIConfig }) {
-  useMarkStepSeen('/pipelines')
+  const navigate = useNavigate()
   const sync = useIntrospectPoll<SyncPipelinesResponse>(
     '/api/sync/pipelines',
     POLL_MS,
     true,
   )
-  const [open, setOpen] = useState<string | null>(null)
 
   const data = sync.state === 'ok' ? sync.value.response : undefined
   const pipelines = data?.pipelines ?? []
   const bucket = data?.bucket || '<your-bucket>'
+  const runs = useSyncRecentRuns(pipelines.map((p) => p.name))
   const now = Date.now()
 
-  const lastLanded = pipelines
-    .map((p) => p.last_run?.started_at)
-    .filter((t): t is string => Boolean(t))
-    .sort()
-    .pop()
-  const pausedCount = pipelines.filter((p) => p.paused).length
+  const runsOf = (name: string) =>
+    (runs ?? []).filter((r) => r.pipeline === name)
 
   return (
     <>
-      <BackLink to="/">Conduit</BackLink>
-      <header className="page-header">
-        <Eyebrow>{stepEyebrow('/pipelines')}</Eyebrow>
-        <h1>Pipelines run here, in your account.</h1>
-        <p className="lede">
-          The sync engine copies the source Postgres into{' '}
-          <span className="mono">{bucket}</span> on each pipeline&rsquo;s
-          schedule. Everything on this page is the engine&rsquo;s own run
-          history &mdash; the data never left this account.
-        </p>
+      <header className="page-header page-header--slim page-header--row">
+        <h1>Pipelines</h1>
+        <span className="subtext muted">
+          GET /sync/pipelines · every {POLL_MS / 1000}s
+        </span>
       </header>
 
-      <div className="facts" style={{ marginTop: 0 }}>
-        <GlanceFact
-          label="Pipelines"
-          value={data ? String(data.pipelines_count) : undefined}
-          note={pausedCount > 0 ? `${pausedCount} paused` : 'all active'}
-        />
-        <GlanceFact
-          label="Last sync landed"
-          value={data ? timeAgo(lastLanded, now) : undefined}
-          note="newest run across all pipelines"
-        />
-        <GlanceFact
-          label="Destination bucket"
-          value={data ? bucket : undefined}
-          note="created by the destination_bucket component"
-          mono
-        />
-      </div>
+      <LoadState result={sync} what="the sync engine" />
 
-      <Section
-        title="Every pipeline, live"
-        aside={`GET /sync/pipelines · re-read every ${POLL_MS / 1000}s`}
-      >
-        <LoadState result={sync} what="the sync engine" />
-        {sync.state === 'ok' && (
-          <div className="pipelist">
-            {pipelines.map((p) => (
-              <PipelineRow
-                key={p.name}
-                pipeline={p}
-                open={open === p.name}
-                onToggle={() => setOpen(open === p.name ? null : p.name)}
-                now={now}
-              />
-            ))}
-          </div>
-        )}
-        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          A failed run stays on the record with the error the engine hit; the
-          next tick retries. The <span className="mono">pause_pipelines</span>{' '}
-          drill (step 09) flips every row to paused &mdash; watch it happen
-          here.
-        </p>
-      </Section>
+      {data && data.pipelines_count === 0 && (
+        <EmptyState>
+          No pipelines registered. The engine registers them from the
+          pipelines table at boot.
+        </EmptyState>
+      )}
+
+      {data && data.pipelines_count > 0 && (
+        <div className="table-wrap">
+          <table className="data runfeed pltable">
+            <thead>
+              <tr>
+                <th>Pipeline</th>
+                <th>Sources &rarr; prefix</th>
+                <th>Interval</th>
+                <th>Next run</th>
+                <th>Last run</th>
+                <th>Last 20</th>
+              </tr>
+            </thead>
+            <tbody>
+              {pipelines.map((p) => (
+                <tr
+                  key={p.name}
+                  className="rowlink"
+                  onClick={() => navigate(`/pipelines/${p.name}`)}
+                >
+                  <td className="mono pltable__name">{p.name}</td>
+                  <td className="mono subtext pltable__sources">
+                    {p.source_tables.join(', ')} &rarr; {p.destination_prefix}
+                  </td>
+                  <td className="mono subtext">
+                    every {fmtInterval(p.interval_seconds)}
+                  </td>
+                  <td className="mono subtext">{nextRunOf(p, now)}</td>
+                  <td>
+                    <span className="pltable__last">
+                      {p.paused ? (
+                        <Badge tone="warning" dot>
+                          paused
+                        </Badge>
+                      ) : p.last_run ? (
+                        <>
+                          <RunStatusBadge status={p.last_run.status} />
+                          <span className="mono subtext">
+                            {timeAgo(p.last_run.started_at, now)} ·{' '}
+                            {p.last_run.rows_copied} rows
+                          </span>
+                        </>
+                      ) : (
+                        <Badge>first run pending</Badge>
+                      )}
+                    </span>
+                  </td>
+                  <td>
+                    {runs === undefined ? (
+                      <span className="subtext muted">…</span>
+                    ) : (
+                      <OutcomeStrip runs={runsOf(p.name)} now={now} />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <Section
         title="Don't take this page's word for it"
@@ -417,11 +295,12 @@ export function Pipelines({ config }: { config: UIConfig }) {
           manual={
             <CommandBlock
               label="list what the engine wrote, with your own AWS credentials"
-              command={`aws s3 ls s3://${bucket}/orders/ --recursive | tail`}
+              command={`aws s3 ls s3://${bucket}/ --recursive | tail`}
               note={
                 <>
-                  The keys match the run history above &mdash; Nuon never holds
-                  this bucket&rsquo;s contents, and neither does this page.
+                  The keys match the run history behind each row &mdash; Nuon
+                  never holds this bucket&rsquo;s contents, and neither does
+                  this page.
                 </>
               }
             />
@@ -437,8 +316,6 @@ export function Pipelines({ config }: { config: UIConfig }) {
           </p>
         )}
       </Section>
-
-      <StepNav current="/pipelines" />
     </>
   )
 }

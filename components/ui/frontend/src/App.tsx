@@ -11,6 +11,7 @@ import { Destinations } from './views/Destinations'
 import { Landing } from './views/Landing'
 import { Mapping } from './views/Mapping'
 import { Ops } from './views/Ops'
+import { PipelineDetail } from './views/PipelineDetail'
 import { Pipelines } from './views/Pipelines'
 import { TicTacToe } from './views/TicTacToe'
 import { UnderTheHood } from './views/UnderTheHood'
@@ -34,7 +35,14 @@ export default function App() {
 
   let view = <Dashboard config={config} />
   if (parts[0] === 'pipelines') {
-    view = <Pipelines config={config} />
+    view = parts[1] ? (
+      <PipelineDetail
+        name={parts[1]}
+        runId={parts[2] === 'run' ? parts[3] : undefined}
+      />
+    ) : (
+      <Pipelines config={config} />
+    )
   } else if (parts[0] === 'system') {
     view = <UnderTheHood config={config} section={parts[1]} />
   } else if (parts[0] === 'destinations') {

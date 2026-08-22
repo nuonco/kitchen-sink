@@ -3653,3 +3653,105 @@ tr.rowlink:hover td {
   gap: var(--space-5);
   font-size: var(--text-body);
 }
+
+/* ============================================================
+   Pipelines list + detail (phase 2)
+   ============================================================ */
+
+.page-header--row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+table.pltable td {
+  white-space: nowrap;
+}
+
+.pltable__name {
+  font-weight: var(--weight-stronger);
+}
+
+.pltable__sources {
+  max-width: 26ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pltable__last {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* The run-outcome strip: squares + the count in words beside it. */
+
+.outcomes {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.outcomes__strip {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.outcomes__sq {
+  width: var(--strip-square);
+  height: var(--strip-square);
+  border-radius: 1px;
+  background: var(--border-strong);
+}
+
+.outcomes__sq--succeeded {
+  background: var(--status-positive);
+}
+
+.outcomes__sq--failed {
+  background: var(--status-negative);
+}
+
+.outcomes__sq--running {
+  background: var(--status-warning);
+}
+
+.outcomes__count {
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-tertiary);
+}
+
+/* The bucket card's live evidence: newest object keys, mono. */
+
+.objlist {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.objlist__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.objlist__keys {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+}
+
+.objlist__keys li {
+  padding: 2px 0;
+  overflow-wrap: anywhere;
+}

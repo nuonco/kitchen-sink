@@ -2,35 +2,31 @@ import { useEffect, useRef, useState } from 'react'
 import {
   COMPLIANCE_EXPORT_SERVICE,
   hasComplianceExport,
-  useIntrospect,
   useIntrospectPoll,
+  useSyncRecentRuns,
   type NamespaceResponse,
   type ServiceSummary,
   type SyncPipelinesResponse,
   type UIConfig,
 } from '../lib/api'
 import { toggleableComponents } from '../lib/config-data.gen'
-import { stepEyebrow } from '../lib/taxonomy'
-import { useMarkStepSeen } from '../lib/progress'
-import { StepNav } from '../ui/CapabilityGrid'
 import {
-  BackLink,
   Badge,
   Callout,
   CodeBlock,
-  Eyebrow,
+  CopyButton,
   LoadState,
   OutLink,
   PspSection,
-  PspTag,
 } from '../ui/Primitives'
 
 /* ============================================================
    Where synced data goes. Two destinations, two commercial stories:
 
    - the S3 bucket every install gets (destination_bucket, always on), which
-     carries the IRSA story: which identity writes, and why no credential
-     ever leaves the account;
+     carries the IRSA story — which identity writes, and why no credential
+     ever leaves the account — plus live evidence: the newest object keys
+     from the engine's own run history;
    - the Enterprise compliance export (compliance_export, toggleable,
      default off), which carries the entitlement mechanic — one config,
      deployed only where the plan includes it, detected live through its
@@ -45,9 +41,17 @@ const component = toggleableComponents.find((c) => c.name === 'compliance_export
 /* ---------- destination 1: the bucket ---------- */
 
 function BucketCard({ config }: { config: UIConfig }) {
-  const sync = useIntrospect<SyncPipelinesResponse>('/api/sync/pipelines')
-  const bucket = sync.state === 'ok' ? sync.value.response.bucket : undefined
+  const sync = useIntrospectPoll<SyncPipelinesResponse>(
+    '/api/sync/pipelines',
+    POLL_MS,
+    true,
+  )
+  const data = sync.state === 'ok' ? sync.value.response : undefined
+  const bucket = data?.bucket
   const install = config.install_id ?? '<install-id>'
+
+  const runs = useSyncRecentRuns((data?.pipelines ?? []).map((p) => p.name))
+  const keys = (runs ?? []).flatMap((r) => r.objects).slice(0, 8)
 
   return (
     <div className="ent ent--on">
@@ -79,6 +83,32 @@ function BucketCard({ config }: { config: UIConfig }) {
         only. The same Pulumi component creates the bucket, the role, and the
         trust between them; no access key exists anywhere.
       </p>
+      <div className="objlist">
+        <div className="objlist__head">
+          <span className="subtext muted">
+            Recently written · from the engine&rsquo;s run history
+          </span>
+          {keys.length > 0 && <CopyButton text={keys.join('\n')} label="Copy keys" />}
+        </div>
+        {runs === undefined ? (
+          <ul className="objlist__keys">
+            <li className="mono muted">…</li>
+          </ul>
+        ) : keys.length === 0 ? (
+          <p className="small muted" style={{ margin: 0 }}>
+            No objects written yet &mdash; first sync lands within a minute of
+            the worker starting.
+          </p>
+        ) : (
+          <ul className="objlist__keys">
+            {keys.map((key) => (
+              <li key={key} className="mono">
+                {key}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   )
 }
@@ -194,7 +224,6 @@ function HowItKnows({
 }
 
 export function Destinations({ config }: { config: UIConfig }) {
-  useMarkStepSeen('/destinations')
   const namespace = config.namespace ?? 'conduit'
   const [enabled, setEnabled] = useState(false)
   const [justEnabled, setJustEnabled] = useState(false)
@@ -231,14 +260,8 @@ export function Destinations({ config }: { config: UIConfig }) {
 
   return (
     <>
-      <BackLink to="/">Conduit</BackLink>
-      <header className="page-header">
-        <Eyebrow>{stepEyebrow('/destinations')}</Eyebrow>
-        <h1>Sell a destination</h1>
-        <p className="lede psp-lede">
-          <PspTag kind="problem" /> Enterprise plans include a destination the
-          other tiers don&rsquo;t, and every install runs the same config.
-        </p>
+      <header className="page-header page-header--slim">
+        <h1>Destinations</h1>
       </header>
 
       <PspSection
@@ -248,7 +271,8 @@ export function Destinations({ config }: { config: UIConfig }) {
       >
         <BucketCard config={config} />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          What lands in it, run by run, is on the{' '}
+          Don&rsquo;t take this page&rsquo;s word for it &mdash; the aws CLI
+          proof, run with your own credentials, is on the{' '}
           <a href="#/pipelines">pipelines page</a>.
         </p>
       </PspSection>
@@ -305,7 +329,7 @@ export function Destinations({ config }: { config: UIConfig }) {
                 {service?.spec?.type ? ` (${service.spec.type})` : ''}. A real
                 exporter puts its workload behind the same switch. The
                 teardown and redeploy land in the{' '}
-                <a href="#/under-the-hood/events">events feed</a> as they
+                <a href="#/system/events">events feed</a> as they
                 happen.
               </Callout>
             ) : (
@@ -336,7 +360,6 @@ export function Destinations({ config }: { config: UIConfig }) {
           </PspSection>
         </>
       )}
-      <StepNav current="/destinations" />
     </>
   )
 }
