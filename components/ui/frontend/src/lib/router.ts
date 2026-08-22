@@ -29,6 +29,17 @@ export function navigate(to: string) {
   window.scrollTo({ top: 0 })
 }
 
+/**
+ * Like navigate, but replaces the current history entry. For redirects from
+ * retired routes: going "back" should land on the page the visitor came from,
+ * not on the redirect that bounced them forward again.
+ */
+export function redirect(to: string) {
+  const url = new URL(window.location.href)
+  url.hash = to
+  window.location.replace(url)
+}
+
 export function useNavigate() {
   return useCallback((to: string) => navigate(to), [])
 }
