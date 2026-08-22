@@ -9,7 +9,6 @@ import {
   BackLink,
   Badge,
   Callout,
-  Eyebrow,
   Icon,
   LoadState,
   OutLink,
@@ -215,7 +214,6 @@ export function TicTacToe({ config }: { config: UIConfig }) {
     <>
       <BackLink to="/">Relay</BackLink>
       <header className="page-header">
-        <Eyebrow>Toggleable component</Eyebrow>
         <h1>One config, per-install features</h1>
         <p className="lede">
           The <span className="mono">tictactoe</span> component is deployed only

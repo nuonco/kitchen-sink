@@ -173,20 +173,24 @@ export function VolumeChart({
                 />
               ) : null,
             )}
-            {buckets.map(
-              (b, i) =>
-                (i % labelStep === 0 || i === buckets.length - 1) && (
-                  <text
-                    key={`label-${b.t}`}
-                    className="viz__tick"
-                    x={PAD_LEFT + i * band + band / 2}
-                    y={HEIGHT - 6}
-                    textAnchor="middle"
-                  >
-                    {hourLabel(b.t)}
-                  </text>
-                ),
-            )}
+            {buckets.map((b, i) => {
+              const last = i === buckets.length - 1
+              // Modulo labels stop one step short of the end so the last
+              // hour's label never collides with a neighbor.
+              const show = last || (i % labelStep === 0 && buckets.length - 1 - i >= labelStep)
+              if (!show) return null
+              return (
+                <text
+                  key={`label-${b.t}`}
+                  className="viz__tick"
+                  x={last ? width - PAD_RIGHT : PAD_LEFT + i * band + band / 2}
+                  y={HEIGHT - 6}
+                  textAnchor={last ? 'end' : 'middle'}
+                >
+                  {hourLabel(b.t)}
+                </text>
+              )
+            })}
             {buckets.map((b, i) => (
               <rect
                 key={`hit-${b.t}`}

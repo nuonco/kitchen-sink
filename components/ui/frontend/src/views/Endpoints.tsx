@@ -168,6 +168,7 @@ function EndpointList() {
 /* ---------- One endpoint ---------- */
 
 function EndpointDetail({ id }: { id: string }) {
+  const navigate = useNavigate()
   const [endpoints] = useDelivery<{ endpoints: DeliveryEndpoint[] }>(
     '/api/delivery/endpoints',
     ENDPOINTS_POLL_MS,
@@ -261,9 +262,7 @@ function EndpointDetail({ id }: { id: string }) {
                         <tr
                           key={att.id}
                           className="row-select"
-                          onClick={() => {
-                            window.location.hash = `/events/${att.event_id}`
-                          }}
+                          onClick={() => navigate(`/events/${att.event_id}`)}
                         >
                           <td className="mono">{att.event_type}</td>
                           <td className="mono subtext">{att.attempt_number}</td>

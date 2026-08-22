@@ -6,6 +6,7 @@ import {
   type DeliveryStats,
   type UIConfig,
 } from '../lib/api'
+import { useNavigate } from '../lib/router'
 import { Callout, Icon, Section } from '../ui/Primitives'
 import { VolumeChart } from '../ui/VolumeChart'
 import { DeliveryLoad, StatusBadge, relativeTime } from '../ui/delivery'
@@ -150,6 +151,7 @@ export function Dashboard({
   stats: DeliveryLoadable<DeliveryStats>
 }) {
   void config
+  const navigate = useNavigate()
   const [events] = useDelivery<{ events: DeliveryEvent[] }>(
     `/api/delivery/events?limit=${EVENTS_LIMIT}`,
     EVENTS_POLL_MS,
@@ -214,9 +216,7 @@ export function Dashboard({
                   <tr
                     key={ev.id}
                     className="row-select"
-                    onClick={() => {
-                      window.location.hash = `/events/${ev.id}`
-                    }}
+                    onClick={() => navigate(`/events/${ev.id}`)}
                   >
                     <td className="mono subtext">{relativeTime(ev.created_at, now)}</td>
                     <td className="mono">{ev.type}</td>
