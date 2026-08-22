@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react'
-import { useUIConfig, type UIConfig } from './lib/api'
+import { useUIConfig } from './lib/api'
 import { segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
 import { AppShell } from './ui/AppShell'
 import { tourDone } from './ui/Drawer'
 import { LoadingOverlay } from './ui/LoadingOverlay'
-import { OutLink } from './ui/Primitives'
 import { Guide } from './views/Guide'
 import { Dashboard } from './views/Dashboard'
 import { Events } from './views/Events'
@@ -13,6 +12,7 @@ import { Workloads } from './views/Workloads'
 import { Nuon } from './views/Nuon'
 import { Operations } from './views/Operations'
 import { Reports } from './views/Reports'
+import { Settings } from './views/Settings'
 import { TicTacToe } from './views/TicTacToe'
 
 /* ============================================================
@@ -36,47 +36,6 @@ function canonicalize(path: string): string {
     return `/${[legacyAliases[head], ...parts.slice(1)].join('/')}`
   }
   return path
-}
-
-/** Interim: the instance facts, until the full Settings view lands. */
-function SettingsInterim({ config }: { config: UIConfig }) {
-  const facts: Array<[string, string | undefined]> = [
-    ['install id', config.install_id],
-    ['org id', config.org_id],
-    ['app id', config.app_id],
-    ['cluster', config.cluster_name],
-    ['region', config.region],
-    ['domain', config.public_domain],
-    ['namespace', config.namespace],
-  ]
-  const known = facts.filter(([, v]) => v)
-  return (
-    <>
-      <header className="page-header">
-        <h1>Settings</h1>
-        <p className="lede">
-          A read-only console: settings here are facts, not forms.
-        </p>
-      </header>
-      {known.length > 0 && (
-        <dl className="kv" style={{ marginTop: 24 }}>
-          {known.map(([k, v]) => (
-            <div key={k} style={{ display: 'contents' }}>
-              <dt>{k}</dt>
-              <dd>{v}</dd>
-            </div>
-          ))}
-        </dl>
-      )}
-      {config.links.versions && (
-        <p className="small" style={{ marginTop: 24 }}>
-          <OutLink href={config.links.versions} variant="plain">
-            Config versions
-          </OutLink>
-        </p>
-      )}
-    </>
-  )
 }
 
 export default function App() {
@@ -116,7 +75,7 @@ export default function App() {
   } else if (parts[0] === 'operations') {
     view = <Operations config={config} />
   } else if (parts[0] === 'settings') {
-    view = <SettingsInterim config={config} />
+    view = <Settings config={config} />
   } else if (parts[0] === 'nuon') {
     view = <Nuon config={config} />
   } else if (parts[0] === 'guide') {
