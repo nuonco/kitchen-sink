@@ -59,7 +59,7 @@ func buildUIConfig() uiConfig {
 		Links:        map[string]string{},
 	}
 	if cfg.Namespace == "" {
-		cfg.Namespace = "kitchen-sink"
+		cfg.Namespace = "relay"
 	}
 
 	base := resolvedEnv("NUON_DASHBOARD_URL")
@@ -199,7 +199,7 @@ func main() {
 		r.URL.Path = r.URL.Path[len("/api"):]
 		r.Host = target.Host
 
-		if _, allowed := policy.filtersFor(r.URL.Path); !allowed {
+		if _, allowed := policy.filtersFor(r.Method, r.URL.Path); !allowed {
 			log.Printf("api proxy denied %s", r.URL.Path)
 			policy.deny(w, r.URL.Path)
 			return

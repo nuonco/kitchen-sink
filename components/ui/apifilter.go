@@ -15,6 +15,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 )
@@ -68,11 +69,40 @@ func (p apiPolicy) namespaceEventsPath() string {
 	return p.namespacePath() + "/events"
 }
 
-// filtersFor returns the filters for an allowed path, and whether the path is
-// allowed at all. Endpoints the UI does not read are not forwarded: several of
-// them (/introspect/secrets, /introspect/helm-values/..., and
-// /introspect/helm-rendered/...) return credentials by design.
-func (p apiPolicy) filtersFor(path string) ([]filter, bool) {
+// The two delivery paths that carry an id segment. Anchored, single-segment,
+// id-charset only, so they can never match a different endpoint.
+var (
+	deliveryAttemptsPath = regexp.MustCompile(`^/delivery/events/[A-Za-z0-9_-]+/attempts$`)
+	deliveryReplayPath   = regexp.MustCompile(`^/delivery/dlq/[A-Za-z0-9_-]+/replay$`)
+)
+
+// deliveryFilters run over every delivery response. Event payloads are
+// arbitrary JSON supplied by whoever POSTed /ingest, so treat them like any
+// other introspection payload: secret-shaped maps, name/value pairs, and
+// sensitively-named keys all come back redacted.
+func deliveryFilters() []filter {
+	return []filter{redactSecretData, redactSensitiveKeys, redactNameValuePairs}
+}
+
+// filtersFor returns the filters for an allowed method+path, and whether the
+// request is allowed at all. Endpoints the UI does not read are not forwarded:
+// several of them (/introspect/secrets, /introspect/helm-values/..., and
+// /introspect/helm-rendered/...) return credentials by design, and
+// POST /ingest is the delivery pipeline's in-cluster front door -- publishing
+// it would hand the internet an unauthenticated write into the queue.
+func (p apiPolicy) filtersFor(method, path string) ([]filter, bool) {
+	// The DLQ replay is the single write this proxy forwards. It can only
+	// re-send an already-stored payload to an already-registered endpoint,
+	// which is also what the break-glass remediation calls through the ALB.
+	if method == http.MethodPost {
+		if deliveryReplayPath.MatchString(path) {
+			return deliveryFilters(), true
+		}
+		return nil, false
+	}
+	if method != http.MethodGet {
+		return nil, false
+	}
 	switch path {
 	case "/introspect/kube":
 		// Namespace names and phases only.
@@ -88,6 +118,11 @@ func (p apiPolicy) filtersFor(path string) ([]filter, bool) {
 		// Events carry no credentials by design, but the same walks run anyway
 		// so a change to what the API returns cannot quietly open a leak.
 		return []filter{redactSecretData, redactNameValuePairs}, true
+	case "/delivery/stats", "/delivery/endpoints", "/delivery/events", "/delivery/dlq":
+		return deliveryFilters(), true
+	}
+	if deliveryAttemptsPath.MatchString(path) {
+		return deliveryFilters(), true
 	}
 	return nil, false
 }
@@ -104,8 +139,14 @@ func (p apiPolicy) deny(w http.ResponseWriter, path string) {
 			"from the internet, so /api/ forwards only the endpoints the UI reads " +
 			"and filters credentials out of those. Run the endpoint from inside " +
 			"the cluster, or through a Nuon action, to see it unfiltered.",
-		"path":      path,
-		"forwarded": []string{"/introspect/kube", "/introspect/helm", "/introspect/env", p.namespacePath(), p.namespaceEventsPath()},
+		"path": path,
+		"forwarded": []string{
+			"/introspect/kube", "/introspect/helm", "/introspect/env",
+			p.namespacePath(), p.namespaceEventsPath(),
+			"/delivery/stats", "/delivery/endpoints", "/delivery/events",
+			"/delivery/events/{id}/attempts", "/delivery/dlq",
+			"POST /delivery/dlq/{id}/replay",
+		},
 	})
 }
 
@@ -118,7 +159,7 @@ func (p apiPolicy) modifyResponse(resp *http.Response) error {
 	}
 
 	path := resp.Request.URL.Path
-	filters, allowed := p.filtersFor(path)
+	filters, allowed := p.filtersFor(resp.Request.Method, path)
 	if !allowed {
 		// Unreachable: the handler denies these before proxying. Fail closed
 		// rather than assume that stays true.
@@ -193,6 +234,21 @@ func redactNameValuePairs(payload any) {
 		}
 		if isSensitiveName(name) {
 			object["value"] = redactedValue
+		}
+	})
+}
+
+// redactSensitiveKeys replaces the value of any object key whose own name
+// looks like a credential, whatever the value's shape. The delivery endpoints
+// need it because an event payload is arbitrary caller-supplied JSON: a
+// payload like {"token": "..."} has neither a data map nor a name/value pair
+// for the other walks to catch.
+func redactSensitiveKeys(payload any) {
+	walk(payload, func(object map[string]any) {
+		for key := range object {
+			if isSensitiveName(key) {
+				object[key] = redactedValue
+			}
 		}
 	})
 }
