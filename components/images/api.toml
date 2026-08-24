@@ -14,7 +14,7 @@ max_auto_retries = 5
 
 [public]
 image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-app"
-tag       = "sha-56184cb"
+tag       = "sha-a4f0b4e"
 
 [labels]
 is_image = "true"
