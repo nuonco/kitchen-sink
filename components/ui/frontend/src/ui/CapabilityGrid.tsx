@@ -30,7 +30,7 @@ function PixelArrow() {
 }
 
 /** The arrow's sibling: a check drawn from the same 3px pixels. */
-function PixelCheck() {
+export function PixelCheck() {
   return (
     <svg width="12" height="12" viewBox="0 0 15 15" fill="none" aria-hidden="true">
       <rect x="0" y="7" width="3" height="3" fill="currentColor" />

@@ -2630,47 +2630,294 @@ a.fact {
   color: var(--accent);
 }
 
-/* The hub's default action: hand the checklist to a coding agent. */
+/* ============================================================
+   The hub's two ways in: agent prompt and CLI, as peer cards.
+   ============================================================ */
 
-.agent-cta {
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
   margin-top: var(--space-6);
-  padding: var(--space-5) var(--space-6);
-  border: 2px solid var(--border-subtle);
-  border-left: 2px solid var(--accent-dim);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    100deg,
-    var(--accent-wash) 0%,
-    rgba(11, 18, 21, 0) 60%
-  );
+}
+
+@media (max-width: 860px) {
+  .choices {
+    grid-template-columns: 1fr;
+  }
+}
+
+.choice {
   display: flex;
-  align-items: center;
-  gap: var(--space-6);
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-align: left;
+  padding: var(--space-5) var(--space-6);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  box-shadow: var(--shadow-01);
 }
 
-.agent-cta__body {
-  flex: 1 1 320px;
-}
-
-.agent-cta__title {
-  font-size: var(--text-body);
+.choice__title {
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
   font-weight: var(--weight-stronger);
+  color: var(--text-primary);
 }
 
-.agent-cta__desc {
-  margin-top: var(--space-1);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
+.choice__desc {
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
   color: var(--text-secondary);
-  max-width: 60ch;
+  max-width: 52ch;
 }
 
-.agent-cta__actions {
+.choice__actions {
+  margin-top: auto;
+  padding-top: var(--space-4);
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  white-space: nowrap;
+  flex-wrap: wrap;
+}
+
+/* The CLI card is one big toggle. Its faux button matches the agent card's
+   copy button so the two ways in read as equals. */
+
+.choice--toggle {
+  cursor: pointer;
+  transition: border-color 0.1s steps(2), background-color 0.1s steps(2);
+}
+
+.choice--toggle:hover {
+  border-color: var(--accent);
+  background: rgba(76, 201, 240, 0.03);
+}
+
+.choice--open {
+  border-color: var(--accent);
+  background: rgba(76, 201, 240, 0.03);
+}
+
+.choice__faux {
+  display: inline-block;
+  padding: var(--space-3) var(--space-5);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  font-family: var(--font-mono);
+  font-size: var(--text-body);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.choice--toggle:hover .choice__faux,
+.choice--open .choice__faux {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.choice__caret {
+  display: inline-flex;
+  color: var(--text-tertiary);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.choice__caret--open {
+  transform: rotate(90deg);
+}
+
+/* The CLI card's payload: every command, grouped, real ids inline. */
+
+.clipanel {
+  margin-top: var(--space-4);
+  border: 2px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.clipanel__group {
+  padding: var(--space-3) var(--space-5) var(--space-4);
+}
+
+.clipanel__group + .clipanel__group {
+  border-top: 2px solid var(--border-subtle);
+}
+
+.clipanel__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin: var(--space-1) 0 var(--space-2);
+}
+
+.clirow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-2) 0;
+}
+
+.clirow + .clirow {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.clirow__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.clirow__cmd {
+  margin: 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-subtext);
+  line-height: 1.7;
+  color: var(--text-primary);
+  white-space: pre;
+}
+
+.clirow__note {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+  max-width: 76ch;
+}
+
+.clirow .copy-btn {
+  margin-top: 3px;
+}
+
+/* ---------- Live tiles: things to click right now ---------- */
+
+.section--hub {
+  margin-top: var(--space-10);
+}
+
+.nods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+a.nod {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  transition: transform 0.1s steps(2), border-color 0.1s steps(2),
+    background-color 0.1s steps(2);
+}
+
+a.nod:hover {
+  text-decoration: none;
+  transform: translate(-4px, -4px);
+  border-color: var(--accent);
+  background: rgba(76, 201, 240, 0.03);
+}
+
+.nod__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.nod__title {
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-stronger);
+}
+
+a.nod:hover .nod__title {
+  color: var(--accent-hover);
+}
+
+.nod__desc {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+}
+
+/* ---------- The index: one line per topic, grouped by phase ---------- */
+
+.encyc {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-6) var(--space-8);
+}
+
+.encyc__phase {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.encyc__phase::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: var(--border-subtle);
+}
+
+.encyc__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+a.encyc__row {
+  display: block;
+  padding: var(--space-2) 0;
+  color: var(--text-primary);
+}
+
+a.encyc__row:hover {
+  text-decoration: none;
+}
+
+.encyc__title {
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-strong);
+}
+
+a.encyc__row:hover .encyc__title {
+  color: var(--accent-hover);
+}
+
+.encyc__desc {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+}
+
+.encyc__desc::before {
+  content: " — ";
+}
+
+.encyc__seen {
+  display: inline-flex;
+  margin-left: var(--space-2);
+  color: var(--status-positive);
+  vertical-align: 1px;
 }
 
 .copy-btn--big {
