@@ -13,8 +13,7 @@ api:
       cpu: 500m
       memory: 256Mi
   autoscaling:
-    enabled: false
-    # The following settings only apply when enabled: true
+    enabled: true
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 50
@@ -36,8 +35,7 @@ ui:
       cpu: 500m
       memory: 256Mi
   autoscaling:
-    enabled: false
-    # The following settings only apply when enabled: true
+    enabled: true
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 50
@@ -60,8 +58,7 @@ worker:
       cpu: 200m
       memory: 128Mi
   autoscaling:
-    enabled: false
-    # The following settings only apply when enabled: true
+    enabled: true
     minReplicas: 1
     maxReplicas: 3
     targetCPUUtilizationPercentage: 50
