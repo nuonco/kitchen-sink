@@ -9,9 +9,13 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
+import { branchName } from '../lib/config-data.gen'
+import { seenSteps } from '../lib/progress'
 import { agentPrompt } from '../lib/prompts'
-import { EvalPath, type SwitchStates } from '../ui/CapabilityGrid'
-import { CopyButton, Icon, OutLink } from '../ui/Primitives'
+import { useNavigate } from '../lib/router'
+import { pathSteps } from '../lib/taxonomy'
+import { ModeBadge, PixelCheck, type SwitchStates } from '../ui/CapabilityGrid'
+import { Badge, CopyButton, Icon, OutLink } from '../ui/Primitives'
 
 /* ============================================================
    The landing is a guided walkthrough. A first-time visitor has just
@@ -203,13 +207,153 @@ function GoldenPath({
 }
 
 /* ============================================================
+   Internal navigation that behaves like navigate(): scrolls back to the
+   top, keeps the href for open-in-new-tab.
+   ============================================================ */
+
+function GoLink({
+  to,
+  className,
+  children,
+}: {
+  to: string
+  className?: string
+  children: ReactNode
+}) {
+  const navigate = useNavigate()
+  return (
+    <a
+      className={className}
+      href={`#${to}`}
+      onClick={(e) => {
+        e.preventDefault()
+        navigate(to)
+      }}
+    >
+      {children}
+    </a>
+  )
+}
+
+/* ============================================================
+   The CLI bucket's payload: every command this app hands out anywhere,
+   collected in one pane and scoped to this install and app. Ids are real,
+   so each row pastes straight into a terminal.
+   ============================================================ */
+
+interface CliRow {
+  cmd: string
+  note?: ReactNode
+}
+
+function cliGroups(install: string, app: string): Array<{ name: string; rows: CliRow[] }> {
+  return [
+    {
+      name: 'Once',
+      rows: [{ cmd: 'nuon auth login', note: 'Keeps a session in ~/.nuon. Skip if you already have one.' }],
+    },
+    {
+      name: 'Inspect this install',
+      rows: [
+        {
+          cmd: `nuon installs get --install-id ${install}`,
+          note: 'Status, sandbox, runner, and every component on it.',
+        },
+      ],
+    },
+    {
+      name: 'Check health',
+      rows: [
+        {
+          cmd: `nuon runbooks list --install-id ${install}`,
+          note: (
+            <>
+              Four recorded procedures; <span className="mono">reconcile-drift</span> and{' '}
+              <span className="mono">break-glass</span> mutate.
+            </>
+          ),
+        },
+        {
+          cmd: `nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`,
+          note: 'Nodes, workloads, ingress, and the public endpoint.',
+        },
+        {
+          cmd: `nuon runbooks create-run --install-id ${install} --runbook-id debug-bundle`,
+          note: 'Read-only diagnostics: pod state, events, logs, endpoint probe.',
+        },
+      ],
+    },
+    {
+      name: 'Run actions',
+      rows: [
+        {
+          cmd: `nuon actions list --app-id ${app}`,
+          note: (
+            <>
+              cron_status &middot; debug &middot; lifecycle_hooks &middot;{' '}
+              break_glass_remediation. Copy the workflow id (
+              <span className="mono">actw&hellip;</span>) for the next two.
+            </>
+          ),
+        },
+        {
+          cmd: `nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`,
+          note: 'Runs on the install’s runner; no kubeconfig handed out.',
+        },
+        {
+          cmd: `nuon actions create-run --install-id ${install} --action-workflow-id <actw-id> --role-name maintenance`,
+          note: 'The same run under a different per-operation IAM role.',
+        },
+      ],
+    },
+    {
+      name: 'Ship a change',
+      rows: [
+        {
+          cmd: `nuon sync --app-id ${app} --force --branch ${branchName}`,
+          note: (
+            <>
+              From your clone of the app config; uncommitted edits count.
+              Triggers the staged rollout with an approval per group;{' '}
+              <span className="mono">--preview</span> plans without applying.
+            </>
+          ),
+        },
+      ],
+    },
+  ]
+}
+
+function CliPanel({ install, app }: { install: string; app: string }) {
+  return (
+    <div className="clipanel" id="cli-commands">
+      {cliGroups(install, app).map((group) => (
+        <section className="clipanel__group" key={group.name}>
+          <div className="clipanel__label">{group.name}</div>
+          {group.rows.map((row) => (
+            <div className="clirow" key={row.cmd}>
+              <div className="clirow__body">
+                <pre className="clirow__cmd">{row.cmd}</pre>
+                {row.note && <div className="clirow__note">{row.note}</div>}
+              </div>
+              <CopyButton text={row.cmd} />
+            </div>
+          ))}
+        </section>
+      ))}
+    </div>
+  )
+}
+
+/* ============================================================
    The customize hub: the tour's destination, and the returning-visitor
-   front door. One ordered path from lib/taxonomy.ts, with the agent prompt
-   as the default way to run it.
+   front door. Two peer ways in (agent prompt, CLI), a few live things to
+   try immediately, and a dense index of the rest.
    ============================================================ */
 
 export function Landing({ config }: { config: UIConfig }) {
   const [step, setStep] = useState<Step>(storedStep)
+  const [cliOpen, setCliOpen] = useState(false)
 
   useEffect(() => {
     rememberStep(step)
@@ -334,26 +478,31 @@ export function Landing({ config }: { config: UIConfig }) {
   if (step === 'explore') {
     const install = config.install_id ?? '<your-install-id>'
     const app = config.app_id ?? '<your-app-id>'
+    const seen = seenSteps()
+    // The other two live tiles are the toggleable components: their switches
+    // move while you watch (the namespace poll above feeds them).
+    const tiles = pathSteps.filter(
+      (s) => s.to === '/audit-log' || s.to === '/tictactoe',
+    )
+    const phases = ['Read', 'Ship', 'Operate', 'Govern'] as const
     return (
       <div className="tour__step" key="explore">
         <header className="hero">
           <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
           <p className="hero__lede">
-            Each step names a problem, shows the config that answers it, and
-            hands you the commands to prove it on this install.
+            Everything below runs against this live install. Two ways to
+            drive it:
           </p>
-          <div className="agent-cta">
-            <div className="agent-cta__body">
-              <div className="agent-cta__title">
-                The default way to run it: your coding agent
-              </div>
-              <p className="agent-cta__desc">
-                One prompt covers the whole checklist, ids filled in. The
-                agent shows every command and waits for your yes before
-                anything mutates.
-              </p>
-            </div>
-            <div className="agent-cta__actions">
+        </header>
+
+        <div className="choices">
+          <section className="choice">
+            <h2 className="choice__title">Paste into your coding agent</h2>
+            <p className="choice__desc">
+              One prompt covers the whole checklist, ids filled in. Nothing
+              mutates without your yes.
+            </p>
+            <div className="choice__actions">
               <CopyButton
                 text={agentPrompt(install, app)}
                 label="Copy the agent prompt"
@@ -364,14 +513,125 @@ export function Landing({ config }: { config: UIConfig }) {
                 Read it first <Icon name="arrow-right" />
               </a>
             </div>
+          </section>
+
+          <button
+            type="button"
+            className={cliOpen ? 'choice choice--toggle choice--open' : 'choice choice--toggle'}
+            aria-expanded={cliOpen}
+            aria-controls="cli-commands"
+            onClick={() => setCliOpen((open) => !open)}
+          >
+            <span className="choice__title">Just show me the Nuon CLI</span>
+            <span className="choice__desc">
+              Every command for this install and app, ids filled in.
+            </span>
+            <span className="choice__actions">
+              <span className="choice__faux">
+                {cliOpen ? 'Hide the commands' : 'Show the commands'}
+              </span>
+              <span
+                className={cliOpen ? 'choice__caret choice__caret--open' : 'choice__caret'}
+                aria-hidden="true"
+              >
+                <Icon name="caret-right" />
+              </span>
+            </span>
+          </button>
+        </div>
+
+        {cliOpen && <CliPanel install={install} app={app} />}
+
+        <section className="section section--hub">
+          <div className="section__head">
+            <h2 className="section__title">Live right now</h2>
           </div>
-          <div className="row" style={{ marginTop: 16 }}>
-            <a className="btn btn--primary btn--xl" href="#/ops">
-              I can reason about all of this. Just show me the things it can
-              do. <Icon name="arrow-right" />
-            </a>
+          <div className="nods">
+            <GoLink to="/deployed" className="nod">
+              <span className="nod__top">
+                <span className="nod__title">Read your live install</span>
+                <Badge tone="positive" dot>
+                  live
+                </Badge>
+              </span>
+              <span className="nod__desc">
+                {podSummary
+                  ? `${podSummary} pods ready in ${namespace}, read as this page loads.`
+                  : 'Pods, services, and secrets, straight from the cluster.'}
+              </span>
+            </GoLink>
+            {tiles.map((s) => {
+              const sw = switches[s.to]
+              return (
+                <GoLink to={s.to} className="nod" key={s.to}>
+                  <span className="nod__top">
+                    <span className="nod__title">{s.title}</span>
+                    {sw ? (
+                      <span
+                        className={
+                          sw.on
+                            ? 'switch switch--sm switch--on'
+                            : 'switch switch--sm'
+                        }
+                        aria-hidden="true"
+                      />
+                    ) : (
+                      <ModeBadge mode={s.mode} />
+                    )}
+                  </span>
+                  <span className="nod__desc">{s.desc}</span>
+                </GoLink>
+              )
+            })}
           </div>
-          <div className="row" style={{ marginTop: 20 }}>
+        </section>
+
+        <section className="section section--hub">
+          <div className="section__head">
+            <h2 className="section__title">Index</h2>
+          </div>
+          <div className="encyc">
+            {phases.map((phase) => (
+              <div className="encyc__group" key={phase}>
+                <div className="encyc__phase">{phase}</div>
+                <ul className="encyc__list">
+                  {pathSteps
+                    .filter((s) => s.phase === phase)
+                    .map((s) => (
+                      <li key={s.to}>
+                        <GoLink to={s.to} className="encyc__row">
+                          <span className="encyc__title">{s.title}</span>
+                          <span className="encyc__desc">{s.desc}</span>
+                          {seen.has(s.to) && (
+                            <span
+                              className="encyc__seen"
+                              title="You have opened this page"
+                            >
+                              <PixelCheck />
+                            </span>
+                          )}
+                        </GoLink>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="section section--hub">
+          <div className="row">
+            {config.links.install && (
+              <OutLink href={config.links.install}>
+                Open this install in Nuon
+              </OutLink>
+            )}
+            <OutLink
+              href="https://docs.nuon.co/get-started/introduction"
+              variant="secondary"
+            >
+              Read the docs
+            </OutLink>
             <button
               className="tour__skip"
               style={{ marginLeft: 0 }}
@@ -380,31 +640,7 @@ export function Landing({ config }: { config: UIConfig }) {
               <Icon name="arrow-left" /> Replay the tour
             </button>
           </div>
-        </header>
-
-        <EvalPath switches={switches} />
-
-        {config.links.install && (
-          <section className="section">
-            <div className="card">
-              <p className="small muted" style={{ maxWidth: '70ch' }}>
-                This app reads the install from the inside. The Nuon dashboard
-                operates it, and every other install, from the outside.
-              </p>
-              <div className="row" style={{ marginTop: 20 }}>
-                <OutLink href={config.links.install}>
-                  Open this install in Nuon
-                </OutLink>
-                <OutLink
-                  href="https://docs.nuon.co/get-started/introduction"
-                  variant="secondary"
-                >
-                  Read the docs
-                </OutLink>
-              </div>
-            </div>
-          </section>
-        )}
+        </section>
       </div>
     )
   }
