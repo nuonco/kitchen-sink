@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { useUIConfig } from './lib/api'
+import { recordHub } from './lib/origin'
 import { segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
@@ -48,6 +50,12 @@ export default function App() {
   const config = useUIConfig()
   const path = useRoute()
   const parts = segments(path)
+
+  // Remember which hub the visitor last passed through, so feature pages
+  // reachable from both can point their breadcrumb at the right one.
+  useEffect(() => {
+    recordHub(path)
+  }, [path])
 
   let view = <Landing config={config} />
   if (parts[0] === 'deployed') {

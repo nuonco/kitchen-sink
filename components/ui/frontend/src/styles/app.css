@@ -384,6 +384,32 @@ body::before {
   color: var(--text-primary);
 }
 
+/* The backlink's sibling for pages reached through an intermediate hub:
+   "Kitchen sink / BYOC operations", each crumb a link back up. */
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+  color: var(--text-tertiary);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+}
+
+.crumbs__link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.crumbs__link:hover {
+  color: var(--text-primary);
+}
+
 /* Cards */
 
 .card {

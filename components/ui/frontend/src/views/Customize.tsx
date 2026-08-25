@@ -20,13 +20,15 @@ import {
   runbooks,
 } from '../lib/config-data.gen'
 import { agentPrompt, proofPrompts } from '../lib/prompts'
-import { stepEyebrow } from '../lib/taxonomy'
+import { lastHub } from '../lib/origin'
+import { operationsPath, stepEyebrow } from '../lib/taxonomy'
 import { EvalPath, StepNav, type SwitchStates } from '../ui/CapabilityGrid'
 import { useMarkStepSeen } from '../lib/progress'
 import {
   BackLink,
   Badge,
   Callout,
+  Crumbs,
   CodeBlock,
   CommandBlock,
   CopyButton,
@@ -1200,9 +1202,25 @@ export function Customize({
   const route = flow ? `/customize/${flow}` : undefined
   useMarkStepSeen(route)
 
+  // Pages the BYOC operations hub fronts breadcrumb back to it when that is
+  // how the visitor got here; every other entry keeps the checklist backlink.
+  const fromOperations =
+    route !== undefined &&
+    operationsPath.includes(route) &&
+    lastHub() === '/operations'
+
   return (
     <>
-      <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      {fromOperations ? (
+        <Crumbs
+          items={[
+            { label: 'Kitchen sink', to: '/' },
+            { label: 'BYOC operations', to: '/operations' },
+          ]}
+        />
+      ) : (
+        <BackLink to="/">Customize the Kitchen Sink</BackLink>
+      )}
 
       {flow === 'branches' && <BranchesFlow config={config} />}
       {flow === 'runbooks' && <RunbooksFlow config={config} />}

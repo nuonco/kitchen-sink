@@ -110,6 +110,15 @@ export const pathSteps: PathStep[] = [
   },
 ]
 
+/** The steps the #/operations hub fronts, in its order. */
+export const operationsPath = [
+  '/customize/health',
+  '/customize/runbooks',
+  '/customize/actions',
+  '/customize/triggers',
+  '/customize/roles',
+]
+
 const numbered = pathSteps.filter((step) => !step.bonus)
 
 /** "03" for the third numbered step; undefined for bonus rows. */
