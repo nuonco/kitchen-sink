@@ -7,7 +7,8 @@ name: Build and publish images
 # chart component's config changes too and the rollout redeploys it (the
 # chart bakes image tags at render time; without this it's classified
 # "unchanged" and skipped, serving stale images) — and pushes that commit,
-# which is what triggers the staged Nuon rollout (see triggers.toml). The
+# which is what triggers the staged Nuon rollout (via the push rule in
+# triggers.toml.example, when enabled in the org — see its header). The
 # stamp commit only touches components/images/ and components/chart/nuon.toml,
 # both outside this workflow's path filters, so it cannot retrigger this
 # workflow.
