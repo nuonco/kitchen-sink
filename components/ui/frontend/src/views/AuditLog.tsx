@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import {
-  AUDIT_LOG_SERVICE,
   hasAuditLogExporter,
+  hasTicTacToe,
   useIntrospectPoll,
   type NamespaceEvent,
   type NamespaceEventsResponse,
   type NamespaceResponse,
-  type ServiceSummary,
   type UIConfig,
 } from '../lib/api'
 import { toggleableComponents } from '../lib/config-data.gen'
@@ -16,7 +15,6 @@ import { StepNav } from '../ui/CapabilityGrid'
 import {
   BackLink,
   Badge,
-  Callout,
   CodeBlock,
   Eyebrow,
   LoadState,
@@ -26,70 +24,82 @@ import {
 } from '../ui/Primitives'
 
 /* ============================================================
-   The audit-log exporter: the second toggleable component, carrying the
-   commercial framing tictactoe deliberately doesn't. Same mechanic end to
-   end — toggleable = true, default_enabled = false, a marker Service this
-   page watches for — shown as an entitlement card, not a paragraph.
+   SKU management: both toggleable components side by side, as the plan
+   gate they demonstrate. Same mechanic on each — toggleable = true,
+   default_enabled = false, a marker Service this page watches for.
    ============================================================ */
 
-/** How often the page re-reads the namespace looking for the deploy. */
+/** How often the page re-reads the namespace looking for a deploy. */
 const POLL_MS = 10_000
 
-/** How often the unlocked page re-reads the namespace's events. */
+/** How often the events feed re-reads the namespace's events. */
 const EVENTS_POLL_MS = 5_000
 
-const component = toggleableComponents.find(
-  (c) => c.name === 'audit_log_exporter',
-)
-
-/** The plan state, drawn: a live readout up top (never a switch — the real
- * control is in the dashboard) and the dashboard deep link as the one action. */
-function EntitlementCard({
+/** One SKU, drawn: a live readout up top (never a switch — the real control
+ * is in the dashboard) and the dashboard deep link as the one action. */
+function SkuCard({
+  plan,
+  name,
+  pitch,
   on,
+  justOn,
   config,
   onDashboardOpen,
+  playHref,
 }: {
+  plan: string
+  name: string
+  pitch: string
   on: boolean
+  justOn: boolean
   config: UIConfig
   onDashboardOpen: () => void
+  playHref?: string
 }) {
   return (
-    <div className={on ? 'ent ent--on' : 'ent'}>
-      <div className="ent__head">
-        <span className="ent__plan">Enterprise plan</span>
-        <span className="entstat mono" role="status">
-          <span
-            className={on ? 'entstat__dot entstat__dot--on' : 'entstat__dot'}
-            aria-hidden="true"
-          />
-          {on ? 'on' : 'off · watching'}
-        </span>
-      </div>
-      <div className="ent__name mono">audit_log_exporter</div>
-      <p className="ent__pitch">
-        Streams every operation Nuon performs in this install to your SIEM.
-        Events never leave your cloud.
-      </p>
-      <div className="ent__foot">
-        {on ? (
+    <div className={justOn ? 'ttt--just-unlocked' : undefined}>
+      {justOn && (
+        <div className="ttt-unlocked-note">
           <Badge tone="positive" dot>
-            included in this install
+            just deployed
           </Badge>
-        ) : (
-          <OutLink href={config.links.components} onClick={onDashboardOpen}>
-            Turn it on in Nuon
-          </OutLink>
-        )}
-        <span className="ent__facts mono">
-          toggleable = true · default_enabled = false
-        </span>
-      </div>
-      {!on && (
-        <p className="ent__how">
-          The switch lives in the Nuon dashboard — enable the component there
-          and this page flips by itself within {POLL_MS / 1000}s of the deploy.
-        </p>
+          <span>
+            Its Service appeared in the namespace and this page noticed. No
+            reload.
+          </span>
+        </div>
       )}
+      <div className={on ? 'ent ent--on' : 'ent'}>
+        <div className="ent__head">
+          <span className="ent__plan">{plan}</span>
+          <span className="entstat mono" role="status">
+            <span
+              className={on ? 'entstat__dot entstat__dot--on' : 'entstat__dot'}
+              aria-hidden="true"
+            />
+            {on ? 'on' : 'off · watching'}
+          </span>
+        </div>
+        <div className="ent__name mono">{name}</div>
+        <p className="ent__pitch">{pitch}</p>
+        <div className="ent__foot">
+          {on ? (
+            <>
+              <Badge tone="positive" dot>
+                included in this install
+              </Badge>
+              {playHref && <a href={playHref}>Play it</a>}
+            </>
+          ) : (
+            <OutLink href={config.links.components} onClick={onDashboardOpen}>
+              Turn it on in Nuon
+            </OutLink>
+          )}
+          <span className="ent__facts mono">
+            toggleable = true · default_enabled = false
+          </span>
+        </div>
+      </div>
     </div>
   )
 }
@@ -103,8 +113,8 @@ function HowItKnows({
 }: {
   config: UIConfig
   namespace: string
-  live?: boolean
-  onDashboardOpen?: () => void
+  live: boolean
+  onDashboardOpen: () => void
 }) {
   const beats = [
     {
@@ -112,7 +122,7 @@ function HowItKnows({
       detail: 'component on, in the dashboard',
       href: config.links.components,
     },
-    { label: 'deploy', detail: `Nuon applies ${AUDIT_LOG_SERVICE}` },
+    { label: 'deploy', detail: 'Nuon applies its marker Service' },
     {
       label: live ? 'narrate' : 'detect',
       detail: live
@@ -266,7 +276,7 @@ function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig
         </ol>
       )}
       <p className="evtfeed__invite">
-        Toggle the component off and on in{' '}
+        Toggle a component off and on in{' '}
         {config.links.components ? (
           <OutLink href={config.links.components} variant="plain">
             the dashboard
@@ -283,93 +293,122 @@ function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig
 export function AuditLog({ config }: { config: UIConfig }) {
   useMarkStepSeen('/audit-log')
   const namespace = config.namespace ?? 'kitchen-sink'
-  const [enabled, setEnabled] = useState(false)
-  const [justEnabled, setJustEnabled] = useState(false)
+  const [audit, setAudit] = useState(false)
+  const [auditJust, setAuditJust] = useState(false)
+  const [ttt, setTtt] = useState(false)
+  const [tttJust, setTttJust] = useState(false)
   const [waiting, setWaiting] = useState(false)
-  // True once the visitor has actually seen the locked state, so an unlock
-  // detected later is a real on-screen moment rather than the initial load.
-  const sawLocked = useRef(false)
+  // True once the visitor has actually seen a card off, so an unlock detected
+  // later is a real on-screen moment rather than the initial load.
+  const sawAuditOff = useRef(false)
+  const sawTttOff = useRef(false)
 
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     POLL_MS,
-    !enabled,
+    !(audit && ttt),
   )
 
   useEffect(() => {
     if (ns.state !== 'ok') return
-    const found = hasAuditLogExporter(ns.value.response.services ?? [])
-    if (found) {
-      if (sawLocked.current) setJustEnabled(true)
-      setEnabled(true)
+    const services = ns.value.response.services ?? []
+    if (hasAuditLogExporter(services)) {
+      if (sawAuditOff.current) setAuditJust(true)
+      setAudit(true)
     } else {
-      sawLocked.current = true
+      sawAuditOff.current = true
+    }
+    if (hasTicTacToe(services)) {
+      if (sawTttOff.current) setTttJust(true)
+      setTtt(true)
+    } else {
+      sawTttOff.current = true
     }
   }, [ns])
 
-  const service: ServiceSummary | undefined =
-    ns.state === 'ok'
-      ? (ns.value.response.services ?? []).find(
-          (svc) => svc.metadata?.name === AUDIT_LOG_SERVICE,
-        )
-      : undefined
-
-  const ready = enabled || ns.state === 'ok'
+  const exporter = toggleableComponents.find(
+    (c) => c.name === 'audit_log_exporter',
+  )
+  const tictactoe = toggleableComponents.find((c) => c.name === 'tictactoe')
+  const ready = audit || ttt || ns.state === 'ok'
+  const bothOn = audit && ttt
 
   return (
     <>
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
         <Eyebrow>{stepEyebrow('/audit-log')}</Eyebrow>
-        <h1>Sell an entitlement</h1>
+        <h1>SKU management</h1>
         <p className="lede psp-lede">
           <PspTag kind="problem" /> One plan tier includes a feature the
           others don&rsquo;t, and every install runs the same config.
         </p>
       </header>
 
-      {!enabled && (
-        <LoadState result={ns} what={`the ${namespace} namespace`} />
-      )}
+      {!ready && <LoadState result={ns} what={`the ${namespace} namespace`} />}
 
       {ready && (
         <>
           <PspSection
             kind="solution"
-            title="A toggleable component"
-            aside="components/audit_log_exporter.toml"
+            title="Toggleable components"
+            aside="components/{audit_log_exporter,tictactoe}.toml"
           >
-            <div className={justEnabled ? 'ttt--just-unlocked' : undefined}>
-              {justEnabled && (
-                <div className="ttt-unlocked-note">
-                  <Badge tone="positive" dot>
-                    just deployed
-                  </Badge>
-                  <span>
-                    The component deployed, its Service appeared in the
-                    namespace, and this page noticed. No reload.
-                  </span>
-                </div>
-              )}
-              <EntitlementCard
-                on={enabled}
+            <p className="small muted" style={{ maxWidth: '72ch' }}>
+              Both features below ship in every install&rsquo;s config,
+              switched off. Flip one on for an install and Nuon deploys it
+              there; flip it off and it is torn down. A feature a plan
+              doesn&rsquo;t include isn&rsquo;t hidden behind a flag —
+              it isn&rsquo;t running in that customer&rsquo;s cloud at all.
+              (Here each deploys one marker Service; a real feature puts its
+              workload behind the same switch.){' '}
+              <OutLink
+                href="https://docs.nuon.co/guides/toggleable-components"
+                variant="plain"
+              >
+                Toggleable components docs
+              </OutLink>
+            </p>
+            <div className="choices">
+              <SkuCard
+                plan="Enterprise plan"
+                name="audit_log_exporter"
+                pitch="Streams every operation Nuon performs in this install to your SIEM. Events never leave your cloud."
+                on={audit}
+                justOn={auditJust}
                 config={config}
                 onDashboardOpen={() => setWaiting(true)}
               />
+              <SkuCard
+                plan="Add-on"
+                name="tictactoe"
+                pitch="A playable game — the stand-in for whatever you’d gate per plan."
+                on={ttt}
+                justOn={tttJust}
+                config={config}
+                onDashboardOpen={() => setWaiting(true)}
+                playHref="#/tictactoe"
+              />
             </div>
-            {component && (
+            {exporter && (
               <CodeBlock
-                label="the real config, comments stripped"
-                code={component.toml}
+                label="audit_log_exporter.toml (the real config, comments stripped)"
+                code={exporter.toml}
+              />
+            )}
+            {tictactoe && (
+              <CodeBlock
+                label="tictactoe.toml (the real config, comments stripped)"
+                code={tictactoe.toml}
               />
             )}
           </PspSection>
 
           <PspSection
             kind="proof"
-            title={enabled ? 'What introspection sees' : 'Flip it on and watch'}
+            title={bothOn ? 'What introspection sees' : 'Flip one on and watch'}
             aside={
-              enabled
+              audit
                 ? `GET /introspect/namespace/${namespace}/events`
                 : `GET /introspect/namespace/${namespace}`
             }
@@ -377,47 +416,35 @@ export function AuditLog({ config }: { config: UIConfig }) {
             <HowItKnows
               config={config}
               namespace={namespace}
-              live={enabled}
-              onDashboardOpen={enabled ? undefined : () => setWaiting(true)}
+              live={audit}
+              onDashboardOpen={() => setWaiting(true)}
             />
-            {enabled ? (
-              <>
-                <EventsFeed namespace={namespace} config={config} />
-                <Callout label="What actually got deployed">
-                  One marker Service —{' '}
-                  {service?.metadata?.name ?? AUDIT_LOG_SERVICE}
-                  {service?.spec?.type ? ` (${service.spec.type})` : ''}. A real
-                  exporter puts its workload behind the same switch.
-                </Callout>
-              </>
-            ) : (
-              <>
-                <div className="ttt-watch">
-                  {waiting ? (
-                    <>
-                      <Badge tone="warning" dot>
-                        waiting for the deploy
-                      </Badge>
-                      <span>
-                        Toggle the component on in the dashboard tab and
-                        deploy it; this page switches over when the Service
-                        appears.
-                      </span>
-                    </>
-                  ) : (
-                    <>
-                      <Badge tone="accent" dot>
-                        watching live
-                      </Badge>
-                      <span>
-                        Checking this namespace for the exporter&rsquo;s
-                        Service every {POLL_MS / 1000} seconds.
-                      </span>
-                    </>
-                  )}
-                </div>
-              </>
+            {!bothOn && (
+              <div className="ttt-watch">
+                {waiting ? (
+                  <>
+                    <Badge tone="warning" dot>
+                      waiting for the deploy
+                    </Badge>
+                    <span>
+                      Toggle a component on in the dashboard tab and deploy
+                      it; its card flips when the Service appears.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Badge tone="accent" dot>
+                      watching live
+                    </Badge>
+                    <span>
+                      Checking this namespace for the marker Services every{' '}
+                      {POLL_MS / 1000} seconds.
+                    </span>
+                  </>
+                )}
+              </div>
             )}
+            {audit && <EventsFeed namespace={namespace} config={config} />}
           </PspSection>
         </>
       )}

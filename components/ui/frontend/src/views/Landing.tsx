@@ -1,21 +1,20 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import {
   countReady,
   hasAuditLogExporter,
-  hasTicTacToe,
   useIntrospect,
   useIntrospectPoll,
   type KubeResponse,
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import { branchName } from '../lib/config-data.gen'
+import { branchName, installGroups } from '../lib/config-data.gen'
 import { seenSteps } from '../lib/progress'
 import { agentPrompt } from '../lib/prompts'
 import { useNavigate } from '../lib/router'
 import { pathSteps } from '../lib/taxonomy'
-import { ModeBadge, PixelCheck, type SwitchStates } from '../ui/CapabilityGrid'
-import { Badge, CopyButton, Icon, OutLink } from '../ui/Primitives'
+import { PixelCheck } from '../ui/CapabilityGrid'
+import { CopyButton, Icon, OutLink } from '../ui/Primitives'
 
 /* ============================================================
    The landing is a guided walkthrough. A first-time visitor has just
@@ -362,43 +361,22 @@ export function Landing({ config }: { config: UIConfig }) {
   const namespace = config.namespace ?? 'kitchen-sink'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
 
-  // The namespace read doubles as the toggleable-component watcher: while the
-  // hub is on screen and either component is still off, keep re-reading so
-  // flipping one on in the dashboard flips its row's switch here without a
-  // reload.
-  const [tictactoe, setTictactoe] = useState(false)
-  const [tictactoeFlipped, setTictactoeFlipped] = useState(false)
+  // The namespace read doubles as the entitlement watcher: while the hub is
+  // on screen and the demo SKU is still off, keep re-reading so flipping it
+  // on in the dashboard flips the SKU tile's switch here without a reload.
   const [auditLog, setAuditLog] = useState(false)
-  const [auditLogFlipped, setAuditLogFlipped] = useState(false)
-  const sawTictactoeOff = useRef(false)
-  const sawAuditLogOff = useRef(false)
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     20_000,
-    step === 'explore' && !(tictactoe && auditLog),
+    step === 'explore' && !auditLog,
   )
 
   useEffect(() => {
     if (ns.state !== 'ok') return
-    const services = ns.value.response.services ?? []
-    if (hasTicTacToe(services)) {
-      if (sawTictactoeOff.current) setTictactoeFlipped(true)
-      setTictactoe(true)
-    } else {
-      sawTictactoeOff.current = true
-    }
-    if (hasAuditLogExporter(services)) {
-      if (sawAuditLogOff.current) setAuditLogFlipped(true)
+    if (hasAuditLogExporter(ns.value.response.services ?? [])) {
       setAuditLog(true)
-    } else {
-      sawAuditLogOff.current = true
     }
   }, [ns])
-
-  const switches: SwitchStates = {
-    '/tictactoe': { on: tictactoe, flipped: tictactoeFlipped },
-    '/audit-log': { on: auditLog, flipped: auditLogFlipped },
-  }
 
   const namespaceCount =
     kube.state === 'ok' ? kube.value.response.namespaces?.length : undefined
@@ -479,11 +457,10 @@ export function Landing({ config }: { config: UIConfig }) {
     const install = config.install_id ?? '<your-install-id>'
     const app = config.app_id ?? '<your-app-id>'
     const seen = seenSteps()
-    // The other two live tiles are the toggleable components: their switches
-    // move while you watch (the namespace poll above feeds them).
-    const tiles = pathSteps.filter(
-      (s) => s.to === '/audit-log' || s.to === '/tictactoe',
-    )
+    // The SKU tile reads its title and switch from the same sources as the
+    // rest of the app: taxonomy for the copy, the namespace poll above for
+    // the live entitlement state.
+    const sku = pathSteps.find((s) => s.to === '/audit-log')
     const phases = ['Read', 'Ship', 'Operate', 'Govern'] as const
     return (
       <div className="tour__step" key="explore">
@@ -544,45 +521,44 @@ export function Landing({ config }: { config: UIConfig }) {
 
         <section className="section section--hub">
           <div className="section__head">
-            <h2 className="section__title">Live right now</h2>
+            <h2 className="section__title">Try it live</h2>
           </div>
           <div className="nods">
-            <GoLink to="/deployed" className="nod">
+            <GoLink to="/customize/branches" className="nod">
               <span className="nod__top">
-                <span className="nod__title">Read your live install</span>
-                <Badge tone="positive" dot>
-                  live
-                </Badge>
+                <span className="nod__title">Get started with app branches</span>
               </span>
               <span className="nod__desc">
-                {podSummary
-                  ? `${podSummary} pods ready in ${namespace}, read as this page loads.`
-                  : 'Pods, services, and secrets, straight from the cluster.'}
+                One push deploys the whole fleet:{' '}
+                {installGroups.map((g) => g.name).join(' → ')}, an approval
+                before each group.
               </span>
             </GoLink>
-            {tiles.map((s) => {
-              const sw = switches[s.to]
-              return (
-                <GoLink to={s.to} className="nod" key={s.to}>
-                  <span className="nod__top">
-                    <span className="nod__title">{s.title}</span>
-                    {sw ? (
-                      <span
-                        className={
-                          sw.on
-                            ? 'switch switch--sm switch--on'
-                            : 'switch switch--sm'
-                        }
-                        aria-hidden="true"
-                      />
-                    ) : (
-                      <ModeBadge mode={s.mode} />
-                    )}
-                  </span>
-                  <span className="nod__desc">{s.desc}</span>
-                </GoLink>
-              )
-            })}
+            {sku && (
+              <GoLink to={sku.to} className="nod">
+                <span className="nod__top">
+                  <span className="nod__title">{sku.title}</span>
+                  <span
+                    className={
+                      auditLog
+                        ? 'switch switch--sm switch--on'
+                        : 'switch switch--sm'
+                    }
+                    aria-hidden="true"
+                  />
+                </span>
+                <span className="nod__desc">{sku.desc}</span>
+              </GoLink>
+            )}
+            <GoLink to="/operations" className="nod">
+              <span className="nod__top">
+                <span className="nod__title">BYOC operations</span>
+              </span>
+              <span className="nod__desc">
+                Healthchecks, runbooks, ad-hoc actions, and triggers, each
+                under a scoped IAM role.
+              </span>
+            </GoLink>
           </div>
         </section>
 
@@ -766,8 +742,7 @@ export function Landing({ config }: { config: UIConfig }) {
           <header className="step-header">
             <h2>Here&rsquo;s what Nuon deployed.</h2>
             <p className="step-header__lede">
-              Read from the cluster as this page loads; each fact opens the
-              record behind it.
+              Read from the cluster as this page loads.
             </p>
           </header>
           <div className="facts">
@@ -784,7 +759,7 @@ export function Landing({ config }: { config: UIConfig }) {
               value={config.cluster_name}
               note={config.region ? `EKS in ${config.region}` : 'EKS'}
               delay={140}
-              href="#/deployed/cluster"
+              href="#/deployed"
             />
             <Fact
               label="Namespaces"
@@ -792,7 +767,7 @@ export function Landing({ config }: { config: UIConfig }) {
               note="Read from the Kubernetes API"
               numeric
               delay={280}
-              href="#/deployed/cluster"
+              href="#/deployed"
             />
             <Fact
               label={`Pods ready in ${namespace}`}
@@ -800,7 +775,7 @@ export function Landing({ config }: { config: UIConfig }) {
               note="api, ui, worker"
               numeric
               delay={420}
-              href="#/deployed/namespace"
+              href="#/deployed"
             />
           </div>
           <div className="cta-block">
