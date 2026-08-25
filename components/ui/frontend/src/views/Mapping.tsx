@@ -51,7 +51,7 @@ dependencies = ["img_api", "img_ui"]
 [public_repo]
 repo = "nuonco/kitchen-sink"
 directory = "components/chart"
-branch = "ms/onboarding-edit"
+branch = "main"
 
 [[values_file]]
 contents = "./chart/values.yaml"`,

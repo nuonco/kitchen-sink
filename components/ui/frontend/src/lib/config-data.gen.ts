@@ -52,7 +52,7 @@ export interface ToggleableComponent {
   toml: string
 }
 
-export const branchName = "ms/onboarding-edit"
+export const branchName = "main"
 
 export const repoName = "nuonco/kitchen-sink"
 
@@ -81,7 +81,7 @@ export const installGroups: InstallGroup[] = [
   }
 ]
 
-export const branchConfigAbridged = "name = \"ms/onboarding-edit\"\n\npost_deploy_runbooks = [\"full-health-check\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"ms/onboarding-edit\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\nuse_for_previews = true\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
+export const branchConfigAbridged = "name = \"main\"\n\npost_deploy_runbooks = [\"full-health-check\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"main\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\nuse_for_previews = true\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
 
 export const runbooks: Runbook[] = [
   {
@@ -328,12 +328,12 @@ export const toggleableComponents: ToggleableComponent[] = [
     "name": "audit_log_exporter",
     "type": "kubernetes_manifest",
     "defaultEnabled": false,
-    "toml": "name = \"audit_log_exporter\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/onboarding-edit\"\n\n[kustomize]\npath        = \"./src/components/audit-log-exporter\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
+    "toml": "name = \"audit_log_exporter\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"main\"\n\n[kustomize]\npath        = \"./src/components/audit-log-exporter\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
   },
   {
     "name": "tictactoe",
     "type": "kubernetes_manifest",
     "defaultEnabled": false,
-    "toml": "name = \"tictactoe\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"ms/onboarding-edit\"\n\n[kustomize]\npath        = \"./src/components/tictactoe\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
+    "toml": "name = \"tictactoe\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"main\"\n\n[kustomize]\npath        = \"./src/components/tictactoe\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
   }
 ]

@@ -17,9 +17,7 @@ default_enabled = false
 [public_repo]
 directory = "."
 repo      = "nuonco/kitchen-sink"
-# Ships with the onboarding restyle; flip back to "main" when
-# ms/onboarding-edit merges.
-branch = "ms/onboarding-edit"
+branch = "main"
 
 [kustomize]
 path        = "./src/components/audit-log-exporter"
