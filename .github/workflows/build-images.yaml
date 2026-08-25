@@ -17,7 +17,6 @@ on:
   push:
     branches:
       - main
-      - ms/onboarding-edit # flip to main-only when the branch merges
     paths:
       - components/api/**
       - components/ui/**
