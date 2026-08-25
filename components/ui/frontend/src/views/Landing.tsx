@@ -2,9 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import {
   countReady,
   hasAuditLogExporter,
-  useIntrospect,
   useIntrospectPoll,
-  type KubeResponse,
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
@@ -60,72 +58,6 @@ function rememberStep(step: Step) {
   } catch {
     // Same story: without storage the tour still works, it just forgets.
   }
-}
-
-/* ============================================================
-   A fact panel entry. Every fact is a link: internal facts open the page
-   where the rest of that read lives, the install fact opens the dashboard.
-   ============================================================ */
-
-function Fact({
-  label,
-  value,
-  note,
-  numeric = false,
-  delay,
-  href,
-  external = false,
-}: {
-  label: string
-  value: ReactNode
-  note?: string
-  numeric?: boolean
-  delay?: number
-  href?: string
-  external?: boolean
-}) {
-  const pending = value === null || value === undefined || value === ''
-  const cls = [
-    'fact',
-    href ? 'fact--link' : '',
-    pending ? 'fact--pending' : '',
-    delay === undefined ? '' : 'fact--in',
-  ]
-    .filter(Boolean)
-    .join(' ')
-  const style =
-    delay === undefined ? undefined : { animationDelay: `${delay}ms` }
-  const body = (
-    <>
-      <div className="fact__label">{label}</div>
-      <div className={numeric ? 'fact__value fact__value--num' : 'fact__value'}>
-        {pending ? '—' : value}
-      </div>
-      {note && <div className="fact__note">{note}</div>}
-      {href && (
-        <span className="fact__go" aria-hidden="true">
-          <Icon name="arrow-up-right" />
-        </span>
-      )}
-    </>
-  )
-  if (href) {
-    return (
-      <a
-        className={cls}
-        style={style}
-        href={href}
-        {...(external ? { target: '_blank', rel: 'noreferrer' } : {})}
-      >
-        {body}
-      </a>
-    )
-  }
-  return (
-    <div className={cls} style={style}>
-      {body}
-    </div>
-  )
 }
 
 /* ============================================================
@@ -359,7 +291,6 @@ export function Landing({ config }: { config: UIConfig }) {
   }, [step])
 
   const namespace = config.namespace ?? 'kitchen-sink'
-  const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
 
   // The namespace read doubles as the entitlement watcher: while the hub is
   // on screen and the demo SKU is still off, keep re-reading so flipping it
@@ -378,8 +309,6 @@ export function Landing({ config }: { config: UIConfig }) {
     }
   }, [ns])
 
-  const namespaceCount =
-    kube.state === 'ok' ? kube.value.response.namespaces?.length : undefined
   const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
   const podSummary =
     ns.state === 'ok' ? `${countReady(pods)} / ${pods.length}` : undefined
@@ -742,43 +671,24 @@ export function Landing({ config }: { config: UIConfig }) {
           <header className="step-header">
             <h2>Here&rsquo;s what Nuon deployed.</h2>
             <p className="step-header__lede">
-              Read from the cluster as this page loads.
+              One config deployed this entire app &mdash; the API, the worker,
+              the page you&rsquo;re reading &mdash; into this AWS account, and
+              Nuon operates it from inside. Your app runs in any
+              customer&rsquo;s cloud the same way.
             </p>
           </header>
-          <div className="facts">
-            <Fact
-              label="Install"
-              value={config.install_id}
-              note="The tenant this app belongs to"
-              delay={0}
-              href={config.links.install}
-              external
-            />
-            <Fact
-              label="Cluster"
-              value={config.cluster_name}
-              note={config.region ? `EKS in ${config.region}` : 'EKS'}
-              delay={140}
-              href="#/deployed"
-            />
-            <Fact
-              label="Namespaces"
-              value={namespaceCount}
-              note="Read from the Kubernetes API"
-              numeric
-              delay={280}
-              href="#/deployed"
-            />
-            <Fact
-              label={`Pods ready in ${namespace}`}
-              value={podSummary}
-              note="api, ui, worker"
-              numeric
-              delay={420}
-              href="#/deployed"
-            />
-          </div>
+          {podSummary && (
+            <div className="row">
+              <span className="chip">
+                {podSummary} pods ready in {namespace}, read from the cluster
+              </span>
+            </div>
+          )}
           <div className="cta-block">
+            <span className="cta-block__kicker">
+              next: ship a change &middot; flip a SKU &middot; run a health
+              check
+            </span>
             <button className="btn btn--primary btn--xl" onClick={next}>
               Customize the Kitchen Sink <Icon name="arrow-right" />
             </button>
