@@ -12,7 +12,7 @@ deploys as the app itself.
 - `components/*.toml` — component definitions; sources under `components/{api,ui,chart,pulumi}` and `src/components/{alb,certificate}`
 - `actions/` — scripts run on the install's runner (cron / manual / lifecycle triggers)
 - `runbooks/` — multi-step operational procedures (`.toml` + rendered `.md`)
-- `branch.toml`, `triggers.toml`, `installs.toml` — app branch with staged install groups, event trigger rules, install configs
+- `branch.toml`, `triggers.toml.example`, `installs.toml` — app branch with staged install groups, event trigger rules (shipped disabled — see the file header), install configs
 - `inputs/`, `input_groups/`, `secrets.toml` — per-install parameters
 - `policies/` (OPA), `permissions/` (per-operation IAM roles + boundaries), `break_glass.toml`
 - `sandbox.toml`, `stack.toml`, `runner.toml` — infrastructure foundation
@@ -53,12 +53,19 @@ deploys as the app itself.
   on a public load balancer — never widen its allowlist or move redaction
   client-side (see `components/ui/README.md`).
 - Shipping config changes: **push to the tracked branch — that's the whole
-  interface.** The repo's webhook + the `github-push-tracked-branch` rule in
-  `triggers.toml` turn every push to the tracked branch into a staged branch
-  run (Nuon fetches the config at that commit, builds, and rolls out with an
-  approval hold per install group). Agents and CI never need a Nuon API token
-  to ship. Router lag between webhook delivery and the run appearing is
+  interface.** The repo's webhook + the `github-push-tracked-branch` rule
+  turn every push to the tracked branch into a staged branch run (Nuon
+  fetches the config at that commit, builds, and rolls out with an approval
+  hold per install group). Agents and CI never need a Nuon API token to
+  ship. Router lag between webhook delivery and the run appearing is
   ~1–2 minutes — don't retry or replay before then.
+  CAVEAT: the rules ship disabled as `triggers.toml.example` (a fresh org's
+  sync fails on rules referencing its missing `github-events` trigger).
+  Trigger rules belong to the app config version that synced them and
+  routing consults only the latest active config, so push-to-ship works only
+  while the org's active config was synced from a tree with the file enabled
+  — re-enable by renaming it back locally and running
+  `nuon sync --app-id <id> --force`.
 - Nuon API access (optional, read-oriented): agents with a provisioned token
   may read app/install state via https://api.nuon.co/docs (requests need an
   `X-Nuon-Org-ID` header). Deploys, branch-run approvals, and install

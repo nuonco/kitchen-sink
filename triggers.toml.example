@@ -1,30 +1,38 @@
-# triggers
-# Rules that turn external events into Nuon runs. A trigger (its ingress URL and
-# authentication) is created with the CLI, not here; these rules only reference
-# one by name.
+# triggers — SHIPPED DISABLED. Rename to triggers.toml to sync these rules.
 #
-# PORTABILITY: every active rule below references a trigger named
-# `github-events` by name. Triggers are org-level resources created with the
-# CLI or dashboard — they cannot be declared in app config — and a rule that
-# references a trigger missing from your org fails the sync. If you are
-# syncing this app into your own org, either create the trigger first and
-# point a GitHub webhook (push + release events) on your fork at its ingress
-# URL:
+# Rules that turn external events into Nuon runs. Every rule below references
+# an org-level webhook trigger named `github-events`. Triggers are created
+# with the CLI or dashboard — they cannot be declared in app config — and a
+# rule referencing a trigger missing from your org fails the whole sync. A
+# fresh org has no such trigger, so this file carries a suffix the config
+# loader ignores (only *.toml files parse) and a first sync succeeds with no
+# trigger rules.
 #
-#   nuon triggers create github-events --preset github
-#   nuon triggers reveal-ingress-url <trigger-id>
-#   nuon triggers events tail --trigger <trigger-id>
+# To enable push-to-deploy in your org:
 #
-# or delete this file before syncing. In Nuon's demo org the trigger already
-# exists, is live and receiving deliveries (`nuon triggers list`), and is
-# shared across the org's demo apps, so every rule below filters on
-# `$.repository.full_name` to only act on this repo's events.
+#   1. Once per org, create the trigger and point a GitHub webhook
+#      (push + release events) on your repo at its ingress URL:
+#
+#        nuon triggers create github-events --preset github
+#        nuon triggers reveal-ingress-url <trigger-id>
+#
+#   2. Set every `$.repository.full_name` filter below to your repo — as
+#      shipped they match only nuonco/kitchen-sink, since Nuon's demo org
+#      shares one trigger across apps.
+#
+#   3. Enable and sync:
+#
+#        git mv triggers.toml.example triggers.toml
+#        nuon sync --app-id <your-app-id> --force
+#
+# Rules belong to the app config version that synced them, and event routing
+# consults only the latest active config — the file has to stay enabled in
+# whatever tree you sync from, or the next sync retires the rules.
 #
 # All rules target the app branch declared in branch.toml. NOTE (verified
 # Aug 14): a push to the tracked branch does NOT start a run by itself for a
 # [public_repo] branch — the branch-tracking push rule below is what makes
-# pushes roll out. The repo's webhook (push + release events) was created
-# pointing at this trigger's ingress URL.
+# pushes roll out.
 
 # Every push to the tracked branch fetches the config at that commit and starts
 # a staged rollout (each install group still holds for approval). This is how
