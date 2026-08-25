@@ -1,0 +1,99 @@
+name: Build and publish images
+
+# Same pattern as nuonco/uptime-monitor's build-images.yaml: build on source
+# changes, publish to Nuon's public ECR gallery via the shared org OIDC role.
+# One addition: a stamp job pins the new immutable tag in
+# components/images/*.toml — plus the chart's `image_stamp` value, so the
+# chart component's config changes too and the rollout redeploys it (the
+# chart bakes image tags at render time; without this it's classified
+# "unchanged" and skipped, serving stale images) — and pushes that commit,
+# which is what triggers the staged Nuon rollout (via the push rule in
+# triggers.toml.example, when enabled in the org — see its header). The
+# stamp commit only touches components/images/ and components/chart/nuon.toml,
+# both outside this workflow's path filters, so it cannot retrigger this
+# workflow.
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - components/api/**
+      - components/ui/**
+      - .github/workflows/build-images.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  AWS_REGION: us-east-1
+  ECR_PUBLIC_REGISTRY: public.ecr.aws/p7e3r5y0
+  # Scoped role trusted only by this repo's branches (ARN lives in the
+  # ROLE_ARN repo secret); see the shared gha-artifacts role for the
+  # org-wide pattern this should eventually join.
+  ROLE_ARN: ${{ secrets.ROLE_ARN }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - service: app
+            context: components/api
+          - service: ui
+            context: components/ui
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ env.ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        with:
+          registry-type: public
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ECR_PUBLIC_REGISTRY }}/kitchen-sink-${{ matrix.service }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.context }}
+          file: ./${{ matrix.context }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  stamp:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Pin new image tags in component configs
+        run: |
+          TAG="sha-${GITHUB_SHA::7}"
+          sed -i "s/^tag       = \".*\"/tag       = \"${TAG}\"/" components/images/api.toml components/images/ui.toml
+          sed -i "s/^image_stamp = \".*\"/image_stamp = \"${TAG}\"/" components/chart/nuon.toml
+          git diff --quiet && echo "tags unchanged" && exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add components/images/api.toml components/images/ui.toml components/chart/nuon.toml
+          git commit -m "chore: stamp image tags to ${TAG}"
+          git push

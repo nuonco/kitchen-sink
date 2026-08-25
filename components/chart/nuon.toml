@@ -17,6 +17,15 @@ branch = "main"
 # and layers it over the chart defaults, so there's a single values file.
 contents = "./chart/values.yaml"
 
+[values]
+# CI's stamp commit (build-images.yaml) bumps this in the same commit that
+# stamps components/images/*.toml, so an image-tag bump changes THIS
+# component's config too and the rollout redeploys the chart. Without it the
+# chart is classified "unchanged" and skipped, leaving installs on the old
+# baked-in tags — `dependencies` above only orders deploys, it never cascades
+# them. Surfaced as the nuon.co/image-stamp annotation on the ConfigMap.
+image_stamp = "sha-493f78f"
+
 [[operation_roles]]
 operation = "deploy"
 role = "setup"
@@ -27,3 +36,22 @@ role = "maintenance"
 
 [labels]
 helm = "true"
+
+# Live health, independent of deploy status. Deployments, pods, services,
+# ingresses and the Helm release itself are assessed automatically; this block
+# tunes that assessment.
+#
+# No probes here on purpose: the probe executor runs on the RUNNER, outside the
+# cluster, and the VPC resolver cannot resolve *.svc.cluster.local names —
+# in-cluster HTTP/TCP probes fail with "no such host" (confirmed on install
+# inlf71nem1j…, Aug 2026). In-cluster serving is asserted by the pods' own
+# readiness probes (values.yaml `probes:`), which the automatic assessment
+# already rolls up; the public endpoint is probed on application_load_balancer.
+#
+# `block_deploy` is off, so the deploy step records what health did without
+# gating on it. Flip it to `true` once health is confirmed green on a real
+# install and every kitchen_sink deploy grows a `verify health` step.
+[health]
+enabled              = true
+stabilization_window = "3m"
+block_deploy         = false

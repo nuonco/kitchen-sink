@@ -1,12 +1,17 @@
+# container-image
+# Pre-built image from Nuon's public ECR gallery. Source lives in
+# components/ui; pushes touching it are built and published by
+# .github/workflows/build-images.yaml, which then stamps the tag below — that
+# stamp commit is what starts the staged rollout.
 name     = "img_ui"
 type     = "container_image"
 var_name = "img_ui"
 
-[aws_ecr]
-image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-ui"
-tag          = "2ab4b6587ee5-wip20260804004838"
-region       = "us-west-2"
-iam_role_arn = "arn:aws:iam::431927561584:role/nuon-ecr-access"
+max_auto_retries = 5
+
+[public]
+image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-ui"
+tag       = "sha-493f78f"
 
 [labels]
 is_image = "true"

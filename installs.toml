@@ -1,4 +1,8 @@
+# Where Nuon reads this app's install configs from. Tracks the same ref as
+# branch.toml on purpose: the `env` / `tier` labels in install-configs/*.toml are
+# what branch.toml's install_groups select on, so reading them from a different
+# branch would group the fleet by labels that are not the ones in this checkout.
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
-branch    = "jm/update-components"
+branch    = "main"
 directory = "install-configs"

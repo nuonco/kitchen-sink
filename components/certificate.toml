@@ -1,5 +1,7 @@
 # terraform
-
+# Wildcard ACM certificate for *.<install domain>, DNS-validated against the
+# install's public Route53 zone. Consumed by the application_load_balancer
+# component to terminate HTTPS.
 name              = "certificate"
 type              = "terraform_module"
 terraform_version = "1.11.3"

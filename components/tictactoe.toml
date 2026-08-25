@@ -1,0 +1,26 @@
+# The toggleable / SKU-upsell demo. Off by default, so a plain install ships
+# without it and the UI shows a locked tile; toggling it on for one install
+# deploys the marker Service below, which the UI detects to unlock the game.
+# Toggle rules cut both ways: nothing always-enabled may depend on this
+# component or reference its outputs.
+name = "tictactoe"
+type = "kubernetes_manifest"
+
+namespace    = "kitchen-sink"
+dependencies = ["kitchen_sink"]
+
+toggleable      = true
+default_enabled = false
+
+[public_repo]
+directory = "."
+repo      = "nuonco/kitchen-sink"
+branch = "main"
+
+[kustomize]
+path        = "./src/components/tictactoe"
+patches     = []
+enable_helm = false
+
+[labels]
+toggleable = "true"
