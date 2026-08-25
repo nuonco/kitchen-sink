@@ -26,6 +26,7 @@ import { useMarkStepSeen } from '../lib/progress'
 import {
   BackLink,
   Badge,
+  Callout,
   CodeBlock,
   CommandBlock,
   CopyButton,
@@ -241,7 +242,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
       <FlowHeader
         to="/customize/branches"
         title="Ship through app branches"
-        problem="Without staging, one bad config change reaches every customer at once."
+        problem="BYOC CI/CD is deploying to a fleet of customer clouds — every release has to reach them all, and one bad change must not."
       />
 
       <PspSection
@@ -275,6 +276,20 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           label="branch.toml (the real config, comments stripped)"
           code={branchConfigAbridged}
         />
+        <Callout label="Create your own">
+          Add a <span className="mono">branch.toml</span> like this one to
+          your app config and sync — every push to the tracked git branch
+          then ships the fleet. Groups select installs by label, so a new
+          customer joins a wave the moment their install is labelled;
+          customers who need a different configuration get their own branch,
+          tracking a different git branch of the same repo.{' '}
+          <OutLink
+            href="https://docs.nuon.co/concepts/app-branches"
+            variant="plain"
+          >
+            App branches docs
+          </OutLink>
+        </Callout>
       </PspSection>
 
       <PspSection

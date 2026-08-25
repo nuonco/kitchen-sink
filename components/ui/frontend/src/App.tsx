@@ -8,6 +8,7 @@ import { Customize } from './views/Customize'
 import { Deployed } from './views/Deployed'
 import { Landing } from './views/Landing'
 import { Mapping } from './views/Mapping'
+import { Operations } from './views/Operations'
 import { Ops } from './views/Ops'
 import { TicTacToe } from './views/TicTacToe'
 
@@ -50,7 +51,9 @@ export default function App() {
 
   let view = <Landing config={config} />
   if (parts[0] === 'deployed') {
-    view = <Deployed config={config} section={parts[1]} />
+    view = <Deployed config={config} />
+  } else if (parts[0] === 'operations') {
+    view = <Operations />
   } else if (parts[0] === 'map') {
     view = <Mapping config={config} />
   } else if (parts[0] === 'day2') {

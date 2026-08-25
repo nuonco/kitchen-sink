@@ -1018,7 +1018,7 @@ body::before {
   background: var(--accent);
 }
 
-/* Small variant, used as the "Enable custom features" tile icon */
+/* Small variant, used as the SKU tile's live state readout */
 
 .switch--sm {
   width: 28px;
