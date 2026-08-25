@@ -30,8 +30,8 @@ export const pathSteps: PathStep[] = [
   {
     to: '/deployed',
     icon: 'magnifying-glass',
-    title: 'Read your live install',
-    desc: 'The install at a glance, live, and the architecture it demonstrates.',
+    title: 'See what Nuon deployed',
+    desc: 'The app running in this account, read live, and the architecture it demonstrates.',
     mode: 'live',
     phase: 'Read',
   },
