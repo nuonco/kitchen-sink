@@ -60,7 +60,7 @@ export function ModeBadge({ mode }: { mode: Mode }) {
  */
 export type SwitchStates = Record<string, { on: boolean; flipped?: boolean }>
 
-function PathRow({
+export function PathRow({
   step,
   switches,
   seen,

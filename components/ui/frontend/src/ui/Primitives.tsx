@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Loadable } from '../lib/api'
 import { useNavigate } from '../lib/router'
 import { iconPaths } from './icons'
@@ -86,6 +86,27 @@ export function BackLink({ to, children }: { to: string; children: ReactNode }) 
       <Icon name="arrow-left" />
       {children}
     </button>
+  )
+}
+
+/** A two-level trail for pages reached through an intermediate hub. */
+export function Crumbs({ items }: { items: { label: string; to: string }[] }) {
+  const navigate = useNavigate()
+  return (
+    <nav className="crumbs" aria-label="Breadcrumb">
+      {items.map((item, i) => (
+        <Fragment key={item.to}>
+          {i > 0 && (
+            <span className="crumbs__sep" aria-hidden="true">
+              /
+            </span>
+          )}
+          <button className="crumbs__link" onClick={() => navigate(item.to)}>
+            {item.label}
+          </button>
+        </Fragment>
+      ))}
+    </nav>
   )
 }
 
