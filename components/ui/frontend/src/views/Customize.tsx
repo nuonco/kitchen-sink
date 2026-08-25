@@ -813,7 +813,7 @@ function TriggersFlow({ config }: { config: UIConfig }) {
       <PspSection
         kind="solution"
         title="Every trigger this app declares"
-        aside="actions/*/nuon.toml · [[triggers]]"
+        aside="actions/*/nuon.toml · triggers.toml"
       >
         <div className="table-wrap">
           <table className="data">
@@ -852,6 +852,20 @@ function TriggersFlow({ config }: { config: UIConfig }) {
           label="actions/lifecycle_hooks/nuon.toml (the real file)"
           code={lifecycleHooksToml}
         />
+        <Callout label="Syncing this config into your own org">
+          <span className="mono">triggers.toml</span> turns GitHub pushes and
+          releases into runs. Its rules name an org-level webhook trigger,{' '}
+          <span className="mono">github-events</span>, that app config cannot
+          create — the sync fails without it. Create it once, or delete the
+          file.{' '}
+          <OutLink href="https://docs.nuon.co/guides/triggers" variant="plain">
+            Triggers docs
+          </OutLink>
+          <CommandBlock
+            label="once per org"
+            command="nuon triggers create github-events --preset github"
+          />
+        </Callout>
       </PspSection>
 
       <PspSection
