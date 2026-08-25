@@ -279,12 +279,14 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           code={branchConfigAbridged}
         />
         <Callout label="Create your own">
-          Add a <span className="mono">branch.toml</span> like this one to
-          your app config and sync — every push to the tracked git branch
-          then ships the fleet. Groups select installs by label, so a new
-          customer joins a wave the moment their install is labelled;
-          customers who need a different configuration get their own branch,
-          tracking a different git branch of the same repo.{' '}
+          Nothing to set up here — the app&rsquo;s first sync built this
+          branch from <span className="mono">branch.toml</span> (branches
+          upsert by name). In your own app, a{' '}
+          <span className="mono">branch.toml</span> and one sync is the whole
+          feature. Groups select installs by label, so a new customer joins a
+          wave the moment their install is labelled; customers who need a
+          different configuration get their own branch, tracking a different
+          git branch of the same repo.{' '}
           <OutLink
             href="https://docs.nuon.co/concepts/app-branches"
             variant="plain"
@@ -813,7 +815,7 @@ function TriggersFlow({ config }: { config: UIConfig }) {
       <PspSection
         kind="solution"
         title="Every trigger this app declares"
-        aside="actions/*/nuon.toml · triggers.toml"
+        aside="actions/*/nuon.toml · triggers.toml.example"
       >
         <div className="table-wrap">
           <table className="data">
@@ -852,18 +854,32 @@ function TriggersFlow({ config }: { config: UIConfig }) {
           label="actions/lifecycle_hooks/nuon.toml (the real file)"
           code={lifecycleHooksToml}
         />
-        <Callout label="Syncing this config into your own org">
-          <span className="mono">triggers.toml</span> turns GitHub pushes and
-          releases into runs. Its rules name an org-level webhook trigger,{' '}
+        <Callout label="Ship on git push">
+          The repo also ships rules that turn GitHub pushes and releases into
+          staged rollouts — disabled, as{' '}
+          <span className="mono">triggers.toml.example</span>, because they
+          name an org-level webhook trigger,{' '}
           <span className="mono">github-events</span>, that app config cannot
-          create — the sync fails without it. Create it once, or delete the
-          file.{' '}
+          create — a fresh sync would fail on it.{' '}
           <OutLink href="https://docs.nuon.co/guides/triggers" variant="plain">
             Triggers docs
           </OutLink>
           <CommandBlock
-            label="once per org"
+            label="1 · once per org — then point a GitHub webhook (push + release) on your repo at its ingress URL"
             command="nuon triggers create github-events --preset github"
+          />
+          <CommandBlock
+            label="2 · enable the rules and sync"
+            command={`git mv triggers.toml.example triggers.toml && nuon sync --app-id ${appIdOf(config)} --force`}
+            note={
+              <>
+                First point the rules&rsquo;{' '}
+                <span className="mono">$.repository.full_name</span> filters at
+                your repo. The file must stay enabled: rules live on the config
+                version that synced them, so a later sync without it retires
+                them.
+              </>
+            }
           />
         </Callout>
       </PspSection>
