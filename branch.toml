@@ -8,10 +8,9 @@
 # branch it tracks (Matt renamed it in the dashboard Aug 17 — a Nuon branch
 # named "main" tracking a different git branch confused everyone). Branches
 # upsert by name, so this file must always match the dashboard name or a sync
-# resurrects the old one. When ms/onboarding-edit merges to git main: update
-# `name`, `branch` below, and every `app_branch` in triggers.toml.example
-# together.
-name = "ms/onboarding-edit"
+# resurrects the old one. Keep `name`, `branch` below, and every `app_branch`
+# in triggers.toml.example in step when the tracked branch changes.
+name = "main"
 
 # Runs on each install after its deploy succeeds, in order. The health check is
 # read-only, so a fleet rollout leaves a per-install health transcript behind
@@ -32,7 +31,7 @@ post_deploy_runbooks = ["full-health-check"]
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "ms/onboarding-edit"
+branch    = "main"
 
 # Groups match the labels already set in install-configs/*.toml. Selectors are
 # preferred over install_names: they re-evaluate on every run, so a new customer

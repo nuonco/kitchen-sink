@@ -34,10 +34,9 @@ deploys as the app itself.
 3. **`branch.toml` must declare the repo the same way components do** — this
    repo resolves as public, so use `[public_repo]`. PR previews depend on the
    org's GitHub App covering the repo owner, not on this block.
-4. **Branch pinning:** `components/chart/nuon.toml`, `components/images/*.toml`
-   comments, and `branch.toml` currently track `ms/onboarding-edit`. When that
-   branch merges, flip each marked `branch =` back to `"main"` (grep for
-   "flip back").
+4. **Branch pinning:** `components/chart/nuon.toml`, the component tomls, and
+   `branch.toml` track `main`. If work moves to a feature branch, pin each
+   `branch =` to it and flip them all back to `"main"` when the branch merges.
 5. `nuon apps validate` requires an authenticated Nuon CLI and the app to exist.
    Without it, check TOML syntax and chart rendering only — note plain
    `helm template` on `components/chart` fails without `--set` overrides
