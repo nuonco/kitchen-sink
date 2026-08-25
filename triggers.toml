@@ -3,14 +3,21 @@
 # authentication) is created with the CLI, not here; these rules only reference
 # one by name.
 #
-# `github-events` already exists in this org — a GitHub-preset, HMAC-signed
-# trigger that is live and receiving deliveries:
+# PORTABILITY: every active rule below references a trigger named
+# `github-events` by name. Triggers are org-level resources created with the
+# CLI or dashboard — they cannot be declared in app config — and a rule that
+# references a trigger missing from your org fails the sync. If you are
+# syncing this app into your own org, either create the trigger first and
+# point a GitHub webhook (push + release events) on your fork at its ingress
+# URL:
 #
-#   nuon triggers list
-#   nuon triggers reveal-ingress-url trg6p1bjh899ee2en78zkzhvyi
-#   nuon triggers events tail --trigger trg6p1bjh899ee2en78zkzhvyi
+#   nuon triggers create github-events --preset github
+#   nuon triggers reveal-ingress-url <trigger-id>
+#   nuon triggers events tail --trigger <trigger-id>
 #
-# It is shared across the org's demo apps, so every rule below filters on
+# or delete this file before syncing. In Nuon's demo org the trigger already
+# exists, is live and receiving deliveries (`nuon triggers list`), and is
+# shared across the org's demo apps, so every rule below filters on
 # `$.repository.full_name` to only act on this repo's events.
 #
 # All rules target the app branch declared in branch.toml. NOTE (verified
@@ -134,9 +141,9 @@ app_branch = "ms/onboarding-edit"
 # app_branch = "ms/onboarding-edit"
 #
 # 2. A `runbook` target runs on one named install rather than a branch, which is
-#    how an alert becomes a diagnostic bundle. The `install` below is real
-#    ("Onboarding demo", inlpveun7eotfjad96chbu1vq7); what is missing is the
-#    trigger, so create it first and then uncomment:
+#    how an alert becomes a diagnostic bundle. `install` must name an install
+#    that exists in your org — set it to one of yours, create the trigger, and
+#    then uncomment:
 #
 #      nuon triggers create kitchen-sink-datadog --preset datadog
 #
@@ -154,4 +161,4 @@ app_branch = "ms/onboarding-edit"
 # [rules.target]
 # type    = "runbook"
 # runbook = "debug-bundle"
-# install = "Onboarding demo"
+# install = "<your-install-name>"
