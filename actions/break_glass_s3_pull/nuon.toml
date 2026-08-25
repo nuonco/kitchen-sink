@@ -16,12 +16,9 @@ type = "manual"
 name            = "pull-object"
 inline_contents = "./break_glass_s3_pull/script.sh"
 
-# Bucket and key mirror components/pulumi/main.go rather than reading the
-# component's outputs: demo_object_key only exists once pulumi_infra redeploys
-# with this change, and a bare output reference fails install render until then.
 [steps.env_vars]
-BUCKET = "kitchen-sink-{{.nuon.install.id}}"
-KEY    = "break-glass/demo.txt"
+BUCKET = "{{.nuon.components.pulumi_infra.outputs.bucket_name}}"
+KEY    = "{{.nuon.components.pulumi_infra.outputs.demo_object_key}}"
 
 [labels]
 is_break_glass = "true"
