@@ -95,7 +95,7 @@ export const pathSteps: PathStep[] = [
     to: '/audit-log',
     icon: 'toggle',
     title: 'SKU management',
-    desc: 'Use Nuon’s toggleable components to manage customers’ access to features.',
+    desc: 'Features that deploy only in the installs whose plan includes them.',
     mode: 'live',
     phase: 'Govern',
   },
