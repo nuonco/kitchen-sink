@@ -38,3 +38,4 @@ type = "http"
 url  = "https://app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}/livez"
 
 
+
