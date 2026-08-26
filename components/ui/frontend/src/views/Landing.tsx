@@ -347,7 +347,7 @@ export function Landing({ config }: { config: UIConfig }) {
           <p className="arrive__lede">
             This page is served by a container in an EKS cluster, in an AWS
             account, that Nuon provisioned and deployed into when you
-            installed.
+            installed the app.
           </p>
           {(config.install_id || config.cluster_name) && (
             <div className="row arrive__chips">
