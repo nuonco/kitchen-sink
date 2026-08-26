@@ -248,6 +248,33 @@ export const adhocActions: AdhocAction[] = [
     ],
     "labels": "is_break_glass = \"true\"",
     "breakGlass": true
+  },
+  {
+    "name": "app_healthcheck",
+    "timeout": "2m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": "runtime = \"container\" · sample = \"health-check\"",
+    "breakGlass": false
+  },
+  {
+    "name": "db_metrics",
+    "timeout": "5m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": "runtime = \"container\" · sample = \"db-metrics\"",
+    "breakGlass": false
+  },
+  {
+    "name": "rollout_status",
+    "timeout": "10m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": "runtime = \"container\" · sample = \"kubectl\"",
+    "breakGlass": false
   }
 ]
 
