@@ -1,0 +1,23 @@
+name               = "db_metrics"
+image              = "postgres:17-alpine"
+timeout            = "5m"
+enable_kube_config = false
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "query-metrics"
+inline_contents = "./db_metrics/metrics.sh"
+
+[steps.env_vars]
+PGHOST            = "{{.nuon.install_stack.outputs.custom_nested_stacks.rds_instance.outputs.DBEndpoint}}"
+PGPORT            = "{{.nuon.install_stack.outputs.custom_nested_stacks.rds_instance.outputs.DBPort}}"
+PGUSER            = "kitchensink"
+PGDATABASE        = "postgres"
+PGPASSWORD        = "temp-password-123"
+PGCONNECT_TIMEOUT = "10"
+
+[labels]
+runtime = "container"
+sample  = "db-metrics"
