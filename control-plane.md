@@ -40,7 +40,7 @@ Deployed into AWS account `{{ $accountId }}` ({{ $region }}) by Nuon, from [one 
 
 <div style="padding-top:1rem;"></div>
 
-Creating this install ran these steps, in order. The checkmarks are live.
+Creating this install ran these steps, in order.
 
 <div style="display:flex;flex-direction:column;gap:10px;margin:18px 0 8px;">
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
