@@ -75,7 +75,7 @@ Nobody logged into a server, and the same sequence repeats identically for the n
 
 ## A shippable Nuon app is three parts
 
-Kitchen Sink uses a lot of the platform because it exists to demo it. You don't need any of that to ship — you need three things:
+Kitchen Sink uses a lot of the platform because it exists to demo it. Shipping your own app takes three things:
 
 **A sandbox — where it runs.** One Terraform-provisioned foundation, created fresh in each customer's account: here an EKS cluster and a dedicated VPC (`{{ $vpcId }}`) in `{{ $accountId }}`. You pick a sandbox; you don't write one.
 
