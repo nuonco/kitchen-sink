@@ -346,8 +346,8 @@ export function Landing({ config }: { config: UIConfig }) {
           <h1>You&rsquo;re inside a BYOC install.</h1>
           <p className="arrive__lede">
             This page is served by a container in an EKS cluster, in an AWS
-            account, that Nuon then provisioned and deployed into when you
-            installed the app.
+            account, that Nuon provisioned and deployed into when you
+            installed.
           </p>
           {(config.install_id || config.cluster_name) && (
             <div className="row arrive__chips">
