@@ -1,0 +1,19 @@
+#:schema https://api.nuon.co/v1/general/config-schema?type=install
+name = "lenovo"
+approval_option = "approve-all"
+
+[labels]
+env = "staging"
+
+[aws_account]
+region = "us-west-2"
+
+[[inputs]]
+debug_mode = "false"
+
+[[inputs]]
+domain = "nuon.run"
+
+[component_toggles]
+audit_log_exporter = false
+tictactoe = false
