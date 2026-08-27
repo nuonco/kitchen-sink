@@ -1,0 +1,32 @@
+# action
+# dig/nslookup gate in front of the certificate component: ACM validates
+# *.<install domain> over DNS, so this blocks the deploy until the sandbox's
+# public zone is delegated and answering, instead of leaving a certificate
+# stuck in PENDING_VALIDATION.
+#
+name = "dns_check"
+image = "internetsystemsconsortium/bind9:9.20"
+timeout = "5m"
+enable_kube_config = false
+
+[[triggers]]
+type = "manual"
+
+[[triggers]]
+type = "pre-deploy-component"
+component_name = "certificate"
+
+[[steps]]
+name = "resolve-public-zone"
+inline_contents = "./dns_check/dns_check.sh"
+
+[steps.env_vars]
+DOMAIN = "{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
+APP_HOST = "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
+RESOLVER = "1.1.1.1"
+ATTEMPTS = "10"
+SLEEP_SECONDS = "15"
+
+[labels]
+runtime = "container"
+sample = "dns-gate"
