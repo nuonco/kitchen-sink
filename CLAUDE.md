@@ -25,6 +25,11 @@ deploys as the app itself.
    to Nuon's public ECR gallery by `.github/workflows/build-images.yaml`
    (shared org OIDC role — no secrets), which then stamps the `tag =` lines in
    `components/images/*.toml`; that stamp commit starts the staged rollout.
+   The stamp arrives as an auto-merge PR from a `ci/stamp-*` branch, not a
+   direct push — `main` requires signed commits and a pull request, and neither
+   is bypassable by `GITHUB_TOKEN` (see `scripts/stamp-image-tags.sh`). **A
+   merged source change does not roll out until its stamp PR is approved**;
+   until then the config stays pinned to the previous tag.
    `scripts/build-and-push*.sh` remain as the manual fallback (need docker +
    AWS creds).
 2. **Component health probes run on the RUNNER, outside the cluster.**

@@ -6,12 +6,18 @@ name: Build and publish images
 # components/images/*.toml — plus the chart's `image_stamp` value, so the
 # chart component's config changes too and the rollout redeploys it (the
 # chart bakes image tags at render time; without this it's classified
-# "unchanged" and skipped, serving stale images) — and pushes that commit,
-# which is what triggers the staged Nuon rollout (via the push rule in
-# triggers.toml.example, when enabled in the org — see its header). The
-# stamp commit only touches components/images/ and components/chart/nuon.toml,
-# both outside this workflow's path filters, so it cannot retrigger this
-# workflow.
+# "unchanged" and skipped, serving stale images) — and lands that commit on
+# the tracked branch, which is what triggers the staged Nuon rollout (via the
+# push rule in triggers.toml.example, when enabled in the org — see its
+# header). The stamp commit only touches components/images/ and
+# components/chart/nuon.toml, both outside this workflow's path filters, so it
+# cannot retrigger this workflow.
+#
+# The stamp cannot push to main directly: the branch requires signed commits
+# (no bypass list exists for that rule) and requires changes to arrive through
+# a pull request (GITHUB_TOKEN cannot be a bypass actor). See
+# scripts/stamp-image-tags.sh, which creates a GitHub-signed commit via the API
+# and opens an auto-merge PR instead.
 
 on:
   push:
@@ -81,19 +87,34 @@ jobs:
   stamp:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref_name }}
 
       - name: Pin new image tags in component configs
+        id: pin
         run: |
           TAG="sha-${GITHUB_SHA::7}"
           sed -i "s/^tag       = \".*\"/tag       = \"${TAG}\"/" components/images/api.toml components/images/ui.toml
           sed -i "s/^image_stamp = \".*\"/image_stamp = \"${TAG}\"/" components/chart/nuon.toml
-          git diff --quiet && echo "tags unchanged" && exit 0
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add components/images/api.toml components/images/ui.toml components/chart/nuon.toml
-          git commit -m "chore: stamp image tags to ${TAG}"
-          git push
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          if git diff --quiet; then
+            echo "tags unchanged"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "base_oid=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open signed stamp PR
+        if: steps.pin.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.pin.outputs.tag }}
+          BASE_OID: ${{ steps.pin.outputs.base_oid }}
+          BASE_BRANCH: ${{ github.ref_name }}
+        run: bash scripts/stamp-image-tags.sh
