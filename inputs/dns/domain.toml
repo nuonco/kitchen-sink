@@ -1,4 +1,4 @@
-name         = "domain"
+name         = "domainabc"
 display_name = "Root Domain"
 description  = "Root domain for DNS records"
 group        = "dns"
