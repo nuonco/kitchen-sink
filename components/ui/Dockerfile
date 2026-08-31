@@ -34,14 +34,10 @@ COPY --from=frontend /build/frontend/dist ./frontend/dist
 # -a rebuilds every package instead of trusting the build cache.
 RUN CGO_ENABLED=0 go build -a -trimpath -ldflags="-s -w" -o /out/ui .
 
-FROM alpine:3.20
-
-RUN apk add --no-cache ca-certificates \
-    && addgroup -S app \
-    && adduser -S -G app app
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
 
 COPY --from=server /out/ui /bin/ui
 
-USER app
+USER nonroot:nonroot
 EXPOSE 3000
 CMD ["/bin/ui"]
