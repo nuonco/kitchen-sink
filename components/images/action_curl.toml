@@ -3,8 +3,16 @@ type     = "container_image"
 var_name = "action_curl"
 
 [public]
-image_url = "curlimages/curl"
-tag       = "8.11.1"
+image_url = "cgr.dev/chainguard/curl"
+tag       = "sha256:6b5f3fa996ac80e85dc783253a22a97be4ed9e4362765621ffb0b00b0fdcb889"
+
+[verification]
+require_signature = true
+
+[[verification.authorities]]
+type    = "sigstore_keyless"
+issuer  = "https://token.actions.githubusercontent.com"
+subject = "https://github.com/chainguard-images/images/.github/workflows/release.yaml@refs/heads/main"
 
 [labels]
 is_image = "true"
