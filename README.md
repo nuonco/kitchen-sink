@@ -9,7 +9,7 @@ A test application showcasing all features of the Nuon platform including Helm c
 | **Helm Chart** | Deploys API, UI, and Worker pods to EKS |
 | **Pulumi Infrastructure** | Creates an S3 bucket with encryption and versioning |
 | **Container Images** | CI-built images from public ECR and GAR, including semver update policies |
-| **Actions** | Script and container-based health checks, debugging, DNS gates, and lifecycle hooks |
+| **Actions** | Script and container-based health checks, debugging, DNS gates, lifecycle hooks, break-glass demos — see [`actions/`](./actions/README.md) |
 | **Policies** | OPA policies for security and compliance |
 | **Runbooks** | Multi-step operational procedures — see [`runbooks/`](./runbooks/README.md) |
 | **Component Health** | Live per-component health with probes — `[health]` in `components/chart/nuon.toml` and `components/alb.toml` |
