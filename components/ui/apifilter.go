@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-const redactedValue = "<redacted by the ui proxy>"
+const redactedValue = "<redacted by the ui proxy>a"
 
 // maxFilterBody caps how much of an API response is buffered for filtering. A
 // response bigger than this is refused rather than forwarded unfiltered.

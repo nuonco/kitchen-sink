@@ -1,5 +1,5 @@
 name         = "api_token"
-display_name = "API Token"
+display_name = "API Token abc"
 description  = "Token for external API integration"
 group        = "compute"
 type         = "string"
