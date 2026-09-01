@@ -1,0 +1,14 @@
+name     = "action_dns_check"
+type     = "container_image"
+var_name = "action_dns_check"
+
+# CI publishes semver tags such as 1.0.1 from git tags shaped
+# action-dns-check/v1.0.1. Nuon resolves the highest matching patch release each
+# time this component builds; it does not poll the registry in the background.
+[public]
+image_url     = "us-west1-docker.pkg.dev/nuon-public/kitchen-sink-dns-check/kitchen-sink-dns-check"
+update_policy = "~1.0.0"
+
+[labels]
+is_image = "true"
+purpose  = "container-action"

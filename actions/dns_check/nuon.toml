@@ -1,11 +1,10 @@
 # action
-# dig/nslookup gate in front of the certificate component: ACM validates
-# *.<install domain> over DNS, so this blocks the deploy until the sandbox's
-# public zone is delegated and answering, instead of leaving a certificate
-# stuck in PENDING_VALIDATION.
+# Custom-image DNS check: compare sandbox nameservers to what a public resolver
+# returns, and gate the certificate component until they match. ACM validates
+# *.<install domain> over DNS, so a mismatch would leave it PENDING_VALIDATION.
 #
 name = "dns_check"
-image = "internetsystemsconsortium/bind9:9.20"
+image = "{{.nuon.components.action_dns_check.outputs.image.ref}}"
 timeout = "5m"
 enable_kube_config = false
 
@@ -23,6 +22,7 @@ inline_contents = "./dns_check/dns_check.sh"
 [steps.env_vars]
 DOMAIN = "{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
 APP_HOST = "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
+EXPECTED_NS = "{{ range $ns := .nuon.install.sandbox.outputs.nuon_dns.public_domain.nameservers }}{{ $ns }} {{ end }}"
 RESOLVER = "1.1.1.1"
 ATTEMPTS = "10"
 SLEEP_SECONDS = "15"
