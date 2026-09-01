@@ -13,7 +13,7 @@ script inside that image instead of the runner's shell.
 | [`app_healthcheck`](./app_healthcheck/nuon.toml) | manual | curls the public endpoint from the `action_curl` image component |
 | [`db_metrics`](./db_metrics/nuon.toml) | manual | queries RDS metrics from a `postgres` container |
 | [`rollout_status`](./rollout_status/nuon.toml) | manual | kubectl rollout status from an `alpine/k8s` container |
-| [`dns_check`](./dns_check/nuon.toml) | pre-deploy of `certificate`, manual | dig gate from a `bind9` container: blocks the deploy until the public zone answers |
+| [`dns_check`](./dns_check/nuon.toml) | pre-deploy of `certificate`, manual | DNS gate from the CI-built `action_dns_check` image: blocks the deploy until the public zone answers |
 | [`break_glass_remediation`](./break_glass_remediation/nuon.toml) | manual | force-rolls the app's workloads under the break-glass role |
 | [`break_glass_s3_pull`](./break_glass_s3_pull/nuon.toml) | manual | reads the demo object the bucket policy hides from everyone else |
 | [`break_glass_kubectl`](./break_glass_kubectl/nuon.toml) | role-enabled, role-disabled, manual | creates/deletes an EKS access entry for a customer principal |
