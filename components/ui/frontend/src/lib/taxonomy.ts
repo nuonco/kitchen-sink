@@ -52,6 +52,14 @@ export const pathSteps: PathStep[] = [
     phase: 'Ship',
   },
   {
+    to: '/customize/agent',
+    icon: 'lightning',
+    title: 'Connect your coding agent',
+    desc: 'Nuon’s MCP server in Claude Code, Cursor, or Amp, and ten things to ask it about this install.',
+    mode: 'guide',
+    phase: 'Ship',
+  },
+  {
     to: '/customize/health',
     icon: 'heartbeat',
     title: 'Watch component health',
