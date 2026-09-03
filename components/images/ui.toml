@@ -1,5 +1,6 @@
 # container-image
-# Pre-built image from Nuon's public ECR gallery. Source lives in
+# Pre-built image. On this branch it comes from an ECR Public repository in
+# the sandbox-ms account (built and pushed by hand); main pulls from Nuon's gallery. Source lives in
 # components/ui; pushes touching it are built and published by
 # .github/workflows/build-images.yaml, which then stamps the tag below — that
 # stamp commit is what starts the staged rollout.
@@ -10,8 +11,8 @@ var_name = "img_ui"
 max_auto_retries = 5
 
 [public]
-image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-ui"
-tag       = "sha-45200f2"
+image_url = "public.ecr.aws/w0p0k2z9/kitchen-sink-ui"
+tag       = "sha-f35333c"
 
 [labels]
 is_image = "true"
