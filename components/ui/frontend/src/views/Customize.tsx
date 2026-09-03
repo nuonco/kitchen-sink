@@ -3,6 +3,7 @@ import {
   countReady,
   hasAuditLogExporter,
   hasTicTacToe,
+  imageTag,
   useIntrospect,
   useIntrospectPoll,
   type NamespaceResponse,
@@ -144,13 +145,6 @@ function podAge(ts?: string): string {
   const hours = Math.floor(minutes / 60)
   if (hours < 48) return `${hours}h ${minutes % 60}m`
   return `${Math.floor(hours / 24)}d`
-}
-
-function imageTag(image?: string): string {
-  if (!image) return '—'
-  const tail = image.split('/').pop() ?? image
-  const i = tail.lastIndexOf(':')
-  return i === -1 ? 'latest' : tail.slice(i + 1)
 }
 
 function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {

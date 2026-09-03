@@ -2,11 +2,12 @@ import { useEffect, useState, type ReactNode } from 'react'
 import {
   countReady,
   hasAuditLogExporter,
+  runningImageTags,
   useIntrospectPoll,
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import { branchName, installGroups } from '../lib/config-data.gen'
+import { branchName, installGroups, repoName } from '../lib/config-data.gen'
 import { seenSteps } from '../lib/progress'
 import { agentPrompt } from '../lib/prompts'
 import { useNavigate } from '../lib/router'
@@ -15,12 +16,14 @@ import { PixelCheck } from '../ui/CapabilityGrid'
 import { CopyButton, Icon, OutLink } from '../ui/Primitives'
 
 /* ============================================================
-   The landing is a guided walkthrough. A first-time visitor has just
-   installed and lands on the arrival moment; each step puts one idea on
-   screen and hands them a single "next". The tour ends on the deployed
-   step's big CTA into the customize page ('explore'), which is also what
-   returning visitors get: progress is remembered in localStorage, and
-   "Skip the tour" jumps straight there.
+   The landing is "Nuon in 5 minutes": a guided walkthrough. A first-time
+   visitor has just installed and lands on the arrival moment; each beat
+   puts one idea on screen, points it at something real in this install,
+   and hands them a single "next". Five beats: sandbox, components,
+   runner, what got deployed, and the branch it all ships through. The
+   tour ends on the branch beat's big CTA into the customize page
+   ('explore'), which is also what returning visitors get: progress is
+   remembered in localStorage, and "Skip the tour" jumps straight there.
    ============================================================ */
 
 const steps = [
@@ -29,8 +32,12 @@ const steps = [
   'components',
   'runner',
   'deployed',
+  'branch',
   'explore',
 ] as const
+
+const WALKTHROUGH_URL =
+  'https://docs.nuon.co/get-started/app-branches-walkthrough'
 
 type Step = (typeof steps)[number]
 
@@ -64,12 +71,13 @@ function rememberStep(step: Step) {
    The golden-path diagram, revealed one part at a time. Parts the tour has
    not reached yet render as ghosts, so each step stays one idea while still
    hinting at the shape of the whole. Revealed parts are clickable and jump
-   the tour to that part's step.
+   the tour to that part's step. The fourth part sits outside the customer's
+   account: the app branch everything inside it ships from.
    ============================================================ */
 
-type PartKey = 'sandbox' | 'components' | 'runner'
+type PartKey = 'sandbox' | 'components' | 'runner' | 'branch'
 
-const partOrder: PartKey[] = ['sandbox', 'components', 'runner']
+const partOrder: PartKey[] = ['sandbox', 'components', 'runner', 'branch']
 
 function GoldenPath({
   stage,
@@ -86,6 +94,8 @@ function GoldenPath({
     if (part === stage) return 'arch__node arch__node--active'
     return 'arch__node'
   }
+
+  const fleetGhost = revealed < partOrder.indexOf('branch')
 
   return (
     <div className="arch">
@@ -132,6 +142,24 @@ function GoldenPath({
             <span className="arch__hint">builds &amp; deploys here</span>
           </button>
         </div>
+      </div>
+      <div className={fleetGhost ? 'arch__fleet arch__fleet--ghost' : 'arch__fleet'}>
+        <div className="arch__edge arch__edge--up" aria-hidden="true">
+          <span className="arch__edge-line" />
+          <span className="arch__edge-label">shipped from</span>
+        </div>
+        <button
+          type="button"
+          className={`${nodeClass('branch')} arch__node--fleet`}
+          disabled={fleetGhost}
+          onClick={() => onPick('branch')}
+        >
+          <span className="arch__num">04</span>
+          <span className="arch__name">Branch {branchName}</span>
+          <span className="arch__hint">
+            {installGroups.map((g) => g.name).join(' → ')}
+          </span>
+        </button>
       </div>
     </div>
   )
@@ -312,6 +340,7 @@ export function Landing({ config }: { config: UIConfig }) {
   const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
   const podSummary =
     ns.state === 'ok' ? `${countReady(pods)} / ${pods.length}` : undefined
+  const imageTags = ns.state === 'ok' ? runningImageTags(pods) : []
 
   const idx = steps.indexOf(step)
   const go = (next: Step) => {
@@ -343,11 +372,13 @@ export function Landing({ config }: { config: UIConfig }) {
     return (
       <div className="tour__step" key="arrive">
         <div className="arrive">
+          <span className="tour__progress">Nuon in 5 minutes</span>
           <h1>You&rsquo;re inside a BYOC install.</h1>
           <p className="arrive__lede">
             This page is served by a container in an EKS cluster, in an AWS
             account, that Nuon provisioned and deployed into when you
-            installed.
+            installed. Five short stops explain how it got here and how it
+            ships.
           </p>
           {(config.install_id || config.cluster_name) && (
             <div className="row arrive__chips">
@@ -369,7 +400,7 @@ export function Landing({ config }: { config: UIConfig }) {
           )}
           <div className="arrive__actions">
             <button className="btn btn--primary" onClick={next}>
-              Show me around <Icon name="arrow-right" />
+              Show me around (5 min) <Icon name="arrow-right" />
             </button>
             <button className="tour__skip" onClick={skip}>
               Skip the tour <Icon name="arrow-up-right" />
@@ -558,7 +589,7 @@ export function Landing({ config }: { config: UIConfig }) {
   const chrome = (
     <div className="tour__topline">
       <span className="tour__progress">
-        step {tourIdx + 1} of {tourSteps.length}
+        minute {tourIdx + 1} of {tourSteps.length}
       </span>
       <span className="tour__dots">
         {tourSteps.map((s, i) => (
@@ -615,7 +646,8 @@ export function Landing({ config }: { config: UIConfig }) {
               The footprint Nuon creates in your customer&rsquo;s cloud
               account. Here it&rsquo;s{' '}
               <span className="mono">aws-eks-sandbox</span>: a VPC, an EKS
-              cluster, and a public DNS zone.
+              cluster, a public DNS zone, and a runner. That is the whole
+              list, and deprovisioning the install takes it back down.
             </>,
           )}
           <GoldenPath stage="sandbox" onPick={(p) => go(p)} />
@@ -645,6 +677,11 @@ export function Landing({ config }: { config: UIConfig }) {
               <span className="chip">
                 {podSummary} pods ready in {namespace}
               </span>
+              {imageTags.length > 0 && (
+                <span className="chip" title="Image tags running right now, read from the cluster">
+                  running {imageTags.join(' · ')}
+                </span>
+              )}
             </div>
           )}
           {stepActions()}
@@ -656,9 +693,10 @@ export function Landing({ config }: { config: UIConfig }) {
           {goldenHeader(
             'The runner does the deploying.',
             <>
-              An agent Nuon runs inside the account. Every build and deploy
-              happens from in there, so your customer&rsquo;s credentials never
-              leave their cloud.
+              A small compute group Nuon runs inside the account. Every build
+              and deploy happens from in there, so your customer&rsquo;s
+              credentials never leave their cloud. It calls out; Nuon never
+              needs inbound access.
             </>,
           )}
           <GoldenPath stage="runner" onPick={(p) => go(p)} />
@@ -673,21 +711,64 @@ export function Landing({ config }: { config: UIConfig }) {
             <p className="step-header__lede">
               One config deployed this entire app &mdash; the API, the worker,
               the page you&rsquo;re reading &mdash; into this AWS account, and
-              Nuon operates it from inside. Your app runs in any
+              Nuon operates it from inside. Every config version this install
+              has ever run is on record. Your app runs in any
               customer&rsquo;s cloud the same way.
             </p>
           </header>
-          {podSummary && (
-            <div className="row">
+          <div className="row">
+            {podSummary && (
               <span className="chip">
                 {podSummary} pods ready in {namespace}, read from the cluster
               </span>
-            </div>
+            )}
+            {config.links.versions && (
+              <OutLink href={config.links.versions} variant="plain">
+                config versions
+              </OutLink>
+            )}
+          </div>
+          {stepActions()}
+        </>
+      )}
+
+      {step === 'branch' && (
+        <>
+          {goldenHeader(
+            'It ships through a branch.',
+            <>
+              This install belongs to the{' '}
+              <span className="mono">{branchName}</span> branch of{' '}
+              <span className="mono">{repoName}</span>. A push builds the
+              config at that commit and rolls it out group by group,{' '}
+              {installGroups.map((g) => g.name).join(', then ')}, with a
+              person approving each group&rsquo;s plan before it deploys.
+              One branch is fine; groups are for when customers differ.
+            </>,
           )}
+          <GoldenPath stage="branch" onPick={(p) => go(p)} />
+          <div className="row" style={{ marginTop: 16 }}>
+            <span className="chip">branch {branchName}</span>
+            {installGroups.map((g) => (
+              <span className="chip" key={g.name} title={g.selector}>
+                {g.order}. {g.name}
+              </span>
+            ))}
+          </div>
+          <div className="row" style={{ marginTop: 12 }}>
+            {config.links.branches && (
+              <OutLink href={config.links.branches} variant="plain">
+                this branch in Nuon
+              </OutLink>
+            )}
+            <OutLink href={WALKTHROUGH_URL} variant="plain">
+              do it yourself: the app-branches walkthrough
+            </OutLink>
+          </div>
           <div className="cta-block">
             <span className="cta-block__kicker">
-              next: ship a change &middot; flip a SKU &middot; run a health
-              check
+              next: connect your coding agent &middot; ship a change &middot;
+              run a health check
             </span>
             <button className="btn btn--primary btn--xl" onClick={next}>
               Customize the Kitchen Sink <Icon name="arrow-right" />
