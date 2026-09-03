@@ -30,15 +30,11 @@ RUN CGO_ENABLED=0 go build -a -trimpath -ldflags="-s -w" -o /out/api . \
     && test -x /out/api \
     && test -x /out/worker
 
-FROM alpine:3.20
+FROM gcr.io/distroless/static-debian12:nonroot@sha256:afa5c872c891853ca7fcf1f12c3edb23f7eeef36189728842dd51042ff57f7ab
 
-RUN apk add --no-cache ca-certificates
-
-# Deliberately still root, unlike the ui image: this service reads the mounted
-# service account token to reach the Kubernetes API, and that is behaviour there
-# is no way to verify outside a cluster. Worth revisiting with a real install.
 COPY --from=builder /out/api /bin/api
 COPY --from=builder /out/worker /bin/worker
 
+USER nonroot:nonroot
 EXPOSE 8080
 CMD ["/bin/api"]
