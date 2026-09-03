@@ -50,7 +50,6 @@ const installGroups = (branch.install_groups ?? [])
     name: g.name,
     order: g.order,
     selector: selectorText(g.label_selector),
-    preview: Boolean(g.use_for_previews),
   }))
 
 // The real file with its comments stripped: still the real config, abridged.
@@ -257,7 +256,6 @@ export interface InstallGroup {
   name: string
   order: number
   selector: string
-  preview: boolean
 }
 
 export interface RunbookStep {

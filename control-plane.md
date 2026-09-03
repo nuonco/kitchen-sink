@@ -40,7 +40,7 @@ Deployed into AWS account `{{ $accountId }}` ({{ $region }}) by Nuon, from [one 
 
 <div style="padding-top:1rem;"></div>
 
-Creating this install ran these steps, in order. The checkmarks are live.
+Creating this install ran these steps, in order.
 
 <div style="display:flex;flex-direction:column;gap:10px;margin:18px 0 8px;">
 <div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
@@ -75,7 +75,7 @@ Nobody logged into a server, and the same sequence repeats identically for the n
 
 ## A shippable Nuon app is three parts
 
-Kitchen Sink uses a lot of the platform because it exists to demo it. You don't need any of that to ship — you need three things:
+Kitchen Sink uses a lot of the platform because it exists to demo it. Shipping your own app takes three things:
 
 **A sandbox — where it runs.** One Terraform-provisioned foundation, created fresh in each customer's account: here an EKS cluster and a dedicated VPC (`{{ $vpcId }}`) in `{{ $accountId }}`. You pick a sandbox; you don't write one.
 
@@ -93,7 +93,13 @@ Everything on the next tab is optional until a customer makes it necessary.
 
 ## When a customer asks for more
 
-Reach for these when a real request makes them necessary — not before. Each is a few lines of config in the same repo.
+Two things first, because they change how you work with everything else on this page.
+
+**"Can we try the new version first?"** This install ships through the `main` [app branch](https://github.com/nuonco/kitchen-sink/blob/main/branch.toml): a push rolls the config out group by group — staging, then customers, then enterprise — with a person approving each group's plan before it deploys. A pilot customer sees a change before the fleet does, and one bad change stops at the first wave.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} The [branches page inside the app](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/customize/branches) shows the groups and the commands that ship to them.{{ end }}
+
+**"Can my coding agent do this?"** Yes. `nuon agents mcp setup --platform claude-code` connects Nuon's MCP server to Claude Code (or Cursor, or Amp) through the CLI; `nuon agents context` verifies it.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} [Ten things to ask it about this install](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/customize/agent), with the ids filled in.{{ end }}
+
+Reach for the rest when a real request makes them necessary — not before. Each is a few lines of config in the same repo.
 
 <!-- Dashboard deep links below take the org id from the render state (nuon.org.id), so they work under whichever org this config is installed in. -->
 
@@ -108,8 +114,6 @@ Reach for these when a real request makes them necessary — not before. Each is
 **"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/{{ .nuon.org.id }}/installs/{{ .nuon.install.id }}/runbooks): an operational procedure as a reviewable, repeatable, parameterized workflow anyone on the team can run against an install.
 
 **"Do we have to click a button every time?"** Triggers run actions and runbooks on a schedule or off lifecycle events — post-provision, before and after a deploy — so routine operations just happen.
-
-**"Can we try the new version first?"** [App branches](https://github.com/nuonco/kitchen-sink) let one install track a different branch of the config repo, so a pilot customer gets the change before the fleet does.
 
 ---
 

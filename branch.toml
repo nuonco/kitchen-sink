@@ -1,20 +1,22 @@
 # app branch
-# Connects one git branch to this app: a push fetches the config at that commit,
-# builds what changed, then rolls it across the install groups below in order,
-# pausing for an approval on each group's plan.
 #
-# `name` is the branch's identity in Nuon and is what `nuon sync --branch` and
-# the trigger rules (triggers.toml.example) refer to. Named after the git
-# branch it tracks (Matt renamed it in the dashboard Aug 17 — a Nuon branch
-# named "main" tracking a different git branch confused everyone). Branches
-# upsert by name, so this file must always match the dashboard name or a sync
-# resurrects the old one. Keep `name`, `branch` below, and every `app_branch`
-# in triggers.toml.example in step when the tracked branch changes.
+# This file is how the app ships. It connects one git branch of this repo to
+# the app: a push to that branch (or `nuon sync --branch main` from a clone)
+# fetches the config at that commit, builds what changed, and rolls it across
+# the install groups below in order, holding for a person's approval on each
+# group's plan before that group deploys.
+#
+# `name` is the branch's identity in Nuon. It is what `nuon sync --branch`,
+# `nuon apps branches runs --branch-id`, and the trigger rules in
+# triggers.toml.example refer to, and it is named after the git branch it
+# tracks. Branches upsert by name, so keep `name`, the `branch` below, and every
+# `app_branch` in triggers.toml.example in step if the tracked branch changes.
+#
+# Reference: https://docs.nuon.co/config-ref/branch
 name = "main"
 
-# Runs on each install after its deploy succeeds, in order. The health check is
-# read-only, so a fleet rollout leaves a per-install health transcript behind
-# without applying anything extra.
+# Runbooks to run on each install, in order, after its deploy succeeds. The
+# health check is read-only.
 post_deploy_runbooks = ["full-health-check"]
 
 # Same repo, same form the components use. `[public_repo]` rather than
@@ -33,14 +35,12 @@ repo      = "nuonco/kitchen-sink"
 directory = "."
 branch    = "main"
 
-# Groups match the labels already set in install-configs/*.toml. Selectors are
-# preferred over install_names: they re-evaluate on every run, so a new customer
-# install joins the right wave the moment it is labelled.
+# Groups match the labels set in install-configs/*.toml. Selectors are preferred
+# over install_names: they re-evaluate on every run, so a new customer install
+# joins the right wave the moment it is labelled. Lower `order` deploys first.
 [[install_groups]]
 name  = "staging"
 order = 1
-# Plan-only preview runs plan against staging rather than a customer group.
-use_for_previews = true
 
 [install_groups.label_selector]
 env = "staging"
