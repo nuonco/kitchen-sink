@@ -9,7 +9,7 @@ import {
 } from '../lib/api'
 import { branchName, installGroups, repoName } from '../lib/config-data.gen'
 import { seenSteps } from '../lib/progress'
-import { agentPrompt } from '../lib/prompts'
+import { agentPrompt, setup, useCases } from '../lib/prompts'
 import { useNavigate } from '../lib/router'
 import { pathSteps } from '../lib/taxonomy'
 import { PixelCheck } from '../ui/CapabilityGrid'
@@ -209,7 +209,20 @@ function cliGroups(install: string, app: string): Array<{ name: string; rows: Cl
   return [
     {
       name: 'Once',
-      rows: [{ cmd: 'nuon auth login', note: 'Keeps a session in ~/.nuon. Skip if you already have one.' }],
+      rows: [
+        { cmd: 'nuon auth login', note: 'Keeps a session in ~/.nuon. Skip if you already have one.' },
+        {
+          cmd: setup.claudeCode,
+          note: (
+            <>
+              Connects Nuon&rsquo;s MCP server to Claude Code through this CLI
+              (also <span className="mono">cursor</span>, <span className="mono">amp</span>).
+              Run it from your clone&rsquo;s root.
+            </>
+          ),
+        },
+        { cmd: setup.verify, note: 'Prints your org, app, and install ids and the tools your agent gets.' },
+      ],
     },
     {
       name: 'Inspect this install',
@@ -434,21 +447,28 @@ export function Landing({ config }: { config: UIConfig }) {
 
         <div className="choices">
           <section className="choice">
-            <h2 className="choice__title">Paste into your coding agent</h2>
+            <h2 className="choice__title">Connect your coding agent</h2>
             <p className="choice__desc">
-              One prompt covers the whole checklist, ids filled in. Nothing
-              mutates without your yes.
+              One command gives Claude Code, Cursor, or Amp Nuon&rsquo;s MCP
+              server through the CLI you already have. Then ask it about this
+              install; nothing mutates without your yes.
             </p>
+            <pre className="cmd__pre choice__cmd">{setup.claudeCode}</pre>
             <div className="choice__actions">
               <CopyButton
-                text={agentPrompt(install, app)}
-                label="Copy the agent prompt"
+                text={setup.claudeCode}
+                label="Copy the setup command"
                 doneLabel="Copied"
                 big
               />
               <a href="#/customize/agent">
-                Read it first <Icon name="arrow-right" />
+                Ten things to ask it <Icon name="arrow-right" />
               </a>
+              <CopyButton
+                text={agentPrompt(install, app)}
+                label="or copy the whole-tour prompt"
+                doneLabel="Copied"
+              />
             </div>
           </section>
 
@@ -478,6 +498,30 @@ export function Landing({ config }: { config: UIConfig }) {
         </div>
 
         {cliOpen && <CliPanel install={install} app={app} />}
+
+        <section className="section section--hub">
+          <div className="section__head">
+            <h2 className="section__title">Ask your agent</h2>
+            <div className="subtext muted">
+              three of the ten use cases on the agent page, read-only
+            </div>
+          </div>
+          <div className="nods">
+            {useCases
+              .filter((u) => !u.write)
+              .slice(0, 3)
+              .map((u) => (
+                <GoLink to="/customize/agent" className="nod" key={u.id}>
+                  <span className="nod__top">
+                    <span className="nod__title">&ldquo;{u.title}&rdquo;</span>
+                  </span>
+                  <span className="nod__desc">
+                    {u.tools.join(' → ')}. {u.answer}
+                  </span>
+                </GoLink>
+              ))}
+          </div>
+        </section>
 
         <section className="section section--hub">
           <div className="section__head">

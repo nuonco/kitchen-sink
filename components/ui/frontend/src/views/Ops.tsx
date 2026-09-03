@@ -5,9 +5,11 @@ import {
   roles,
   runbooks,
 } from '../lib/config-data.gen'
+import { setup, useCasePrompt, useCases } from '../lib/prompts'
 import {
   BackLink,
   CommandBlock,
+  CopyButton,
   Mono,
   OutLink,
   Section,
@@ -47,29 +49,58 @@ export function Ops({ config }: { config: UIConfig }) {
       <Section title="App branches" aside="branch.toml">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           Every push to <Mono>{branchName}</Mono> rolls out staging &rarr;
-          customers &rarr; enterprise, holding for approval per group.
+          customers &rarr; enterprise, holding for a person&rsquo;s approval
+          per group.
         </p>
         <CommandBlock
           label="edit any file in your clone, then"
-          command={`nuon sync --app-id ${app} --force --branch ${branchName}`}
+          command={`nuon sync --app-id ${app} --force --branch ${branchName} --no-wait --output agent`}
           note={
             <>
               Uncommitted files count. <Mono>--preview</Mono> plans without
-              applying. Approvals are dashboard-only
+              applying; <Mono>--auto-approve</Mono> skips the gate. Approve in
+              the dashboard
               {config.links.branches ? (
                 <>
                   {' '}
-                  &mdash;{' '}
+                  (
                   <OutLink href={config.links.branches} variant="plain">
                     watch the run
                   </OutLink>
+                  )
                 </>
-              ) : (
-                '.'
-              )}
+              ) : null}{' '}
+              or from an agent connected with <Mono>--allow-writes</Mono>.
             </>
           }
         />
+        <CommandBlock
+          label="watch the rollout"
+          command={`nuon apps branches runs --app-id ${app} --branch-id ${branchName}`}
+        />
+      </Section>
+
+      <Section title="From your agent" aside="Nuon MCP server">
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Connect once with <Mono>{setup.claudeCode}</Mono> (or{' '}
+          <Mono>cursor</Mono>, <Mono>amp</Mono>), verify with{' '}
+          <Mono>{setup.verify}</Mono>, then paste a prompt. Three read-only
+          ones; the other seven are on the{' '}
+          <a href="#/customize/agent">agent page</a>.
+        </p>
+        <div className="row" style={{ marginTop: 12, flexWrap: 'wrap', gap: 8 }}>
+          {useCases
+            .filter((u) => !u.write)
+            .slice(0, 3)
+            .map((u) => (
+              <CopyButton
+                key={u.id}
+                text={useCasePrompt(u, install, app)}
+                label={`Copy: ${u.title}`}
+                doneLabel="Copied"
+              />
+            ))}
+        </div>
       </Section>
 
       <Section

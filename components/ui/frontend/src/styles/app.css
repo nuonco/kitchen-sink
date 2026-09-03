@@ -3448,3 +3448,15 @@ a.encyc__row:hover .encyc__title {
 .usecase .cmd__pre {
   margin: 0;
 }
+
+/* The hub's first choice shows the setup command inline */
+
+.choice__cmd {
+  margin: var(--space-3) 0 0;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
