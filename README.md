@@ -19,7 +19,7 @@ ships is a guided tour of that install from the inside, served at
 |---------|-------------|
 | **Helm chart** | Deploys the API, UI, and worker pods to EKS |
 | **Pulumi infrastructure** | Creates an S3 bucket with encryption and versioning |
-| **Container images** | CI-published images from Nuon's public ECR gallery, plus one private-registry example |
+| **Container images** | Pre-built images from public registries, so the config builds in any org |
 | **Actions** | Script and container-based health checks, debugging, DNS gates, and lifecycle hooks |
 | **Runbooks** | Multi-step operational procedures — see [`runbooks/`](./runbooks/README.md) |
 | **Component health** | Live per-component health with probes — `[health]` in `components/chart/nuon.toml` and `components/alb.toml` |
