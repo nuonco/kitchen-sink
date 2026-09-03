@@ -70,8 +70,14 @@ deploys as the app itself.
   while the org's active config was synced from a tree with the file enabled
   — re-enable by renaming it back locally and running
   `nuon sync --app-id <id> --force`.
-- Nuon API access (optional, read-oriented): agents with a provisioned token
-  may read app/install state via https://api.nuon.co/docs (requests need an
-  `X-Nuon-Org-ID` header). Deploys, branch-run approvals, and install
-  create/deprovision/delete always need an explicit human go-ahead per task.
-  Never commit tokens to this (public) repo.
+- Nuon access for agents: use the Nuon MCP server, not raw API calls. The
+  repo ships a project `.mcp.json` that runs `nuon agents mcp` (the CLI's
+  stdio proxy, which reuses the CLI's login); `nuon agents context` prints the
+  current org, app, and install ids and the tool table. Prefer MCP tools for
+  reads (`whoami`, `list_installs`, `get_install`, `list_app_branches`,
+  `get_app_branch`, `list_workflows`, logs). Write tools are hidden unless the
+  proxy runs with `--allow-writes`; even then, deploys, branch-run approvals,
+  previews in `apply` mode, and install create/deprovision/delete need an
+  explicit human go-ahead per task. Where no MCP tool exists (syncing local
+  config, running a runbook, config versions), fall back to the CLI with
+  `--output agent --read-only`. Never commit tokens to this (public) repo.

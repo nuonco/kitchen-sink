@@ -7,7 +7,6 @@ export interface InstallGroup {
   name: string
   order: number
   selector: string
-  preview: boolean
 }
 
 export interface RunbookStep {
@@ -64,24 +63,21 @@ export const installGroups: InstallGroup[] = [
   {
     "name": "staging",
     "order": 1,
-    "selector": "env = staging",
-    "preview": true
+    "selector": "env = staging"
   },
   {
     "name": "customers",
     "order": 2,
-    "selector": "env = production · tier = customer",
-    "preview": false
+    "selector": "env = production · tier = customer"
   },
   {
     "name": "enterprise",
     "order": 3,
-    "selector": "env = production · tier = enterprise",
-    "preview": false
+    "selector": "env = production · tier = enterprise"
   }
 ]
 
-export const branchConfigAbridged = "name = \"main\"\n\npost_deploy_runbooks = [\"full-health-check\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"main\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\nuse_for_previews = true\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
+export const branchConfigAbridged = "name = \"main\"\n\npost_deploy_runbooks = [\"full-health-check\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"main\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
 
 export const runbooks: Runbook[] = [
   {
@@ -248,6 +244,43 @@ export const adhocActions: AdhocAction[] = [
     ],
     "labels": "is_break_glass = \"true\"",
     "breakGlass": true
+  },
+  {
+    "name": "app_healthcheck",
+    "timeout": "2m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": "runtime = \"container\" · sample = \"health-check\"",
+    "breakGlass": false
+  },
+  {
+    "name": "db_metrics",
+    "timeout": "5m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": "runtime = \"container\" · sample = \"db-metrics\"",
+    "breakGlass": false
+  },
+  {
+    "name": "dns_check",
+    "timeout": "5m",
+    "triggers": [
+      "manual",
+      "pre-deploy-component certificate"
+    ],
+    "labels": "runtime = \"container\" · sample = \"dns-gate\"",
+    "breakGlass": false
+  },
+  {
+    "name": "rollout_status",
+    "timeout": "10m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": "runtime = \"container\" · sample = \"kubectl\"",
+    "breakGlass": false
   }
 ]
 
