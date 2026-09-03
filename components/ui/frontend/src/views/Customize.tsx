@@ -20,7 +20,14 @@ import {
   roles,
   runbooks,
 } from '../lib/config-data.gen'
-import { agentPrompt, proofPrompts } from '../lib/prompts'
+import {
+  agentPrompt,
+  proofPrompts,
+  setup,
+  useCasePrompt,
+  useCases,
+  type UseCase,
+} from '../lib/prompts'
 import { lastHub } from '../lib/origin'
 import { operationsPath, stepEyebrow } from '../lib/taxonomy'
 import { EvalPath, StepNav, type SwitchStates } from '../ui/CapabilityGrid'
@@ -33,13 +40,16 @@ import {
   CodeBlock,
   CommandBlock,
   CopyButton,
+  Disclosure,
   Eyebrow,
   Icon,
   LoadState,
+  Mono,
   OutLink,
   PhaseBadge,
   PspSection,
   PspTag,
+  Section,
 } from '../ui/Primitives'
 
 /* ============================================================
@@ -1067,87 +1077,208 @@ function RolesFlow({ config }: { config: UIConfig }) {
 }
 
 /* ============================================================
-   The agent page: the full checklist prompt and the command menu it wraps.
-   Both use this install's real ids, filled in from ui-config at render time.
+   The agent page: connect the Nuon MCP server, verify it, then a gallery of
+   use cases, each a prompt with this install's ids filled in. Read-only
+   cases first, the ones that need --allow-writes after. The CLI stays
+   available as the "run it yourself" track at the bottom.
    ============================================================ */
+
+function UseCaseCard({
+  useCase,
+  install,
+  app,
+}: {
+  useCase: UseCase
+  install: string
+  app: string
+}) {
+  const [open, setOpen] = useState(false)
+  const text = useCasePrompt(useCase, install, app)
+  return (
+    <article className="usecase">
+      <div className="usecase__head">
+        <h3 className="usecase__title">&ldquo;{useCase.title}&rdquo;</h3>
+        <Badge tone={useCase.write ? 'warning' : 'accent'}>
+          {useCase.write ? 'write · --allow-writes' : 'read-only'}
+        </Badge>
+      </div>
+      <div className="usecase__tools">
+        {useCase.tools.map((tool) => (
+          <span className="chip" key={tool}>
+            {tool}
+          </span>
+        ))}
+      </div>
+      <p className="usecase__answer">{useCase.answer}</p>
+      <div className="usecase__actions">
+        <CopyButton text={text} label="Copy the prompt" doneLabel="Copied" />
+        <button
+          type="button"
+          className="tour__skip"
+          style={{ marginLeft: 0 }}
+          aria-expanded={open}
+          onClick={() => setOpen((o) => !o)}
+        >
+          {open ? 'Hide the prompt' : 'Read the prompt'}{' '}
+          <Icon name="caret-right" />
+        </button>
+        {useCase.page && (
+          <a className="usecase__page" href={`#${useCase.page}`}>
+            also on the {useCase.page.split('/').pop()} page
+          </a>
+        )}
+      </div>
+      {open && (
+        <pre className="cmd__pre agent-prompt__pre proof-prompt__pre">{text}</pre>
+      )}
+    </article>
+  )
+}
 
 function AgentFlow({ config }: { config: UIConfig }) {
   const install = installIdOf(config)
   const app = appIdOf(config)
   const prompt = agentPrompt(install, app)
+  const reads = useCases.filter((u) => !u.write)
+  const writes = useCases.filter((u) => u.write)
 
   return (
     <>
       <header className="page-header">
-        <h1>Run day-2 from your terminal</h1>
+        <Eyebrow>{stepEyebrow('/customize/agent')}</Eyebrow>
+        <h1>Connect your coding agent</h1>
         <p className="lede">
-          One prompt walks Claude Code or Codex through every proof on the
-          checklist: it must show you each command and wait for your yes
-          before anything mutates. The command menu below is the same walk,
-          one command per flow.
+          Nuon ships a Model Context Protocol (MCP) server. One command
+          connects it to Claude Code, Cursor, or Amp through the Nuon CLI you
+          already have. Then your agent can read this install, follow a
+          rollout, and, when you allow writes, act on it. Every prompt below
+          has this install&rsquo;s ids filled in.
         </p>
       </header>
 
-      <Tracks
-        agent={
-          <div className="agent-prompt">
-            <div className="cmd__head">
-              <span className="cmd__label">the prompt, your ids filled in</span>
-              <CopyButton text={prompt} />
-            </div>
-            <pre className="cmd__pre agent-prompt__pre">{prompt}</pre>
-          </div>
-        }
-        manual={
-          <>
-            <CommandBlock
-              label="run a real health check (read-only)"
-              command={`nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`}
-              note={<>A run appears in your dashboard with per-step results.</>}
-            />
-            <CommandBlock
-              label="prove the per-operation IAM roles (restarts this app's pods)"
-              command={`nuon actions list --app-id ${app}`}
-              note={
-                <>
-                  Copy the <span className="mono">actw</span> id next to{' '}
-                  <span className="mono">break_glass_remediation</span>, then{' '}
-                  <span className="mono">
-                    nuon actions create-run --install-id {install}{' '}
-                    --action-workflow-id &lt;actw-id&gt;
-                  </span>
-                  . The run logs print the assumed break-glass role and a
-                  denied Secrets Manager call; watch the pod ages reset on the{' '}
-                  <span className="mono">actions</span> page here.
-                </>
-              }
-            />
-            <CommandBlock
-              label="ship a change through the staged groups (from your clone)"
-              command={`nuon sync --app-id ${app} --force --branch ${branchName}`}
-              note={
-                <>
-                  Syncs your local edit — no push needed — and triggers a real
-                  branch run, group by group; approve held groups in your
-                  dashboard.
-                </>
-              }
-            />
-            <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-              Rollback is the one flow without a CLI command today: it runs
-              from the version history in the dashboard — plan first, then
-              apply, and the old image tags reappear on your pods.{' '}
-              {config.links.versions && (
-                <OutLink href={config.links.versions} variant="plain">
-                  Open this install&rsquo;s version history
-                </OutLink>
-              )}
-            </p>
-          </>
-        }
-      />
+      <Section title="1 · Connect" aside="from your clone's root">
+        <CommandBlock
+          label="Claude Code"
+          command={setup.claudeCode}
+          note={
+            <>
+              Writes a project <Mono>.mcp.json</Mono> beside your config, so
+              anyone who clones the repo gets the same server. Also{' '}
+              <Mono>--platform cursor</Mono> or <Mono>--platform amp</Mono>.
+            </>
+          }
+        />
+        <CommandBlock
+          label="or register it in the client instead"
+          command={setup.claudeMcpAdd}
+          note={
+            <>
+              Add <Mono>--allow-writes</Mono> after{' '}
+              <Mono>nuon agents mcp</Mono> when you want the agent to be able
+              to approve, preview, or run things. Without it every write tool
+              stays hidden, which is the right default for a first session.
+            </>
+          }
+        />
+      </Section>
 
-      <p className="small muted" style={{ maxWidth: '72ch' }}>
+      <Section title="2 · Verify" aside="what the agent sees">
+        <CommandBlock
+          label="prints your org, app, and install ids, and the tool table"
+          command={setup.verify}
+          note={
+            <>
+              If the App ID it prints is not this app, run{' '}
+              <Mono>nuon apps select</Mono> and pick it from the list.
+            </>
+          }
+        />
+      </Section>
+
+      <Section
+        title="3 · Ask your agent"
+        aside={`${useCases.length} use cases, ids filled in`}
+        id="use-cases"
+      >
+        <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
+          Each card is one prompt. Copy it, paste it into your agent, and the
+          agent does the rest with the tools listed. Read-only first.
+        </p>
+        <div className="gallery">
+          {reads.map((u) => (
+            <UseCaseCard key={u.id} useCase={u} install={install} app={app} />
+          ))}
+        </div>
+        <Callout label="With --allow-writes">
+          The next four start runs or approve steps. The agent shows you what
+          will change and waits for your yes; previews default to plan-only.
+          They need the proxy started with <Mono>--allow-writes</Mono> and a
+          token that can create.
+        </Callout>
+        <div className="gallery" style={{ marginTop: 16 }}>
+          {writes.map((u) => (
+            <UseCaseCard key={u.id} useCase={u} install={install} app={app} />
+          ))}
+        </div>
+      </Section>
+
+      <Section title="The whole tour in one prompt" aside="for a first session">
+        <div className="agent-prompt">
+          <div className="cmd__head">
+            <span className="cmd__label">five steps, your ids filled in</span>
+            <CopyButton text={prompt} />
+          </div>
+          <pre className="cmd__pre agent-prompt__pre">{prompt}</pre>
+        </div>
+      </Section>
+
+      <Disclosure summary="Run it yourself with the Nuon CLI">
+        <CommandBlock
+          label="run a real health check (read-only)"
+          command={`nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`}
+          note={<>A run appears in your dashboard with per-step results.</>}
+        />
+        <CommandBlock
+          label="prove the per-operation IAM roles (restarts this app's pods)"
+          command={`nuon actions list --app-id ${app}`}
+          note={
+            <>
+              Copy the <span className="mono">actw</span> id next to{' '}
+              <span className="mono">break_glass_remediation</span>, then{' '}
+              <span className="mono">
+                nuon actions create-run --install-id {install}{' '}
+                --action-workflow-id &lt;actw-id&gt;
+              </span>
+              . The run logs print the assumed break-glass role and a denied
+              Secrets Manager call; watch the pod ages reset on the{' '}
+              <span className="mono">actions</span> page here.
+            </>
+          }
+        />
+        <CommandBlock
+          label="ship a change through the staged groups (from your clone)"
+          command={`nuon sync --app-id ${app} --force --branch ${branchName} --no-wait --output agent`}
+          note={
+            <>
+              Syncs your local edit, no push needed, and triggers a real branch
+              run, group by group. Approve held groups in your dashboard, or
+              let your agent surface them with get_pending_approvals.
+            </>
+          }
+        />
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          Re-applying an earlier config version runs from the version history
+          in the dashboard: plan first, then apply, and the old image tags
+          reappear on your pods.{' '}
+          {config.links.versions && (
+            <OutLink href={config.links.versions} variant="plain">
+              Open this install&rsquo;s version history
+            </OutLink>
+          )}
+        </p>
+      </Disclosure>
+
+      <p className="small muted" style={{ marginTop: 24, maxWidth: '72ch' }}>
         Why the terminal, and not buttons here: this page runs behind your
         customer&rsquo;s load balancer, so it hands you commands and shows you
         evidence instead of holding credentials.

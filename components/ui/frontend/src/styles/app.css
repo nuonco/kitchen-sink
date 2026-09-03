@@ -3381,3 +3381,70 @@ a.encyc__row:hover .encyc__title {
     animation: none;
   }
 }
+
+/* ============================================================
+   The "Ask your agent" gallery: one card per MCP use case
+   ============================================================ */
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.usecase {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  min-width: 0;
+}
+
+.usecase__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.usecase__title {
+  margin: 0;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-strong);
+  color: var(--text-primary);
+  text-wrap: balance;
+}
+
+.usecase__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.usecase__answer {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.usecase__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: auto;
+}
+
+.usecase__page {
+  font-size: var(--text-subtext);
+  color: var(--text-tertiary);
+}
+
+.usecase .cmd__pre {
+  margin: 0;
+}
