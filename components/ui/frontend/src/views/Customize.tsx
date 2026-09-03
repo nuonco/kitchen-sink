@@ -237,9 +237,45 @@ function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {
    ============================================================ */
 
 const groupNotes: Record<string, string> = {
-  staging: 'use_for_previews: PR preview plans run here',
+  staging: 'first wave: where a change proves itself',
   customers: 'the production fleet',
   enterprise: 'the installs with change windows',
+}
+
+/**
+ * What a branch lets you do on this install, each with the command or the
+ * agent prompt that does it here. Copy stays inside what origin/main ships:
+ * approvals belong to your dashboard or API, previews default to plan-only,
+ * and re-applying a version is described as exactly that.
+ */
+function branchScenarios(install: string, app: string) {
+  return [
+    {
+      scenario: 'Ship one change to the whole fleet, in order, with an approval per group',
+      how: `nuon sync --app-id ${app} --force --branch ${branchName} --no-wait --output agent`,
+      note: 'from your clone; watch with the runs command below',
+    },
+    {
+      scenario: 'Preview a pull request against one install before it merges',
+      how: `nuon apps branches preview --app-id ${app} --branch-id ${branchName} --pr-number <n> --install-id ${install} --mode plan-only`,
+      note: 'or ask your agent: preview_app_branch, plan-only by default',
+    },
+    {
+      scenario: 'See what changed between two versions',
+      how: 'version history in Nuon',
+      note: 'every config version this install has run, with a diff',
+    },
+    {
+      scenario: 'Re-apply an earlier version',
+      how: 'version history in Nuon, plan first, then apply',
+      note: 'the old image tags reappear on your pods',
+    },
+    {
+      scenario: 'A new customer joins a wave the moment its install is labelled',
+      how: `nuon installs labels set --install-id <new-install-id> env=staging`,
+      note: 'groups select installs by label, so nobody edits the branch',
+    },
+  ]
 }
 
 function BranchesFlow({ config }: { config: UIConfig }) {
@@ -265,8 +301,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
               </div>
               <div className="group-card__selector mono">{group.selector}</div>
               <div className="group-card__note">
-                {groupNotes[group.name] ??
-                  (group.preview ? 'PR preview plans run here' : '')}
+                {groupNotes[group.name] ?? ''}
               </div>
             </div>
           ))}
@@ -274,9 +309,8 @@ function BranchesFlow({ config }: { config: UIConfig }) {
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           Every push to <span className="mono">{branchName}</span> builds the
           config at that commit and rolls it across these groups in order.
-          Each group&rsquo;s plan holds for a human approval, and the{' '}
-          <span className="mono">full-health-check</span> runbook runs on
-          every install after its group deploys.
+          Each group&rsquo;s plan holds for a person&rsquo;s approval before
+          it deploys, so one bad change stops at the first wave.
         </p>
         <CodeBlock
           label="branch.toml (the real config, comments stripped)"
@@ -301,30 +335,88 @@ function BranchesFlow({ config }: { config: UIConfig }) {
       </PspSection>
 
       <PspSection
+        kind="solution"
+        title="What a branch lets you do"
+        aside="five scenarios, ids filled in"
+      >
+        <div className="table-wrap">
+          <table className="data">
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>How, here</th>
+              </tr>
+            </thead>
+            <tbody>
+              {branchScenarios(installIdOf(config), appIdOf(config)).map((row) => (
+                <tr key={row.scenario}>
+                  <td>{row.scenario}</td>
+                  <td>
+                    {row.how.startsWith('nuon ') ? (
+                      <code className="mono">{row.how}</code>
+                    ) : config.links.versions ? (
+                      <OutLink href={config.links.versions} variant="plain">
+                        {row.how}
+                      </OutLink>
+                    ) : (
+                      row.how
+                    )}
+                    <div className="subtext muted">{row.note}</div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </PspSection>
+
+      <PspSection
         kind="proof"
         title="Ship a change to this install"
-        aside="one command from your terminal"
+        aside="one command from your terminal, or one prompt"
       >
         <Tracks
           agent={<ProofPrompt flow="branches" config={config} />}
           manual={
-            <CommandBlock
-              label="edit any file in your clone, then sync and trigger the run"
-              command={`nuon sync --app-id ${appIdOf(config)} --force --branch ${branchName}`}
-              note={
-                <>
-                  Syncs your local files exactly as they are (even uncommitted,
-                  no push) and triggers a real branch run through the groups
-                  above. <span className="mono">--preview</span> plans every
-                  group with nothing applied.
-                </>
-              }
-            />
+            <>
+              <CommandBlock
+                label="edit any file in your clone, then sync and trigger the run"
+                command={`nuon sync --app-id ${appIdOf(config)} --force --branch ${branchName} --no-wait --output agent`}
+                note={
+                  <>
+                    Syncs your local files exactly as they are (even
+                    uncommitted, no push) and triggers a real branch run
+                    through the groups above. <span className="mono">--preview</span>{' '}
+                    plans every group with nothing applied.
+                  </>
+                }
+              />
+              <CommandBlock
+                label="watch the rollout"
+                command={`nuon apps branches runs --app-id ${appIdOf(config)} --branch-id ${branchName}`}
+                note={<>Every run on this branch and the step it is on.</>}
+              />
+              <CommandBlock
+                label="which group is this install in?"
+                command={`nuon installs labels list --install-id ${installIdOf(config)}`}
+                note={
+                  <>
+                    Groups select by label. Your agent answers the same
+                    question with <span className="mono">get_app_branch</span>,
+                    including how far the last rollout got for this install.
+                  </>
+                }
+              />
+            </>
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Each group&rsquo;s approval is a person in the dashboard; there is
-          deliberately no CLI command for it.{' '}
+          A person approves each group&rsquo;s plan in your dashboard by
+          default. <span className="mono">--auto-approve</span> on the sync
+          skips that gate, and an agent connected with{' '}
+          <span className="mono">--allow-writes</span> can list what is waiting
+          (<span className="mono">get_pending_approvals</span>) and approve a
+          step when you say so.{' '}
           {config.links.branches && (
             <OutLink href={config.links.branches} variant="plain">
               Watch the run and approve each group
@@ -342,9 +434,9 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Rolling back: there is no CLI command yet. Re-deploy a previous
-          version from the dashboard&rsquo;s version history (plan first),
-          or revert the commit and let the same staged rollout replay.{' '}
+          To go back: re-apply an earlier config version from the
+          dashboard&rsquo;s version history (plan first), or revert the commit
+          and let the same staged rollout replay.{' '}
           {config.links.versions && (
             <OutLink href={config.links.versions} variant="plain">
               Open this install&rsquo;s version history

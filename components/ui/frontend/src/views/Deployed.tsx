@@ -8,10 +8,11 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
+import { branchName, installGroups } from '../lib/config-data.gen'
 import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
-import { BackLink, Eyebrow, LoadState, Mono, Section } from '../ui/Primitives'
+import { BackLink, Eyebrow, LoadState, Mono, OutLink, Section } from '../ui/Primitives'
 
 /**
  * Which namespaces this app config put in the cluster, as opposed to the
@@ -114,6 +115,11 @@ function Glance({
         }
         numeric
       />
+      <GlanceFact
+        label="Deployed by branch"
+        value={branchName}
+        note={installGroups.map((g) => g.name).join(' → ')}
+      />
     </div>
   )
 }
@@ -203,6 +209,14 @@ export function Deployed({ config }: { config: UIConfig }) {
       </header>
 
       <Glance kube={kube} ns={ns} namespace={namespace} installID={config.install_id} />
+      {config.links.versions && (
+        <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
+          Every config version this install has run is on record.{' '}
+          <OutLink href={config.links.versions} variant="plain">
+            See its config versions
+          </OutLink>
+        </p>
+      )}
       <LoadState result={kube} what="the cluster" />
       {kube.state === 'ok' && (
         <LoadState result={ns} what={`the ${namespace} namespace`} />
