@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useUIConfig } from './lib/api'
+import { branchName, installGroups } from './lib/config-data.gen'
 import { recordHub } from './lib/origin'
 import { segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
@@ -29,6 +30,28 @@ function TopBar({
         <NuonMark />
         <span className="topbar__brand-name">Kitchen sink</span>
       </button>
+      {/* The two ideas this demo exists to show, visible from every view. */}
+      <a
+        className="topbar__chip"
+        href="#/customize/branches"
+        title="Every change to this install ships through an app branch, group by group"
+      >
+        <Icon name="git-branch" />
+        <span>
+          ships via <span className="topbar__chip-strong">{branchName}</span>
+        </span>
+        <span className="topbar__chip-groups">
+          {installGroups.map((g) => g.name).join(' → ')}
+        </span>
+      </a>
+      <a
+        className="topbar__chip topbar__chip--agent"
+        href="#/customize/agent"
+        title="Connect Nuon's MCP server to Claude Code, Cursor, or Amp"
+      >
+        <Icon name="lightning" />
+        Connect your coding agent
+      </a>
       {installID && (
         <>
           <span className="topbar__divider" />

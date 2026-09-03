@@ -3256,3 +3256,128 @@ a.encyc__row:hover .encyc__title {
     animation: none;
   }
 }
+
+/* ============================================================
+   Top bar: the two ideas this demo exists to show, on every view
+   ============================================================ */
+
+.topbar__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 3px var(--space-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  background: var(--surface-card);
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: 0;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.topbar__chip:hover {
+  border-color: var(--accent-dim);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.topbar__chip .icon {
+  width: 12px;
+  height: 12px;
+  color: var(--accent);
+}
+
+.topbar__chip-strong {
+  color: var(--text-primary);
+  font-weight: var(--weight-strong);
+}
+
+.topbar__chip-groups {
+  color: var(--text-tertiary);
+}
+
+.topbar__chip--agent {
+  font-family: var(--font-sans);
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+}
+
+@media (max-width: 1024px) {
+  .topbar__chip-groups {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .topbar__chip {
+    display: none;
+  }
+}
+
+/* ============================================================
+   The fleet row under the sandbox: the app branch everything ships from
+   ============================================================ */
+
+.arch__fleet {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.arch__fleet .arch__edge {
+  align-self: center;
+  min-width: 0;
+  padding: var(--space-2) 0;
+}
+
+.arch__fleet .arch__edge-line {
+  width: 1px;
+  height: 24px;
+}
+
+.arch__fleet .arch__edge-line::before {
+  left: -3px;
+  top: 0;
+  border-top: none;
+  border-left: 3.5px solid transparent;
+  border-right: 3.5px solid transparent;
+  border-bottom: 5px solid var(--border-strong);
+}
+
+.arch__fleet--ghost .arch__edge {
+  opacity: 0.35;
+}
+
+.arch__node--fleet {
+  flex: none;
+}
+
+/* The Prezi: the part the tour is on leans forward */
+
+.arch__node,
+.arch__sandbox {
+  transition: border-color var(--duration-base) var(--ease-standard),
+    background var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
+}
+
+.arch__node--active,
+.arch__sandbox--active {
+  transform: scale(1.02);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arch__node--active,
+  .arch__sandbox--active {
+    transform: none;
+  }
+
+  .tour__step {
+    animation: none;
+  }
+}

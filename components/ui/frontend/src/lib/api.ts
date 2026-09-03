@@ -315,6 +315,25 @@ export function hasAuditLogExporter(services: ServiceSummary[]): boolean {
   return services.some((svc) => svc.metadata?.name === AUDIT_LOG_SERVICE)
 }
 
+/** "sha-45200f2" from a full image reference; "latest" when untagged. */
+export function imageTag(image?: string): string {
+  if (!image) return '—'
+  const tail = image.split('/').pop() ?? image
+  const i = tail.lastIndexOf(':')
+  return i === -1 ? 'latest' : tail.slice(i + 1)
+}
+
+/** The distinct image tags running in a namespace, first container of each pod. */
+export function runningImageTags(pods: PodSummary[]): string[] {
+  const tags = pods.map((pod) =>
+    imageTag(
+      pod.status?.containerStatuses?.[0]?.image ??
+        pod.spec?.containers?.[0]?.image,
+    ),
+  )
+  return Array.from(new Set(tags.filter((t) => t !== '—')))
+}
+
 export function countReady(pods: PodSummary[]): number {
   return pods.filter((pod) => {
     const statuses = pod.status?.containerStatuses ?? []
