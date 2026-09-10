@@ -1,0 +1,23 @@
+# action
+# One of four health checks the full-health-check runbook composes. Each writes
+# k=v to $NUON_ACTIONS_OUTPUT_FILEPATH; the install readme renders them as a
+# per-check status chart. Diagnostics go to stdout, never to the output file.
+name    = "health_endpoint"
+timeout = "5m"
+
+[[triggers]]
+type = "manual"
+
+[[triggers]]
+type = "post-provision"
+
+[[steps]]
+name            = "check-endpoint"
+inline_contents = "./health_endpoint/script.sh"
+
+[steps.env_vars]
+ENDPOINT = "https://app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}/livez"
+
+[labels]
+kind = "health-check"
+team = "platform"
