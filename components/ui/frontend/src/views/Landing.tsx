@@ -240,7 +240,7 @@ function cliGroups(install: string, app: string): Array<{ name: string; rows: Cl
           cmd: `nuon runbooks list --install-id ${install}`,
           note: (
             <>
-              Four recorded procedures; <span className="mono">reconcile-drift</span> and{' '}
+              Four recorded procedures; <span className="mono">re-apply-config</span> and{' '}
               <span className="mono">break-glass</span> mutate.
             </>
           ),

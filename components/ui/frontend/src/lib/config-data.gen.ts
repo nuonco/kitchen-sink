@@ -82,7 +82,7 @@ export const branchConfigAbridged = "name = \"main\"\n\npost_deploy_runbooks = [
 export const runbooks: Runbook[] = [
   {
     "name": "full-health-check",
-    "description": "Check an install end to end: nodes, the kitchen-sink workloads, the ALB ingress, and the public HTTPS endpoint.",
+    "description": "Checks nodes, workloads, ingress, and the public endpoint.",
     "kind": "health-check",
     "mutates": false,
     "steps": [
@@ -115,7 +115,7 @@ export const runbooks: Runbook[] = [
   },
   {
     "name": "debug-bundle",
-    "description": "Something's gone wrong — collect a read-only diagnostic bundle: pod state, events, logs, restart reasons, and a verbose endpoint probe.",
+    "description": "Collects pod, event, and config state into one transcript.",
     "kind": "debug",
     "mutates": false,
     "steps": [
@@ -142,8 +142,8 @@ export const runbooks: Runbook[] = [
     ]
   },
   {
-    "name": "reconcile-drift",
-    "description": "Re-apply desired state after out-of-band changes: plan the chart, reprovision the sandbox, then roll the infrastructure and app components forward.",
+    "name": "re-apply-config",
+    "description": "Re-applies this install's components after an out-of-band change.",
     "kind": "drift",
     "mutates": true,
     "steps": [
@@ -181,7 +181,7 @@ export const runbooks: Runbook[] = [
   },
   {
     "name": "break-glass",
-    "description": "Emergency, elevated-access remediation run as a recorded procedure instead of ad-hoc console access.",
+    "description": "Runs elevated remediation under the break-glass role, recorded.",
     "kind": "break-glass",
     "mutates": true,
     "steps": [
@@ -212,7 +212,7 @@ export const adhocActions: AdhocAction[] = [
       "cron 0 * * * *",
       "manual"
     ],
-    "labels": "is_health_check = \"true\"",
+    "labels": "kind = \"health-check\" · team = \"platform\"",
     "breakGlass": false
   },
   {
@@ -221,7 +221,7 @@ export const adhocActions: AdhocAction[] = [
     "triggers": [
       "manual"
     ],
-    "labels": null,
+    "labels": "kind = \"debug\" · team = \"platform\"",
     "breakGlass": false
   },
   {
@@ -233,7 +233,7 @@ export const adhocActions: AdhocAction[] = [
       "post-deploy-component kitchen_sink",
       "pre-deploy-component kitchen_sink"
     ],
-    "labels": null,
+    "labels": "kind = \"lifecycle\" · team = \"platform\"",
     "breakGlass": false
   },
   {
@@ -242,7 +242,7 @@ export const adhocActions: AdhocAction[] = [
     "triggers": [
       "manual"
     ],
-    "labels": "is_break_glass = \"true\"",
+    "labels": "kind = \"break-glass\" · team = \"platform\"",
     "breakGlass": true
   },
   {
@@ -251,7 +251,7 @@ export const adhocActions: AdhocAction[] = [
     "triggers": [
       "manual"
     ],
-    "labels": "runtime = \"container\" · sample = \"health-check\"",
+    "labels": "kind = \"health-check\" · team = \"platform\" · runtime = \"container\"",
     "breakGlass": false
   },
   {
@@ -260,7 +260,7 @@ export const adhocActions: AdhocAction[] = [
     "triggers": [
       "manual"
     ],
-    "labels": "runtime = \"container\" · sample = \"db-metrics\"",
+    "labels": "kind = \"metrics\" · team = \"platform\" · runtime = \"container\"",
     "breakGlass": false
   },
   {
@@ -270,7 +270,7 @@ export const adhocActions: AdhocAction[] = [
       "manual",
       "pre-deploy-component certificate"
     ],
-    "labels": "runtime = \"container\" · sample = \"dns-gate\"",
+    "labels": "kind = \"dns\" · team = \"platform\" · runtime = \"container\"",
     "breakGlass": false
   },
   {
@@ -279,12 +279,12 @@ export const adhocActions: AdhocAction[] = [
     "triggers": [
       "manual"
     ],
-    "labels": "runtime = \"container\" · sample = \"kubectl\"",
+    "labels": "kind = \"health-check\" · team = \"platform\" · runtime = \"container\"",
     "breakGlass": false
   }
 ]
 
-export const lifecycleHooksToml = "name         = \"lifecycle_hooks\"\ntimeout      = \"1m\"\ndependencies = [\"kitchen_sink\"]\n\n[[triggers]]\ntype = \"manual\"\n\n[[triggers]]\ntype = \"post-provision\"\n\n[[triggers]]\ntype           = \"post-deploy-component\"\ncomponent_name = \"kitchen_sink\"\n\n[[triggers]]\ntype           = \"pre-deploy-component\"\ncomponent_name = \"kitchen_sink\"\n\n[[steps]]\nname            = \"log-lifecycle-hook\"\ninline_contents = \"./lifecycle_hooks/script.sh\"\n\n[steps.env_vars]\nHOOK_VERSION = \"v1\""
+export const lifecycleHooksToml = "name         = \"lifecycle_hooks\"\ntimeout      = \"1m\"\ndependencies = [\"kitchen_sink\"]\n\n[[triggers]]\ntype = \"manual\"\n\n[[triggers]]\ntype = \"post-provision\"\n\n[[triggers]]\ntype           = \"post-deploy-component\"\ncomponent_name = \"kitchen_sink\"\n\n[[triggers]]\ntype           = \"pre-deploy-component\"\ncomponent_name = \"kitchen_sink\"\n\n[[steps]]\nname            = \"log-lifecycle-hook\"\ninline_contents = \"./lifecycle_hooks/script.sh\"\n\n[steps.env_vars]\nHOOK_VERSION = \"v1\"\n\n[labels]\nkind = \"lifecycle\"\nteam = \"platform\""
 
 export const roles: Role[] = [
   {

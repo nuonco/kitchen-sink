@@ -577,7 +577,7 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
           lead={
             <>
               The two runbooks that apply changes land right here:{' '}
-              <span className="mono">reconcile-drift</span> redeploys the chart
+              <span className="mono">re-apply-config</span> redeploys the chart
               and <span className="mono">break-glass</span> restarts the
               app&rsquo;s deployments, so pod names change and ages reset as
               the run works.

@@ -1,6 +1,6 @@
-name        = "reconcile-drift"
-description = "Re-apply desired state after out-of-band changes: plan the chart, reprovision the sandbox, then roll the infrastructure and app components forward."
-readme      = "./runbooks/reconcile-drift.md"
+name        = "re-apply-config"
+description = "Re-applies this install's components after an out-of-band change."
+readme      = "./runbooks/re-apply-config.md"
 
 [labels]
 kind = "drift"

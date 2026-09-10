@@ -13,7 +13,7 @@ actions `cron_status`, `debug`, `break_glass_remediation`.
 |---------|----------|-------|
 | [`full-health-check`](./full-health-check.md) | **Health check** — many signals at once, read-only | nodes → `cron_status` → rollout convergence → ALB ingress → public endpoint |
 | [`debug-bundle`](./debug-bundle.md) | **Debug** — something's gone wrong, read-only | `debug` → pod/restart detail → ingress + synced secrets → endpoint probe |
-| [`reconcile-drift`](./reconcile-drift.md) | **Drift** — re-apply desired state (applies changes) | `plan_only` chart plan → `sandbox_reprovision` → `pulumi_infra` → `certificate` → `kitchen_sink` + dependents → verify |
+| [`re-apply-config`](./re-apply-config.md) | **Drift** — re-apply desired state (applies changes) | `plan_only` chart plan → `sandbox_reprovision` → `pulumi_infra` → `certificate` → `kitchen_sink` + dependents → verify |
 | [`break-glass`](./break-glass.md) | **Break glass** — recorded emergency with elevated access | capture state → `break_glass_remediation` (assumes the break-glass role) → verify |
 
 ## Step types used

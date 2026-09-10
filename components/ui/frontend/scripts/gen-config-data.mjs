@@ -135,7 +135,7 @@ const mutatingStepTypes = new Set([
   'sandbox_deprovision',
 ])
 
-const runbookOrder = ['full-health-check', 'debug-bundle', 'reconcile-drift', 'break-glass']
+const runbookOrder = ['full-health-check', 'debug-bundle', 're-apply-config', 'break-glass']
 const runbookFiles = readdirSync(join(repoRoot, 'runbooks'))
   .filter((f) => f.endsWith('.toml'))
   .sort((a, b) => {

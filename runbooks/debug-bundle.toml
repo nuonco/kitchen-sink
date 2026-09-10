@@ -1,5 +1,5 @@
 name        = "debug-bundle"
-description = "Something's gone wrong — collect a read-only diagnostic bundle: pod state, events, logs, restart reasons, and a verbose endpoint probe."
+description = "Collects pod, event, and config state into one transcript."
 readme      = "./runbooks/debug-bundle.md"
 
 [labels]

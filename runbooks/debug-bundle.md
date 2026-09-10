@@ -36,5 +36,5 @@ credentials, joins a VPN, or shares a screen — and the output lands in the ins
 workflow history where support and engineering can both read it.
 
 If the bundle shows drift rather than a crash, run
-[`reconcile-drift`](./reconcile-drift.md). If it shows something that needs elevated
+[`re-apply-config`](./re-apply-config.md). If it shows something that needs elevated
 access to fix, run [`break-glass`](./break-glass.md).

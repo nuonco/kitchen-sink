@@ -1,5 +1,5 @@
 name        = "full-health-check"
-description = "Check an install end to end: nodes, the kitchen-sink workloads, the ALB ingress, and the public HTTPS endpoint."
+description = "Checks nodes, workloads, ingress, and the public endpoint."
 readme      = "./runbooks/full-health-check.md"
 
 [labels]

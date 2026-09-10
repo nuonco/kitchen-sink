@@ -1,5 +1,5 @@
 name        = "break-glass"
-description = "Emergency, elevated-access remediation run as a recorded procedure instead of ad-hoc console access."
+description = "Runs elevated remediation under the break-glass role, recorded."
 readme      = "./runbooks/break-glass.md"
 
 [labels]

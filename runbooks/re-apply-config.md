@@ -1,4 +1,4 @@
-# reconcile-drift
+# re-apply-config
 
 Re-applies desired state to install `{{ .nuon.install.id }}` after someone changed
 something out of band — a hand-edited deployment, a deleted security group, a
