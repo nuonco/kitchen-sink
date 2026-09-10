@@ -7,18 +7,13 @@ Read-only: nothing here applies a change.
 
 ## What it checks
 
-1. **node-health** — node readiness and capacity (`kubectl get nodes`, `kubectl top nodes`).
-2. **workload-health** — runs the existing **cron_status** action, which reports the
-   `kitchen-sink` namespace's pods, services and ingresses and emits `pods_ready` /
-   `pods_total` as structured outputs.
-3. **rollout-convergence** — `kubectl rollout status` for `kitchen-sink-api`,
-   `kitchen-sink-ui` and `kitchen-sink-worker`, plus the HPAs. Ready pods are not the
-   same as a converged rollout; this step asserts convergence.
-4. **ingress-health** — the Helm releases in the namespace and a full describe of the
-   `kitchen-sink-alb` ingress, which is where the AWS Load Balancer Controller reports
-   target-group and certificate problems.
-5. **endpoint-health** — curls the public endpoint and only passes on a healthy HTTP
-   status, retrying while DNS and the target group settle.
+Each step runs a named action and writes structured outputs that the install README renders.
+
+1. **health_nodes** — node readiness and capacity.
+2. **cron_status** — workloads, pods, and services in the `kitchen-sink` namespace.
+3. **health_rollout** — deployment convergence for the three app components.
+4. **health_ingress** — Helm releases and the ALB ingress controller.
+5. **health_endpoint** — public HTTPS endpoint health.
 
 ## Target
 
@@ -38,5 +33,5 @@ or as the first thing you do when someone reports the app is slow. If it comes b
 clean and the customer still sees a problem, the problem is above this stack —
 go to [`debug-bundle`](./debug-bundle.md) next.
 
-Component Health already reports this continuously per component. This runbook is the
-on-demand, single-transcript version: one workflow record you can link to in a ticket.
+Component Health reports this continuously, per component. Running this once produces a
+single workflow record you can link to in a ticket.
