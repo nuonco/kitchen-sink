@@ -19,5 +19,6 @@ PGPASSWORD        = "temp-password-123"
 PGCONNECT_TIMEOUT = "10"
 
 [labels]
+kind = "metrics"
+team = "platform"
 runtime = "container"
-sample  = "db-metrics"

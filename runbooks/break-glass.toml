@@ -3,8 +3,8 @@ description = "Emergency, elevated-access remediation run as a recorded procedur
 readme      = "./runbooks/break-glass.md"
 
 [labels]
-team = "platform"
 kind = "break-glass"
+team = "platform"
 
 # Capture pre-remediation state first: the run history is the incident record.
 [[steps]]

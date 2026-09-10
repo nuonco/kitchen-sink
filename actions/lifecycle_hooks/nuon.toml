@@ -22,3 +22,7 @@ inline_contents = "./lifecycle_hooks/script.sh"
 
 [steps.env_vars]
 HOOK_VERSION = "v1"
+
+[labels]
+kind = "lifecycle"
+team = "platform"

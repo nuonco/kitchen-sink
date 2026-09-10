@@ -16,5 +16,6 @@ ENDPOINT = "https://app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.n
 IMAGE    = "{{.nuon.components.action_curl.outputs.image.ref}}"
 
 [labels]
+kind = "health-check"
+team = "platform"
 runtime = "container"
-sample  = "health-check"

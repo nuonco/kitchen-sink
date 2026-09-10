@@ -29,5 +29,6 @@ ATTEMPTS = "10"
 SLEEP_SECONDS = "15"
 
 [labels]
+kind = "dns"
+team = "platform"
 runtime = "container"
-sample = "dns-gate"

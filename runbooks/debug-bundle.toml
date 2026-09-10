@@ -3,8 +3,8 @@ description = "Something's gone wrong — collect a read-only diagnostic bundle:
 readme      = "./runbooks/debug-bundle.md"
 
 [labels]
-team = "platform"
 kind = "debug"
+team = "platform"
 
 [[steps]]
 name        = "collect-diagnostics"

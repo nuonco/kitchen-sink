@@ -3,8 +3,8 @@ description = "Re-apply desired state after out-of-band changes: plan the chart,
 readme      = "./runbooks/reconcile-drift.md"
 
 [labels]
-team = "platform"
 kind = "drift"
+team = "platform"
 
 # Plan first so the run records what drifted before anything is applied.
 [[steps]]

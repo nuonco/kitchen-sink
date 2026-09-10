@@ -3,8 +3,8 @@ description = "Check an install end to end: nodes, the kitchen-sink workloads, t
 readme      = "./runbooks/full-health-check.md"
 
 [labels]
-team = "platform"
 kind = "health-check"
+team = "platform"
 
 [[steps]]
 name    = "node-health"

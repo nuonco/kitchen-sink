@@ -8,3 +8,7 @@ type = "manual"
 [[steps]]
 name            = "debug-info"
 inline_contents = "./debug/script.sh"
+
+[labels]
+kind = "debug"
+team = "platform"

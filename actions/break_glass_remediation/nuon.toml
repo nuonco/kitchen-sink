@@ -16,4 +16,5 @@ name            = "elevated-remediation"
 inline_contents = "./break_glass_remediation/script.sh"
 
 [labels]
-is_break_glass = "true"
+kind = "break-glass"
+team = "platform"

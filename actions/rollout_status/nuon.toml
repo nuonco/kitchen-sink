@@ -11,5 +11,6 @@ name            = "rollout-status"
 inline_contents = "./rollout_status/rollout.sh"
 
 [labels]
+kind = "health-check"
+team = "platform"
 runtime = "container"
-sample  = "kubectl"
