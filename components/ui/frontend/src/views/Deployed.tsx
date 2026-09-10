@@ -172,7 +172,7 @@ function Patterns({ namespace }: { namespace: string }) {
   ]
 
   return (
-    <Section title="The patterns it demonstrates" aside="components/*.toml">
+    <Section title="Four patterns in this config" aside="components/*.toml">
       <div className="groups">
         {patterns.map((p) => (
           <div className="group-card" key={p.name}>
@@ -203,8 +203,8 @@ export function Deployed({ config }: { config: UIConfig }) {
         <Eyebrow>{stepEyebrow('/deployed')}</Eyebrow>
         <h1>What did Nuon actually deploy?</h1>
         <p className="lede">
-          Live reads from this install, and the architecture they demonstrate
-          — the rest of the checklist goes deeper on each piece.
+          Live reads from this install, and the four config patterns behind
+          them.
         </p>
       </header>
 

@@ -63,10 +63,7 @@ function SkuCard({
           <Badge tone="positive" dot>
             just deployed
           </Badge>
-          <span>
-            Its Service appeared in the namespace and this page noticed. No
-            reload.
-          </span>
+          <span>Its Service appeared in the namespace on the last poll.</span>
         </div>
       )}
       <div className={on ? 'ent ent--on' : 'ent'}>
@@ -124,7 +121,7 @@ function HowItKnows({
     },
     { label: 'deploy', detail: 'Nuon applies its marker Service' },
     {
-      label: live ? 'narrate' : 'detect',
+      label: live ? 'read' : 'detect',
       detail: live
         ? `this page reads ${namespace} events every ${EVENTS_POLL_MS / 1000}s`
         : `this page re-reads ${namespace} every ${POLL_MS / 1000}s`,
@@ -357,9 +354,9 @@ export function AuditLog({ config }: { config: UIConfig }) {
             <p className="small muted" style={{ maxWidth: '72ch' }}>
               Both features below ship in every install&rsquo;s config,
               switched off. Flip one on for an install and Nuon deploys it
-              there; flip it off and it is torn down. A feature a plan
-              doesn&rsquo;t include isn&rsquo;t hidden behind a flag —
-              it isn&rsquo;t running in that customer&rsquo;s cloud at all.
+              there; flip it off and it is torn down. Off means not deployed:
+              no pods, no Service, nothing for that feature in the
+              customer&rsquo;s cloud.
               (Here each deploys one marker Service; a real feature puts its
               workload behind the same switch.){' '}
               <OutLink
@@ -409,8 +406,8 @@ export function AuditLog({ config }: { config: UIConfig }) {
             title={bothOn ? 'What introspection sees' : 'Flip one on and watch'}
             aside={
               audit
-                ? `GET /introspect/namespace/${namespace}/events`
-                : `GET /introspect/namespace/${namespace}`
+                ? `GET /api/introspect/namespace/${namespace}/events`
+                : `GET /api/introspect/namespace/${namespace}`
             }
           >
             <HowItKnows

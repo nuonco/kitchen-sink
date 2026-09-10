@@ -390,8 +390,7 @@ export function Landing({ config }: { config: UIConfig }) {
           <p className="arrive__lede">
             This page is served by a container in an EKS cluster, in an AWS
             account, that Nuon provisioned and deployed into when you
-            installed. Five short stops explain how it got here and how it
-            ships.
+            installed.
           </p>
           {(config.install_id || config.cluster_name) && (
             <div className="row arrive__chips">
@@ -440,8 +439,7 @@ export function Landing({ config }: { config: UIConfig }) {
         <header className="hero">
           <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
           <p className="hero__lede">
-            Everything below runs against this live install. Two ways to
-            drive it:
+            Everything below runs against this live install.
           </p>
         </header>
 
@@ -479,7 +477,7 @@ export function Landing({ config }: { config: UIConfig }) {
             aria-controls="cli-commands"
             onClick={() => setCliOpen((open) => !open)}
           >
-            <span className="choice__title">Just show me the Nuon CLI</span>
+            <span className="choice__title">Nuon CLI commands</span>
             <span className="choice__desc">
               Every command for this install and app, ids filled in.
             </span>
@@ -530,7 +528,7 @@ export function Landing({ config }: { config: UIConfig }) {
           <div className="nods">
             <GoLink to="/customize/branches" className="nod">
               <span className="nod__top">
-                <span className="nod__title">Get started with app branches</span>
+                <span className="nod__title">App branches</span>
               </span>
               <span className="nod__desc">
                 One push deploys the whole fleet:{' '}
@@ -648,7 +646,7 @@ export function Landing({ config }: { config: UIConfig }) {
                   : 'tour__dot'
             }
             disabled={i > tourIdx}
-            aria-label={`Step ${i + 1} of ${tourSteps.length}`}
+            aria-label={`minute ${i + 1} of ${tourSteps.length}`}
             {...(i === tourIdx ? { 'aria-current': 'step' as const } : {})}
             onClick={() => go(s)}
           />
@@ -685,7 +683,7 @@ export function Landing({ config }: { config: UIConfig }) {
       {step === 'sandbox' && (
         <>
           {goldenHeader(
-            'It starts with a sandbox.',
+            'Every install gets a sandbox.',
             <>
               The footprint Nuon creates in your customer&rsquo;s cloud
               account. Here it&rsquo;s{' '}
@@ -737,7 +735,7 @@ export function Landing({ config }: { config: UIConfig }) {
           {goldenHeader(
             'The runner does the deploying.',
             <>
-              A small compute group Nuon runs inside the account. Every build
+              An EKS managed node group Nuon runs inside the account. Every build
               and deploy happens from in there, so your customer&rsquo;s
               credentials never leave their cloud. It calls out; Nuon never
               needs inbound access.
@@ -751,13 +749,10 @@ export function Landing({ config }: { config: UIConfig }) {
       {step === 'deployed' && (
         <>
           <header className="step-header">
-            <h2>Here&rsquo;s what Nuon deployed.</h2>
+            <h2>What&rsquo;s running.</h2>
             <p className="step-header__lede">
-              One config deployed this entire app &mdash; the API, the worker,
-              the page you&rsquo;re reading &mdash; into this AWS account, and
-              Nuon operates it from inside. Every config version this install
-              has ever run is on record. Your app runs in any
-              customer&rsquo;s cloud the same way.
+              One config version deployed all three, and Nuon operates them
+              from inside the account.
             </p>
           </header>
           <div className="row">
@@ -810,10 +805,6 @@ export function Landing({ config }: { config: UIConfig }) {
             </OutLink>
           </div>
           <div className="cta-block">
-            <span className="cta-block__kicker">
-              next: connect your coding agent &middot; ship a change &middot;
-              run a health check
-            </span>
             <button className="btn btn--primary btn--xl" onClick={next}>
               Customize the Kitchen Sink <Icon name="arrow-right" />
             </button>

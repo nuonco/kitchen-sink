@@ -42,7 +42,7 @@ export function Ops({ config }: { config: UIConfig }) {
       <BackLink to="/">Kitchen Sink</BackLink>
 
       <header className="page-header">
-        <h1>The things it can do.</h1>
+        <h1>Day-2 operations</h1>
         <p className="lede">Real commands against this install, ids filled in.</p>
       </header>
 

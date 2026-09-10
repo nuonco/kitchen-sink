@@ -10,7 +10,7 @@
 {{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }}
 <div style="border:1px solid rgba(127,127,127,0.3);border-radius:12px;padding:30px 24px;margin:4px 0 6px;text-align:center;background:rgba(127,127,127,0.06);">
 <div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin-bottom:12px;">THE APP IS RUNNING</div>
-<div style="font-size:1.75em;font-weight:800;line-height:1.2;"><a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/">Open the app and explore ↗</a></div>
+<div style="font-size:1.75em;font-weight:800;line-height:1.2;"><a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/">Open the app ↗</a></div>
 <div style="font-family:monospace;font-size:0.85em;opacity:0.6;margin-top:10px;">app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}</div>
 <div style="font-size:0.9em;opacity:0.75;margin-top:14px;max-width:34em;margin-left:auto;margin-right:auto;line-height:1.5;">The app explains each part of the platform against this install's live state.</div>
 </div>
@@ -75,8 +75,6 @@ Kitchen Sink uses a lot of the platform because it exists to demo it. Shipping y
 **At least one component — the thing you ship.** A piece of your software in a format you already build: container image, Helm chart, Kubernetes manifests, Terraform module. Declare what it needs, and Nuon works out build and deploy order. This install has {{ $cT }}{{ if gt $cT 0 }} ({{ $cR }} active){{ end }}. One is a legitimate app.
 
 **The runner — what does the work.** An EKS managed node group inside the customer's account performs every build, deploy, and action itself. It authenticates outbound and polls for work, so **Nuon never needs inbound access to their account**.
-
-Everything on the next tab is optional until a customer makes it necessary.
 
 </nuon-tab>
 

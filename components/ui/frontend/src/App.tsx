@@ -111,9 +111,6 @@ export default function App() {
         <div className="footer__inner">
           <span className="mono">nuonco/kitchen-sink</span>
           <span className="topbar__divider" />
-          <span>
-            This app and the Nuon dashboard are two halves of the same tour.
-          </span>
           <span className="topbar__spacer" />
           <OutLink href="https://docs.nuon.co" variant="plain">
             docs.nuon.co

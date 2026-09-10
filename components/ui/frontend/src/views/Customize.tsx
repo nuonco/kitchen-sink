@@ -169,9 +169,9 @@ function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {
   return (
     <section className="section">
       <div className="section__head">
-        <h2 className="section__title">What you&rsquo;ll see, live</h2>
+        <h2 className="section__title">Pods in this namespace</h2>
         <div className="subtext muted">
-          GET /introspect/namespace/{namespace} · re-read every{' '}
+          GET /api/introspect/namespace/{namespace} · re-read every{' '}
           {EVIDENCE_POLL_MS / 1000}s
         </div>
       </div>
@@ -313,15 +313,15 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           it deploys, so one bad change stops at the first wave.
         </p>
         <CodeBlock
-          label="branch.toml (the real config, comments stripped)"
+          label="branch.toml (comments stripped)"
           code={branchConfigAbridged}
         />
         <Callout label="Create your own">
           Nothing to set up here — the app&rsquo;s first sync built this
           branch from <span className="mono">branch.toml</span> (branches
-          upsert by name). In your own app, a{' '}
-          <span className="mono">branch.toml</span> and one sync is the whole
-          feature. Groups select installs by label, so a new customer joins a
+          upsert by name). In your own app: a{' '}
+          <span className="mono">branch.toml</span> and one sync. Groups
+          select installs by label, so a new customer joins a
           wave the moment their install is labelled; customers who need a
           different configuration get their own branch, tracking a different
           git branch of the same repo.{' '}
@@ -548,10 +548,7 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
               command={`nuon runbooks create-run --install-id ${install} --runbook-id ${runbook.name}`}
               note={
                 runbook.mutates ? (
-                  <>
-                    <strong>This one changes things</strong> — it re-applies
-                    state or assumes elevated access. Run it deliberately.
-                  </>
+                  <>Re-applies state or assumes elevated access.</>
                 ) : (
                   <>
                     Read-only diagnostics: safe to run right now. Runbooks
@@ -563,7 +560,7 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          This install already has real runs on record:{' '}
+          This install already has runs on record:{' '}
           <span className="mono">full-health-check</span> runs after every
           staged deploy (<span className="mono">post_deploy_runbooks</span>).{' '}
           {config.links.runbooks && (
@@ -596,7 +593,7 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
 /** Editorial context per action; the facts next to it come from the config. */
 const actionNotes: Record<string, string> = {
   cron_status:
-    'Collects pod status and publishes pods_ready / pods_total as structured outputs; the install readme reads them as its health pulse.',
+    'Collects pod status and publishes pods_ready / pods_total as structured outputs; the install readme renders them.',
   debug:
     'What support runs when an install misbehaves: pods, events, and recent logs, with nobody handed a kubeconfig.',
   lifecycle_hooks:
@@ -641,8 +638,9 @@ function actionOutcome(name: string, installID: string): ReactNode {
       The transcript prints the identity the run assumed (
       <span className="mono">aws sts get-caller-identity</span> &rarr;{' '}
       <span className="mono">{installID}-app-break-glass</span>), then a{' '}
-      <em>denied</em> Secrets Manager call — the permissions boundary doing its
-      job — and then restarts the app&rsquo;s three deployments. Watch the pod
+      <em>denied</em> Secrets Manager call — the explicit Deny in{' '}
+      <span className="mono">break_glass.toml</span> — and then restarts the
+      app&rsquo;s three deployments. Watch the pod
       table below while it runs.
     </>
   )
@@ -709,8 +707,8 @@ function ActionsFlow({ config }: { config: UIConfig }) {
           {action.labels && <span className="chip">{action.labels}</span>}
         </div>
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          The runner already has the access an action needs; the action is the
-          audited, repeatable path to using it.
+          The runner already holds the access; the action is how you use it
+          without a kubeconfig.
         </p>
       </PspSection>
 
@@ -728,11 +726,8 @@ function ActionsFlow({ config }: { config: UIConfig }) {
                 command={`nuon actions list --app-id ${app}`}
                 note={
                   <>
-                    The sharp edge: <span className="mono">create-run</span>{' '}
-                    takes the workflow <strong>id</strong> (it starts with{' '}
-                    <span className="mono">actw</span>), never the name — so
-                    list first and copy the id next to{' '}
-                    <span className="mono">{action.name}</span>.
+                    <span className="mono">create-run</span> takes the id,
+                    not the name.
                   </>
                 }
               />
@@ -833,7 +828,7 @@ function HealthFlow({ config }: { config: UIConfig }) {
       <PspSection
         kind="proof"
         title="The gate's inputs, right now"
-        aside={`GET /introspect/namespace/${namespace}`}
+        aside={`GET /api/introspect/namespace/${namespace}`}
       >
         <LoadState result={ns} what="pod health" />
         {ns.state === 'ok' && (
@@ -947,16 +942,16 @@ function TriggersFlow({ config }: { config: UIConfig }) {
           which is where a migration or a cache warm goes.
         </p>
         <CodeBlock
-          label="actions/lifecycle_hooks/nuon.toml (the real file)"
+          label="actions/lifecycle_hooks/nuon.toml"
           code={lifecycleHooksToml}
         />
         <Callout label="Ship on git push">
           The repo also ships rules that turn GitHub pushes and releases into
-          staged rollouts — disabled, as{' '}
-          <span className="mono">triggers.toml.example</span>, because they
-          name an org-level webhook trigger,{' '}
+          staged rollouts, shipped disabled as{' '}
+          <span className="mono">triggers.toml.example</span>. They name an
+          org-level webhook trigger,{' '}
           <span className="mono">github-events</span>, that app config cannot
-          create — a fresh sync would fail on it.{' '}
+          create, so a fresh sync would fail on it.{' '}
           <OutLink href="https://docs.nuon.co/guides/triggers" variant="plain">
             Triggers docs
           </OutLink>
@@ -1080,13 +1075,10 @@ function RolesFlow({ config }: { config: UIConfig }) {
             </tbody>
           </table>
         </div>
-        <div className="callout" style={{ marginTop: 16 }}>
-          <div className="callout__label">
-            {role.name} · in this install: {'{install-id}'}-{role.name}
-          </div>
+        <Callout label={`${role.name} · in this install: ${install}-${role.name}`}>
           {roleNotes[role.name] ?? role.desc}
-        </div>
-        <CodeBlock label="break_glass.toml (the real file)" code={breakGlassToml} />
+        </Callout>
+        <CodeBlock label="break_glass.toml" code={breakGlassToml} />
         <p className="small muted" style={{ marginTop: 24, maxWidth: '72ch' }}>
           On top of the roles, OPA policies bound what a config may ask for,
           evaluated against plans before anything applies:
@@ -1124,7 +1116,7 @@ function RolesFlow({ config }: { config: UIConfig }) {
       <PspSection
         kind="proof"
         title="Prove the boundary, on the record"
-        aside="the break-glass run narrates its own evidence"
+        aside="the transcript prints the assumed role and the denied call"
       >
         <Tracks
           agent={<ProofPrompt flow="roles" config={config} />}
@@ -1242,9 +1234,10 @@ function AgentFlow({ config }: { config: UIConfig }) {
         <p className="lede">
           Nuon ships a Model Context Protocol (MCP) server. One command
           connects it to Claude Code, Cursor, or Amp through the Nuon CLI you
-          already have. Then your agent can read this install, follow a
-          rollout, and, when you allow writes, act on it. Every prompt below
-          has this install&rsquo;s ids filled in.
+          already have. Your agent can then read this install and follow a
+          rollout; with <Mono>--allow-writes</Mono> it can start runs and
+          approve steps. Every prompt below has this install&rsquo;s ids
+          filled in.
         </p>
       </header>
 
@@ -1268,7 +1261,7 @@ function AgentFlow({ config }: { config: UIConfig }) {
               Add <Mono>--allow-writes</Mono> after{' '}
               <Mono>nuon agents mcp</Mono> when you want the agent to be able
               to approve, preview, or run things. Without it every write tool
-              stays hidden, which is the right default for a first session.
+              stays hidden.
             </>
           }
         />
@@ -1293,8 +1286,7 @@ function AgentFlow({ config }: { config: UIConfig }) {
         id="use-cases"
       >
         <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-          Each card is one prompt. Copy it, paste it into your agent, and the
-          agent does the rest with the tools listed. Read-only first.
+          Each card is one prompt and the tools it uses. Read-only first.
         </p>
         <div className="gallery">
           {reads.map((u) => (
@@ -1302,10 +1294,10 @@ function AgentFlow({ config }: { config: UIConfig }) {
           ))}
         </div>
         <Callout label="With --allow-writes">
-          The next four start runs or approve steps. The agent shows you what
-          will change and waits for your yes; previews default to plan-only.
-          They need the proxy started with <Mono>--allow-writes</Mono> and a
-          token that can create.
+          The next {writes.length} start runs or approve steps. The agent shows
+          you what will change and waits for your yes; previews default to
+          plan-only. They need the proxy started with <Mono>--allow-writes</Mono>{' '}
+          and a token that can create.
         </Callout>
         <div className="gallery" style={{ marginTop: 16 }}>
           {writes.map((u) => (
@@ -1326,7 +1318,7 @@ function AgentFlow({ config }: { config: UIConfig }) {
 
       <Disclosure summary="Run it yourself with the Nuon CLI">
         <CommandBlock
-          label="run a real health check (read-only)"
+          label="run a health check (read-only)"
           command={`nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`}
           note={<>A run appears in your dashboard with per-step results.</>}
         />
@@ -1352,7 +1344,7 @@ function AgentFlow({ config }: { config: UIConfig }) {
           command={`nuon sync --app-id ${app} --force --branch ${branchName} --no-wait --output agent`}
           note={
             <>
-              Syncs your local edit, no push needed, and triggers a real branch
+              Syncs your local edit, no push needed, and triggers a branch
               run, group by group. Approve held groups in your dashboard, or
               let your agent surface them with get_pending_approvals.
             </>
