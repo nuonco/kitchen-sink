@@ -4,27 +4,15 @@
 {{ $region := .nuon.cloud_account.aws.region }}
 {{ $vpcId := dig "vpc_id" "vpc-000000" .nuon.install_stack.outputs }}
 {{- $comps := default dict .nuon.components -}}
-{{- $workflows := dict -}}{{- if .nuon.actions }}{{ $workflows = default dict .nuon.actions.workflows }}{{ end -}}
-{{- $sSandbox := dig "status" "" (default dict .nuon.sandbox) -}}
-{{- $sStack := dig "status" "" .nuon.install_stack -}}
-{{- $sAlb := dig "status" "" (default dict (index $comps "application_load_balancer")) -}}
-{{- $sandboxOk := or (eq $sSandbox "active") (eq $sSandbox "healthy") (eq $sSandbox "finished") -}}
-{{- $stackOk := or (eq $sStack "active") (eq $sStack "healthy") (eq $sStack "finished") -}}
 {{- $cR := 0 -}}{{- range $n, $c := $comps }}{{ if eq (dig "status" "" $c) "active" }}{{ $cR = add $cR 1 }}{{ end }}{{ end -}}
 {{- $cT := len $comps -}}
-{{- $allCompsOk := and (gt $cT 0) (ge $cR $cT) -}}
-{{- $hc := default dict (index $workflows "cron_status") -}}
-{{- $hcOut := default dict (dig "outputs" dict $hc) -}}
-{{- $pr := int (dig "pods_ready" 0 $hcOut) -}}{{- $pt := int (dig "pods_total" 0 $hcOut) -}}
-{{- $checkedAt := dig "checked_at" "" $hcOut -}}
-{{- $healthOk := and (gt $pt 0) (ge $pr $pt) -}}
 
 {{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }}
 <div style="border:1px solid rgba(127,127,127,0.3);border-radius:12px;padding:30px 24px;margin:4px 0 6px;text-align:center;background:rgba(127,127,127,0.06);">
 <div style="font-size:0.78em;font-weight:700;letter-spacing:0.09em;opacity:0.55;margin-bottom:12px;">THE APP IS RUNNING</div>
 <div style="font-size:1.75em;font-weight:800;line-height:1.2;"><a href="https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/">Open the app and explore ↗</a></div>
 <div style="font-family:monospace;font-size:0.85em;opacity:0.6;margin-top:10px;">app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}</div>
-<div style="font-size:0.9em;opacity:0.75;margin-top:14px;max-width:34em;margin-left:auto;margin-right:auto;line-height:1.5;">A guided tour of the platform lives inside the app itself. This page just gets you there.</div>
+<div style="font-size:0.9em;opacity:0.75;margin-top:14px;max-width:34em;margin-left:auto;margin-right:auto;line-height:1.5;">The app explains each part of the platform against this install's live state.</div>
 </div>
 {{ else }}
 <div style="border:1px solid rgba(127,127,127,0.3);border-radius:12px;padding:26px 24px;margin:4px 0 6px;text-align:center;background:rgba(127,127,127,0.06);">
@@ -40,32 +28,37 @@ Deployed into AWS account `{{ $accountId }}` ({{ $region }}) by Nuon, from [one 
 
 <div style="padding-top:1rem;"></div>
 
-Creating this install ran these steps, in order.
+## Five health checks
 
-<div style="display:flex;flex-direction:column;gap:10px;margin:18px 0 8px;">
-<div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
-<span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">1</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Provisioned the infrastructure in <code>{{ $accountId }}</code> ({{ $region }}) — cluster, VPC <code>{{ $vpcId }}</code>, DNS zones, and the runner.</div>
-<span style="font-weight:800;flex:none;color:{{ if and $sandboxOk $stackOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if and $sandboxOk $stackOk }}✓{{ else }}…{{ end }}</span>
-</div>
-<div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
-<span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">2</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Built the application's components and deployed them in dependency order — {{ $cR }}/{{ $cT }} active.</div>
-<span style="font-weight:800;flex:none;color:{{ if $allCompsOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if $allCompsOk }}✓{{ else }}…{{ end }}</span>
-</div>
-<div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
-<span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">3</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Issued a TLS certificate and put the app behind a public HTTPS endpoint.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} That's the link at the top of this page.{{ end }}</div>
-<span style="font-weight:800;flex:none;color:{{ if eq $sAlb "active" }}#16a34a{{ else }}#64748b{{ end }};">{{ if eq $sAlb "active" }}✓{{ else }}…{{ end }}</span>
-</div>
-<div style="display:flex;align-items:flex-start;gap:14px;border:1px solid rgba(127,127,127,0.22);border-radius:8px;padding:14px 16px;">
-<span style="font-family:monospace;font-weight:800;font-size:1.05em;border:1.5px solid rgba(127,127,127,0.5);border-radius:50%;width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;flex:none;">4</span>
-<div style="flex:1;font-size:0.92em;line-height:1.45;">Started scheduled health checks that run inside the install: every pod, every hour{{ if gt $pt 0 }} — currently <strong>{{ $pr }}/{{ $pt }} ready</strong>{{ if ne $checkedAt "" }}, last run <nuon-time time="{{ $checkedAt }}" format="relative"></nuon-time>{{ end }}{{ end }}.</div>
-<span style="font-weight:800;flex:none;color:{{ if $healthOk }}#16a34a{{ else }}#64748b{{ end }};">{{ if $healthOk }}✓{{ else }}…{{ end }}</span>
-</div>
-</div>
+{{ $acts := default dict .nuon.actions -}}
+{{ if dig "populated" false $acts -}}
+{{- $wf := default dict (dig "workflows" dict $acts) -}}
+{{- $nodes := default dict (index $wf "health_nodes") -}}
+{{- $nodesOut := default dict (dig "outputs" dict $nodes) -}}
+{{- $roll := default dict (index $wf "health_rollout") -}}
+{{- $rollOut := default dict (dig "outputs" dict $roll) -}}
+{{- $ing := default dict (index $wf "health_ingress") -}}
+{{- $ingOut := default dict (dig "outputs" dict $ing) -}}
+{{- $end := default dict (index $wf "health_endpoint") -}}
+{{- $endOut := default dict (dig "outputs" dict $end) -}}
+{{- $pods := default dict (index $wf "cron_status") -}}
+{{- $podsOut := default dict (dig "outputs" dict $pods) -}}
 
-Nobody logged into a server, and the same sequence repeats identically for the next customer account.
+| Check | State | Detail |
+|---|---|---|
+| Nodes | {{ if eq (dig "status" "" $nodes) "error" }}failed{{ else if ne (dig "status" "" $nodes) "finished" }}not yet run{{ else if and (ne (toString (dig "node_count" "0" $nodesOut)) "0") (eq (toString (dig "nodes_ready" "?" $nodesOut)) (toString (dig "node_count" "!" $nodesOut))) }}healthy{{ else }}degraded{{ end }} | {{ dig "nodes_ready" "—" $nodesOut }} of {{ dig "node_count" "—" $nodesOut }} ready |
+| Workloads | {{ if eq (dig "status" "" $pods) "error" }}failed{{ else if ne (dig "status" "" $pods) "finished" }}not yet run{{ else if eq (toString (dig "status" "?" $podsOut)) "ok" }}healthy{{ else }}degraded{{ end }} | {{ dig "pods_ready" "—" $podsOut }} of {{ dig "pods_total" "—" $podsOut }} pods ready |
+| Rollouts | {{ if eq (dig "status" "" $roll) "error" }}failed{{ else if ne (dig "status" "" $roll) "finished" }}not yet run{{ else if and (eq (toString (dig "api_rollout" "?" $rollOut)) "complete") (eq (toString (dig "ui_rollout" "?" $rollOut)) "complete") (eq (toString (dig "worker_rollout" "?" $rollOut)) "complete") }}healthy{{ else }}degraded{{ end }} | api {{ dig "api_rollout" "—" $rollOut }} · ui {{ dig "ui_rollout" "—" $rollOut }} · worker {{ dig "worker_rollout" "—" $rollOut }} |
+| Ingress | {{ if eq (dig "status" "" $ing) "error" }}failed{{ else if ne (dig "status" "" $ing) "finished" }}not yet run{{ else if and (ne (toString (dig "targets_total" "0" $ingOut)) "0") (eq (toString (dig "targets_healthy" "?" $ingOut)) (toString (dig "targets_total" "!" $ingOut))) }}healthy{{ else }}degraded{{ end }} | {{ dig "targets_healthy" "—" $ingOut }} of {{ dig "targets_total" "—" $ingOut }} endpoints backed |
+| Public endpoint | {{ if eq (dig "status" "" $end) "error" }}failed{{ else if ne (dig "status" "" $end) "finished" }}not yet run{{ else if eq (toString (dig "http_status" "?" $endOut)) "200" }}healthy{{ else }}degraded{{ end }} | HTTP {{ dig "http_status" "—" $endOut }} in {{ dig "latency_ms" "—" $endOut }}ms |
+
+{{ with dig "checked_at" "" $endOut }}Last checked <nuon-time time="{{ . }}" format="relative"></nuon-time>. {{ end }}Run the `full-health-check` runbook to refresh every row.
+{{ else -}}
+No health check has run yet. Run the `full-health-check` runbook.
+{{ end }}
+Provisioned cluster, VPC `{{ $vpcId }}`, DNS zones, a TLS certificate, and the runner in `{{ $accountId }}` ({{ $region }}), then built and deployed {{ $cT }} components in dependency order behind a public HTTPS endpoint — {{ $cR }} active.
+
+The same sequence runs unchanged for the next customer account.
 
 </nuon-tab>
 
@@ -81,7 +74,7 @@ Kitchen Sink uses a lot of the platform because it exists to demo it. Shipping y
 
 **At least one component — the thing you ship.** A piece of your software in a format you already build: container image, Helm chart, Kubernetes manifests, Terraform module. Declare what it needs, and Nuon works out build and deploy order. This install has {{ $cT }}{{ if gt $cT 0 }} ({{ $cR }} active){{ end }}. One is a legitimate app.
 
-**The runner — what does the work.** A small compute group inside the customer's account performs every build, deploy, and action itself. It authenticates outbound and polls for work, so **Nuon never needs inbound access to their account**. That asymmetry is the whole security story, and you get it by default.
+**The runner — what does the work.** An EKS managed node group inside the customer's account performs every build, deploy, and action itself. It authenticates outbound and polls for work, so **Nuon never needs inbound access to their account**.
 
 Everything on the next tab is optional until a customer makes it necessary.
 
@@ -92,8 +85,6 @@ Everything on the next tab is optional until a customer makes it necessary.
 <div style="padding-top:1rem;"></div>
 
 ## When a customer asks for more
-
-Two things first, because they change how you work with everything else on this page.
 
 **"Can we try the new version first?"** This install ships through the `main` [app branch](https://github.com/nuonco/kitchen-sink/blob/main/branch.toml): a push rolls the config out group by group — staging, then customers, then enterprise — with a person approving each group's plan before it deploys. A pilot customer sees a change before the fleet does, and one bad change stops at the first wave.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} The [branches page inside the app](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/customize/branches) shows the groups and the commands that ship to them.{{ end }}
 
@@ -111,9 +102,9 @@ Reach for the rest when a real request makes them necessary — not before. Each
 
 **"What exactly can you touch in our account?"** Answer with files: a scoped IAM role per operation with [permissions boundaries](https://github.com/nuonco/kitchen-sink/tree/main/permissions), [policies](https://github.com/nuonco/kitchen-sink/tree/main/policies) that block a deploy before it applies, and a pre-declared [break-glass role](https://github.com/nuonco/kitchen-sink/blob/main/break_glass.toml) with an audit trail — agreed to before the emergency.
 
-**"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/{{ .nuon.org.id }}/installs/{{ .nuon.install.id }}/runbooks): an operational procedure as a reviewable, repeatable, parameterized workflow anyone on the team can run against an install.
+**"Our support team needs to do that themselves."** [Runbooks](https://app.nuon.co/{{ .nuon.org.id }}/installs/{{ .nuon.install.id }}/runbooks): an operational procedure as a parameterized workflow anyone on the team can run against an install. This app ships four.
 
-**"Do we have to click a button every time?"** Triggers run actions and runbooks on a schedule or off lifecycle events — post-provision, before and after a deploy — so routine operations just happen.
+**"Do we have to click a button every time?"** Triggers run actions and runbooks on a schedule or off lifecycle events — post-provision, before and after a deploy. This install's hourly health check runs from one.
 
 ---
 
