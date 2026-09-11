@@ -3490,6 +3490,431 @@ a.encyc__row:hover .encyc__title {
 }
 
 /* ============================================================
+   The relationship diagram: repo -> Nuon -> customer clouds, drawn once
+   and driven through three states by the rel--stageN class. Bands never
+   unmount between stages — only their emphasis, and the stage-2 zoom
+   that nests the golden path inside the highlighted install.
+   ============================================================ */
+
+.rel {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.rel__band {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+  padding: var(--space-4);
+  transition: opacity var(--duration-base) var(--ease-standard),
+    flex-grow var(--duration-base) var(--ease-standard);
+}
+
+.rel__band--nuon {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* The clouds band carries four fan-out nodes (this install + every
+   rollout group) against the other bands' one line of text each, so it
+   gets more of the row by default, not only when stage 2 zooms it further. */
+.rel__band--clouds {
+  flex-grow: 2.2;
+}
+
+.rel__band-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rel__band-name {
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
+  font-weight: var(--weight-strong);
+  color: var(--text-primary);
+  margin-top: var(--space-1);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.rel__band-sub {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+.rel__band-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.rel__groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.rel__group-type {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 2px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.rel__group-names {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-secondary);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.rel__edge {
+  flex: none;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 64px;
+  padding: 0 var(--space-1);
+}
+
+.rel__edge-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.rel__edge-line {
+  position: relative;
+  width: 100%;
+  height: 1px;
+  background: var(--border-strong);
+}
+
+.rel__edge-line::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: -3px;
+  border-top: 3.5px solid transparent;
+  border-bottom: 3.5px solid transparent;
+  border-left: 5px solid var(--border-strong);
+}
+
+.rel__installs {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.rel__install {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  min-width: 0;
+  border: 2px dashed var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  transition: flex-grow var(--duration-base) var(--ease-standard);
+}
+
+.rel__install--sibling {
+  opacity: 0.45;
+  padding: var(--space-2);
+}
+
+.rel__install--sibling .rel__install-label {
+  display: block;
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-secondary);
+  max-width: 100%;
+  hyphens: auto;
+  overflow-wrap: anywhere;
+}
+
+.rel__install--this {
+  flex-grow: 1.6;
+  border-style: solid;
+  border-color: var(--accent-dim);
+  background: var(--accent-wash);
+  transition: border-color var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard),
+    flex-grow var(--duration-base) var(--ease-standard);
+}
+
+.rel__install-top {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.rel__install-label {
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-strong);
+  color: var(--text-primary);
+}
+
+.rel__install-tag {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+/* The dimmed rollout-group markers: "group" as its own line above the
+   name, so a group like "customers" never reads as a second install. */
+.rel__install-group-tag {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  margin-bottom: 2px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.rel__install-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.rel__zoom {
+  margin-top: var(--space-3);
+}
+
+/* Shrink the nested golden path to fit inside the zoomed install card.
+   Real property overrides, not a transform scale, so the box still
+   participates in ordinary layout at every width. */
+.rel__zoom .arch__sandbox {
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.rel__zoom .arch__node,
+.rel__zoom .arch__node--fleet {
+  padding: var(--space-2);
+  gap: 2px;
+}
+
+.rel__zoom .arch__name {
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+}
+
+.rel__zoom .arch__hint {
+  font-size: 9px;
+  line-height: 12px;
+}
+
+.rel__zoom .arch__num {
+  font-size: 9px;
+}
+
+.rel__zoom .arch__edge {
+  min-width: 32px;
+  padding: 0 var(--space-1);
+}
+
+/* Nested purely as an illustration here — every part is already revealed,
+   and there is no step left for a click to jump to — so mouse affordance
+   is turned off rather than left implying a control that does nothing. */
+.rel__zoom .arch button {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* ---------- Stage emphasis: the same three bands, three states ---------- */
+
+.rel--stage1 .rel__band--clouds {
+  opacity: 0.45;
+}
+
+.rel--stage2 .rel__band--repo,
+.rel--stage2 .rel__band--nuon {
+  flex-grow: 0.9;
+  opacity: 0.4;
+}
+
+.rel--stage2 .rel__band--repo .rel__band-name,
+.rel--stage2 .rel__band--nuon .rel__band-name {
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+}
+
+.rel--stage2 .rel__band--repo .rel__group-type {
+  font-size: 10px;
+  line-height: 14px;
+}
+
+.rel--stage2 .rel__band--clouds {
+  flex-grow: 3.6;
+}
+
+.rel--stage2 .rel__install--sibling {
+  flex-grow: 0.5;
+}
+
+.rel--stage2 .rel__install--this {
+  flex-grow: 3;
+  border-color: var(--accent);
+  transform: scale(1.01);
+}
+
+.rel--stage3 .rel__band--repo,
+.rel--stage3 .rel__band--nuon,
+.rel--stage3 .rel__band--clouds {
+  opacity: 1;
+}
+
+/* The reconcile edge: repo through Nuon out to every install group, in
+   installGroups order — the push slide's animation. */
+.rel--stage3 .rel__edge-line {
+  animation: rel-flow 1.4s var(--ease-standard) infinite;
+}
+
+.rel--stage3 .rel__edge--nuon-clouds .rel__edge-line {
+  animation-delay: 0.2s;
+}
+
+@keyframes rel-flow {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.rel--stage3 .rel__install--this,
+.rel--stage3 .rel__install--sibling {
+  animation: rel-reconcile 1.8s var(--ease-standard) 1;
+}
+
+.rel--stage3 .rel__install--this {
+  animation-delay: 0.3s;
+}
+
+.rel--stage3 .rel__installs .rel__install--sibling:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.rel--stage3 .rel__installs .rel__install--sibling:nth-child(3) {
+  animation-delay: 0.9s;
+}
+
+.rel--stage3 .rel__installs .rel__install--sibling:nth-child(4) {
+  animation-delay: 1.2s;
+}
+
+@keyframes rel-reconcile {
+  0% {
+    box-shadow: 0 0 0 0 var(--accent-ring);
+  }
+  40% {
+    box-shadow: 0 0 0 4px var(--accent-ring);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-ring) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rel__band,
+  .rel__install,
+  .rel__install--this {
+    transition: none;
+  }
+
+  .rel--stage2 .rel__install--this {
+    transform: none;
+  }
+
+  .rel--stage3 .rel__edge-line,
+  .rel--stage3 .rel__install--this,
+  .rel--stage3 .rel__install--sibling {
+    animation: none;
+  }
+}
+
+@media (max-width: 860px) {
+  .rel {
+    flex-direction: column;
+  }
+
+  .rel__edge {
+    align-self: center;
+    min-width: 0;
+    padding: var(--space-2) 0;
+  }
+
+  .rel__edge-line {
+    width: 1px;
+    height: 24px;
+  }
+
+  .rel__edge-line::before {
+    right: auto;
+    left: -3px;
+    top: 0;
+    border-top: none;
+    border-left: 3.5px solid transparent;
+    border-right: 3.5px solid transparent;
+    border-bottom: 5px solid var(--border-strong);
+  }
+}
+
+@media (max-width: 640px) {
+  .rel__installs {
+    flex-direction: column;
+  }
+
+  .rel__install--this,
+  .rel--stage2 .rel__install--this,
+  .rel--stage2 .rel__install--sibling {
+    flex-grow: 1;
+  }
+}
+
+/* ============================================================
    The "Ask your agent" gallery: one card per MCP use case
    ============================================================ */
 

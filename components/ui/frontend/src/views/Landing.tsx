@@ -7,34 +7,26 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import { branchName, installGroups, repoName } from '../lib/config-data.gen'
+import { branchName, installGroups } from '../lib/config-data.gen'
 import { seenSteps } from '../lib/progress'
 import { agentPrompt, setup, useCases } from '../lib/prompts'
 import { useNavigate } from '../lib/router'
 import { pathSteps } from '../lib/taxonomy'
 import { PixelCheck } from '../ui/CapabilityGrid'
 import { CopyButton, Icon, OutLink } from '../ui/Primitives'
+import { RelationshipDiagram } from '../ui/RelationshipDiagram'
 
 /* ============================================================
-   The landing is "Nuon in 5 minutes": a guided walkthrough. A first-time
-   visitor has just installed and lands on the arrival moment; each beat
-   puts one idea on screen, points it at something real in this install,
-   and hands them a single "next". Five beats: sandbox, components,
-   runner, what got deployed, and the branch it all ships through. The
-   tour ends on the branch beat's big CTA into the customize page
-   ('explore'), which is also what returning visitors get: progress is
-   remembered in localStorage, and "Skip the tour" jumps straight there.
+   The landing opens on arrival, then three slides put the reader's own
+   relationship to Nuon on screen against the same diagram: their repo is
+   a template, an install is a running instance of it, and a push is how
+   it changes. The tour ends on the push slide's big CTA into the
+   customize page ('explore'), which is also what returning visitors get:
+   progress is remembered in localStorage, and "Skip the tour" jumps
+   straight there.
    ============================================================ */
 
-const steps = [
-  'arrive',
-  'sandbox',
-  'components',
-  'runner',
-  'deployed',
-  'branch',
-  'explore',
-] as const
+const steps = ['arrive', 'template', 'instance', 'push', 'explore'] as const
 
 const WALKTHROUGH_URL =
   'https://docs.nuon.co/get-started/app-branches-walkthrough'
@@ -46,10 +38,12 @@ const TOUR_KEY = 'kitchen-sink-tour'
 function storedStep(): Step {
   try {
     const value = window.localStorage.getItem(TOUR_KEY)
-    // Older tours had dedicated toggle, day-2 and shipped steps; those beats
-    // now live elsewhere, so resume at the nearest surviving step.
+    // Older tours had more steps than this one has; those beats now live
+    // elsewhere (or nowhere), so resume at the nearest surviving step.
     if (value === 'toggle' || value === 'day2') return 'explore'
-    if (value === 'shipped') return 'deployed'
+    if (value === 'shipped' || value === 'deployed') return 'instance'
+    if (value === 'sandbox' || value === 'components' || value === 'runner') return 'instance'
+    if (value === 'branch') return 'push'
     if (value && (steps as readonly string[]).includes(value)) {
       return value as Step
     }
@@ -65,104 +59,6 @@ function rememberStep(step: Step) {
   } catch {
     // Same story: without storage the tour still works, it just forgets.
   }
-}
-
-/* ============================================================
-   The golden-path diagram, revealed one part at a time. Parts the tour has
-   not reached yet render as ghosts, so each step stays one idea while still
-   hinting at the shape of the whole. Revealed parts are clickable and jump
-   the tour to that part's step. The fourth part sits outside the customer's
-   account: the app branch everything inside it ships from.
-   ============================================================ */
-
-type PartKey = 'sandbox' | 'components' | 'runner' | 'branch'
-
-const partOrder: PartKey[] = ['sandbox', 'components', 'runner', 'branch']
-
-function GoldenPath({
-  stage,
-  onPick,
-}: {
-  stage: PartKey
-  onPick: (part: PartKey) => void
-}) {
-  const revealed = partOrder.indexOf(stage)
-
-  const nodeClass = (part: PartKey) => {
-    const i = partOrder.indexOf(part)
-    if (i > revealed) return 'arch__node arch__node--ghost'
-    if (part === stage) return 'arch__node arch__node--active'
-    return 'arch__node'
-  }
-
-  const fleetGhost = revealed < partOrder.indexOf('branch')
-
-  return (
-    <div className="arch">
-      <div
-        className={
-          stage === 'sandbox' ? 'arch__sandbox arch__sandbox--active' : 'arch__sandbox'
-        }
-      >
-        <button
-          type="button"
-          className="arch__boundary"
-          onClick={() => onPick('sandbox')}
-        >
-          <span className="arch__num">01</span>
-          <span className="arch__name">Sandbox</span>
-          <span className="arch__hint">VPC · EKS · DNS</span>
-        </button>
-        <div className="arch__nodes">
-          <button
-            type="button"
-            className={nodeClass('components')}
-            disabled={revealed < 1}
-            onClick={() => onPick('components')}
-          >
-            <span className="arch__num">02</span>
-            <span className="arch__name">Components</span>
-            <span className="arch__hint">kitchen_sink chart</span>
-          </button>
-          <div
-            className={revealed < 2 ? 'arch__edge arch__edge--ghost' : 'arch__edge'}
-            aria-hidden="true"
-          >
-            <span className="arch__edge-label">deploys</span>
-            <span className="arch__edge-line" />
-          </div>
-          <button
-            type="button"
-            className={nodeClass('runner')}
-            disabled={revealed < 2}
-            onClick={() => onPick('runner')}
-          >
-            <span className="arch__num">03</span>
-            <span className="arch__name">Runner</span>
-            <span className="arch__hint">builds &amp; deploys here</span>
-          </button>
-        </div>
-      </div>
-      <div className={fleetGhost ? 'arch__fleet arch__fleet--ghost' : 'arch__fleet'}>
-        <div className="arch__edge arch__edge--up" aria-hidden="true">
-          <span className="arch__edge-line" />
-          <span className="arch__edge-label">shipped from</span>
-        </div>
-        <button
-          type="button"
-          className={`${nodeClass('branch')} arch__node--fleet`}
-          disabled={fleetGhost}
-          onClick={() => onPick('branch')}
-        >
-          <span className="arch__num">04</span>
-          <span className="arch__name">Branch {branchName}</span>
-          <span className="arch__hint">
-            {installGroups.map((g) => g.name).join(' → ')}
-          </span>
-        </button>
-      </div>
-    </div>
-  )
 }
 
 /* ============================================================
@@ -385,7 +281,6 @@ export function Landing({ config }: { config: UIConfig }) {
     return (
       <div className="tour__step" key="arrive">
         <div className="arrive">
-          <span className="tour__progress">Nuon in 5 minutes</span>
           <h1>You&rsquo;re inside a BYOC install.</h1>
           <p className="arrive__lede">
             This page is served by a container in an EKS cluster, in an AWS
@@ -412,7 +307,7 @@ export function Landing({ config }: { config: UIConfig }) {
           )}
           <div className="arrive__actions">
             <button className="btn btn--primary" onClick={next}>
-              Show me around (5 min) <Icon name="arrow-right" />
+              Show me around <Icon name="arrow-right" />
             </button>
             <button className="tour__skip" onClick={skip}>
               Skip the tour <Icon name="arrow-up-right" />
@@ -623,7 +518,7 @@ export function Landing({ config }: { config: UIConfig }) {
     )
   }
 
-  /* ---------- The four tour steps between arrival and explore ---------- */
+  /* ---------- The three slides between arrival and explore ---------- */
 
   const tourSteps = steps.slice(1, -1) as Step[]
   const tourIdx = tourSteps.indexOf(step)
@@ -631,7 +526,7 @@ export function Landing({ config }: { config: UIConfig }) {
   const chrome = (
     <div className="tour__topline">
       <span className="tour__progress">
-        minute {tourIdx + 1} of {tourSteps.length}
+        slide {tourIdx + 1} of {tourSteps.length}
       </span>
       <span className="tour__dots">
         {tourSteps.map((s, i) => (
@@ -646,7 +541,7 @@ export function Landing({ config }: { config: UIConfig }) {
                   : 'tour__dot'
             }
             disabled={i > tourIdx}
-            aria-label={`minute ${i + 1} of ${tourSteps.length}`}
+            aria-label={`slide ${i + 1} of ${tourSteps.length}`}
             {...(i === tourIdx ? { 'aria-current': 'step' as const } : {})}
             onClick={() => go(s)}
           />
@@ -680,120 +575,60 @@ export function Landing({ config }: { config: UIConfig }) {
     <div className="tour__step" key={step}>
       {chrome}
 
-      {step === 'sandbox' && (
+      {step === 'template' && (
         <>
           {goldenHeader(
-            'Every install gets a sandbox.',
+            'Your app is a template.',
             <>
-              The footprint Nuon creates in your customer&rsquo;s cloud
-              account. Here it&rsquo;s{' '}
-              <span className="mono">aws-eks-sandbox</span>: a VPC, an EKS
-              cluster, a public DNS zone, and a runner. That is the whole
-              list, and deprovisioning the install takes it back down.
+              A template is every component mapped to one TOML file. Nuon
+              reads them into the dependency graph below, and templatizes
+              that graph for every install.
             </>,
           )}
-          <GoldenPath stage="sandbox" onPick={(p) => go(p)} />
-          {config.cluster_name && (
-            <div className="row" style={{ marginTop: 16 }}>
-              <span className="chip">cluster {config.cluster_name}</span>
-              {config.region && <span className="chip">{config.region}</span>}
-            </div>
-          )}
+          <RelationshipDiagram stage={1} imageTags={imageTags} />
           {stepActions()}
         </>
       )}
 
-      {step === 'components' && (
+      {step === 'instance' && (
         <>
           {goldenHeader(
-            'Components are your product.',
+            'An install is an instance of it, in a customer’s cloud.',
             <>
-              One component is one deployable piece of your product. Here the{' '}
-              <span className="mono">kitchen_sink</span> Helm chart deploys the
-              API, the worker, and the UI you&rsquo;re reading.
+              An instance is a running copy of the template, in a
+              customer&rsquo;s AWS account: its own sandbox, its own
+              components, deployed from the same graph.
             </>,
           )}
-          <GoldenPath stage="components" onPick={(p) => go(p)} />
-          {podSummary && (
-            <div className="row" style={{ marginTop: 16 }}>
-              <span className="chip">
-                {podSummary} pods ready in {namespace}
-              </span>
-              {imageTags.length > 0 && (
-                <span className="chip" title="Image tags running right now, read from the cluster">
-                  running {imageTags.join(' · ')}
-                </span>
-              )}
-            </div>
-          )}
+          <RelationshipDiagram
+            stage={2}
+            cluster={config.cluster_name}
+            region={config.region}
+            podsReady={podSummary}
+            imageTags={imageTags}
+          />
           {stepActions()}
         </>
       )}
 
-      {step === 'runner' && (
+      {step === 'push' && (
         <>
           {goldenHeader(
-            'The runner does the deploying.',
+            'To change it, you push.',
             <>
-              An EKS managed node group Nuon runs inside the account. Every build
-              and deploy happens from in there, so your customer&rsquo;s
-              credentials never leave their cloud. It calls out; Nuon never
-              needs inbound access.
+              A push builds the template at that commit. Nuon rolls it out
+              install group by install group, with an approval before each
+              one. The repo&rsquo;s expected state becomes what&rsquo;s
+              running.
             </>,
           )}
-          <GoldenPath stage="runner" onPick={(p) => go(p)} />
-          {stepActions()}
-        </>
-      )}
-
-      {step === 'deployed' && (
-        <>
-          <header className="step-header">
-            <h2>What&rsquo;s running.</h2>
-            <p className="step-header__lede">
-              One config version deployed all three, and Nuon operates them
-              from inside the account.
-            </p>
-          </header>
-          <div className="row">
-            {podSummary && (
-              <span className="chip">
-                {podSummary} pods ready in {namespace}, read from the cluster
-              </span>
-            )}
-            {config.links.versions && (
-              <OutLink href={config.links.versions} variant="plain">
-                config versions
-              </OutLink>
-            )}
-          </div>
-          {stepActions()}
-        </>
-      )}
-
-      {step === 'branch' && (
-        <>
-          {goldenHeader(
-            'It ships through a branch.',
-            <>
-              This install belongs to the{' '}
-              <span className="mono">{branchName}</span> branch of{' '}
-              <span className="mono">{repoName}</span>. A push builds the
-              config at that commit and rolls it out group by group,{' '}
-              {installGroups.map((g) => g.name).join(', then ')}, with a
-              person approving each group&rsquo;s plan before it deploys.
-              One branch is fine; groups are for when customers differ.
-            </>,
-          )}
-          <GoldenPath stage="branch" onPick={(p) => go(p)} />
-          <div className="row" style={{ marginTop: 16 }}>
-            <span className="chip">branch {branchName}</span>
-            {installGroups.map((g) => (
-              <span className="chip" key={g.name} title={g.selector}>
-                {g.order}. {g.name}
-              </span>
-            ))}
-          </div>
+          <RelationshipDiagram
+            stage={3}
+            cluster={config.cluster_name}
+            region={config.region}
+            podsReady={podSummary}
+            imageTags={imageTags}
+          />
           <div className="row" style={{ marginTop: 12 }}>
             {config.links.branches && (
               <OutLink href={config.links.branches} variant="plain">
@@ -801,7 +636,7 @@ export function Landing({ config }: { config: UIConfig }) {
               </OutLink>
             )}
             <OutLink href={WALKTHROUGH_URL} variant="plain">
-              do it yourself: the app-branches walkthrough
+              app-branches walkthrough
             </OutLink>
           </div>
           <div className="cta-block">
