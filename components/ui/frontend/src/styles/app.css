@@ -2516,6 +2516,93 @@ tr.row-select--active td {
   color: var(--accent);
 }
 
+/* ============================================================
+   Dependency graph: one row per deploy wave, generated from each
+   component's own `dependencies` line (src/lib/graph.ts).
+   ============================================================ */
+
+.cgraph {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.cgraph__layer {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.cgraph__layer-label {
+  padding-top: var(--space-2);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-tertiary);
+}
+
+.cgraph__nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.cgraph__node {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 220px;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-card);
+  transition: border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard);
+}
+
+.cgraph__node:hover {
+  border-color: var(--accent-dim);
+  background: var(--surface-raised);
+}
+
+.cgraph__node-name {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-primary);
+}
+
+.cgraph__node-type {
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-tertiary);
+}
+
+.cgraph__node-needs {
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .cgraph__layer {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+
+  .cgraph__layer-label {
+    padding-top: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cgraph__node {
+    transition: none;
+  }
+}
+
 /* The arrive step's config-versions line. */
 
 .arrive__versions {

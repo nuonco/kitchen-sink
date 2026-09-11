@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { UIConfig } from '../lib/api'
-import { branchName, repoName } from '../lib/config-data.gen'
+import { branchName, components, repoName } from '../lib/config-data.gen'
+import { buildGraph } from '../lib/graph'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
 import {
@@ -203,24 +204,50 @@ function TypeMatrix() {
   )
 }
 
-/**
- * The dependency order of this app's core pieces, copied from each
- * component's own `dependencies` line.
- */
-const deployOrder = [
-  {
-    label: 'img_api · img_ui',
-    detail: 'container_image — nothing to wait for',
-  },
-  {
-    label: 'kitchen_sink',
-    detail: 'dependencies = ["img_api", "img_ui"]',
-  },
-  {
-    label: 'application_load_balancer',
-    detail: 'dependencies = ["certificate", "kitchen_sink"]',
-  },
-]
+/** The graph this app's own components draw, one row per deploy wave. */
+function DependencyGraph() {
+  const graph = buildGraph(components)
+  const byName = new Map(graph.nodes.map((n) => [n.name, n]))
+
+  // Per node, what it needs — the edges pointing into it, named.
+  const needs = new Map<string, string[]>()
+  for (const e of graph.edges) {
+    const list = needs.get(e.to) ?? []
+    list.push(e.from)
+    needs.set(e.to, list)
+  }
+
+  return (
+    <div className="cgraph">
+      {graph.layers.map(
+        (layer, i) =>
+          layer.length > 0 && (
+            <div className="cgraph__layer" key={i}>
+              <span className="cgraph__layer-label mono">Wave {i}</span>
+              <div className="cgraph__nodes">
+                {layer.map((name) => {
+                  const nodeNeeds = needs.get(name)
+                  return (
+                    <span className="cgraph__node" key={name}>
+                      <span className="cgraph__node-name mono">{name}</span>
+                      <span className="cgraph__node-type mono">
+                        {byName.get(name)?.type}
+                      </span>
+                      {nodeNeeds && (
+                        <span className="cgraph__node-needs mono">
+                          needs {nodeNeeds.join(' · ')}
+                        </span>
+                      )}
+                    </span>
+                  )
+                })}
+              </div>
+            </div>
+          ),
+      )}
+    </div>
+  )
+}
 
 export function Mapping({ config }: { config: UIConfig }) {
   useMarkStepSeen('/map')
@@ -253,18 +280,13 @@ export function Mapping({ config }: { config: UIConfig }) {
 
       <Section title="How they find each other" aside="outputs · dependencies">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
-          <span className="mono">dependencies</span> orders the deploys; any
-          component can interpolate another&rsquo;s outputs.
+          Each component names its own{' '}
+          <span className="mono">dependencies</span>; it deploys one wave
+          below the deepest one it names. Any component can also interpolate
+          another&rsquo;s outputs, the way <span className="mono">values.yaml</span>{' '}
+          does below.
         </p>
-        <div className="ship">
-          {deployOrder.map((beat, i) => (
-            <span key={beat.label} className="ship__beat">
-              <span className="ship__num">0{i + 1}</span>
-              <span className="ship__label">{beat.label}</span>
-              <span className="ship__detail mono">{beat.detail}</span>
-            </span>
-          ))}
-        </div>
+        <DependencyGraph />
         <FileCode
           file="components/chart/values.yaml"
           code={`api:
