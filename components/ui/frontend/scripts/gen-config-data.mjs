@@ -227,6 +227,33 @@ const toggleableComponents = readdirSync(join(repoRoot, 'components'))
     toml: strippedToml(`components/${file}`),
   }))
 
+/* ---------- components: every component, for the dependency graph ---------- */
+
+// Components come in three shapes: components/*.toml, components/<name>/nuon.toml
+// (chart, pulumi), and components/images/*.toml — four files in a directory with
+// no nuon.toml. Recursing one level covers all three without hardcoding a filename.
+const componentFiles = []
+for (const entry of readdirSync(join(repoRoot, 'components'), { withFileTypes: true })) {
+  if (entry.isFile() && entry.name.endsWith('.toml')) {
+    componentFiles.push(`components/${entry.name}`)
+    continue
+  }
+  if (!entry.isDirectory()) continue
+  for (const inner of readdirSync(join(repoRoot, 'components', entry.name))) {
+    if (inner.endsWith('.toml')) componentFiles.push(`components/${entry.name}/${inner}`)
+  }
+}
+
+const components = componentFiles
+  .map((rel) => toml(rel))
+  .filter((cfg) => cfg.name && cfg.type)
+  .map((cfg) => ({
+    name: cfg.name,
+    type: cfg.type,
+    dependencies: Array.isArray(cfg.dependencies) ? cfg.dependencies : [],
+  }))
+  .sort((a, b) => a.name.localeCompare(b.name))
+
 /* ---------- policies/*.toml ---------- */
 
 const guardrails = readdirSync(join(repoRoot, 'policies'))
@@ -300,6 +327,12 @@ export interface ToggleableComponent {
   toml: string
 }
 
+export interface ComponentNode {
+  name: string
+  type: string
+  dependencies: string[]
+}
+
 export const branchName = ${ts(branch.name)}
 
 export const repoName = ${ts(branch.public_repo?.repo ?? branch.connected_repo?.repo ?? '')}
@@ -323,6 +356,8 @@ export const breakGlassToml = ${ts(breakGlassToml)}
 export const guardrails: Guardrail[] = ${ts(guardrails)}
 
 export const toggleableComponents: ToggleableComponent[] = ${ts(toggleableComponents)}
+
+export const components: ComponentNode[] = ${ts(components)}
 `
 
 writeFileSync(outFile, out)

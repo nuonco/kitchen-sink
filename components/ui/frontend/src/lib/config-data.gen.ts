@@ -51,6 +51,12 @@ export interface ToggleableComponent {
   toml: string
 }
 
+export interface ComponentNode {
+  name: string
+  type: string
+  dependencies: string[]
+}
+
 export const branchName = "main"
 
 export const repoName = "nuonco/kitchen-sink"
@@ -408,5 +414,80 @@ export const toggleableComponents: ToggleableComponent[] = [
     "type": "kubernetes_manifest",
     "defaultEnabled": false,
     "toml": "name = \"tictactoe\"\ntype = \"kubernetes_manifest\"\n\nnamespace    = \"kitchen-sink\"\ndependencies = [\"kitchen_sink\"]\n\ntoggleable      = true\ndefault_enabled = false\n\n[public_repo]\ndirectory = \".\"\nrepo      = \"nuonco/kitchen-sink\"\nbranch = \"main\"\n\n[kustomize]\npath        = \"./src/components/tictactoe\"\npatches     = []\nenable_helm = false\n\n[labels]\ntoggleable = \"true\""
+  }
+]
+
+export const components: ComponentNode[] = [
+  {
+    "name": "action_curl",
+    "type": "container_image",
+    "dependencies": []
+  },
+  {
+    "name": "action_dns_check",
+    "type": "container_image",
+    "dependencies": []
+  },
+  {
+    "name": "application_load_balancer",
+    "type": "helm_chart",
+    "dependencies": [
+      "certificate",
+      "kitchen_sink"
+    ]
+  },
+  {
+    "name": "audit_log_exporter",
+    "type": "kubernetes_manifest",
+    "dependencies": [
+      "kitchen_sink"
+    ]
+  },
+  {
+    "name": "certificate",
+    "type": "terraform_module",
+    "dependencies": []
+  },
+  {
+    "name": "img_api",
+    "type": "container_image",
+    "dependencies": []
+  },
+  {
+    "name": "img_ui",
+    "type": "container_image",
+    "dependencies": []
+  },
+  {
+    "name": "kitchen_sink",
+    "type": "helm_chart",
+    "dependencies": [
+      "img_api",
+      "img_ui"
+    ]
+  },
+  {
+    "name": "kustomize_namespace",
+    "type": "kubernetes_manifest",
+    "dependencies": []
+  },
+  {
+    "name": "kustomizeapp",
+    "type": "kubernetes_manifest",
+    "dependencies": [
+      "kustomize_namespace"
+    ]
+  },
+  {
+    "name": "pulumi_infra",
+    "type": "pulumi",
+    "dependencies": []
+  },
+  {
+    "name": "tictactoe",
+    "type": "kubernetes_manifest",
+    "dependencies": [
+      "kitchen_sink"
+    ]
   }
 ]
