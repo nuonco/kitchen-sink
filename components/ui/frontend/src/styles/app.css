@@ -3864,6 +3864,10 @@ a.encyc__row:hover .encyc__title {
 }
 
 .rel--stage3 .rel__install--this {
+  /* Same as stage 2: a real cluster name like n-<install id> plus the
+     region, pod and image chips need the whole row; the group markers
+     wrap beneath. */
+  flex-basis: 100%;
   animation-delay: 0.3s;
 }
 
