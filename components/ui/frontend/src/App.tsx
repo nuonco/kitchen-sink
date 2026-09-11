@@ -6,6 +6,7 @@ import { segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { Icon, NuonMark, OutLink } from './ui/Primitives'
+import { ProgressStrip } from './ui/ProgressStrip'
 import { AuditLog } from './views/AuditLog'
 import { Customize } from './views/Customize'
 import { Deployed } from './views/Deployed'
@@ -106,6 +107,7 @@ export default function App() {
       <LoadingOverlay />
       <AmbientMark />
       <TopBar installID={config.install_id} dashboardURL={config.links.install} />
+      <ProgressStrip />
       <main className="main">{view}</main>
       <footer className="footer">
         <div className="footer__inner">

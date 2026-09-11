@@ -29,7 +29,7 @@ import {
   type UseCase,
 } from '../lib/prompts'
 import { lastHub } from '../lib/origin'
-import { operationsPath, stepEyebrow } from '../lib/taxonomy'
+import { operationsPath } from '../lib/taxonomy'
 import { EvalPath, StepNav, type SwitchStates } from '../ui/CapabilityGrid'
 import { useMarkStepSeen } from '../lib/progress'
 import {
@@ -41,7 +41,6 @@ import {
   CommandBlock,
   CopyButton,
   Disclosure,
-  Eyebrow,
   Icon,
   LoadState,
   Mono,
@@ -62,7 +61,6 @@ import {
    ============================================================ */
 
 function FlowHeader({
-  to,
   title,
   problem,
 }: {
@@ -72,7 +70,6 @@ function FlowHeader({
 }) {
   return (
     <header className="page-header">
-      <Eyebrow>{stepEyebrow(to)}</Eyebrow>
       <h1>{title}</h1>
       <p className="lede psp-lede">
         <PspTag kind="problem" /> {problem}
@@ -1229,7 +1226,6 @@ function AgentFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <header className="page-header">
-        <Eyebrow>{stepEyebrow('/customize/agent')}</Eyebrow>
         <h1>Connect your coding agent</h1>
         <p className="lede">
           Nuon ships a Model Context Protocol (MCP) server. One command

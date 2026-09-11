@@ -9,10 +9,9 @@ import {
   type UIConfig,
 } from '../lib/api'
 import { branchName, installGroups } from '../lib/config-data.gen'
-import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
-import { BackLink, Eyebrow, LoadState, Mono, OutLink, Section } from '../ui/Primitives'
+import { BackLink, LoadState, Mono, OutLink, Section } from '../ui/Primitives'
 
 /**
  * Which namespaces this app config put in the cluster, as opposed to the
@@ -200,7 +199,6 @@ export function Deployed({ config }: { config: UIConfig }) {
     <>
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
-        <Eyebrow>{stepEyebrow('/deployed')}</Eyebrow>
         <h1>What did Nuon actually deploy?</h1>
         <p className="lede">
           Live reads from this install, and the four config patterns behind

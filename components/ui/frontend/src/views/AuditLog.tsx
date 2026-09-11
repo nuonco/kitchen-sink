@@ -9,14 +9,12 @@ import {
   type UIConfig,
 } from '../lib/api'
 import { toggleableComponents } from '../lib/config-data.gen'
-import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
 import {
   BackLink,
   Badge,
   CodeBlock,
-  Eyebrow,
   LoadState,
   OutLink,
   PspSection,
@@ -334,7 +332,6 @@ export function AuditLog({ config }: { config: UIConfig }) {
     <>
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
-        <Eyebrow>{stepEyebrow('/audit-log')}</Eyebrow>
         <h1>SKU management</h1>
         <p className="lede psp-lede">
           <PspTag kind="problem" /> One plan tier includes a feature the

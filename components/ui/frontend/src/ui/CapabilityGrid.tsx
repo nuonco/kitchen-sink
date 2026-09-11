@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { pathSteps, stepNumber, type Mode, type PathStep } from '../lib/taxonomy'
 import { seenSteps } from '../lib/progress'
+import { useCompletion, type CompletionKind } from '../lib/completion'
 import { useNavigate } from '../lib/router'
 import { Badge } from './Primitives'
 
@@ -65,11 +66,13 @@ export function PathRow({
   switches,
   seen,
   isNext,
+  completion,
 }: {
   step: PathStep
   switches?: SwitchStates
   seen: boolean
   isNext: boolean
+  completion?: CompletionKind
 }) {
   const navigate = useNavigate()
   const isToggle = step.icon === 'toggle'
@@ -120,6 +123,12 @@ export function PathRow({
               <span className="sr-only">explored</span>
             </span>
           )}
+          {completion === 'verified' && (
+            <span className="pathrow__done pathrow__done--verified">verified</span>
+          )}
+          {completion === 'advanced' && (
+            <span className="pathrow__done">read</span>
+          )}
           {isNext && !seen && <span className="pathrow__next">next</span>}
         </span>
       </button>
@@ -131,6 +140,7 @@ export function EvalPath({ switches }: { switches?: SwitchStates }) {
   // Read once per mount: navigating away and back remounts the hub, which is
   // exactly when the set can have grown.
   const seen = seenSteps()
+  const { map } = useCompletion()
   const numbered = pathSteps.filter((s) => !s.bonus)
   const explored = numbered.filter((s) => seen.has(s.to)).length
   const nextStep = numbered.find((s) => !seen.has(s.to))
@@ -160,6 +170,7 @@ export function EvalPath({ switches }: { switches?: SwitchStates }) {
         switches={switches}
         seen={seen.has(step.to)}
         isNext={step.to === nextStep?.to}
+        completion={map[step.to]?.kind}
       />,
     )
   }

@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import type { UIConfig } from '../lib/api'
 import { branchName, repoName } from '../lib/config-data.gen'
-import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
 import {
   BackLink,
   Callout,
-  Eyebrow,
   Icon,
   OutLink,
   Section,
@@ -230,7 +228,6 @@ export function Mapping({ config }: { config: UIConfig }) {
     <>
       <BackLink to="/">Customize the Kitchen Sink</BackLink>
       <header className="page-header">
-        <Eyebrow>{stepEyebrow('/map')}</Eyebrow>
         <h1>How does my product map onto this?</h1>
         <p className="lede">
           A component is one deployable piece of your product, described by a
