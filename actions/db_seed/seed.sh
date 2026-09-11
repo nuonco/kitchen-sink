@@ -25,7 +25,8 @@ SELECT
   (ARRAY['active','inactive','pending'])[floor(random()*3+1)],
   (ARRAY['free','pro','enterprise'])[floor(random()*3+1)],
   now() - (random() * interval '365 days')
-FROM generate_series(1, 50) AS i;
+FROM generate_series(1, 50) AS i
+WHERE NOT EXISTS (SELECT 1 FROM users LIMIT 1);
 "
 
 output=$(psql -tAX -c "
@@ -40,7 +41,7 @@ SELECT json_build_object(
 ) FROM users;
 ")
 
-echo "$output" | jq .
+echo "$output"
 echo "$output" >> "$NUON_ACTIONS_OUTPUT_FILEPATH"
 
 echo "done"
