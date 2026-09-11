@@ -103,27 +103,49 @@ export function clearCompletion(storage?: Storage) {
 }
 
 /**
- * Subscribes a view to the completion map. Re-reads on mount and whenever this
- * tab writes, which is enough: nothing else mutates the key.
+ * Fan-out for same-tab writes. `complete()` and `reset()` mutate storage
+ * directly (through the pure functions above) and then call `emit()`, so
+ * every mounted `useCompletion()` instance re-reads — including the one that
+ * wrote. Without this, only the `storage` event fired, and that only reaches
+ * *other* tabs: two instances in this tab (e.g. ProgressStrip at the App
+ * root and StepNav on the current page) would otherwise each hold their own
+ * stale copy of the map until a full reload.
+ */
+const listeners = new Set<() => void>()
+
+function emit() {
+  for (const listener of listeners) listener()
+}
+
+/**
+ * Subscribes a view to the completion map. Re-reads on mount, whenever any
+ * instance in this tab writes (via the listener set above), and whenever
+ * another tab writes (via the `storage` event).
  */
 export function useCompletion() {
   const [map, setMap] = useState<CompletionMap>(() => readCompletion())
 
   const complete = useCallback((route: string, kind: CompletionKind) => {
-    setMap(markComplete(route, kind, new Date().toISOString()))
+    markComplete(route, kind, new Date().toISOString())
+    emit()
   }, [])
 
   const reset = useCallback(() => {
     clearCompletion()
-    setMap({})
+    emit()
   }, [])
 
   useEffect(() => {
+    const sync = () => setMap(readCompletion())
+    listeners.add(sync)
     const onStorage = (e: StorageEvent) => {
-      if (e.key === KEY) setMap(readCompletion())
+      if (e.key === KEY) sync()
     }
     window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
+    return () => {
+      listeners.delete(sync)
+      window.removeEventListener('storage', onStorage)
+    }
   }, [])
 
   return { map, complete, reset }

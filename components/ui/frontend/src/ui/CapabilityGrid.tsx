@@ -204,11 +204,14 @@ function StepNavLink({
   dir,
   title,
   next = false,
+  onBeforeNavigate,
 }: {
   to: string
   dir: ReactNode
   title: string
   next?: boolean
+  /** Fires just before navigate(), forward direction only — see StepNav. */
+  onBeforeNavigate?: () => void
 }) {
   const navigate = useNavigate()
   return (
@@ -219,6 +222,7 @@ function StepNavLink({
         // navigate() also scrolls back to the top, which a bare hash change
         // would not; the href stays for open-in-new-tab.
         e.preventDefault()
+        onBeforeNavigate?.()
         navigate(to)
       }}
     >
@@ -229,11 +233,16 @@ function StepNavLink({
 }
 
 export function StepNav({ current }: { current: string }) {
+  const { complete } = useCompletion()
   const numbered = pathSteps.filter((s) => !s.bonus)
   const i = numbered.findIndex((s) => s.to === current)
   if (i === -1) return null
   const prev = i > 0 ? numbered[i - 1] : undefined
   const next = i < numbered.length - 1 ? numbered[i + 1] : undefined
+  // Advancing is the only claim this makes: the reader moved on. Never
+  // 'verified' — that kind is earned only by a live cluster read, and this
+  // is the back button's sibling, not one.
+  const advance = () => complete(current, 'advanced')
 
   return (
     <nav className="stepnav" aria-label="Checklist steps">
@@ -252,9 +261,16 @@ export function StepNav({ current }: { current: string }) {
           dir={<>Step {stepNumber(next.to)} &rarr;</>}
           title={next.title}
           next
+          onBeforeNavigate={advance}
         />
       ) : (
-        <StepNavLink to="/" dir={<>Done &rarr;</>} title="Back to the checklist" next />
+        <StepNavLink
+          to="/"
+          dir={<>Done &rarr;</>}
+          title="Back to the checklist"
+          next
+          onBeforeNavigate={advance}
+        />
       )}
     </nav>
   )
