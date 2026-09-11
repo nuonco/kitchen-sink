@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: branch-source-probe
+  namespace: kitchen-sink
+data:
+  source: pull-request

@@ -1,0 +1,14 @@
+name = "branch_source_probe"
+type = "kubernetes_manifest"
+
+namespace = "kitchen-sink"
+
+[public_repo]
+directory = "."
+repo = "nuonco/kitchen-sink"
+branch = "main"
+
+[kustomize]
+path = "./src/components/branch-source-probe"
+patches = []
+enable_helm = false
