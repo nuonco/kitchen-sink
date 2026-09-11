@@ -3,7 +3,8 @@ image   = "postgres:17-alpine"
 timeout = "5m"
 
 [[triggers]]
-type = "post-provision"
+type           = "pre-deploy-component"
+component_name = "kitchen-sink"
 
 [[triggers]]
 type = "manual"
