@@ -1,17 +1,17 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import {
   countReady,
-  hasAuditLogExporter,
   runningImageTags,
   useIntrospectPoll,
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import { branchName, installGroups } from '../lib/config-data.gen'
-import { seenSteps } from '../lib/progress'
-import { agentPrompt, setup, useCases } from '../lib/prompts'
+import { branchName, repoName, toggleableComponents } from '../lib/config-data.gen'
+import { completedCount, useCompletion } from '../lib/completion'
+import { seenSteps, TOUR_KEY } from '../lib/progress'
+import { agentPrompt, setup } from '../lib/prompts'
 import { useNavigate } from '../lib/router'
-import { pathSteps } from '../lib/taxonomy'
+import { numberedSteps, pathSteps, stepNumber } from '../lib/taxonomy'
 import { PixelCheck } from '../ui/CapabilityGrid'
 import { CopyButton, Icon, OutLink } from '../ui/Primitives'
 import { RelationshipDiagram } from '../ui/RelationshipDiagram'
@@ -32,8 +32,6 @@ const WALKTHROUGH_URL =
   'https://docs.nuon.co/get-started/app-branches-walkthrough'
 
 type Step = (typeof steps)[number]
-
-const TOUR_KEY = 'kitchen-sink-tour'
 
 function storedStep(): Step {
   try {
@@ -222,6 +220,7 @@ function CliPanel({ install, app }: { install: string; app: string }) {
 export function Landing({ config }: { config: UIConfig }) {
   const [step, setStep] = useState<Step>(storedStep)
   const [cliOpen, setCliOpen] = useState(false)
+  const { map } = useCompletion()
 
   useEffect(() => {
     rememberStep(step)
@@ -229,22 +228,20 @@ export function Landing({ config }: { config: UIConfig }) {
 
   const namespace = config.namespace ?? 'kitchen-sink'
 
-  // The namespace read doubles as the entitlement watcher: while the hub is
-  // on screen and the demo SKU is still off, keep re-reading so flipping it
-  // on in the dashboard flips the SKU tile's switch here without a reload.
-  const [auditLog, setAuditLog] = useState(false)
+  // Active from the first slide on, not just on 'explore': the three tour
+  // slides read podSummary/imageTags below, so the poll has to be live the
+  // whole way through for those to be real values instead of placeholders.
+  // A returning visitor's stored step is already past 'arrive', so `active`
+  // is true from this hook's first mount and nothing changes for them. A
+  // first-time visitor who advances from 'arrive' inside boot's MIN_SHOW_MS
+  // (lib/boot.ts, 2400ms) flips `active` false -> true mid-lifetime, which
+  // re-runs this hook's effect and lets trackBoot catch one more fetch --
+  // one extra warm fetch inside the boot window, not a new cold wait.
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     20_000,
-    step === 'explore' && !auditLog,
+    step !== 'arrive',
   )
-
-  useEffect(() => {
-    if (ns.state !== 'ok') return
-    if (hasAuditLogExporter(ns.value.response.services ?? [])) {
-      setAuditLog(true)
-    }
-  }, [ns])
 
   const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
   const podSummary =
@@ -324,11 +321,15 @@ export function Landing({ config }: { config: UIConfig }) {
     const install = config.install_id ?? '<your-install-id>'
     const app = config.app_id ?? '<your-app-id>'
     const seen = seenSteps()
-    // The SKU tile reads its title and switch from the same sources as the
-    // rest of the app: taxonomy for the copy, the namespace poll above for
-    // the live entitlement state.
-    const sku = pathSteps.find((s) => s.to === '/audit-log')
     const phases = ['Read', 'Ship', 'Operate', 'Govern'] as const
+    const done = completedCount(map, numberedSteps.map((s) => s.to))
+    const complete = done === numberedSteps.length
+    // While the path is incomplete, tic-tac-toe stays the last row of the
+    // index, same as before it was a numbered/bonus split. Once complete it
+    // moves into the ending block below and drops out of the index, so the
+    // same link never appears twice on one screen.
+    const tictactoe = pathSteps.find((s) => s.to === '/tictactoe')
+    const indexSteps = complete || !tictactoe ? numberedSteps : [...numberedSteps, tictactoe]
     return (
       <div className="tour__step" key="explore">
         <header className="hero">
@@ -337,6 +338,27 @@ export function Landing({ config }: { config: UIConfig }) {
             Everything below runs against this live install.
           </p>
         </header>
+
+        {complete && (
+          <section className="ending">
+            <h2 className="ending__title">
+              {numberedSteps.length} of {numberedSteps.length} steps complete.
+            </h2>
+            <p className="ending__unlock">
+              <GoLink to="/tictactoe">Tic-tac-toe</GoLink> is one of this
+              config&rsquo;s {toggleableComponents.length} toggleable components: it
+              exists in the cluster only once step {stepNumber('/audit-log')}{' '}
+              switches it on.
+            </p>
+            <p className="ending__next">
+              This install runs from one app config,{' '}
+              <OutLink href={`https://github.com/${repoName}`} variant="plain">
+                {repoName}
+              </OutLink>
+              ; clone it to start your own.
+            </p>
+          </section>
+        )}
 
         <div className="choices">
           <section className="choice">
@@ -394,81 +416,17 @@ export function Landing({ config }: { config: UIConfig }) {
 
         <section className="section section--hub">
           <div className="section__head">
-            <h2 className="section__title">Ask your agent</h2>
+            <h2 className="section__title">{numberedSteps.length} steps</h2>
             <div className="subtext muted">
-              three of the ten use cases on the agent page, read-only
+              {done} of {numberedSteps.length} done
             </div>
-          </div>
-          <div className="nods">
-            {useCases
-              .filter((u) => !u.write)
-              .slice(0, 3)
-              .map((u) => (
-                <GoLink to="/customize/agent" className="nod" key={u.id}>
-                  <span className="nod__top">
-                    <span className="nod__title">&ldquo;{u.title}&rdquo;</span>
-                  </span>
-                  <span className="nod__desc">
-                    {u.tools.join(' → ')}. {u.answer}
-                  </span>
-                </GoLink>
-              ))}
-          </div>
-        </section>
-
-        <section className="section section--hub">
-          <div className="section__head">
-            <h2 className="section__title">Try it live</h2>
-          </div>
-          <div className="nods">
-            <GoLink to="/customize/branches" className="nod">
-              <span className="nod__top">
-                <span className="nod__title">App branches</span>
-              </span>
-              <span className="nod__desc">
-                One push deploys the whole fleet:{' '}
-                {installGroups.map((g) => g.name).join(' → ')}, an approval
-                before each group.
-              </span>
-            </GoLink>
-            {sku && (
-              <GoLink to={sku.to} className="nod">
-                <span className="nod__top">
-                  <span className="nod__title">{sku.title}</span>
-                  <span
-                    className={
-                      auditLog
-                        ? 'switch switch--sm switch--on'
-                        : 'switch switch--sm'
-                    }
-                    aria-hidden="true"
-                  />
-                </span>
-                <span className="nod__desc">{sku.desc}</span>
-              </GoLink>
-            )}
-            <GoLink to="/operations" className="nod">
-              <span className="nod__top">
-                <span className="nod__title">BYOC operations</span>
-              </span>
-              <span className="nod__desc">
-                Healthchecks, runbooks, ad-hoc actions, and triggers, each
-                under a scoped IAM role.
-              </span>
-            </GoLink>
-          </div>
-        </section>
-
-        <section className="section section--hub">
-          <div className="section__head">
-            <h2 className="section__title">Index</h2>
           </div>
           <div className="encyc">
             {phases.map((phase) => (
               <div className="encyc__group" key={phase}>
                 <div className="encyc__phase">{phase}</div>
                 <ul className="encyc__list">
-                  {pathSteps
+                  {indexSteps
                     .filter((s) => s.phase === phase)
                     .map((s) => (
                       <li key={s.to}>

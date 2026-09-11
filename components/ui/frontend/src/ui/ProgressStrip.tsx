@@ -9,23 +9,22 @@
  */
 import { useState } from 'react'
 import { useCompletion, completedCount } from '../lib/completion'
+import { clearSeenSteps, clearTourKey } from '../lib/progress'
 import { navigate, useRoute } from '../lib/router'
-import { pathSteps } from '../lib/taxonomy'
-
-const numbered = pathSteps.filter((s) => !s.bonus)
+import { numberedSteps } from '../lib/taxonomy'
 
 export function ProgressStrip() {
   // Normalised so a trailing slash or a stray query string still matches the
   // step it points at instead of silently hiding the strip.
   const route = useRoute().replace(/[?#].*$/, '').replace(/\/+$/, '') || '/'
-  const { map } = useCompletion()
+  const { map, reset } = useCompletion()
   const [open, setOpen] = useState(false)
 
-  const idx = numbered.findIndex((s) => s.to === route)
+  const idx = numberedSteps.findIndex((s) => s.to === route)
   if (idx === -1) return null
 
-  const step = numbered[idx]
-  const done = completedCount(map, numbered.map((s) => s.to))
+  const step = numberedSteps[idx]
+  const done = completedCount(map, numberedSteps.map((s) => s.to))
 
   return (
     <nav className="pstrip" aria-label="Walkthrough progress">
@@ -37,11 +36,11 @@ export function ProgressStrip() {
       >
         <span className="pstrip__pos">
           Step {String(idx + 1).padStart(2, '0')} of{' '}
-          {String(numbered.length).padStart(2, '0')}
+          {String(numberedSteps.length).padStart(2, '0')}
         </span>
         <span className="pstrip__phase">{step.phase}</span>
         <span className="pstrip__bar" aria-hidden="true">
-          {numbered.map((s) => {
+          {numberedSteps.map((s) => {
             const rec = map[s.to]
             const state = s.to === route ? 'current' : rec ? 'done' : 'todo'
             return <span key={s.to} className={`pstrip__seg pstrip__seg--${state}`} />
@@ -51,7 +50,7 @@ export function ProgressStrip() {
       </button>
 
       <ul className="pstrip__path" id="pstrip-path" hidden={!open}>
-        {numbered.map((s, i) => {
+        {numberedSteps.map((s, i) => {
           const rec = map[s.to]
           return (
             <li key={s.to}>
@@ -77,6 +76,18 @@ export function ProgressStrip() {
             </li>
           )
         })}
+        <li className="pstrip__reset-item">
+          <button
+            className="pstrip__row pstrip__reset"
+            onClick={() => {
+              reset()
+              clearSeenSteps()
+              clearTourKey()
+            }}
+          >
+            Start over
+          </button>
+        </li>
       </ul>
     </nav>
   )

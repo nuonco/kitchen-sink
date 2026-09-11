@@ -9,6 +9,16 @@ import { useEffect } from 'react'
 
 const KEY = 'kitchen-sink-path-seen'
 
+/**
+ * The tour's own resume-point key lives here, not in Landing.tsx: Landing
+ * already imports this module, so ProgressStrip importing the key from here
+ * instead of from Landing avoids pulling Landing's whole module graph
+ * (RelationshipDiagram, prompts, config-data) into every numbered step page,
+ * and avoids turning any future Landing → ProgressStrip import into a real
+ * initialization cycle.
+ */
+export const TOUR_KEY = 'kitchen-sink-tour'
+
 export function seenSteps(): Set<string> {
   try {
     const raw = window.localStorage.getItem(KEY)
@@ -39,4 +49,27 @@ export function useMarkStepSeen(route?: string) {
   useEffect(() => {
     if (route) markStepSeen(route)
   }, [route])
+}
+
+/**
+ * Start over clears every store that draws part of the path's state:
+ * this one (the index's checkmarks) and the tour's resume point below.
+ * Completion (lib/completion.ts) is a third, separate store with its own
+ * reset().
+ */
+export function clearSeenSteps() {
+  try {
+    window.localStorage.removeItem(KEY)
+  } catch {
+    // Same story as markStepSeen: without storage there was nothing to forget.
+  }
+}
+
+export function clearTourKey() {
+  try {
+    window.localStorage.removeItem(TOUR_KEY)
+  } catch {
+    // Storage can be unavailable; the tour just won't remember to restart at
+    // 'arrive' on the next load.
+  }
 }

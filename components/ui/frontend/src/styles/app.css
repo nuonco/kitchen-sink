@@ -506,6 +506,33 @@ body::before {
   max-width: 64ch;
 }
 
+/* The hub's finish state: every numbered step done. Sits above .choices,
+   so it reads before the two ways back in. */
+.ending {
+  margin-top: var(--space-6);
+  padding: var(--space-5) var(--space-6);
+  border: 2px solid var(--border-default);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--radius-lg);
+  background: var(--surface-card);
+}
+
+.ending__title {
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
+  font-weight: var(--weight-stronger);
+  color: var(--text-primary);
+}
+
+.ending__unlock,
+.ending__next {
+  margin-top: var(--space-3);
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-secondary);
+  max-width: 68ch;
+}
+
 .facts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
@@ -4166,4 +4193,19 @@ a.encyc__row:hover .encyc__title {
 
 .pstrip__done--verified {
   color: var(--status-positive);
+}
+
+.pstrip__reset-item {
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pstrip__reset {
+  justify-content: center;
+  color: var(--text-tertiary);
+}
+
+.pstrip__reset:hover {
+  color: var(--text-primary);
 }

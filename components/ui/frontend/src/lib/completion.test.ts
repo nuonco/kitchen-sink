@@ -7,19 +7,7 @@ import {
   markComplete,
   readCompletion,
 } from './completion'
-
-/** In-memory Storage stand-in so these tests need no DOM. */
-function fakeStorage(seed: Record<string, string> = {}): Storage {
-  const map = new Map(Object.entries(seed))
-  return {
-    get length() { return map.size },
-    clear: () => map.clear(),
-    getItem: (k: string) => map.get(k) ?? null,
-    key: (i: number) => [...map.keys()][i] ?? null,
-    removeItem: (k: string) => { map.delete(k) },
-    setItem: (k: string, v: string) => { map.set(k, v) },
-  } as Storage
-}
+import { fakeStorage } from './test-support'
 
 describe('completion store', () => {
   it('starts empty', () => {

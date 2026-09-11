@@ -127,11 +127,14 @@ export const operationsPath = [
   '/customize/roles',
 ]
 
-const numbered = pathSteps.filter((step) => !step.bonus)
+/** The numbered path: every step except the bonus tic-tac-toe row. The hub
+ *  and the progress strip both derive their step count and their index from
+ *  this one array. */
+export const numberedSteps = pathSteps.filter((step) => !step.bonus)
 
 /** "03" for the third numbered step; undefined for bonus rows. */
 export function stepNumber(to: string): string | undefined {
-  const i = numbered.findIndex((step) => step.to === to)
+  const i = numberedSteps.findIndex((step) => step.to === to)
   return i === -1 ? undefined : String(i + 1).padStart(2, '0')
 }
 
@@ -140,5 +143,5 @@ export function stepEyebrow(to: string): string {
   const step = pathSteps.find((s) => s.to === to)
   const num = stepNumber(to)
   if (!step || !num) return 'Customize'
-  return `Step ${num} of ${String(numbered.length).padStart(2, '0')} · ${step.phase}`
+  return `Step ${num} of ${String(numberedSteps.length).padStart(2, '0')} · ${step.phase}`
 }
