@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
+  AUDIT_LOG_POD_PREFIX,
   hasAuditLogExporter,
   hasTicTacToe,
   useIntrospectPoll,
@@ -8,6 +9,9 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
+import { useCompletion } from '../lib/completion'
+import { fingerprint, workloadAppeared, type PodFingerprint } from '../lib/cluster-diff'
+import { useClusterChange } from '../lib/use-cluster-change'
 import { toggleableComponents } from '../lib/config-data.gen'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
@@ -29,6 +33,10 @@ import {
 
 /** How often the page re-reads the namespace looking for a deploy. */
 const POLL_MS = 10_000
+
+/** Stable `test` callback for useClusterChange: the exporter's own pod. */
+const auditLogPodAppeared = (prev: PodFingerprint[], next: PodFingerprint[]) =>
+  workloadAppeared(prev, next, AUDIT_LOG_POD_PREFIX)
 
 /** How often the events feed re-reads the namespace's events. */
 const EVENTS_POLL_MS = 5_000
@@ -321,6 +329,25 @@ export function AuditLog({ config }: { config: UIConfig }) {
     }
   }, [ns])
 
+  // The pod half of the same signal — kept as a live read (it feeds the
+  // "just deployed" note below, alongside the Service-based auditJust), but
+  // not a completion gate: workloadAppeared fires on any absent-then-present
+  // pair, including an already-on exporter's pod getting evicted and
+  // rescheduled mid-visit, which is not a toggle. auditJust can't false-fire
+  // that way — it requires having witnessed the Service off first.
+  const fp = useMemo(
+    () => fingerprint(ns.state === 'ok' ? ns.value.response : undefined),
+    [ns],
+  )
+  const podAppeared = useClusterChange(fp, auditLogPodAppeared)
+  const { complete } = useCompletion()
+  useEffect(() => {
+    // auditJust, not audit: audit is also true when the exporter was already
+    // on before this visit, which this page never watched turn on. Do not
+    // add podAppeared here — see the comment above.
+    if (auditJust) complete('/audit-log', 'verified')
+  }, [auditJust, complete])
+
   const exporter = toggleableComponents.find(
     (c) => c.name === 'audit_log_exporter',
   )
@@ -369,7 +396,7 @@ export function AuditLog({ config }: { config: UIConfig }) {
                 name="audit_log_exporter"
                 pitch="Streams every operation Nuon performs in this install to your SIEM. Events never leave your cloud."
                 on={audit}
-                justOn={auditJust}
+                justOn={auditJust || podAppeared}
                 config={config}
                 onDashboardOpen={() => setWaiting(true)}
               />

@@ -1,14 +1,25 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import {
+  APP_WORKLOADS,
   countReady,
   hasAuditLogExporter,
   hasTicTacToe,
   imageTag,
   useIntrospect,
   useIntrospectPoll,
+  type Envelope,
+  type Loadable,
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
+import { useCompletion } from '../lib/completion'
+import {
+  fingerprint,
+  imageTagChanged,
+  podsRestarted,
+  type PodFingerprint,
+} from '../lib/cluster-diff'
+import { useClusterChange } from '../lib/use-cluster-change'
 import {
   adhocActions,
   branchConfigAbridged,
@@ -154,13 +165,48 @@ function podAge(ts?: string): string {
   return `${Math.floor(hours / 24)}d`
 }
 
-function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {
+/**
+ * The namespace poll behind LiveEvidence, lifted to the caller so a flow that
+ * also needs to watch for a cluster change (a Do step) reads the same poll
+ * instead of opening a second one against the same endpoint.
+ */
+function useNamespacePoll(config: UIConfig) {
   const namespace = config.namespace ?? 'kitchen-sink'
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
     EVIDENCE_POLL_MS,
     true,
   )
+  return { namespace, ns }
+}
+
+/**
+ * The three workloads the kitchen_sink chart deploys, filtered out of a
+ * namespace-wide fingerprint. `podsRestarted` and `imageTagChanged` read
+ * every pod in the namespace, so an unscoped call on this install would also
+ * true up when a toggleable component (audit_log_exporter, tictactoe)
+ * deploys or tears down — a change this install did not ask these two steps
+ * to verify.
+ */
+const appPods = (fp: PodFingerprint[]) =>
+  fp.filter((p) => APP_WORKLOADS.some((w) => p.name.startsWith(w)))
+
+/** Stable `test` callbacks for useClusterChange — scoped to the app's own pods. */
+const appPodsRestarted = (prev: PodFingerprint[], next: PodFingerprint[]) =>
+  podsRestarted(appPods(prev), appPods(next))
+
+const appImageTagChanged = (prev: PodFingerprint[], next: PodFingerprint[]) =>
+  imageTagChanged(appPods(prev), appPods(next))
+
+function LiveEvidence({
+  namespace,
+  ns,
+  lead,
+}: {
+  namespace: string
+  ns: Loadable<Envelope<NamespaceResponse>>
+  lead: ReactNode
+}) {
   const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
 
   return (
@@ -276,12 +322,23 @@ function branchScenarios(install: string, app: string) {
 }
 
 function BranchesFlow({ config }: { config: UIConfig }) {
+  const { namespace, ns } = useNamespacePoll(config)
+  const fp = useMemo(
+    () => fingerprint(ns.state === 'ok' ? ns.value.response : undefined),
+    [ns],
+  )
+  const tagChanged = useClusterChange(fp, appImageTagChanged)
+  const { complete } = useCompletion()
+  useEffect(() => {
+    if (tagChanged) complete('/customize/branches', 'verified')
+  }, [tagChanged, complete])
+
   return (
     <>
       <FlowHeader
         to="/customize/branches"
         title="Ship through app branches"
-        problem="BYOC CI/CD is deploying to a fleet of customer clouds — every release has to reach them all, and one bad change must not."
+        problem="Every release has to reach a fleet of customer clouds. One bad change must stop at the first one."
       />
 
       <PspSection
@@ -305,8 +362,9 @@ function BranchesFlow({ config }: { config: UIConfig }) {
         </div>
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           Every push to <span className="mono">{branchName}</span> builds the
-          config at that commit and rolls it across these groups in order.
-          Each group&rsquo;s plan holds for a person&rsquo;s approval before
+          config at that commit — this repo&rsquo;s expected state. Nuon
+          reconciles each install in these groups against it, in order, and
+          each group&rsquo;s plan holds for a person&rsquo;s approval before
           it deploys, so one bad change stops at the first wave.
         </p>
         <CodeBlock
@@ -420,13 +478,36 @@ function BranchesFlow({ config }: { config: UIConfig }) {
             </OutLink>
           )}
         </p>
+        <div className="row" style={{ marginTop: 16 }}>
+          {tagChanged ? (
+            <>
+              <Badge tone="positive" dot>
+                verified
+              </Badge>
+              <span className="small muted">
+                The image tag below moved — a deploy reached this install.
+              </span>
+            </>
+          ) : (
+            <>
+              <Badge tone="warning" dot>
+                watching for a deploy
+              </Badge>
+              <span className="small muted">
+                A deploy has to land on this install while this tab is open
+                for that to happen — most visits won&rsquo;t see one.
+              </span>
+            </>
+          )}
+        </div>
         <LiveEvidence
-          config={config}
+          namespace={namespace}
+          ns={ns}
           lead={
             <>
-              When the run&rsquo;s deploy reaches this install, the image tags
-              below flip to the new <span className="mono">sha-*</span> stamp
-              and the pods churn as the new version rolls in.
+              When a deploy reaches this install, the image tags below flip
+              to the new <span className="mono">sha-*</span> stamp and the
+              pods churn as the new version rolls in.
             </>
           }
         />
@@ -465,6 +546,16 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
   const [selected, setSelected] = useState(0)
   const runbook = runbooks[selected]
   const install = installIdOf(config)
+  const { namespace, ns } = useNamespacePoll(config)
+  const fp = useMemo(
+    () => fingerprint(ns.state === 'ok' ? ns.value.response : undefined),
+    [ns],
+  )
+  const restarted = useClusterChange(fp, appPodsRestarted)
+  const { complete } = useCompletion()
+  useEffect(() => {
+    if (restarted) complete('/customize/runbooks', 'verified')
+  }, [restarted, complete])
 
   return (
     <>
@@ -566,8 +657,35 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
             </OutLink>
           )}
         </p>
+        <div className="row" style={{ marginTop: 16 }}>
+          {restarted ? (
+            <>
+              <Badge tone="positive" dot>
+                verified
+              </Badge>
+              <span className="small muted">
+                The app&rsquo;s pods restarted below — new names, ages reset,
+                since this page opened.
+              </span>
+            </>
+          ) : (
+            <>
+              <Badge tone="warning" dot>
+                watching for a run
+              </Badge>
+              <span className="small muted">
+                <span className="mono">re-apply-config</span> re-applies this
+                install&rsquo;s desired state; the app&rsquo;s pods restarting
+                below is that reconciliation happening. A run has to land on
+                this install while this tab is open for that to happen —
+                most visits won&rsquo;t see one.
+              </span>
+            </>
+          )}
+        </div>
         <LiveEvidence
-          config={config}
+          namespace={namespace}
+          ns={ns}
           lead={
             <>
               The two runbooks that apply changes land right here:{' '}
@@ -648,6 +766,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
   const action = adhocActions[selected]
   const install = installIdOf(config)
   const app = appIdOf(config)
+  const { namespace, ns } = useNamespacePoll(config)
 
   return (
     <>
@@ -755,7 +874,8 @@ function ActionsFlow({ config }: { config: UIConfig }) {
           )}
         </p>
         <LiveEvidence
-          config={config}
+          namespace={namespace}
+          ns={ns}
           lead={
             <>
               <span className="mono">break_glass_remediation</span> ends with a
@@ -779,6 +899,10 @@ function HealthFlow({ config }: { config: UIConfig }) {
     `/api/introspect/namespace/${namespace}`,
   )
   const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
+  // The readme's health-check table has one row per step of this runbook —
+  // read the count from the array instead of spelling it out.
+  const healthCheckSteps =
+    runbooks.find((rb) => rb.name === 'full-health-check')?.steps.length ?? 0
 
   return (
     <>
@@ -882,6 +1006,17 @@ function HealthFlow({ config }: { config: UIConfig }) {
             }
           />
         </div>
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          The install readme lists a row for each of{' '}
+          <span className="mono">full-health-check</span>&rsquo;s{' '}
+          {healthCheckSteps} steps, including checks on the node group and
+          the public endpoint — both read from outside this cluster.{' '}
+          {config.links.install && (
+            <OutLink href={config.links.install} variant="plain">
+              Install readme
+            </OutLink>
+          )}
+        </p>
       </PspSection>
     </>
   )
@@ -1032,6 +1167,7 @@ function RolesFlow({ config }: { config: UIConfig }) {
   const role = roles[selected]
   const install = installIdOf(config)
   const app = appIdOf(config)
+  const { namespace, ns } = useNamespacePoll(config)
 
   return (
     <>
@@ -1143,7 +1279,8 @@ function RolesFlow({ config }: { config: UIConfig }) {
           )}
         </p>
         <LiveEvidence
-          config={config}
+          namespace={namespace}
+          ns={ns}
           lead={
             <>
               The same run&rsquo;s last act is a rollout restart of the
