@@ -4,8 +4,8 @@ import { fakeStorage } from './test-support'
 import { numberedSteps, pathSteps } from './taxonomy'
 
 describe('numberedSteps', () => {
-  it('has ten entries, none of them bonus', () => {
-    expect(numberedSteps.length).toBe(10)
+  it('has nine entries, none of them bonus', () => {
+    expect(numberedSteps.length).toBe(9)
     expect(numberedSteps.every((s) => !s.bonus)).toBe(true)
   })
 
@@ -18,20 +18,20 @@ describe('numberedSteps', () => {
     const routes = numberedSteps.map((s) => s.to)
     const s = fakeStorage()
 
-    // Nine of the ten routes: not satisfied.
-    for (const route of routes.slice(0, 9)) {
+    // Every route but the last: not satisfied.
+    for (const route of routes.slice(0, -1)) {
       markComplete(route, 'advanced', '2026-09-10T00:00:00Z', s)
     }
-    expect(completedCount(readCompletion(s), routes)).toBe(9)
+    expect(completedCount(readCompletion(s), routes)).toBe(routes.length - 1)
     expect(completedCount(readCompletion(s), routes)).not.toBe(routes.length)
 
-    // A tenth entry for /tictactoe instead of the real tenth route: still
-    // not satisfied, because /tictactoe isn't in the numbered route list.
+    // /tictactoe instead of the real last route: still not satisfied,
+    // because /tictactoe isn't in the numbered route list.
     markComplete('/tictactoe', 'advanced', '2026-09-10T00:00:00Z', s)
-    expect(completedCount(readCompletion(s), routes)).toBe(9)
+    expect(completedCount(readCompletion(s), routes)).toBe(routes.length - 1)
 
-    // The actual tenth numbered route: now satisfied.
-    markComplete(routes[9], 'advanced', '2026-09-10T00:00:00Z', s)
+    // The actual last numbered route: now satisfied.
+    markComplete(routes[routes.length - 1], 'advanced', '2026-09-10T00:00:00Z', s)
     expect(completedCount(readCompletion(s), routes)).toBe(routes.length)
   })
 })

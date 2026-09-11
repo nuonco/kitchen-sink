@@ -86,7 +86,7 @@ Kitchen Sink uses a lot of the platform because it exists to demo it. Shipping y
 
 **"Can we try the new version first?"** This install ships through the `main` [app branch](https://github.com/nuonco/kitchen-sink/blob/main/branch.toml): a push rolls the config out group by group — staging, then customers, then enterprise — with a person approving each group's plan before it deploys. A pilot customer sees a change before the fleet does, and one bad change stops at the first wave.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} The [branches page inside the app](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/customize/branches) shows the groups and the commands that ship to them.{{ end }}
 
-**"Can my coding agent do this?"** Yes. `nuon agents mcp setup --platform claude-code` connects Nuon's MCP server to Claude Code (or Cursor, or Amp) through the CLI; `nuon agents context` verifies it.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} [Ten things to ask it about this install](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/customize/agent), with the ids filled in.{{ end }}
+**"Can my coding agent do this?"** Yes. `nuon agents mcp setup --platform claude-code` connects Nuon's MCP server to Claude Code (or Cursor, or Amp) through the CLI; `nuon agents context` verifies it.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} [Prompts to ask it about this install](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/customize/agent), with the ids filled in.{{ end }}
 
 Reach for the rest when a real request makes them necessary — not before. Each is a few lines of config in the same repo.
 

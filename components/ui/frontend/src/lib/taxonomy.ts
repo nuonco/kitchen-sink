@@ -13,7 +13,8 @@
  * - guide: the page explains real config; there is nothing to read live
  */
 
-import { roles } from './config-data.gen'
+import { roles, runbooks } from './config-data.gen'
+import { useCases } from './prompts'
 
 export type Mode = 'live' | 'guide'
 
@@ -32,7 +33,7 @@ export const pathSteps: PathStep[] = [
   {
     to: '/deployed',
     icon: 'magnifying-glass',
-    title: 'See what Nuon deployed',
+    title: 'What Nuon deployed',
     desc: 'The app running in this account, read live, and the architecture it demonstrates.',
     mode: 'live',
     phase: 'Read',
@@ -40,7 +41,7 @@ export const pathSteps: PathStep[] = [
   {
     to: '/map',
     icon: 'puzzle-piece',
-    title: 'Map your product onto components',
+    title: 'Your product as components',
     desc: 'The five component types against the pieces you already ship.',
     mode: 'guide',
     phase: 'Read',
@@ -48,7 +49,7 @@ export const pathSteps: PathStep[] = [
   {
     to: '/customize/branches',
     icon: 'git-branch',
-    title: 'Ship through app branches',
+    title: 'App branches',
     desc: 'A staged rollout with an approval on each group.',
     mode: 'live',
     phase: 'Ship',
@@ -56,39 +57,31 @@ export const pathSteps: PathStep[] = [
   {
     to: '/customize/agent',
     icon: 'lightning',
-    title: 'Connect your coding agent',
-    desc: 'Nuon’s MCP server in Claude Code, Cursor, or Amp, and ten things to ask it about this install.',
+    title: 'Coding agent setup',
+    desc: `Nuon’s MCP server in Claude Code, Cursor, or Amp, and ${useCases.length} things to ask it about this install.`,
     mode: 'guide',
     phase: 'Ship',
   },
   {
     to: '/customize/health',
     icon: 'heartbeat',
-    title: 'Watch component health',
-    desc: 'Probes on the runner that every deploy has to pass.',
+    title: 'Component health',
+    desc: 'Pod readiness read live, and the [health] blocks on the chart and the ALB.',
     mode: 'live',
     phase: 'Operate',
   },
   {
     to: '/customize/runbooks',
     icon: 'book-open',
-    title: 'Run runbooks',
-    desc: 'Four recorded procedures; two of them apply changes.',
-    mode: 'live',
-    phase: 'Operate',
-  },
-  {
-    to: '/customize/actions',
-    icon: 'lightning',
-    title: 'Run adhoc actions',
-    desc: 'Scripts the runner executes, with no kubeconfig handed out.',
+    title: 'Runbooks',
+    desc: `${runbooks.length} recorded procedures; ${runbooks.filter((r) => r.mutates).length} of them apply changes.`,
     mode: 'live',
     phase: 'Operate',
   },
   {
     to: '/customize/triggers',
     icon: 'gauge',
-    title: 'Wire up triggers',
+    title: 'Triggers',
     desc: 'When scripts run: cron, lifecycle, or on demand.',
     mode: 'guide',
     phase: 'Operate',
@@ -96,7 +89,7 @@ export const pathSteps: PathStep[] = [
   {
     to: '/customize/roles',
     icon: 'lock',
-    title: 'Scope operation roles',
+    title: 'Operation roles',
     desc: `${roles.filter((r) => r.type !== 'break-glass').length} per-operation IAM roles, plus break-glass, and the guardrails on top.`,
     mode: 'live',
     phase: 'Govern',
@@ -112,8 +105,8 @@ export const pathSteps: PathStep[] = [
   {
     to: '/tictactoe',
     icon: 'toggle',
-    title: 'Play tic-tac-toe',
-    desc: 'The other toggleable component, playable once it’s switched on.',
+    title: 'Tic-tac-toe',
+    desc: 'Also toggleable; playable once it’s switched on.',
     mode: 'live',
     phase: 'Govern',
     bonus: true,
@@ -124,7 +117,6 @@ export const pathSteps: PathStep[] = [
 export const operationsPath = [
   '/customize/health',
   '/customize/runbooks',
-  '/customize/actions',
   '/customize/triggers',
   '/customize/roles',
 ]

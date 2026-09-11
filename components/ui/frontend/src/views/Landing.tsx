@@ -6,10 +6,10 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import { adhocActions, branchName, repoName, toggleableComponents } from '../lib/config-data.gen'
+import { adhocActions, branchName, repoName, runbooks, toggleableComponents } from '../lib/config-data.gen'
 import { completedCount, useCompletion } from '../lib/completion'
 import { seenSteps, TOUR_KEY } from '../lib/progress'
-import { agentPrompt, setup } from '../lib/prompts'
+import { agentPrompt, setup, useCases } from '../lib/prompts'
 import { useNavigate } from '../lib/router'
 import { numberedSteps, pathSteps, stepNumber } from '../lib/taxonomy'
 import { PixelCheck } from '../ui/CapabilityGrid'
@@ -48,6 +48,10 @@ function storedStep(): Step {
   } catch {
     // Storage can be unavailable (private mode); the tour just starts over.
   }
+  // No saved position, but a step page has already been opened: a deep-link
+  // visitor (the install readme links straight into #/customize/agent). For
+  // them "/" is the hub, not the opener.
+  if (seenSteps().size > 0) return 'explore'
   return 'arrive'
 }
 
@@ -134,7 +138,7 @@ function cliGroups(install: string, app: string): Array<{ name: string; rows: Cl
           cmd: `nuon runbooks list --install-id ${install}`,
           note: (
             <>
-              Four recorded procedures; <span className="mono">re-apply-config</span> and{' '}
+              {runbooks.length} recorded procedures; <span className="mono">re-apply-config</span> and{' '}
               <span className="mono">break-glass</span> mutate.
             </>
           ),
@@ -307,7 +311,7 @@ export function Landing({ config }: { config: UIConfig }) {
               Show me around <Icon name="arrow-right" />
             </button>
             <button className="tour__skip" onClick={skip}>
-              Skip the tour <Icon name="arrow-up-right" />
+              Skip the tour <Icon name="arrow-right" />
             </button>
           </div>
         </div>
@@ -334,9 +338,6 @@ export function Landing({ config }: { config: UIConfig }) {
       <div className="tour__step" key="explore">
         <header className="hero">
           <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
-          <p className="hero__lede">
-            Everything below runs against this live install.
-          </p>
         </header>
 
         {complete && (
@@ -362,11 +363,12 @@ export function Landing({ config }: { config: UIConfig }) {
 
         <div className="choices">
           <section className="choice">
-            <h2 className="choice__title">Connect your coding agent</h2>
+            <h2 className="choice__title">Coding agent setup</h2>
             <p className="choice__desc">
               One command gives Claude Code, Cursor, or Amp Nuon&rsquo;s MCP
-              server through the CLI you already have. Then ask it about this
-              install; nothing mutates without your yes.
+              server through the Nuon CLI. Then ask it about this install;
+              write tools stay hidden unless you pass{' '}
+              <span className="mono">--allow-writes</span>.
             </p>
             <pre className="cmd__pre choice__cmd">{setup.claudeCode}</pre>
             <div className="choice__actions">
@@ -377,7 +379,7 @@ export function Landing({ config }: { config: UIConfig }) {
                 big
               />
               <a href="#/customize/agent">
-                Ten things to ask it <Icon name="arrow-right" />
+                {useCases.length} things to ask it <Icon name="arrow-right" />
               </a>
               <CopyButton
                 text={agentPrompt(install, app)}
@@ -506,7 +508,7 @@ export function Landing({ config }: { config: UIConfig }) {
         ))}
       </span>
       <button className="tour__skip" onClick={skip}>
-        Skip the tour <Icon name="arrow-up-right" />
+        Skip the tour <Icon name="arrow-right" />
       </button>
     </div>
   )
@@ -539,8 +541,8 @@ export function Landing({ config }: { config: UIConfig }) {
             'Your app is a template.',
             <>
               A template is every component mapped to one TOML file. Nuon
-              reads them into the dependency graph below, and templatizes
-              that graph for every install.
+              reads them into a dependency graph and templatizes that graph
+              for every install.
             </>,
           )}
           <RelationshipDiagram stage={1} imageTags={imageTags} />
@@ -572,12 +574,16 @@ export function Landing({ config }: { config: UIConfig }) {
       {step === 'push' && (
         <>
           {goldenHeader(
-            'To change it, you push.',
+            'To change it, you sync.',
             <>
-              A push builds the template at that commit. Nuon rolls it out
-              install group by install group, with an approval before each
-              one. The repo&rsquo;s expected state becomes what&rsquo;s
-              running.
+              From a clone,{' '}
+              <span className="mono">nuon sync --branch {branchName}</span>{' '}
+              builds the config as it stands and starts a branch run. Nuon
+              rolls it out install group by install group, with an approval
+              before each one. The repo&rsquo;s expected state becomes
+              what&rsquo;s running. Push-to-deploy is the same run started by
+              a GitHub webhook; its rules ship disabled in{' '}
+              <span className="mono">triggers.toml.example</span>.
             </>,
           )}
           <RelationshipDiagram
@@ -590,11 +596,11 @@ export function Landing({ config }: { config: UIConfig }) {
           <div className="row" style={{ marginTop: 12 }}>
             {config.links.branches && (
               <OutLink href={config.links.branches} variant="plain">
-                this branch in Nuon
+                This branch in Nuon
               </OutLink>
             )}
             <OutLink href={WALKTHROUGH_URL} variant="plain">
-              app-branches walkthrough
+              App-branches walkthrough
             </OutLink>
           </div>
           <div className="cta-block">

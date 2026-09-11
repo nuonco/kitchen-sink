@@ -16,8 +16,6 @@ interface ComponentType {
   type: string
   /** One line for the matrix row. */
   purpose: string
-  /** What this type is in this app, named. */
-  uses: string
   /** The open row's detail. */
   what: string
   here: string
@@ -34,7 +32,6 @@ const types: ComponentType[] = [
   {
     type: 'helm_chart',
     purpose: 'Deploy a Helm chart',
-    uses: 'kitchen_sink',
     what:
       'Deploys a Helm chart into the install cluster. Nuon interpolates your values file first, so image tags and sandbox outputs are filled in per install.',
     here:
@@ -58,7 +55,6 @@ contents = "./chart/values.yaml"`,
   {
     type: 'container_image',
     purpose: 'Sync an image your CI already built',
-    uses: 'img_ui · img_api',
     what:
       'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
     here:
@@ -76,7 +72,6 @@ tag       = "sha-…"`,
   {
     type: 'terraform_module',
     purpose: 'Run a Terraform module',
-    uses: 'certificate',
     what:
       'Runs a Terraform module. The runner holds the state and the credentials, so your customer keeps both.',
     here:
@@ -100,7 +95,6 @@ domain_name = "*.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}
   {
     type: 'pulumi',
     purpose: 'Run a Pulumi program',
-    uses: 'pulumi_infra',
     what:
       'Runs a Pulumi program in Go, TypeScript or Python. Same contract as Terraform: your code, the customer’s account, the runner in between.',
     here:
@@ -122,7 +116,6 @@ branch    = "main"
   {
     type: 'kubernetes_manifest',
     purpose: 'Apply raw YAML or a kustomize overlay',
-    uses: 'kustomizeapp',
     what:
       'Applies raw YAML or a kustomize overlay. The escape hatch for anything that is not packaged as a chart.',
     here:
@@ -144,6 +137,16 @@ path        = "./kustomize-guestbook"
 enable_helm = false`,
   },
 ]
+
+/** The components of one type, from the generated config, so the matrix
+    never disagrees with the graph below it. */
+const usesOf = (type: string) =>
+  components
+    .filter((c) => c.type === type)
+    .map((c) => c.name)
+    .join(' · ')
+
+const typeCount = new Set(components.map((c) => c.type)).size
 
 /** The file's home in the repo, at the branch this install tracks. */
 function repoFileURL(file: string): string {
@@ -183,7 +186,7 @@ function TypeMatrix() {
             >
               <span className="typerow__type mono">{t.type}</span>
               <span className="typerow__purpose">{t.purpose}</span>
-              <span className="typerow__uses mono">{t.uses}</span>
+              <span className="typerow__uses mono">{usesOf(t.type)}</span>
               <span className="typerow__caret" aria-hidden="true">
                 <Icon name="caret-right" />
               </span>
@@ -258,16 +261,16 @@ export function Mapping({ config }: { config: UIConfig }) {
         <h1>How does my product map onto this?</h1>
         <p className="lede">
           A component is one deployable piece of your product, described by a
-          small TOML file in your repo.
+          TOML file in your repo.
         </p>
       </header>
 
-      <Section title="The component types" aside="Five of them, in this app">
+      <Section title="The component types" aside={`${typeCount} of them, in this app`}>
         <TypeMatrix />
-        <Callout label="A first config needs one, not five">
+        <Callout label="A first config needs one type">
           Pick the type that matches how you already ship — a chart, a prebuilt
-          image, a Terraform module. The other four are here because this app
-          exists to show them.
+          image, a Terraform module. The other {typeCount - 1} are here because
+          this app exists to show them.
         </Callout>
         {config.links.components && (
           <div className="row" style={{ marginTop: 24 }}>

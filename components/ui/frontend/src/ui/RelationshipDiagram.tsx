@@ -87,7 +87,7 @@ export function RelationshipDiagram({
       </div>
 
       <div className="rel__edge rel__edge--nuon-clouds" aria-hidden="true">
-        <span className="rel__edge-label">push</span>
+        <span className="rel__edge-label">deploys</span>
         <span className="rel__edge-line" />
       </div>
 

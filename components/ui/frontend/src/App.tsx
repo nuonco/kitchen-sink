@@ -51,7 +51,7 @@ function TopBar({
         title="Connect Nuon's MCP server to Claude Code, Cursor, or Amp"
       >
         <Icon name="lightning" />
-        Connect your coding agent
+        Coding agent setup
       </a>
       {installID && (
         <>

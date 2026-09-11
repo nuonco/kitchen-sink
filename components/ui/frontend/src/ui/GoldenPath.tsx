@@ -72,7 +72,7 @@ export function GoldenPath({
           >
             <span className="arch__num">03</span>
             <span className="arch__name">Runner</span>
-            <span className="arch__hint">builds &amp; deploys here</span>
+            <span className="arch__hint">deploys here</span>
           </button>
         </div>
       </div>

@@ -394,7 +394,7 @@ export function AuditLog({ config }: { config: UIConfig }) {
               <SkuCard
                 plan="Enterprise plan"
                 name="audit_log_exporter"
-                pitch="Streams every operation Nuon performs in this install to your SIEM. Events never leave your cloud."
+                pitch="The stand-in for a feature sold per plan. Here it deploys one marker Service and nothing else."
                 on={audit}
                 justOn={auditJust || podAppeared}
                 config={config}

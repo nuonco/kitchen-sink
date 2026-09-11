@@ -165,7 +165,6 @@ failed, say so and show me the last successful one instead.`,
     write: true,
     answer:
       'Pod state, warning events, and recent logs from inside the cluster, collected by the runner.',
-    page: '/customize/actions',
     prompt: (install) => `Call list_install_actions for install ${install} and find the action named
 "debug". Show me what it does (get_action). After my "yes", call run_action for it,
 follow with watch_workflow, and summarize the diagnostic bundle: pod state, warning
@@ -271,24 +270,25 @@ Budget: exactly one run.`
 export const proofPrompts: Record<string, (install: string, app: string) => string> = {
   branches: fromUseCase('group'),
   runbooks: fromUseCase('runbooks'),
-  actions: fromUseCase('action'),
   health: fromUseCase('debug'),
   roles: fromUseCase('inputs'),
-  triggers: (install) => `${guardrails(install, '<your-app-id>')}
+  triggers: (install, app) => `${guardrails(install, app)}
 
-Budget: exactly one run.
+Call list_install_actions for install ${install} and find "cron_status", the action
+its cron trigger fires on the hour. Show me what it does (get_action). After my
+"yes", call run_action, then watch_workflow, and show me its structured outputs:
+pods_ready, pods_total, checked_at. Starting a run is a write: the proxy needs
+--allow-writes.
 
-PROOF — call list_install_actions for install ${install} and find "cron_status",
-the action its cron trigger has run hourly since this install provisioned. Show me
-what it does (get_action). After my "yes", call run_action, then watch_workflow, and
-show me its structured outputs: pods_ready, pods_total, checked_at. Starting a run
-is a write: the proxy needs --allow-writes.`,
+Budget: exactly one run.`,
 }
 
 /** Caption under the agent tab, only where its prompt runs a different
     exercise than the manual track's proof on the same page — keyed like
     proofPrompts, present only for the flows that need it. */
 export const proofCaptions: Partial<Record<string, string>> = {
+  health:
+    'This prompt finds the most recent failed workflow and explains it; the manual track runs full-health-check instead.',
   roles:
     'This prompt runs the inputs use case instead: read this install’s inputs, change one, and redeploy — not the break-glass transcript below.',
 }

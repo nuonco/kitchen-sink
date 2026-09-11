@@ -30,7 +30,6 @@ import {
   lifecycleHooksToml,
   roles,
   runbooks,
-  type AdhocAction,
 } from '../lib/config-data.gen'
 import {
   agentPrompt,
@@ -345,7 +344,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
     <>
       <FlowHeader
         to="/customize/branches"
-        title="Ship through app branches"
+        title="App branches"
         problem="Every release has to reach a fleet of customer clouds. One bad change must stop at the first one."
       />
 
@@ -369,10 +368,14 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           ))}
         </div>
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Every push to <span className="mono">{branchName}</span> builds the
-          config at that commit — this repo&rsquo;s expected state. Nuon
-          reconciles each install in these groups against it, in order, and
-          each group&rsquo;s plan holds for a person&rsquo;s approval before
+          A branch run builds the config at one commit: this repo&rsquo;s
+          expected state.{' '}
+          <span className="mono">nuon sync --branch {branchName}</span> from a
+          clone starts one; so does a push to{' '}
+          <span className="mono">{branchName}</span> once the rules in{' '}
+          <span className="mono">triggers.toml.example</span> are enabled.
+          Nuon reconciles each install in these groups against it, in order.
+          Each group&rsquo;s plan holds for a person&rsquo;s approval before
           it deploys, so one bad change stops at the first wave.
         </p>
         <CodeBlock
@@ -448,7 +451,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
                 note={
                   <>
                     Syncs your local files exactly as they are (even
-                    uncommitted, no push) and triggers a real branch run
+                    uncommitted, no push) and starts a branch run
                     through the groups above. <span className="mono">--preview</span>{' '}
                     plans every group with nothing applied.
                   </>
@@ -569,7 +572,7 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
     <>
       <FlowHeader
         to="/customize/runbooks"
-        title="Run runbooks"
+        title="Runbooks"
         problem="Something breaks at 2am, in an install you cannot log into."
       />
 
@@ -712,251 +715,6 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
 }
 
 /* ============================================================
-   Operate: adhoc actions (the nuon.toml of each actions/ entry)
-   ============================================================ */
-
-/** Editorial context per action; the facts next to it come from the config. */
-const actionNotes: Record<string, string> = {
-  cron_status:
-    'Collects pod status and publishes pods_ready / pods_total as structured outputs; the install readme renders them.',
-  debug:
-    'What support runs when an install misbehaves: pods, events, and recent logs, with nobody handed a kubeconfig.',
-  lifecycle_hooks:
-    'Brackets every chart deploy, which is where a migration or a cache warm goes. Depends on kitchen_sink.',
-  break_glass_remediation:
-    'Elevated remediation through a recorded action instead of ad-hoc console access. Assumes the break-glass role from break_glass.toml.',
-}
-
-/** What a real run of each action puts on the record. `null` when nobody
-    here has read the action's implementation — no outcome copy is safer
-    than a plausible guess. */
-function actionOutcome(action: AdhocAction, installID: string): ReactNode | null {
-  const name = action.name
-  if (name === 'cron_status') {
-    return (
-      <>
-        The run&rsquo;s transcript lists this namespace&rsquo;s pods and
-        publishes <span className="mono">pods_ready</span> /{' '}
-        <span className="mono">pods_total</span> /{' '}
-        <span className="mono">checked_at</span> as structured outputs —
-        read-only, over in seconds.
-      </>
-    )
-  }
-  if (name === 'debug') {
-    return (
-      <>
-        The transcript collects pod state with restart counts, warning events,
-        and recent API logs — the support bundle, read-only, nothing changes in
-        the cluster.
-      </>
-    )
-  }
-  if (name === 'lifecycle_hooks') {
-    return (
-      <>
-        The transcript logs which hook fired. The same script runs
-        automatically post-provision and before and after every{' '}
-        <span className="mono">kitchen_sink</span> deploy.
-      </>
-    )
-  }
-  if (name === 'health_nodes') {
-    return (
-      <>
-        The transcript lists every cluster node (
-        <span className="mono">kubectl get nodes -o wide</span>) and
-        publishes <span className="mono">node_count</span> /{' '}
-        <span className="mono">nodes_ready</span> /{' '}
-        <span className="mono">checked_at</span> — read-only.
-      </>
-    )
-  }
-  if (name === 'health_rollout') {
-    return (
-      <>
-        The transcript checks rollout status for the api, ui, and worker
-        deployments in turn and publishes{' '}
-        <span className="mono">api_rollout</span> /{' '}
-        <span className="mono">ui_rollout</span> /{' '}
-        <span className="mono">worker_rollout</span> /{' '}
-        <span className="mono">checked_at</span> — read-only.
-      </>
-    )
-  }
-  if (name === 'health_ingress') {
-    return (
-      <>
-        The transcript describes the{' '}
-        <span className="mono">kitchen-sink-alb</span> ingress and counts its
-        Endpoints objects, publishing <span className="mono">alb_address</span>{' '}
-        / <span className="mono">targets_healthy</span> /{' '}
-        <span className="mono">targets_total</span> /{' '}
-        <span className="mono">checked_at</span> — read-only.
-      </>
-    )
-  }
-  if (name === 'health_endpoint') {
-    return (
-      <>
-        The transcript requests the install&rsquo;s public HTTPS endpoint and
-        publishes <span className="mono">http_status</span> /{' '}
-        <span className="mono">latency_ms</span> /{' '}
-        <span className="mono">checked_at</span> — read-only.
-      </>
-    )
-  }
-  if (action.breakGlass) {
-    return (
-      <>
-        The transcript prints the identity the run assumed (
-        <span className="mono">aws sts get-caller-identity</span> &rarr;{' '}
-        <span className="mono">{installID}-app-break-glass</span>), then a{' '}
-        <em>denied</em> Secrets Manager call — the explicit Deny in{' '}
-        <span className="mono">break_glass.toml</span> — and then restarts the
-        app&rsquo;s three deployments. Watch the pod
-        table below while it runs.
-      </>
-    )
-  }
-  return null
-}
-
-function ActionsFlow({ config }: { config: UIConfig }) {
-  const [selected, setSelected] = useState(0)
-  const action = adhocActions[selected]
-  const install = installIdOf(config)
-  const app = appIdOf(config)
-  const { namespace, ns } = useNamespacePoll(config)
-  const note = actionNotes[action.name]
-  const outcome = actionOutcome(action, install)
-
-  return (
-    <>
-      <FlowHeader
-        to="/customize/actions"
-        title="Run adhoc actions"
-        problem="Support needs to fix a customer install without holding its credentials."
-      />
-
-      <PspSection
-        kind="solution"
-        title="Scripts the runner executes inside the install"
-        aside="actions/*/nuon.toml"
-      >
-        <div className="tiles" style={{ marginBottom: 24 }}>
-          {adhocActions.map((a, i) => (
-            <button
-              key={a.name}
-              className={i === selected ? 'tile tile--active' : 'tile'}
-              onClick={() => setSelected(i)}
-            >
-              <span className="tile__head">
-                <Icon name="lightning" />
-                <span className="mono">{a.name}</span>
-              </span>
-              <span className="tile__body">
-                timeout {a.timeout}
-                {a.breakGlass ? ' · assumes the break-glass role' : ''}
-              </span>
-            </button>
-          ))}
-        </div>
-
-        <div className="section__head">
-          <h2 className="section__title mono">{action.name}</h2>
-          <div className="subtext muted">actions/{action.name}/nuon.toml</div>
-        </div>
-        {action.breakGlass && (
-          <div className="row" style={{ marginBottom: 12 }}>
-            <Badge tone="warning" dot>
-              elevated access · restarts the app&rsquo;s pods
-            </Badge>
-          </div>
-        )}
-        {note && (
-          <p className="small muted" style={{ maxWidth: '72ch', marginBottom: 12 }}>
-            {note}
-          </p>
-        )}
-        <div className="row">
-          {action.triggers.map((t) => (
-            <span key={t} className="chip">
-              {t}
-            </span>
-          ))}
-          {action.labels && <span className="chip">{action.labels}</span>}
-        </div>
-        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          The runner already holds the access; the action is how you use it
-          without a kubeconfig.
-        </p>
-      </PspSection>
-
-      <PspSection
-        kind="proof"
-        title="Fire one at this install"
-        aside="two commands"
-      >
-        <Tracks
-          agent={<ProofPrompt flow="actions" config={config} />}
-          manual={
-            <>
-              <CommandBlock
-                label="1 · list the action workflows and copy the id"
-                command={`nuon actions list --app-id ${app}`}
-                note={
-                  <>
-                    <span className="mono">create-run</span> takes the id,
-                    not the name.
-                  </>
-                }
-              />
-              <CommandBlock
-                label={`2 · run ${action.name} against this install`}
-                command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
-                note={
-                  <>
-                    To override the IAM role for one run, the flag is{' '}
-                    <span className="mono">--role-name</span>.
-                  </>
-                }
-              />
-            </>
-          }
-        />
-        {outcome && (
-          <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-            {outcome}
-          </p>
-        )}
-        <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
-          One of these is already on the record:{' '}
-          <span className="mono">cron_status</span> has run hourly since this
-          install provisioned.{' '}
-          {config.links.actions && (
-            <OutLink href={config.links.actions} variant="plain">
-              Open the hourly run history
-            </OutLink>
-          )}
-        </p>
-        <LiveEvidence
-          namespace={namespace}
-          ns={ns}
-          lead={
-            <>
-              <span className="mono">break_glass_remediation</span> ends with a
-              rollout restart: new pod names, ages reset to seconds — it lands
-              in this table within one poll.
-            </>
-          }
-        />
-      </PspSection>
-    </>
-  )
-}
-
-/* ============================================================
    Operate: component health (live pod reads + the config behind the gate)
    ============================================================ */
 
@@ -975,31 +733,41 @@ function HealthFlow({ config }: { config: UIConfig }) {
     <>
       <FlowHeader
         to="/customize/health"
-        title="Watch component health"
+        title="Component health"
         problem="A deploy can succeed while the app it shipped is down."
       />
 
       <PspSection
         kind="solution"
-        title="Health gates every deploy"
-        aside="a component that never goes green blocks the install"
+        title="Health is assessed on every deploy"
+        aside="block_deploy = false on the chart and the ALB"
       >
         <p className="small muted" style={{ maxWidth: '72ch' }}>
-          Nuon waits for a component to become healthy before calling its
-          deploy done. That gate shapes this app&rsquo;s config in two places:
+          After a deploy, Nuon assesses the component&rsquo;s deployments,
+          pods, services and ingresses and records the result with the deploy
+          step. The chart and the ALB each carry a <code>[health]</code> block
+          with <code>block_deploy = false</code>, so the record is kept and
+          nothing is held on it. The config choices that follow from it:
         </p>
         <div className="prose" style={{ marginTop: 12 }}>
           <ul>
             <li>
               The API has no ingress: an internal ingress never converges (no
-              cert, no DNS), so the component would sit un-green forever. The
+              cert, no DNS), so the component would never assess green. The
               UI reaches it in-cluster at{' '}
               <code>http://kitchen-sink-api:8080</code>.
             </li>
             <li>
               The chart&rsquo;s ConfigMap carries a <code>nuon.co/roll</code>{' '}
               annotation set to the Helm release revision, so a redeploy is
-              never a no-op that would skip the gate.
+              never a no-op.
+            </li>
+            <li>
+              The one probe is on <code>application_load_balancer</code>: an
+              HTTP check of <code>/livez</code> on the public domain, sent from
+              the runner, with a 5m stabilization window. The chart declares
+              none, because the runner cannot resolve{' '}
+              <code>*.svc.cluster.local</code>.
             </li>
           </ul>
         </div>
@@ -1015,7 +783,7 @@ function HealthFlow({ config }: { config: UIConfig }) {
 
       <PspSection
         kind="proof"
-        title="The gate's inputs, right now"
+        title="Pod readiness, right now"
         aside={`GET /api/introspect/namespace/${namespace}`}
       >
         <LoadState result={ns} what="pod health" />
@@ -1067,7 +835,7 @@ function HealthFlow({ config }: { config: UIConfig }) {
             agent={<ProofPrompt flow="health" config={config} />}
             manual={
               <CommandBlock
-                label="run the same checks the deploy gate relies on (read-only)"
+                label="run full-health-check, the runbook branch.toml runs after each deploy (read-only)"
                 command={`nuon runbooks create-run --install-id ${installIdOf(config)} --runbook-id full-health-check`}
               />
             }
@@ -1098,7 +866,7 @@ function TriggersFlow({ config }: { config: UIConfig }) {
     <>
       <FlowHeader
         to="/customize/triggers"
-        title="Wire up triggers"
+        title="Triggers"
         problem="Operational scripts need to run at the right moment with nobody remembering them."
       />
 
@@ -1195,10 +963,11 @@ function TriggersFlow({ config }: { config: UIConfig }) {
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          Its hourly history is already on the record.{' '}
+          <span className="mono">cron 0 * * * *</span> fires it on the hour;
+          each run is listed in the dashboard.{' '}
           {config.links.actions && (
             <OutLink href={config.links.actions} variant="plain">
-              Open the run history
+              Run history
             </OutLink>
           )}
         </p>
@@ -1240,8 +1009,8 @@ function RolesFlow({ config }: { config: UIConfig }) {
     <>
       <FlowHeader
         to="/customize/roles"
-        title="Scope operation roles"
-        problem="Your customer's security team asks exactly what Nuon may do in their account."
+        title="Operation roles"
+        problem="Your customer’s security team asks exactly what Nuon may do in their account."
       />
 
       <PspSection
@@ -1327,7 +1096,7 @@ function RolesFlow({ config }: { config: UIConfig }) {
                 command={`nuon actions list --app-id ${app}`}
               />
               <CommandBlock
-                label="2 · run break_glass_remediation (heads up: it ends by restarting the app's pods)"
+                label="2 · run break_glass_remediation; it ends by restarting the app’s pods"
                 command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
               />
             </>
@@ -1350,9 +1119,9 @@ function RolesFlow({ config }: { config: UIConfig }) {
           ns={ns}
           lead={
             <>
-              The same run&rsquo;s last act is a rollout restart of the
-              app&rsquo;s three deployments: pod names change and ages reset
-              the moment it lands.
+              The same run ends with a rollout restart of the app&rsquo;s
+              three deployments: pod names change and ages reset the moment
+              it lands.
             </>
           }
         />
@@ -1430,18 +1199,18 @@ function AgentFlow({ config }: { config: UIConfig }) {
   return (
     <>
       <header className="page-header">
-        <h1>Connect your coding agent</h1>
+        <h1>Coding agent setup</h1>
         <p className="lede">
           Nuon ships a Model Context Protocol (MCP) server. One command
-          connects it to Claude Code, Cursor, or Amp through the Nuon CLI you
-          already have. Your agent can then read this install and follow a
+          connects it to Claude Code, Cursor, or Amp through the Nuon CLI.
+          Your agent can then read this install and follow a
           rollout; with <Mono>--allow-writes</Mono> it can start runs and
           approve steps. Every prompt below has this install&rsquo;s ids
           filled in.
         </p>
       </header>
 
-      <Section title="1 · Connect" aside="from your clone's root">
+      <Section title="1 · Connect" aside="from your clone’s root">
         <CommandBlock
           label="Claude Code"
           command={setup.claudeCode}
@@ -1523,7 +1292,7 @@ function AgentFlow({ config }: { config: UIConfig }) {
           note={<>A run appears in your dashboard with per-step results.</>}
         />
         <CommandBlock
-          label="prove the per-operation IAM roles (restarts this app's pods)"
+          label="prove the per-operation IAM roles (restarts this app’s pods)"
           command={`nuon actions list --app-id ${app}`}
           note={
             <>
@@ -1587,8 +1356,6 @@ function flowLinks(flow: string, config: UIConfig) {
     return { href: links.branches ?? links.install, label: 'See branch runs & approvals in Nuon' }
   if (flow === 'runbooks')
     return { href: links.runbooks ?? links.install, label: 'Open runbook runs & transcripts in Nuon' }
-  if (flow === 'actions')
-    return { href: links.actions ?? links.install, label: 'Open the action run history in Nuon' }
   if (flow === 'health')
     return { href: links.components ?? links.install, label: 'See component health in Nuon' }
   if (flow === 'triggers')
@@ -1663,7 +1430,6 @@ export function Customize({
 
       {flow === 'branches' && <BranchesFlow config={config} />}
       {flow === 'runbooks' && <RunbooksFlow config={config} />}
-      {flow === 'actions' && <ActionsFlow config={config} />}
       {flow === 'health' && <HealthFlow config={config} />}
       {flow === 'triggers' && <TriggersFlow config={config} />}
       {flow === 'roles' && <RolesFlow config={config} />}

@@ -3658,6 +3658,7 @@ a.encyc__row:hover .encyc__title {
 
 .rel__installs {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: var(--space-3);
   margin-top: var(--space-3);
@@ -3677,6 +3678,11 @@ a.encyc__row:hover .encyc__title {
 .rel__install--sibling {
   opacity: 0.45;
   padding: var(--space-2);
+  /* Content-sized and never squeezed, so a group name is not hyphenated
+     mid-word when the highlighted install widens on slide 2; the row wraps
+     instead. */
+  flex-basis: auto;
+  flex-shrink: 0;
 }
 
 .rel__install--sibling .rel__install-label {
@@ -3685,8 +3691,6 @@ a.encyc__row:hover .encyc__title {
   line-height: var(--text-tiny-line);
   color: var(--text-secondary);
   max-width: 100%;
-  hyphens: auto;
-  overflow-wrap: anywhere;
 }
 
 .rel__install--this {
@@ -3821,6 +3825,9 @@ a.encyc__row:hover .encyc__title {
 
 .rel--stage2 .rel__install--this {
   flex-grow: 3;
+  /* The zoomed install takes the whole row so the nested golden path has
+     room; the group markers wrap onto the row beneath it. */
+  flex-basis: 100%;
   border-color: var(--accent);
   transform: scale(1.01);
 }
@@ -3932,12 +3939,14 @@ a.encyc__row:hover .encyc__title {
 @media (max-width: 640px) {
   .rel__installs {
     flex-direction: column;
+    flex-wrap: nowrap;
   }
 
   .rel__install--this,
   .rel--stage2 .rel__install--this,
   .rel--stage2 .rel__install--sibling {
     flex-grow: 1;
+    flex-basis: auto;
   }
 }
 

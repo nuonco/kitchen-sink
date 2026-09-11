@@ -179,7 +179,7 @@ function Locked({
         When enabled, the component applies a marker Service named{' '}
         <span className="mono">kitchen-sink-tictactoe</span>. This page lists
         the namespace&rsquo;s Services through the introspection API and did not
-        find it, so you get the pitch instead of the game.
+        find it; the game renders once it does.
       </Callout>
     </section>
   )

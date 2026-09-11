@@ -245,7 +245,7 @@ export function StepNav({ current }: { current: string }) {
   const advance = () => complete(current, 'advanced')
 
   return (
-    <nav className="stepnav" aria-label="Checklist steps">
+    <nav className="stepnav" aria-label="Step navigation">
       {prev ? (
         <StepNavLink
           to={prev.to}
@@ -253,7 +253,7 @@ export function StepNav({ current }: { current: string }) {
           title={prev.title}
         />
       ) : (
-        <StepNavLink to="/" dir={<>&larr; Checklist</>} title="Customize the Kitchen Sink" />
+        <StepNavLink to="/" dir={<>&larr; {numbered.length} steps</>} title="Customize the Kitchen Sink" />
       )}
       {next ? (
         <StepNavLink
@@ -266,8 +266,8 @@ export function StepNav({ current }: { current: string }) {
       ) : (
         <StepNavLink
           to="/"
-          dir={<>Done &rarr;</>}
-          title="Back to the checklist"
+          dir={<>{numbered.length} steps &rarr;</>}
+          title="Customize the Kitchen Sink"
           next
           onBeforeNavigate={advance}
         />

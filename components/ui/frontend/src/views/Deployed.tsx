@@ -100,7 +100,7 @@ function Glance({
         numeric
       />
       <GlanceFact
-        label="This app's namespace"
+        label="This app’s namespace"
         value={kubeRows ? namespace : undefined}
         note={thisNs?.status?.phase ?? undefined}
       />
@@ -144,8 +144,9 @@ function Patterns({ namespace }: { namespace: string }) {
       name: 'Many services, one domain',
       note: (
         <>
-          A Terraform module issues the certificate, a second chart runs the
-          ALB in front of every service, deployed in dependency order.
+          A Terraform module issues the certificate; a second chart runs the
+          ALB in front of the UI&rsquo;s Service, which proxies{' '}
+          <Mono>/api/</Mono> to the API. Both deploy in dependency order.
         </>
       ),
     },
