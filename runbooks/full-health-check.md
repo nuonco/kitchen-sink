@@ -12,7 +12,7 @@ Each step runs a named action and writes structured outputs that the install REA
 1. **health_nodes** — node readiness and capacity.
 2. **cron_status** — workloads, pods, and services in the `kitchen-sink` namespace.
 3. **health_rollout** — deployment convergence for the three app components.
-4. **health_ingress** — Helm releases and the ALB ingress controller.
+4. **health_ingress** — the ALB ingress resource and how many endpoints it backs.
 5. **health_endpoint** — public HTTPS endpoint health.
 
 ## Target

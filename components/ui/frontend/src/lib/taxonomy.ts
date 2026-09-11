@@ -13,6 +13,8 @@
  * - guide: the page explains real config; there is nothing to read live
  */
 
+import { roles } from './config-data.gen'
+
 export type Mode = 'live' | 'guide'
 
 export interface PathStep {
@@ -95,7 +97,7 @@ export const pathSteps: PathStep[] = [
     to: '/customize/roles',
     icon: 'lock',
     title: 'Scope operation roles',
-    desc: 'Seven per-operation IAM roles and the guardrails on top.',
+    desc: `${roles.filter((r) => r.type !== 'break-glass').length} per-operation IAM roles, plus break-glass, and the guardrails on top.`,
     mode: 'live',
     phase: 'Govern',
   },
@@ -138,10 +140,3 @@ export function stepNumber(to: string): string | undefined {
   return i === -1 ? undefined : String(i + 1).padStart(2, '0')
 }
 
-/** The eyebrow a feature page wears: "Step 03 of 09 · Ship". */
-export function stepEyebrow(to: string): string {
-  const step = pathSteps.find((s) => s.to === to)
-  const num = stepNumber(to)
-  if (!step || !num) return 'Customize'
-  return `Step ${num} of ${String(numberedSteps.length).padStart(2, '0')} · ${step.phase}`
-}

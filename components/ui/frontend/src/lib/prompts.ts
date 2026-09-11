@@ -284,3 +284,11 @@ what it does (get_action). After my "yes", call run_action, then watch_workflow,
 show me its structured outputs: pods_ready, pods_total, checked_at. Starting a run
 is a write: the proxy needs --allow-writes.`,
 }
+
+/** Caption under the agent tab, only where its prompt runs a different
+    exercise than the manual track's proof on the same page — keyed like
+    proofPrompts, present only for the flows that need it. */
+export const proofCaptions: Partial<Record<string, string>> = {
+  roles:
+    'This prompt runs the inputs use case instead: read this install’s inputs, change one, and redeploy — not the break-glass transcript below.',
+}

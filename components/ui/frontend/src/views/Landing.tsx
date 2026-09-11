@@ -6,7 +6,7 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import { branchName, repoName, toggleableComponents } from '../lib/config-data.gen'
+import { adhocActions, branchName, repoName, toggleableComponents } from '../lib/config-data.gen'
 import { completedCount, useCompletion } from '../lib/completion'
 import { seenSteps, TOUR_KEY } from '../lib/progress'
 import { agentPrompt, setup } from '../lib/prompts'
@@ -141,7 +141,7 @@ function cliGroups(install: string, app: string): Array<{ name: string; rows: Cl
         },
         {
           cmd: `nuon runbooks create-run --install-id ${install} --runbook-id full-health-check`,
-          note: 'Nodes, workloads, ingress, and the public endpoint.',
+          note: 'Nodes, workloads, rollout convergence, ingress, and the public endpoint.',
         },
         {
           cmd: `nuon runbooks create-run --install-id ${install} --runbook-id debug-bundle`,
@@ -156,8 +156,8 @@ function cliGroups(install: string, app: string): Array<{ name: string; rows: Cl
           cmd: `nuon actions list --app-id ${app}`,
           note: (
             <>
-              cron_status &middot; debug &middot; lifecycle_hooks &middot;{' '}
-              break_glass_remediation. Copy the workflow id (
+              Prints all {adhocActions.length} configured actions. Copy the
+              workflow id (
               <span className="mono">actw&hellip;</span>) for the next two.
             </>
           ),

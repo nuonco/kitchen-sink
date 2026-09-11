@@ -85,7 +85,7 @@ export function Ops({ config }: { config: UIConfig }) {
           Connect once with <Mono>{setup.claudeCode}</Mono> (or{' '}
           <Mono>cursor</Mono>, <Mono>amp</Mono>), verify with{' '}
           <Mono>{setup.verify}</Mono>, then paste a prompt. Three read-only
-          ones; the other seven are on the{' '}
+          ones to start; all {useCases.length}, these included, are on the{' '}
           <a href="#/customize/agent">agent page</a>.
         </p>
         <div className="row" style={{ marginTop: 12, flexWrap: 'wrap', gap: 8 }}>
@@ -128,8 +128,8 @@ export function Ops({ config }: { config: UIConfig }) {
       <Section title="Health checks" aside="probes run on the runner">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           Component health probes gate every deploy;{' '}
-          <Mono>full-health-check</Mono> re-checks nodes, workloads, ingress,
-          and the public endpoint on demand.
+          <Mono>full-health-check</Mono> re-checks nodes, workloads, rollout
+          convergence, ingress, and the public endpoint on demand.
         </p>
         <CommandBlock
           label="check this install now"

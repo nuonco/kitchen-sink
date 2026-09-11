@@ -7,7 +7,8 @@ from the dashboard's **Runbooks** tab or `nuon runbooks list --install-id <id>` 
 
 Every step here operates on something this app actually has: the components
 `kitchen_sink`, `application_load_balancer`, `certificate`, `pulumi_infra`, and the
-actions `cron_status`, `debug`, `break_glass_remediation`.
+actions `cron_status`, `debug`, `break_glass_remediation`, `health_nodes`,
+`health_rollout`, `health_ingress`, `health_endpoint`.
 
 | Runbook | Scenario | Steps |
 |---------|----------|-------|

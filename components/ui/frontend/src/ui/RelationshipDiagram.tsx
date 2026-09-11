@@ -60,9 +60,6 @@ export function RelationshipDiagram({
         <div className="rel__band-facts">
           <span className="chip">{components.length} components</span>
           <span className="chip">branch {branchName}</span>
-          {imageTags.length > 0 && (
-            <span className="chip">commit {imageTags[0]}</span>
-          )}
         </div>
         <div className="rel__groups">
           {repoGroups.map((g) => (

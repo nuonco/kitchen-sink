@@ -54,7 +54,9 @@ finalize_defaults
   --region "${REGION}" --profile "${PROFILE}" --tag "${TAG}" --repo-name "${REPO_NAME}"
 
 AWS_OPTS=(--region "$REGION")
-[[ -n "$PROFILE" ]] && AWS_OPTS+=(--profile "$PROFILE")
+if [[ -n "$PROFILE" ]]; then
+  AWS_OPTS+=(--profile "$PROFILE")
+fi
 
 ALIAS="$(aws "${AWS_OPTS[@]}" ecr-public describe-registries \
   --query 'registries[0].aliases[0].name' --output text)"

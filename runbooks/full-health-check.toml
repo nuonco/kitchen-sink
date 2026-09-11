@@ -1,5 +1,5 @@
 name        = "full-health-check"
-description = "Checks nodes, workloads, ingress, and the public endpoint."
+description = "Checks nodes, workloads, rollout convergence, ingress, and the public endpoint."
 readme      = "./runbooks/full-health-check.md"
 
 [labels]

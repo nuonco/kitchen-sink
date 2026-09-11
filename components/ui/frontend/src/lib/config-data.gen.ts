@@ -88,7 +88,7 @@ export const branchConfigAbridged = "name = \"main\"\n\npost_deploy_runbooks = [
 export const runbooks: Runbook[] = [
   {
     "name": "full-health-check",
-    "description": "Checks nodes, workloads, ingress, and the public endpoint.",
+    "description": "Checks nodes, workloads, rollout convergence, ingress, and the public endpoint.",
     "kind": "health-check",
     "mutates": false,
     "steps": [

@@ -30,9 +30,11 @@ import {
   lifecycleHooksToml,
   roles,
   runbooks,
+  type AdhocAction,
 } from '../lib/config-data.gen'
 import {
   agentPrompt,
+  proofCaptions,
   proofPrompts,
   setup,
   useCasePrompt,
@@ -133,6 +135,7 @@ function ProofPrompt({ flow, config }: { flow: string; config: UIConfig }) {
   const build = proofPrompts[flow]
   if (!build) return null
   const prompt = build(installIdOf(config), appIdOf(config))
+  const caption = proofCaptions[flow]
   return (
     <div className="agent-prompt proof-prompt">
       <div className="cmd__head">
@@ -140,6 +143,11 @@ function ProofPrompt({ flow, config }: { flow: string; config: UIConfig }) {
         <CopyButton text={prompt} />
       </div>
       <pre className="cmd__pre agent-prompt__pre proof-prompt__pre">{prompt}</pre>
+      {caption && (
+        <p className="small muted" style={{ marginTop: 8 }}>
+          {caption}
+        </p>
+      )}
     </div>
   )
 }
@@ -648,9 +656,11 @@ function RunbooksFlow({ config }: { config: UIConfig }) {
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          This install already has runs on record:{' '}
-          <span className="mono">full-health-check</span> runs after every
-          staged deploy (<span className="mono">post_deploy_runbooks</span>).{' '}
+          <span className="mono">branch.toml</span> runs{' '}
+          <span className="mono">full-health-check</span> on each install
+          after its group deploys (
+          <span className="mono">post_deploy_runbooks</span>) — runs appear
+          here once a branch run has deployed to this install.{' '}
           {config.links.runbooks && (
             <OutLink href={config.links.runbooks} variant="plain">
               Open the latest full-health-check transcript
@@ -717,8 +727,11 @@ const actionNotes: Record<string, string> = {
     'Elevated remediation through a recorded action instead of ad-hoc console access. Assumes the break-glass role from break_glass.toml.',
 }
 
-/** What a real run of each action puts on the record. */
-function actionOutcome(name: string, installID: string): ReactNode {
+/** What a real run of each action puts on the record. `null` when nobody
+    here has read the action's implementation — no outcome copy is safer
+    than a plausible guess. */
+function actionOutcome(action: AdhocAction, installID: string): ReactNode | null {
+  const name = action.name
   if (name === 'cron_status') {
     return (
       <>
@@ -748,17 +761,65 @@ function actionOutcome(name: string, installID: string): ReactNode {
       </>
     )
   }
-  return (
-    <>
-      The transcript prints the identity the run assumed (
-      <span className="mono">aws sts get-caller-identity</span> &rarr;{' '}
-      <span className="mono">{installID}-app-break-glass</span>), then a{' '}
-      <em>denied</em> Secrets Manager call — the explicit Deny in{' '}
-      <span className="mono">break_glass.toml</span> — and then restarts the
-      app&rsquo;s three deployments. Watch the pod
-      table below while it runs.
-    </>
-  )
+  if (name === 'health_nodes') {
+    return (
+      <>
+        The transcript lists every cluster node (
+        <span className="mono">kubectl get nodes -o wide</span>) and
+        publishes <span className="mono">node_count</span> /{' '}
+        <span className="mono">nodes_ready</span> /{' '}
+        <span className="mono">checked_at</span> — read-only.
+      </>
+    )
+  }
+  if (name === 'health_rollout') {
+    return (
+      <>
+        The transcript checks rollout status for the api, ui, and worker
+        deployments in turn and publishes{' '}
+        <span className="mono">api_rollout</span> /{' '}
+        <span className="mono">ui_rollout</span> /{' '}
+        <span className="mono">worker_rollout</span> /{' '}
+        <span className="mono">checked_at</span> — read-only.
+      </>
+    )
+  }
+  if (name === 'health_ingress') {
+    return (
+      <>
+        The transcript describes the{' '}
+        <span className="mono">kitchen-sink-alb</span> ingress and counts its
+        Endpoints objects, publishing <span className="mono">alb_address</span>{' '}
+        / <span className="mono">targets_healthy</span> /{' '}
+        <span className="mono">targets_total</span> /{' '}
+        <span className="mono">checked_at</span> — read-only.
+      </>
+    )
+  }
+  if (name === 'health_endpoint') {
+    return (
+      <>
+        The transcript requests the install&rsquo;s public HTTPS endpoint and
+        publishes <span className="mono">http_status</span> /{' '}
+        <span className="mono">latency_ms</span> /{' '}
+        <span className="mono">checked_at</span> — read-only.
+      </>
+    )
+  }
+  if (action.breakGlass) {
+    return (
+      <>
+        The transcript prints the identity the run assumed (
+        <span className="mono">aws sts get-caller-identity</span> &rarr;{' '}
+        <span className="mono">{installID}-app-break-glass</span>), then a{' '}
+        <em>denied</em> Secrets Manager call — the explicit Deny in{' '}
+        <span className="mono">break_glass.toml</span> — and then restarts the
+        app&rsquo;s three deployments. Watch the pod
+        table below while it runs.
+      </>
+    )
+  }
+  return null
 }
 
 function ActionsFlow({ config }: { config: UIConfig }) {
@@ -767,6 +828,8 @@ function ActionsFlow({ config }: { config: UIConfig }) {
   const install = installIdOf(config)
   const app = appIdOf(config)
   const { namespace, ns } = useNamespacePoll(config)
+  const note = actionNotes[action.name]
+  const outcome = actionOutcome(action, install)
 
   return (
     <>
@@ -811,9 +874,11 @@ function ActionsFlow({ config }: { config: UIConfig }) {
             </Badge>
           </div>
         )}
-        <p className="small muted" style={{ maxWidth: '72ch', marginBottom: 12 }}>
-          {actionNotes[action.name] ?? ''}
-        </p>
+        {note && (
+          <p className="small muted" style={{ maxWidth: '72ch', marginBottom: 12 }}>
+            {note}
+          </p>
+        )}
         <div className="row">
           {action.triggers.map((t) => (
             <span key={t} className="chip">
@@ -860,9 +925,11 @@ function ActionsFlow({ config }: { config: UIConfig }) {
             </>
           }
         />
-        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          {actionOutcome(action.name, install)}
-        </p>
+        {outcome && (
+          <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+            {outcome}
+          </p>
+        )}
         <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
           One of these is already on the record:{' '}
           <span className="mono">cron_status</span> has run hourly since this
@@ -1249,18 +1316,18 @@ function RolesFlow({ config }: { config: UIConfig }) {
       <PspSection
         kind="proof"
         title="Prove the boundary, on the record"
-        aside="the transcript prints the assumed role and the denied call"
+        aside="running it yourself prints the assumed role and the denied call"
       >
         <Tracks
           agent={<ProofPrompt flow="roles" config={config} />}
           manual={
             <>
               <CommandBlock
-                label="1 · resolve the workflow id (create-run takes the id, not the name)"
+                label="1 · list the action workflows and copy the actw id next to break_glass_remediation"
                 command={`nuon actions list --app-id ${app}`}
               />
               <CommandBlock
-                label="2 · run it (heads up: it ends by restarting the app's pods)"
+                label="2 · run break_glass_remediation (heads up: it ends by restarting the app's pods)"
                 command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
               />
             </>
