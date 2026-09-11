@@ -10,7 +10,7 @@ type = "manual"
 
 [[steps]]
 name    = "seed database"
-command = "./seed.sh"
+inline_contents = "./db_seed/seed.sh"
 
 [steps.env_vars]
 PGHOST            = "{{.nuon.install_stack.outputs.custom_nested_stacks.rds_instance.outputs.DBEndpoint}}"
