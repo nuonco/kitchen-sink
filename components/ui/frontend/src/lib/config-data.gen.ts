@@ -89,7 +89,7 @@ export const runbooks: Runbook[] = [
       {
         "name": "node-health",
         "type": "action",
-        "detail": "Nodes, Node capacity · 2m"
+        "detail": "runs the health_nodes action"
       },
       {
         "name": "workload-health",
@@ -99,17 +99,17 @@ export const runbooks: Runbook[] = [
       {
         "name": "rollout-convergence",
         "type": "action",
-        "detail": "rollout status, Horizontal pod autoscalers · 6m"
+        "detail": "runs the health_rollout action"
       },
       {
         "name": "ingress-health",
         "type": "action",
-        "detail": "Helm releases in kitchen-sink, ALB ingress · 3m"
+        "detail": "runs the health_ingress action"
       },
       {
         "name": "endpoint-health",
         "type": "action",
-        "detail": "probe the public HTTPS endpoint · 5m"
+        "detail": "runs the health_endpoint action"
       }
     ]
   },
@@ -271,6 +271,46 @@ export const adhocActions: AdhocAction[] = [
       "pre-deploy-component certificate"
     ],
     "labels": "kind = \"dns\" · team = \"platform\" · runtime = \"container\"",
+    "breakGlass": false
+  },
+  {
+    "name": "health_endpoint",
+    "timeout": "5m",
+    "triggers": [
+      "manual",
+      "post-provision"
+    ],
+    "labels": "kind = \"health-check\" · team = \"platform\"",
+    "breakGlass": false
+  },
+  {
+    "name": "health_ingress",
+    "timeout": "3m",
+    "triggers": [
+      "manual",
+      "post-provision"
+    ],
+    "labels": "kind = \"health-check\" · team = \"platform\"",
+    "breakGlass": false
+  },
+  {
+    "name": "health_nodes",
+    "timeout": "2m",
+    "triggers": [
+      "manual",
+      "post-provision"
+    ],
+    "labels": "kind = \"health-check\" · team = \"platform\"",
+    "breakGlass": false
+  },
+  {
+    "name": "health_rollout",
+    "timeout": "6m",
+    "triggers": [
+      "manual",
+      "post-provision"
+    ],
+    "labels": "kind = \"health-check\" · team = \"platform\"",
     "breakGlass": false
   },
   {
