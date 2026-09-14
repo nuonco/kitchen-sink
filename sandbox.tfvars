@@ -17,3 +17,8 @@ maintenance_role_eks_access_entry_policy_associations = {
     }
   }
 }
+
+# The EKS API endpoint stays private. nuonco/aws-eks-sandbox already defaults
+# cluster_endpoint_public_access to false and sets private access on; this
+# line makes the choice explicit in the config so a reviewer can find it.
+cluster_endpoint_public_access = false
