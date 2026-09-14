@@ -31,7 +31,7 @@ export const setup = {
 
 /* ---------- Guardrails ---------- */
 
-function guardrails(install: string, app: string): string {
+export function guardrails(install: string, app: string): string {
   return `You are driving Nuon for MY app and MY install, in my own Nuon org, through the
 "nuon" MCP server (the Nuon CLI's stdio proxy). The CLI is already authenticated on
 this machine; do not ask me for, print, or export any token.

@@ -24,16 +24,27 @@ export function useRoute(): string {
   return path
 }
 
-export function navigate(to: string) {
+export function navigate(to: string, opts: { keepScroll?: boolean } = {}) {
   window.location.hash = to
-  window.scrollTo({ top: 0 })
+  if (!opts.keepScroll) window.scrollTo({ top: 0 })
+}
+
+/** Like navigate(), without a history entry: for redirects from retired routes. */
+export function replace(to: string) {
+  window.location.replace(`#${to}`)
 }
 
 export function useNavigate() {
-  return useCallback((to: string) => navigate(to), [])
+  return useCallback((to: string, opts?: { keepScroll?: boolean }) => navigate(to, opts), [])
 }
 
-/** Splits "/day2/runbooks" into ["day2", "runbooks"]. */
+/** Splits "/cases/no-egress?panel=roles" into ["cases", "no-egress"]. */
 export function segments(path: string): string[] {
-  return path.split('/').filter(Boolean)
+  return path.split('?')[0].split('/').filter(Boolean)
+}
+
+/** The query part of a hash route: "?panel=roles" on "/cases/no-egress?panel=roles". */
+export function query(path: string): URLSearchParams {
+  const i = path.indexOf('?')
+  return new URLSearchParams(i === -1 ? '' : path.slice(i + 1))
 }

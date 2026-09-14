@@ -1,20 +1,108 @@
 /**
- * The three common requests, each one app branch of this repo. The
- * branch-derived facts (files, delta lines, groups) arrive with the case
- * screens; this module holds what the request is.
+ * The three common requests, each one app branch of this repo. What the
+ * request is lives here; what the branch changes comes from git through
+ * case-deltas.gen.ts, so the screens can only show lines a branch contains.
  */
+import type { UIConfig } from './api'
+import { caseBranches, type CaseBranch } from './case-deltas.gen'
+import { runbooks } from './config-data.gen'
+import { guardrails } from './prompts'
 
-export interface CaseSummary {
+export type CaseId = 'no-egress' | 'byo-vpc' | 'single-tenant'
+
+export type PanelId =
+  | 'workloads'
+  | 'components'
+  | 'rollout'
+  | 'health'
+  | 'runbooks'
+  | 'roles'
+  | 'toggles'
+  | 'policies'
+  | 'stack-inputs'
+
+export interface CaseDef {
   /** Also the git branch and the Nuon app branch name. */
-  branch: 'no-egress' | 'byo-vpc' | 'single-tenant'
+  branch: CaseId
   title: string
+  /** Proof panels mounted under the diagram, in strip order. */
+  panels: PanelId[]
+  /** One sentence from docs.nuon.co, quoted under the diagram, with its page. */
+  quote: { text: string; url: string; label: string }
+  /** The one prompt for a coding agent, this install's ids filled in. */
+  prompt: (config: UIConfig) => string
 }
 
-export const cases: CaseSummary[] = [
-  { branch: 'no-egress', title: 'No egress' },
-  { branch: 'byo-vpc', title: 'Existing VPC' },
-  { branch: 'single-tenant', title: 'Single-tenant, vendor-run' },
+const installOf = (c: UIConfig) => c.install_id ?? '<your-install-id>'
+const appOf = (c: UIConfig) => c.app_id ?? '<your-app-id>'
+
+const healthSteps = runbooks.find((r) => r.name === 'full-health-check')?.steps.length ?? 0
+
+export const cases: CaseDef[] = [
+  {
+    branch: 'no-egress',
+    title: 'No egress',
+    panels: ['policies', 'roles', 'workloads'],
+    quote: {
+      text: 'The Control Plane cannot push commands or open connections into customer accounts.',
+      url: 'https://docs.nuon.co/security',
+      label: 'docs.nuon.co/security',
+    },
+    prompt: (c) => `${guardrails(installOf(c), appOf(c))}
+
+Call get_install for install ${installOf(c)}, then list_install_components and
+get_component for each component. List every network path out of this install's
+AWS account and name the component that owns it: the runner's outbound connection
+to the Nuon API, image pulls, the public load balancer, and any URL a component's
+config reaches. One line per path. Read-only.`,
+  },
+  {
+    branch: 'byo-vpc',
+    title: 'Existing VPC',
+    panels: ['stack-inputs', 'workloads', 'rollout', 'components'],
+    quote: {
+      text: 'Point vpc_nested_template_url at the byo-vpc/default template; it accepts existing VPC and subnet IDs as parameters instead of creating them.',
+      url: 'https://docs.nuon.co/concepts/stacks/customer-vpc',
+      label: 'docs.nuon.co/concepts/stacks/customer-vpc',
+    },
+    prompt: (c) => `${guardrails(installOf(c), appOf(c))}
+
+Call get_install for install ${installOf(c)} and get_install_inputs. The install
+stack created VPC ${c.vpc_id ?? '(read it from install_stack.outputs.vpc_id)'}. List
+what changes if this install moves into an existing VPC instead: the stack.toml
+template line (byo-vpc/default) and the four Quick Create parameters the customer
+supplies (VpcID, PublicSubnetIDs, PrivateSubnetIDs, RunnerSubnetID). Show the plan
+as file edits. Apply nothing. Read-only.`,
+  },
+  {
+    branch: 'single-tenant',
+    title: 'Single-tenant, vendor-run',
+    panels: ['health', 'runbooks', 'roles', 'toggles', 'rollout'],
+    quote: {
+      text: 'No cross-account access is required.',
+      url: 'https://docs.nuon.co/architecture/platform',
+      label: 'docs.nuon.co/architecture/platform',
+    },
+    prompt: (c) => `${guardrails(installOf(c), appOf(c))}
+
+Runbook runs have no MCP tool. After my "yes", run:
+nuon runbooks create-run --install-id ${installOf(c)} --runbook-id full-health-check --output agent
+Then call list_workflows for install ${installOf(c)}, find that run, and
+watch_workflow until it ends. Summarize the transcript: each of its ${healthSteps}
+steps with its verdict, and the failing step if there is one.
+
+Budget: exactly one run.`,
+  },
 ]
 
-export const caseByBranch = (branch: string): CaseSummary | undefined =>
+export const caseByBranch = (branch: string): CaseDef | undefined =>
   cases.find((c) => c.branch === branch)
+
+/** The branch's diff against main and its own install groups, from git. */
+export const caseBranch = (branch: string): CaseBranch | undefined => caseBranches[branch]
+
+/** The group the branch ships to: the first group its branch.toml declares. */
+export function shipsTo(branch: string): { name: string; order: number } | null {
+  const g = caseBranch(branch)?.groups[0]
+  return g ? { name: g.name, order: g.order } : null
+}
