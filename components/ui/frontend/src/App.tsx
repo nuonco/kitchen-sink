@@ -7,6 +7,7 @@ import { LoadingOverlay } from './ui/LoadingOverlay'
 import { Icon, NuonMark, OutLink } from './ui/Primitives'
 import { CaseDetail } from './views/CaseDetail'
 import { Cases } from './views/Cases'
+import { TryYourApp } from './views/TryYourApp'
 import { Home } from './views/Home'
 import { markOpenerDone, Opener, openerDone } from './views/Opener'
 
@@ -73,6 +74,8 @@ export default function App() {
     view = <Opener key="intro" config={config} onDone={finishOpener} fromStart />
   } else if (parts[0] === 'home') {
     view = <Home config={config} />
+  } else if (parts[0] === 'try') {
+    view = <TryYourApp />
   } else if (parts[0] === 'cases') {
     view = parts[1] ? (
       <CaseDetail config={config} branch={parts[1]} panel={query(path).get('panel')} />
