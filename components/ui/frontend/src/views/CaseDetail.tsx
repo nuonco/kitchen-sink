@@ -6,7 +6,7 @@ import { panelById } from '../lib/panels'
 import { useNavigate } from '../lib/router'
 import { CaseDiagram } from '../ui/CaseDiagrams'
 import { Drawer } from '../ui/Drawer'
-import { BackLink, CopyButton, Disclosure, OutLink } from '../ui/Primitives'
+import { BackLink, CommandBlock, CopyButton, Disclosure, OutLink } from '../ui/Primitives'
 
 /* ============================================================
    One request end to end: the picture of the branch, the diff against
@@ -106,7 +106,21 @@ export function CaseDetail({
   const data = caseBranch(def.branch)
   const ships = shipsTo(def.branch)
   const app = config.app_id ?? '<your-app-id>'
-  const syncCmd = `nuon sync --app-id ${app} --force --branch ${def.branch}`
+  // The git branch the case's branch.toml tracks, and the Nuon branch name it
+  // declares, both read from the branch itself (case-deltas.gen.ts).
+  const tracked = data?.trackedBranch ?? def.branch
+  const nuonBranch = data?.branchName ?? def.branch
+  const cloneDir = `kitchen-sink-${tracked}`
+  // One block: clone the branch, enter it, sync. --force because the clone's
+  // directory name is not the app name.
+  const shipBlock = [
+    `git clone -b ${tracked} --single-branch https://github.com/${repoName} ${cloneDir}`,
+    `cd ${cloneDir}`,
+    `nuon sync --app-id ${app} --force --branch ${nuonBranch}`,
+  ].join('\n')
+  const previewBlock = `${shipBlock} --preview`
+  const groups = data?.groups ?? []
+  const approvals = groups.length === 1 ? 'one approval' : `${groups.length} approvals`
   // Only a panel this case mounts opens; a stale or hand-typed id is ignored.
   const openPanel = panel && (def.panels as string[]).includes(panel) ? panelById(panel) : undefined
   const closeDrawer = () => navigate(`/cases/${def.branch}`, { keepScroll: true })
@@ -159,19 +173,20 @@ export function CaseDetail({
             ))}
           </div>
           <div className="delta__foot">
-            <div className="home__cmd">
-              <code className="mono">{syncCmd}</code>
-              <CopyButton text={syncCmd} />
-            </div>
+            <CommandBlock label="ship this branch to the app" command={shipBlock} />
+            <CommandBlock label="plan only, nothing applied" command={previewBlock} />
             <div className="mono home__aside">
-              from a clone checked out at {def.branch} · plan → approve →{' '}
-              {(data?.groups ?? []).map((g, i) => (
+              branch run: plan, {approvals}, then{' '}
+              {groups.map((g, i) => (
                 <span key={g.name}>
-                  {i > 0 && ' → '}
-                  <span className="casedetail__lit">{g.name}</span>
+                  {i > 0 && ', '}
+                  <span className="casedetail__lit">{g.name}</span> (order {g.order})
                 </span>
               ))}
             </div>
+            {!config.app_id && (
+              <p className="small muted">App id not served; the block shows a placeholder.</p>
+            )}
           </div>
         </section>
       </div>
