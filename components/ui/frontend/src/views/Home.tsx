@@ -102,15 +102,15 @@ export function cliGroups(install: string, app: string): Array<{ name: string; r
       ],
     },
     {
-      name: 'Sync',
+      name: 'Branch run',
       rows: [
         {
-          cmd: `nuon sync --app-id ${app} --force --branch ${branchName}`,
+          cmd: `nuon branches trigger --app-id ${app} --branch-id ${branchName} --no-wait`,
           note: (
             <>
-              From your clone of the app config; uncommitted edits count.
-              Triggers the staged rollout with an approval per group;{' '}
-              <span className="mono">--preview</span> plans without applying.
+              Runs <span className="mono">{branchName}</span> at its head on GitHub; each install group
+              holds for an approval. A new app&rsquo;s first config upload stays{' '}
+              <span className="mono">nuon sync --create</span>, from the config directory.
             </>
           ),
         },
@@ -170,7 +170,7 @@ export function Home({ config }: { config: UIConfig }) {
   const headline = [
     ...byName('This install').slice(0, 1),
     ...byName('Runbooks').slice(1, 2),
-    ...byName('Sync').slice(0, 1),
+    ...byName('Branch run').slice(0, 1),
   ]
 
   return (

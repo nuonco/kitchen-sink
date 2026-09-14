@@ -442,7 +442,7 @@ export function VersionTimeline({
   const who = installName ?? installId ?? 'this install'
 
   const describe = [
-    `Branch ${branchName}. Each push is a version.`,
+    `Branch ${branchName}. Each branch run is a version.`,
     ...groups.map((g) => {
       const names = configsIn(g.name).map((c) => c.name)
       return `Group ${g.name}, order ${g.order}, selector ${g.selector}${names.length ? `, install config${names.length === 1 ? '' : 's'} ${names.join(', ')}` : ''}.`
@@ -475,7 +475,7 @@ export function VersionTimeline({
         BRANCH {branchName.toUpperCase()}
       </text>
       <text x={W} y="12" textAnchor="end" className="opener__svg-label">
-        EACH PUSH IS A VERSION
+        EACH BRANCH RUN IS A VERSION
       </text>
 
       <line x1="0" y1="52" x2={W} y2="52" className="opener__branch-line" />

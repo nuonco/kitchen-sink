@@ -110,15 +110,13 @@ export function CaseDetail({
   // declares, both read from the branch itself (case-deltas.gen.ts).
   const tracked = data?.trackedBranch ?? def.branch
   const nuonBranch = data?.branchName ?? def.branch
-  const cloneDir = `kitchen-sink-${tracked}`
-  // One block: clone the branch, enter it, sync. --force because the clone's
-  // directory name is not the app name.
-  const shipBlock = [
-    `git clone -b ${tracked} --single-branch https://github.com/${repoName} ${cloneDir}`,
-    `cd ${cloneDir}`,
-    `nuon sync --app-id ${app} --force --branch ${nuonBranch}`,
-  ].join('\n')
-  const previewBlock = `${shipBlock} --preview`
+  const install = config.install_id ?? '<your-install-id>'
+  // A branch run builds the config at the branch's head on GitHub; nothing is
+  // uploaded from this machine, so there is no clone and no --force.
+  const shipCmd = `nuon branches trigger --app-id ${app} --branch-id ${nuonBranch} --no-wait`
+  const previewCmd = `nuon branches preview --app-id ${app} --branch-id ${nuonBranch} --git-ref ${tracked} --install-id ${install} --mode plan-only`
+  // The one command that creates the branch in the app, from its own branch.toml.
+  const createCmd = `nuon branches sync --app-id ${app} --file branch.toml --confirm`
   const groups = data?.groups ?? []
   const approvals = groups.length === 1 ? 'one approval' : `${groups.length} approvals`
   // Only a panel this case mounts opens; a stale or hand-typed id is ignored.
@@ -173,8 +171,13 @@ export function CaseDetail({
             ))}
           </div>
           <div className="delta__foot">
-            <CommandBlock label="ship this branch to the app" command={shipBlock} />
-            <CommandBlock label="plan only, nothing applied" command={previewBlock} />
+            <CommandBlock label="ship this branch to the app" command={shipCmd} />
+            <CommandBlock label="plan only, nothing applied" command={previewCmd} />
+            <p className="small muted">
+              If the app has no branch named <span className="mono">{nuonBranch}</span> yet:{' '}
+              <span className="mono">{createCmd}</span>, with that branch&rsquo;s branch.toml in the
+              working directory.
+            </p>
             <div className="mono home__aside">
               branch run: plan, {approvals}, then{' '}
               {groups.map((g, i) => (
@@ -184,8 +187,8 @@ export function CaseDetail({
                 </span>
               ))}
             </div>
-            {!config.app_id && (
-              <p className="small muted">App id not served; the block shows a placeholder.</p>
+            {(!config.app_id || !config.install_id) && (
+              <p className="small muted">Ids not served; the commands show placeholders.</p>
             )}
           </div>
         </section>

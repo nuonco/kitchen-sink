@@ -10,7 +10,7 @@ ships explains that install from the inside (an opener, three common enterprise 
 
 | | |
 |---|---|
-| **App branch** | Everything ships through [`branch.toml`](./branch.toml): a push to `main` rolls the config out group by group (staging, then customers, then enterprise) with a person approving each group's plan. Try it end to end in the [app-branches walkthrough](https://docs.nuon.co/get-started/app-branches-walkthrough). |
+| **App branch** | Everything ships through [`branch.toml`](./branch.toml): `nuon branches trigger --app-id <app> --branch-id main` starts a run that rolls main's config out group by group (staging, then customers, then enterprise) with a person approving each group's plan; a push to `main` starts the same run only once the `github-events` rules in `triggers.toml.example` are enabled in the org. Try it end to end in the [app-branches walkthrough](https://docs.nuon.co/get-started/app-branches-walkthrough). |
 | **Your coding agent** | `claude mcp add --transport stdio nuon -- nuon agents mcp` registers Nuon's MCP server, the CLI's stdio proxy, with Claude Code (`amp mcp add nuon -- nuon agents mcp` for Amp; Cursor reads `~/.cursor/mcp.json`); `nuon agents context` verifies it. The deployed UI carries one prompt per case and the rest in the proof-panel drawers, ids filled in. Docs: [agents overview](https://docs.nuon.co/guides/agents/overview). A project [`.mcp.json`](./.mcp.json) is checked in, so a clone of this repo offers the server on first open. |
 
 ## What gets deployed

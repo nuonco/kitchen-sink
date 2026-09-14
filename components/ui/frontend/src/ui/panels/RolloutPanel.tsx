@@ -37,12 +37,12 @@ function scenarios(install: string, app: string) {
   return [
     {
       scenario: 'Ship one change to the fleet, in order, with an approval per group',
-      how: `nuon sync --app-id ${app} --force --branch ${branchName} --no-wait --output agent`,
-      note: 'from your clone',
+      how: `nuon branches trigger --app-id ${app} --branch-id ${branchName} --no-wait --output agent`,
+      note: 'runs the branch at its head on GitHub',
     },
     {
       scenario: 'Preview a pull request against one install before it merges',
-      how: `nuon apps branches preview --app-id ${app} --branch-id ${branchName} --pr-number <n> --install-id ${install} --mode plan-only`,
+      how: `nuon branches preview --app-id ${app} --branch-id ${branchName} --pr-number <n> --install-id ${install} --mode plan-only`,
       note: 'or ask your agent: preview_app_branch, plan-only by default',
     },
     {
@@ -90,11 +90,9 @@ export function RolloutDrawer({ config, caseBranch }: PanelProps) {
         ))}
       </div>
       <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-        A branch run builds the config at one commit.{' '}
-        <span className="mono">nuon sync --branch {branchName}</span> from a clone starts one; so does
-        a push to <span className="mono">{branchName}</span> once the rules in{' '}
-        <span className="mono">triggers.toml.example</span> are enabled. Each group&rsquo;s plan
-        holds for a person&rsquo;s approval before it deploys.
+        A branch run builds the config at the branch&rsquo;s head commit on GitHub.{' '}
+        <span className="mono">nuon branches trigger --branch-id {branchName}</span> starts one. Each
+        group&rsquo;s plan holds for a person&rsquo;s approval before it deploys.
       </p>
       <CodeBlock label="branch.toml (comments stripped)" code={branchConfigAbridged} />
 
@@ -135,19 +133,19 @@ export function RolloutDrawer({ config, caseBranch }: PanelProps) {
       </div>
 
       <CommandBlock
-        label="sync your clone and start a branch run"
-        command={`nuon sync --app-id ${app} --force --branch ${branchName} --no-wait --output agent`}
+        label="start a branch run"
+        command={`nuon branches trigger --app-id ${app} --branch-id ${branchName} --no-wait --output agent`}
         note={
           <>
-            Syncs your local files as they are (uncommitted included) and starts a branch run through
-            the groups above. <span className="mono">--preview</span> plans every group with nothing
-            applied.
+            Builds the config at the branch&rsquo;s head on GitHub and runs it through the groups above;
+            nothing is uploaded from this machine. <span className="mono">--force</span> rebuilds every
+            component.
           </>
         }
       />
       <CommandBlock
         label="watch the rollout"
-        command={`nuon apps branches runs --app-id ${app} --branch-id ${branchName}`}
+        command={`nuon branches runs --app-id ${app} --branch-id ${branchName}`}
       />
       <CommandBlock
         label="this install's group, by label"
