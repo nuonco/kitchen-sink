@@ -72,7 +72,7 @@ function Strip({ def, config, open }: { def: CaseDef; config: UIConfig; open: st
             onClick={() => navigate(`/cases/${def.branch}?panel=${p.id}`, { keepScroll: true })}
           >
             <span className="ptile__title mono">{p.title}</span>
-            <p.Tile config={config} />
+            <p.Tile config={config} caseBranch={def.branch} />
           </button>
         ))}
       </div>
@@ -193,7 +193,7 @@ export function CaseDetail({
 
       {openPanel && (
         <Drawer title={openPanel.title} aside={openPanel.source} onClose={closeDrawer}>
-          <openPanel.Drawer config={config} />
+          <openPanel.Drawer config={config} caseBranch={def.branch} />
         </Drawer>
       )}
     </div>

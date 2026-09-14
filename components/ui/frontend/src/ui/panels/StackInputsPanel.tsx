@@ -1,7 +1,7 @@
 import { inputs, runner, sandbox, stack } from '../../lib/config-data.gen'
 import type { PanelProps } from '../../lib/panels'
-import { useCaseById, useCasePrompt } from '../../lib/prompts'
-import { CodeBlock, CopyButton, OutLink } from '../Primitives'
+import { CodeBlock, OutLink } from '../Primitives'
+import { PanelPrompts } from './shared'
 
 /* ============================================================
    stack-inputs: what the install stack builds, what the sandbox takes, and
@@ -32,9 +32,6 @@ export function StackInputsTile({ config }: PanelProps) {
 }
 
 export function StackInputsDrawer({ config }: PanelProps) {
-  const install = config.install_id ?? '<your-install-id>'
-  const app = config.app_id ?? '<your-app-id>'
-  const inputsCase = useCaseById('inputs')
   return (
     <>
       <div className="section__head">
@@ -118,15 +115,7 @@ export function StackInputsDrawer({ config }: PanelProps) {
         </table>
       </div>
 
-      {inputsCase && (
-        <div className="agent-prompt" style={{ marginTop: 24 }}>
-          <div className="cmd__head">
-            <span className="cmd__label">{inputsCase.title}</span>
-            <CopyButton text={useCasePrompt(inputsCase, install, app)} />
-          </div>
-          <pre className="cmd__pre agent-prompt__pre">{useCasePrompt(inputsCase, install, app)}</pre>
-        </div>
-      )}
+      <PanelPrompts panel="stack-inputs" config={config} />
     </>
   )
 }

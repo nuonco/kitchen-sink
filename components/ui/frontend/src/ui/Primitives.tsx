@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Loadable } from '../lib/api'
 import { useNavigate } from '../lib/router'
 import { iconPaths } from './icons'
@@ -89,27 +89,6 @@ export function BackLink({ to, children }: { to: string; children: ReactNode }) 
   )
 }
 
-/** A two-level trail for pages reached through an intermediate hub. */
-export function Crumbs({ items }: { items: { label: string; to: string }[] }) {
-  const navigate = useNavigate()
-  return (
-    <nav className="crumbs" aria-label="Breadcrumb">
-      {items.map((item, i) => (
-        <Fragment key={item.to}>
-          {i > 0 && (
-            <span className="crumbs__sep" aria-hidden="true">
-              /
-            </span>
-          )}
-          <button className="crumbs__link" onClick={() => navigate(item.to)}>
-            {item.label}
-          </button>
-        </Fragment>
-      ))}
-    </nav>
-  )
-}
-
 /** An external link out to the Nuon dashboard or docs. */
 export function OutLink({
   href,
@@ -159,41 +138,6 @@ export function Section({
   return (
     <section className="section" id={id}>
       <div className="section__head">
-        <h2 className="section__title">{title}</h2>
-        {aside && <div className="subtext muted">{aside}</div>}
-      </div>
-      {children}
-    </section>
-  )
-}
-
-/* ============================================================
-   Every feature page runs the same three beats: Problem (where this bites),
-   Solution (the config that answers it), Proof (test it on this install,
-   right now). The tags make the pattern visible without a paragraph.
-   ============================================================ */
-
-export type PspKind = 'problem' | 'solution' | 'proof'
-
-export function PspTag({ kind }: { kind: PspKind }) {
-  return <span className={`psp-tag psp-tag--${kind}`}>{kind}</span>
-}
-
-export function PspSection({
-  kind,
-  title,
-  aside,
-  children,
-}: {
-  kind: PspKind
-  title: string
-  aside?: ReactNode
-  children: ReactNode
-}) {
-  return (
-    <section className="section">
-      <div className="section__head">
-        <PspTag kind={kind} />
         <h2 className="section__title">{title}</h2>
         {aside && <div className="subtext muted">{aside}</div>}
       </div>

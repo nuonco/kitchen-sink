@@ -85,6 +85,7 @@ pre {
 
 /* Hairline grid wash behind the page -- the terminal/CLI motif, kept at a
    level where it never competes with text. */
+
 body::before {
   content: "";
   position: fixed;
@@ -386,29 +387,6 @@ body::before {
 
 /* The backlink's sibling for pages reached through an intermediate hub:
    "Kitchen sink / BYOC operations", each crumb a link back up. */
-.crumbs {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-5);
-  color: var(--text-tertiary);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-}
-
-.crumbs__link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: inherit;
-  font-size: inherit;
-  line-height: inherit;
-  cursor: pointer;
-}
-
-.crumbs__link:hover {
-  color: var(--text-primary);
-}
 
 /* Cards */
 
@@ -418,20 +396,6 @@ body::before {
   background: var(--surface-card);
   padding: var(--space-6);
   box-shadow: var(--shadow-01);
-}
-
-.card__header {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: var(--space-2);
-}
-
-.card__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
 }
 
 /* Page header */
@@ -475,10 +439,6 @@ body::before {
   gap: var(--space-3);
 }
 
-.stack--lg {
-  gap: var(--space-6);
-}
-
 .row {
   display: flex;
   align-items: center;
@@ -490,24 +450,9 @@ body::before {
    Landing
    ============================================================ */
 
-.hero {
-  padding-bottom: var(--space-4);
-}
-
-.hero h1 {
-  margin: var(--space-3) 0 var(--space-4);
-  max-width: 22ch;
-}
-
-.hero__lede {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 64ch;
-}
-
 /* The hub's finish state: every numbered step done. Sits above .choices,
    so it reads before the two ways back in. */
+
 .ending {
   margin-top: var(--space-6);
   padding: var(--space-5) var(--space-6);
@@ -515,22 +460,6 @@ body::before {
   border-left: 2px solid var(--accent);
   border-radius: var(--radius-lg);
   background: var(--surface-card);
-}
-
-.ending__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  color: var(--text-primary);
-}
-
-.ending__unlock,
-.ending__next {
-  margin-top: var(--space-3);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  max-width: 68ch;
 }
 
 .facts {
@@ -588,7 +517,7 @@ body::before {
 
 /* Golden path */
 
-.arch__num {
+.group-card__num {
   font-family: var(--font-mono);
   font-size: var(--text-tiny);
   line-height: var(--text-tiny-line);
@@ -639,6 +568,7 @@ body::before {
 
 /* Dots are buttons: reached steps can be jumped back to; steps ahead stay
    disabled — the tour reveals, it doesn't preview. */
+
 .tour__dot {
   width: 7px;
   height: 7px;
@@ -693,57 +623,7 @@ body::before {
   margin-top: var(--space-10);
 }
 
-.tour__aside {
-  margin-top: var(--space-6);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-tertiary);
-  max-width: 64ch;
-}
-
 /* The arrival moment */
-
-.arrive {
-  min-height: 52vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.arrive h1 {
-  font-size: var(--display-lg);
-  line-height: 1.08;
-  margin: var(--space-4) 0 var(--space-5);
-  max-width: 18ch;
-}
-
-.arrive__lede {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 58ch;
-}
-
-.arrive__chips {
-  margin-top: var(--space-6);
-}
-
-.arrive__actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  margin-top: var(--space-8);
-}
-
-.arrive__actions .tour__skip {
-  margin-left: 0;
-}
-
-@media (max-width: 720px) {
-  .arrive h1 {
-    font-size: var(--display-md);
-  }
-}
 
 /* Step headers */
 
@@ -767,10 +647,6 @@ body::before {
 
 /* Staggered reveal for the live facts */
 
-.fact--in {
-  animation: fact-in 560ms var(--ease-standard) both;
-}
-
 @keyframes fact-in {
   from {
     opacity: 0;
@@ -784,32 +660,6 @@ body::before {
 
 /* The end-of-tour CTA block on the deployed step */
 
-.cta-block {
-  margin-top: var(--space-8);
-  padding: var(--space-6);
-  border: 2px solid var(--border-subtle);
-  border-left: 2px solid var(--accent-dim);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    100deg,
-    var(--accent-wash) 0%,
-    rgba(11, 18, 21, 0) 60%
-  );
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-4);
-}
-
-.cta-block__kicker {
-  font-family: var(--font-mono);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
 .btn--xl {
   padding: var(--space-4) var(--space-8);
   font-size: var(--text-heading);
@@ -819,58 +669,7 @@ body::before {
 
 /* The live toggle switch (drawn, not interactive) */
 
-.switch {
-  position: relative;
-  flex: none;
-  margin-left: auto;
-  width: 44px;
-  height: 24px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-strong);
-  background: var(--surface-sunken);
-}
-
-.switch::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 16px;
-  height: 16px;
-  border-radius: var(--radius-full);
-  background: var(--text-tertiary);
-  transition: left var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard);
-}
-
-.switch--on {
-  border-color: var(--accent);
-  background: var(--accent-wash-strong);
-}
-
-.switch--on::after {
-  left: 23px;
-  background: var(--accent);
-}
-
 /* Small variant, used as the SKU tile's live state readout */
-
-.switch--sm {
-  width: 28px;
-  height: 16px;
-  margin-left: 0;
-}
-
-.switch--sm::after {
-  top: 2px;
-  left: 2px;
-  width: 10px;
-  height: 10px;
-}
-
-.switch--sm.switch--on::after {
-  left: 14px;
-}
 
 /* ============================================================
    The evaluation checklist: one ordered path, rendered as numbered rows.
@@ -878,335 +677,27 @@ body::before {
    a cyan border snaps on, the title turns cyan with a pixel arrow.
    ============================================================ */
 
-.pathlist {
-  list-style: none;
-  margin: var(--space-8) 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-.pathlist__phase {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin: var(--space-5) 0 var(--space-1);
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.pathlist__phase::after {
-  content: "";
-  flex: 1;
-  height: 2px;
-  background: var(--border-subtle);
-}
-
-.pathrow {
-  width: 100%;
-  display: grid;
-  grid-template-columns: 44px 1fr auto;
-  align-items: center;
-  gap: var(--space-4);
-  text-align: left;
-  padding: var(--space-4) var(--space-5);
-  border: 2px solid var(--border-subtle);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: transform 0.1s steps(2), border-color 0.1s steps(2),
-    background-color 0.1s steps(2);
-}
-
-.pathrow:hover {
-  transform: translate(-4px, -4px);
-  border-color: var(--accent);
-  background: rgba(76, 201, 240, 0.03);
-}
-
-.pathrow--bonus {
-  border-style: dashed;
-}
-
-.pathrow__num {
-  font-family: var(--font-mono);
-  font-size: var(--text-title);
-  line-height: var(--text-title-line);
-  color: var(--accent-dim);
-}
-
-.pathrow__body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
-.pathrow__title {
-  display: flex;
-  align-items: center;
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  color: var(--text-primary);
-  transition: color 300ms var(--ease-standard);
-}
-
-.pathrow:hover .pathrow__title {
-  color: var(--accent-hover);
-}
-
-.pathrow__arrow {
-  display: flex;
-  align-items: center;
-  width: 0;
-  opacity: 0;
-  overflow: hidden;
-  transition: width 300ms var(--ease-standard),
-    opacity 300ms var(--ease-standard);
-}
-
-.pathrow:hover .pathrow__arrow {
-  width: 20px;
-  opacity: 1;
-}
-
-.pathrow__desc {
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-secondary);
-}
-
-.pathrow__meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.pathrow__meta .switch {
-  margin-left: 0;
-}
-
-@media (max-width: 640px) {
-  .pathrow {
-    grid-template-columns: 32px 1fr;
-  }
-
-  .pathrow__meta {
-    grid-column: 2;
-    justify-content: flex-start;
-  }
-}
-
 /* ---------- The checklist's memory ---------- */
 
 /* How far this browser has been: a counted label and a thin track. The label
    says "explored", not "done" — opening a page is all the app can honestly
    claim. */
-.pathmeter {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-top: var(--space-8);
-}
-
-.pathmeter__label {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
-.pathmeter__track {
-  flex: 1;
-  max-width: 220px;
-  height: 6px;
-  background: var(--border-subtle);
-  overflow: hidden;
-}
-
-.pathmeter__fill {
-  display: block;
-  height: 100%;
-  background: var(--accent);
-  transition: width 400ms var(--ease-standard);
-}
 
 /* A step this visitor has opened: the number goes green and a pixel check
    joins the badges. The row stays fully readable — done is a fact, not a
    dimmer. */
-.pathrow--seen .pathrow__num {
-  color: var(--status-positive);
-}
-
-.pathrow__seen {
-  display: inline-flex;
-  align-items: center;
-  color: var(--status-positive);
-}
 
 /* The first step not yet opened: where to pick the path back up. */
-.pathrow--next {
-  border-color: var(--accent-dim);
-}
-
-.pathrow__next {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--accent);
-}
 
 /* A step this visitor completed, not just opened: 'read' says they moved on,
    'verified' says the cluster confirmed it. Separate from --seen above, which
    only ever means the page was opened. */
-.pathrow__done {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  padding: 2px var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
-.pathrow__done--verified {
-  color: var(--status-positive);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
 
 /* ---------- Prev / next along the path ---------- */
 
-.stepnav {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
-  margin-top: var(--space-10);
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--border-subtle);
-}
-
-.stepnav__link {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: var(--space-4) var(--space-5);
-  border: 2px solid var(--border-subtle);
-  background: var(--surface-card);
-  text-decoration: none;
-  transition: transform 0.1s steps(2), border-color 0.1s steps(2);
-}
-
-.stepnav__link:hover {
-  transform: translate(-4px, -4px);
-  border-color: var(--accent);
-}
-
-.stepnav__link--next {
-  text-align: right;
-}
-
-.stepnav__dir {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.stepnav__title {
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  font-weight: var(--weight-stronger);
-  color: var(--text-primary);
-}
-
-.stepnav__link:hover .stepnav__title {
-  color: var(--accent-hover);
-}
-
-@media (max-width: 640px) {
-  .stepnav {
-    grid-template-columns: 1fr;
-  }
-
-  .stepnav__link--next {
-    text-align: left;
-  }
-}
-
 /* ---------- The two ways to run a proof ---------- */
 
-.tracks__bar {
-  display: inline-flex;
-  border: 2px solid var(--border-strong);
-  background: var(--surface-card);
-}
-
-.tracks__tab {
-  padding: var(--space-2) var(--space-4);
-  border: none;
-  background: none;
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  cursor: pointer;
-}
-
-.tracks__tab + .tracks__tab {
-  border-left: 2px solid var(--border-strong);
-}
-
-.tracks__tab--on {
-  background: var(--accent-wash-strong);
-  color: var(--accent);
-}
-
-.tracks__tab:focus-visible {
-  outline: none;
-  box-shadow: var(--shadow-focus);
-}
-
-.tracks__panel {
-  margin-top: var(--space-4);
-}
-
-
 /* Path cards */
-
-.paths {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--space-4);
-  margin-top: var(--space-5);
-}
 
 .path {
   display: flex;
@@ -1227,50 +718,6 @@ body::before {
   border-color: var(--accent-dim);
   background: var(--surface-raised);
   text-decoration: none;
-}
-
-.path__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--accent-wash-strong);
-  background: var(--accent-wash);
-  color: var(--accent);
-  font-size: 20px;
-}
-
-.path__q {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  letter-spacing: var(--tracking-normal);
-}
-
-.path__body {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  flex: 1;
-}
-
-.path__cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-body);
-  font-weight: var(--weight-strong);
-  color: var(--accent);
-}
-
-.path:hover .path__cta .icon {
-  transform: translateX(2px);
-}
-
-.path__cta .icon {
-  transition: transform var(--duration-base) var(--ease-standard);
 }
 
 /* ============================================================
@@ -1456,16 +903,18 @@ pre.raw {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .skeleton {
+.skeleton {
     animation: none;
-  }
-  .tour__step,
+}
+
+.tour__step,
   .fact--in {
     animation: none;
-  }
-  * {
+}
+
+* {
     transition: none !important;
-  }
+}
 }
 
 /* ============================================================
@@ -1564,12 +1013,13 @@ pre.raw {
 }
 
 @media (max-width: 720px) {
-  .typerow__head {
+.typerow__head {
     grid-template-columns: 1fr 16px;
-  }
-  .typerow__uses {
+}
+
+.typerow__uses {
     text-align: left;
-  }
+}
 }
 
 /* A config file shown in place: the filename links to the file in the repo. */
@@ -1657,38 +1107,6 @@ pre.raw {
 
 /* Prose used in the day-two feature views */
 
-.prose p {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 72ch;
-}
-
-.prose p + p {
-  margin-top: var(--space-4);
-}
-
-.prose code {
-  padding: 1px 5px;
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  background: var(--surface-sunken);
-  color: var(--text-primary);
-}
-
-.prose ul {
-  margin: var(--space-4) 0 0;
-  padding-left: var(--space-5);
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 72ch;
-}
-
-.prose li + li {
-  margin-top: var(--space-2);
-}
-
 .callout {
   margin-top: var(--space-6);
   padding: var(--space-4) var(--space-5);
@@ -1716,41 +1134,6 @@ pre.raw {
 
 /* The landing tile's locked state: still clickable (it leads to the pitch),
    but visibly not part of the install. */
-.path--locked {
-  border-style: dashed;
-  background: var(--surface-sunken);
-}
-
-.path--locked:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-sunken);
-}
-
-.path--locked .path__icon {
-  border-color: var(--border-subtle);
-  background: var(--surface-hover);
-  color: var(--text-tertiary);
-}
-
-.path--locked .path__q,
-.path--locked .path__body {
-  color: var(--text-tertiary);
-}
-
-.path__lock {
-  display: inline-flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-}
-
-.path__lock .icon {
-  flex: none;
-  font-size: 14px;
-  margin-top: 1px;
-}
 
 .ttt {
   display: flex;
@@ -1765,10 +1148,6 @@ pre.raw {
 
 /* The audit-log exporter's enabled panel reuses the ttt frame (and its
    just-unlocked glow), but reads as a document, not a centered game. */
-.ttt.entitled {
-  align-items: stretch;
-  gap: var(--space-3);
-}
 
 .ttt__status {
   font-family: var(--font-mono);
@@ -1813,41 +1192,6 @@ pre.raw {
 }
 
 /* The upsell shown at #/tictactoe while the component is disabled */
-.ttt-locked {
-  padding: var(--space-8) var(--space-6);
-  border: 1px dashed var(--border-default);
-  border-radius: var(--radius-lg);
-  background: var(--surface-sunken);
-}
-
-.ttt-locked__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--border-subtle);
-  background: var(--surface-hover);
-  color: var(--text-tertiary);
-  font-size: 20px;
-  margin-bottom: var(--space-4);
-}
-
-.ttt-locked__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  letter-spacing: var(--tracking-normal);
-  margin-bottom: var(--space-2);
-}
-
-.ttt-locked__body {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  max-width: 68ch;
-}
 
 /* ============================================================
    Boot loading overlay (labs.nuon.co treatment)
@@ -1925,6 +1269,7 @@ pre.raw {
 }
 
 /* Names the work the overlay is actually waiting on. */
+
 .loading__sub {
   margin-top: var(--space-4);
   font-family: var(--font-mono);
@@ -1936,17 +1281,18 @@ pre.raw {
 }
 
 @media (max-width: 720px) {
-  .loading__mark {
+.loading__mark {
     width: 150px;
-  }
+}
 
-  .loading__title {
+.loading__title {
     margin-top: var(--space-8);
     font-size: var(--display-lg);
-  }
+}
 }
 
 /* The rotating 3D mark, off to the side when the viewport allows. */
+
 .loading__stage {
   position: absolute;
   top: 50%;
@@ -2015,23 +1361,24 @@ pre.raw {
 
 /* Narrow viewports: no room off to the side, so the mark steps aside and
    the glow and wordmark carry the load. */
+
 @media (max-width: 960px) {
-  .loading__stage {
+.loading__stage {
     display: none;
-  }
+}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .loading__glow,
+.loading__glow,
   .loading__center,
   .loading__stage {
     animation: none;
-  }
+}
 
-  .loading__logo {
+.loading__logo {
     animation: none;
     transform: rotateX(-8deg) rotateY(24deg);
-  }
+}
 }
 
 /* ============================================================
@@ -2163,13 +1510,6 @@ pre.raw {
   color: var(--text-tertiary);
 }
 
-.group-card__note {
-  margin-top: var(--space-1);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-}
-
 /* Clickable table rows in the roles flow */
 
 tr.row-select {
@@ -2221,16 +1561,16 @@ tr.row-select--active td {
 }
 
 @media (max-width: 1200px) {
-  .ambient {
+.ambient {
     display: none;
-  }
+}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ambient__logo {
+.ambient__logo {
     animation: none;
     transform: rotateX(-8deg) rotateY(24deg);
-  }
+}
 }
 
 /* ============================================================
@@ -2238,22 +1578,22 @@ tr.row-select--active td {
    ============================================================ */
 
 @media (max-width: 720px) {
-  h1 {
+h1 {
     font-size: var(--text-title);
     line-height: var(--text-title-line);
-  }
+}
 
-  .main {
+.main {
     padding: var(--space-8) var(--space-4) var(--space-14);
-  }
+}
 
-  .topbar {
+.topbar {
     padding: 0 var(--space-4);
-  }
+}
 
-  .topbar__meta {
+.topbar__meta {
     display: none;
-  }
+}
 }
 
 /* ============================================================
@@ -2311,18 +1651,6 @@ tr.row-select--active td {
   line-height: var(--text-tiny-line);
   color: var(--text-tertiary);
   overflow-wrap: anywhere;
-}
-
-.ship__go {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
-  color: var(--text-tertiary);
-  font-size: 12px;
-}
-
-.ship__beat--link:hover .ship__go {
-  color: var(--accent);
 }
 
 /* ============================================================
@@ -2396,31 +1724,23 @@ tr.row-select--active td {
 }
 
 @media (max-width: 640px) {
-  .cgraph__layer {
+.cgraph__layer {
     grid-template-columns: 1fr;
     gap: var(--space-1);
-  }
+}
 
-  .cgraph__layer-label {
+.cgraph__layer-label {
     padding-top: 0;
-  }
+}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .cgraph__node {
+.cgraph__node {
     transition: none;
-  }
+}
 }
 
 /* The arrive step's config-versions line. */
-
-.arrive__versions {
-  margin-top: var(--space-4);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-  max-width: 60ch;
-}
 
 /* The tictactoe watcher: the locked tile is polling the namespace. */
 
@@ -2505,10 +1825,6 @@ tr.row-select--active td {
 
 /* The checklist row the moment its component flips on while on screen. */
 
-.pathrow--flipped {
-  animation: action-flip 1400ms var(--ease-standard) both;
-}
-
 @keyframes action-flip {
   0% {
     box-shadow: 0 0 0 0 var(--accent-ring);
@@ -2524,13 +1840,13 @@ tr.row-select--active td {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ttt--just-unlocked,
+.ttt--just-unlocked,
   .ttt-unlocked-note,
   .pathrow--flipped,
   .entstat__dot,
   .ttt-watch .badge--accent .badge__dot {
     animation: none;
-  }
+}
 }
 
 /* ============================================================
@@ -2547,31 +1863,6 @@ a.fact {
   text-decoration: none;
 }
 
-.fact--link {
-  position: relative;
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard);
-}
-
-.fact--link:hover {
-  text-decoration: none;
-  border-color: var(--accent-dim);
-  background: var(--surface-raised);
-}
-
-.fact__go {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
-  color: var(--text-tertiary);
-  font-size: 12px;
-}
-
-.fact--link:hover .fact__go {
-  color: var(--accent);
-}
-
 /* ============================================================
    The hub's two ways in: agent prompt and CLI, as peer cards.
    ============================================================ */
@@ -2584,92 +1875,13 @@ a.fact {
 }
 
 @media (max-width: 860px) {
-  .choices {
+.choices {
     grid-template-columns: 1fr;
-  }
 }
-
-.choice {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  text-align: left;
-  padding: var(--space-5) var(--space-6);
-  border: 2px solid var(--border-default);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  box-shadow: var(--shadow-01);
-}
-
-.choice__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  color: var(--text-primary);
-}
-
-.choice__desc {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  max-width: 52ch;
-}
-
-.choice__actions {
-  margin-top: auto;
-  padding-top: var(--space-4);
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
 }
 
 /* The CLI card is one big toggle. Its faux button matches the agent card's
    copy button so the two ways in read as equals. */
-
-.choice--toggle {
-  cursor: pointer;
-  transition: border-color 0.1s steps(2), background-color 0.1s steps(2);
-}
-
-.choice--toggle:hover {
-  border-color: var(--accent);
-  background: rgba(76, 201, 240, 0.03);
-}
-
-.choice--open {
-  border-color: var(--accent);
-  background: rgba(76, 201, 240, 0.03);
-}
-
-.choice__faux {
-  display: inline-block;
-  padding: var(--space-3) var(--space-5);
-  border: 2px solid var(--border-default);
-  border-radius: var(--radius-sm);
-  background: var(--surface-card);
-  font-family: var(--font-mono);
-  font-size: var(--text-body);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-secondary);
-}
-
-.choice--toggle:hover .choice__faux,
-.choice--open .choice__faux {
-  border-color: var(--border-strong);
-  color: var(--text-primary);
-}
-
-.choice__caret {
-  display: inline-flex;
-  color: var(--text-tertiary);
-  transition: transform var(--duration-base) var(--ease-standard);
-}
-
-.choice__caret--open {
-  transform: rotate(90deg);
-}
 
 /* The CLI card's payload: every command, grouped, real ids inline. */
 
@@ -2738,129 +1950,7 @@ a.fact {
 
 /* ---------- Live tiles: things to click right now ---------- */
 
-.section--hub {
-  margin-top: var(--space-10);
-}
-
-.nods {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: var(--space-4);
-}
-
-a.nod {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  color: var(--text-primary);
-  transition: transform 0.1s steps(2), border-color 0.1s steps(2),
-    background-color 0.1s steps(2);
-}
-
-a.nod:hover {
-  text-decoration: none;
-  transform: translate(-4px, -4px);
-  border-color: var(--accent);
-  background: rgba(76, 201, 240, 0.03);
-}
-
-.nod__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.nod__title {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  font-weight: var(--weight-stronger);
-}
-
-a.nod:hover .nod__title {
-  color: var(--accent-hover);
-}
-
-.nod__desc {
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-secondary);
-}
-
 /* ---------- The index: one line per topic, grouped by phase ---------- */
-
-.encyc {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: var(--space-6) var(--space-8);
-}
-
-.encyc__phase {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.encyc__phase::after {
-  content: "";
-  flex: 1;
-  height: 2px;
-  background: var(--border-subtle);
-}
-
-.encyc__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-a.encyc__row {
-  display: block;
-  padding: var(--space-2) 0;
-  color: var(--text-primary);
-}
-
-a.encyc__row:hover {
-  text-decoration: none;
-}
-
-.encyc__title {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  font-weight: var(--weight-strong);
-}
-
-a.encyc__row:hover .encyc__title {
-  color: var(--accent-hover);
-}
-
-.encyc__desc {
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-}
-
-.encyc__desc::before {
-  content: " — ";
-}
-
-.encyc__seen {
-  display: inline-flex;
-  margin-left: var(--space-2);
-  color: var(--status-positive);
-  vertical-align: 1px;
-}
 
 .copy-btn--big {
   padding: var(--space-3) var(--space-5);
@@ -2869,56 +1959,9 @@ a.encyc__row:hover .encyc__title {
 
 /* The three beats every feature page runs. */
 
-.psp-tag {
-  display: inline-block;
-  vertical-align: 2px;
-  margin-right: var(--space-2);
-  padding: 1px 8px;
-  border: 2px solid var(--border-strong);
-  border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-}
-
-.psp-tag--problem {
-  color: var(--status-warning);
-  border-color: rgba(254, 178, 115, 0.32);
-  background: rgba(254, 178, 115, 0.08);
-}
-
-.psp-tag--solution {
-  color: var(--accent);
-  border-color: rgba(76, 201, 240, 0.32);
-  background: var(--accent-wash);
-}
-
-.psp-tag--proof {
-  color: var(--status-positive);
-  border-color: rgba(108, 233, 166, 0.32);
-  background: rgba(108, 233, 166, 0.08);
-}
-
-.psp-lede {
-  max-width: 72ch;
-}
-
 /* Keep the tag glued to the title; the aside stays on the far edge. */
-.section__head .psp-tag {
-  margin-right: calc(var(--space-4) * -1 + var(--space-2));
-}
-
-.section__head .psp-tag + .section__title {
-  margin-right: auto;
-}
 
 /* A single proof's agent prompt: shorter pane than the full checklist. */
-
-.proof-prompt__pre {
-  max-height: 240px;
-}
 
 /* The audit-log entitlement card: plan, live state, and the one action. */
 
@@ -3016,16 +2059,6 @@ a.encyc__row:hover .encyc__title {
 }
 
 /* One line under the card action: where the control is, how this page reacts. */
-
-.ent__how {
-  margin-top: var(--space-4);
-  padding-top: var(--space-4);
-  border-top: 1px dashed var(--border-subtle);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-  max-width: 52ch;
-}
 
 @keyframes watch-pulse {
   0%,
@@ -3156,89 +2189,31 @@ a.encyc__row:hover .encyc__title {
 }
 
 @media (max-width: 720px) {
-  .evt {
+.evt {
     grid-template-columns: 64px 1fr;
-  }
+}
 
-  .evt__obj,
+.evt__obj,
   .evt__msg {
     grid-column: 2 / -1;
-  }
+}
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .evtfeed__dot,
+.evtfeed__dot,
   .evt--new {
     animation: none;
-  }
+}
 }
 
 /* ============================================================
    Top bar: the two ideas this demo exists to show, on every view
    ============================================================ */
 
-.topbar__chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 3px var(--space-3);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-full);
-  background: var(--surface-card);
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: 0;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  text-decoration: none;
-  transition: border-color var(--duration-fast) var(--ease-standard),
-    color var(--duration-fast) var(--ease-standard);
-}
-
-.topbar__chip:hover {
-  border-color: var(--accent-dim);
-  color: var(--text-primary);
-  text-decoration: none;
-}
-
-.topbar__chip .icon {
-  width: 12px;
-  height: 12px;
-  color: var(--accent);
-}
-
-.topbar__chip-strong {
-  color: var(--text-primary);
-  font-weight: var(--weight-strong);
-}
-
-.topbar__chip-groups {
-  color: var(--text-tertiary);
-}
-
-.topbar__chip--agent {
-  font-family: var(--font-sans);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-}
-
-@media (max-width: 1024px) {
-  .topbar__chip-groups {
-    display: none;
-  }
-}
-
-@media (max-width: 720px) {
-  .topbar__chip {
-    display: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .tour__step {
+.tour__step {
     animation: none;
-  }
+}
 }
 
 /* ============================================================
@@ -3251,74 +2226,7 @@ a.encyc__row:hover .encyc__title {
   gap: var(--space-4);
 }
 
-.usecase {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--surface-card);
-  min-width: 0;
-}
-
-.usecase__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.usecase__title {
-  margin: 0;
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  font-weight: var(--weight-strong);
-  color: var(--text-primary);
-  text-wrap: balance;
-}
-
-.usecase__tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-}
-
-.usecase__answer {
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-secondary);
-  margin: 0;
-}
-
-.usecase__actions {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: auto;
-}
-
-.usecase__page {
-  font-size: var(--text-subtext);
-  color: var(--text-tertiary);
-}
-
-.usecase .cmd__pre {
-  margin: 0;
-}
-
 /* The hub's first choice shows the setup command inline */
-
-.choice__cmd {
-  margin: var(--space-3) 0 0;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-  white-space: pre-wrap;
-  word-break: break-word;
-}
 
 /* ============================================================
    Progress strip: the wizard shell under the top bar. Sticks directly
@@ -3326,189 +2234,11 @@ a.encyc__row:hover .encyc__title {
    z-index so the two never fight for the same edge.
    ============================================================ */
 
-.pstrip {
-  position: sticky;
-  top: var(--topbar-height);
-  z-index: 9;
-  background: var(--surface-raised);
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-.pstrip__head {
-  width: 100%;
-  max-width: var(--content-max);
-  margin: 0 auto;
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-6);
-  border: none;
-  background: none;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color var(--duration-base) var(--ease-standard);
-}
-
-.pstrip__head:hover {
-  background: var(--accent-wash);
-}
-
-.pstrip__pos {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  white-space: nowrap;
-}
-
-.pstrip__phase {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
-.pstrip__bar {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.pstrip__seg {
-  flex: 1;
-  height: 3px;
-  border-radius: var(--radius-sm);
-  background: var(--border-subtle);
-  transition: background-color var(--duration-base) var(--ease-standard);
-}
-
-.pstrip__seg--done {
-  background: var(--border-strong);
-}
-
-.pstrip__seg--current {
-  background: var(--accent);
-}
-
-.pstrip__count {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
-@media (max-width: 640px) {
-  .pstrip__phase,
-  .pstrip__count {
-    display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .pstrip__head,
-  .pstrip__seg {
-    transition: none;
-  }
-}
-
 /* The drawer: every step, click one to jump straight there. Always rendered,
    toggled via the `hidden` attribute rather than conditional mounting (so
    `aria-controls="pstrip-path"` always points at a real element) — the
    `[hidden]` override below keeps that working since `display: flex` alone
    would otherwise beat the UA's `[hidden] { display: none }`. */
-.pstrip__path {
-  list-style: none;
-  max-width: var(--content-max);
-  margin: 0 auto;
-  padding: var(--space-2) var(--space-6) var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  border-top: 1px solid var(--border-subtle);
-}
-
-.pstrip__path[hidden] {
-  display: none;
-}
-
-.pstrip__row {
-  width: 100%;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--text-secondary);
-  text-align: left;
-  cursor: pointer;
-}
-
-.pstrip__row:hover {
-  background: var(--accent-wash);
-  color: var(--text-primary);
-}
-
-.pstrip__row--current {
-  background: var(--accent-wash-strong);
-  color: var(--text-primary);
-}
-
-.pstrip__num {
-  font-size: var(--text-tiny);
-  color: var(--text-tertiary);
-}
-
-.pstrip__row--current .pstrip__num {
-  color: var(--accent);
-}
-
-.pstrip__title {
-  flex: 1;
-  min-width: 0;
-  font-size: var(--text-subtext);
-}
-
-.pstrip__done {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  padding: 2px var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  color: var(--text-tertiary);
-  white-space: nowrap;
-}
-
-.pstrip__done--verified {
-  color: var(--status-positive);
-}
-
-.pstrip__reset-item {
-  margin-top: var(--space-1);
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--border-subtle);
-}
-
-.pstrip__reset {
-  justify-content: center;
-  color: var(--text-tertiary);
-}
-
-.pstrip__reset:hover {
-  color: var(--text-primary);
-}
 
 /* ============================================================
    The opener: three slides, one diagram each (ui/RelationshipDiagram.tsx)
@@ -3935,11 +2665,11 @@ a.encyc__row:hover .encyc__title {
 }
 
 @media (max-width: 860px) {
-  .opener__triad,
+.opener__triad,
   .opener__columns,
   .opener__customers {
     grid-template-columns: 1fr;
-  }
+}
 }
 
 /* ============================================================
@@ -4188,14 +2918,14 @@ a.encyc__row:hover .encyc__title {
 }
 
 @media (max-width: 860px) {
-  .home__wings,
+.home__wings,
   .home__reqs {
     grid-template-columns: 1fr;
-  }
+}
 
-  .home__exit {
+.home__exit {
     flex-wrap: wrap;
-  }
+}
 }
 
 /* ============================================================
@@ -4606,14 +3336,82 @@ a.encyc__row:hover .encyc__title {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .drawer__panel {
+.drawer__panel {
     animation: none;
-  }
+}
 }
 
 @media (max-width: 860px) {
-  .casegrid,
+.casegrid,
   .casedetail__wings {
     grid-template-columns: 1fr;
-  }
+}
+}
+
+/* ============================================================
+   Proof panels: the lit group, the prompt list inside a drawer
+   ============================================================ */
+
+.group-card--lit {
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
+
+.ptile__lit {
+  color: var(--accent);
+}
+
+.promptlist {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.promptrow {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.promptrow__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+}
+
+.promptrow__toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+}
+
+.promptrow__caret {
+  display: inline-flex;
+  color: var(--text-tertiary);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.promptrow__caret--open {
+  transform: rotate(90deg);
+}
+
+.promptrow__mode {
+  flex: none;
+  font-size: var(--text-tiny);
+  color: var(--text-tertiary);
+}
+
+.promptrow .agent-prompt__pre {
+  border-top: 1px solid var(--border-subtle);
 }
