@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useUIConfig } from './lib/api'
-import { branchName, installGroups } from './lib/config-data.gen'
 import { recordHub } from './lib/origin'
 import { navigate, segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
@@ -10,7 +9,7 @@ import { ProgressStrip } from './ui/ProgressStrip'
 import { AuditLog } from './views/AuditLog'
 import { Customize } from './views/Customize'
 import { Deployed } from './views/Deployed'
-import { Landing } from './views/Landing'
+import { Home } from './views/Home'
 import { Mapping } from './views/Mapping'
 import { Operations } from './views/Operations'
 import { markOpenerDone, Opener, openerDone } from './views/Opener'
@@ -32,28 +31,6 @@ function TopBar({
         <NuonMark />
         <span className="topbar__brand-name">Kitchen sink</span>
       </button>
-      {/* The two ideas this demo exists to show, visible from every view. */}
-      <a
-        className="topbar__chip"
-        href="#/customize/branches"
-        title="Every change to this install ships through an app branch, group by group"
-      >
-        <Icon name="git-branch" />
-        <span>
-          ships via <span className="topbar__chip-strong">{branchName}</span>
-        </span>
-        <span className="topbar__chip-groups">
-          {installGroups.map((g) => g.name).join(' → ')}
-        </span>
-      </a>
-      <a
-        className="topbar__chip topbar__chip--agent"
-        href="#/customize/agent"
-        title="Connect Nuon's MCP server to Claude Code, Cursor, or Amp"
-      >
-        <Icon name="lightning" />
-        Coding agent setup
-      </a>
       {installID && (
         <>
           <span className="topbar__divider" />
@@ -94,12 +71,14 @@ export default function App() {
   // Distinct keys so a hash change between "/" and "/intro" remounts the
   // opener instead of carrying the current slide across.
   let view = seenOpener ? (
-    <Landing config={config} />
+    <Home config={config} />
   ) : (
     <Opener key="opener" config={config} onDone={finishOpener} />
   )
   if (parts[0] === 'intro') {
     view = <Opener key="intro" config={config} onDone={finishOpener} fromStart />
+  } else if (parts[0] === 'home') {
+    view = <Home config={config} />
   } else if (parts[0] === 'deployed') {
     view = <Deployed config={config} />
   } else if (parts[0] === 'operations') {
@@ -131,6 +110,7 @@ export default function App() {
         <div className="footer__inner">
           <span className="mono">nuonco/kitchen-sink</span>
           <span className="topbar__divider" />
+          <a href="#/intro">Opener</a>
           <span className="topbar__spacer" />
           <OutLink href="https://docs.nuon.co" variant="plain">
             docs.nuon.co
