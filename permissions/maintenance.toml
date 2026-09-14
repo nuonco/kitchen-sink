@@ -3,7 +3,9 @@ name                 = "{{.nuon.install.id}}-maintenance"
 description          = "operate and remediate components"
 display_name         = "maintenance role"
 permissions_boundary = "./maintenance_boundary.json"
-named_policies       = ["alb-maintenance"]
+
+[[named_policies]]
+name = "{{.nuon.install.id}}-alb-maintenance"
 
 [[policies]]
 managed_policy_name = "AdministratorAccess"
