@@ -107,7 +107,8 @@ export function CaseDetail({
   const ships = shipsTo(def.branch)
   const app = config.app_id ?? '<your-app-id>'
   const syncCmd = `nuon sync --app-id ${app} --force --branch ${def.branch}`
-  const openPanel = panel ? panelById(panel) : undefined
+  // Only a panel this case mounts opens; a stale or hand-typed id is ignored.
+  const openPanel = panel && (def.panels as string[]).includes(panel) ? panelById(panel) : undefined
   const closeDrawer = () => navigate(`/cases/${def.branch}`, { keepScroll: true })
   const prompt = def.prompt(config)
 
@@ -136,7 +137,7 @@ export function CaseDetail({
         <section className="casedetail__card casedetail__card--picture">
           <CaseDiagram branch={def.branch} />
           <p className="casedetail__quote">
-            &ldquo;{def.quote.text}&rdquo;{' '}
+            {def.quote.verbatim ? <>&ldquo;{def.quote.text}&rdquo;</> : def.quote.text}{' '}
             <OutLink href={def.quote.url} variant="plain">
               <span className="mono">{def.quote.label}</span>
             </OutLink>
@@ -184,7 +185,9 @@ export function CaseDetail({
         </div>
         <div className="agent-prompt">
           <div className="cmd__head">
-            <span className="cmd__label">this install&rsquo;s ids filled in</span>
+            <span className="cmd__label">
+              {config.install_id ? 'this install\u2019s ids filled in' : 'ids not served; placeholders shown'}
+            </span>
             <CopyButton text={prompt} />
           </div>
           <pre className="cmd__pre agent-prompt__pre">{prompt}</pre>

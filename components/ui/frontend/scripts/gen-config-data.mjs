@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Generates src/lib/config-data.gen.ts from the repo's real app config
 // (branch.toml, runbooks/, actions/, permissions/, break_glass.toml,
-// policies/), so the customize views can never drift from the config.
+// policies/, inputs/, install-configs/, stack.toml, sandbox.toml) and
+// src/lib/case-deltas.gen.ts from the case branches' diffs, so the views can
+// never drift from the config.
 //
 // Runs automatically before `npm run dev` and `npm run build`. The generated
 // file is committed because the Docker image build's context is components/ui
@@ -16,6 +18,7 @@ import { parse } from 'smol-toml'
 
 const frontendDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const outFile = join(frontendDir, 'src', 'lib', 'config-data.gen.ts')
+const deltasFile = join(frontendDir, 'src', 'lib', 'case-deltas.gen.ts')
 
 // Walk up from the frontend directory to find the repo root.
 let repoRoot = frontendDir
@@ -24,11 +27,11 @@ while (repoRoot !== '/' && !existsSync(join(repoRoot, 'branch.toml'))) {
 }
 
 if (!existsSync(join(repoRoot, 'branch.toml'))) {
-  if (existsSync(outFile)) {
-    console.log('gen-config-data: repo config not found (image build); keeping the committed config-data.gen.ts')
+  if (existsSync(outFile) && existsSync(deltasFile)) {
+    console.log('gen-config-data: repo config not found (image build); keeping the committed config-data.gen.ts and case-deltas.gen.ts')
     process.exit(0)
   }
-  console.error('gen-config-data: repo config not found and no committed config-data.gen.ts to fall back to')
+  console.error('gen-config-data: repo config not found and no committed config-data.gen.ts or case-deltas.gen.ts to fall back to')
   process.exit(1)
 }
 
@@ -280,8 +283,9 @@ const guardrails = readdirSync(join(repoRoot, 'policies'))
 
 /* ---------- install-configs/*.toml ---------- */
 
-// An install config joins the first branch group whose selector its labels
-// satisfy, the same rule the control plane applies.
+// The lowest-order branch group whose selector the install config's labels
+// satisfy. The control plane resolves every group on its own, so labels that
+// satisfy two selectors put the install in both; the UI shows the first.
 const selectorMatches = (labels, selector) =>
   Object.entries(selector ?? {}).every(([k, v]) => labels?.[k] === v)
 
@@ -310,14 +314,6 @@ const installConfigs = readdirSync(join(repoRoot, 'install-configs'))
   })
 
 /* ---------- inputs/<group>/<name>.toml + input_groups/<group>.toml ---------- */
-
-const inputGroups = readdirSync(join(repoRoot, 'input_groups'))
-  .filter((f) => f.endsWith('.toml'))
-  .sort()
-  .map((f) => {
-    const g = toml(`input_groups/${f}`)
-    return { name: g.name, displayName: g.display_name ?? g.name, description: g.description ?? '' }
-  })
 
 const inputs = []
 for (const dir of readdirSync(join(repoRoot, 'inputs'), { withFileTypes: true })) {
@@ -457,12 +453,6 @@ export interface InstallConfig {
   toggles: Record<string, boolean>
 }
 
-export interface InputGroup {
-  name: string
-  displayName: string
-  description: string
-}
-
 export interface InputDef {
   name: string
   displayName: string
@@ -554,8 +544,6 @@ export const components: ComponentNode[] = ${ts(components)}
 
 export const installConfigs: InstallConfig[] = ${ts(installConfigs)}
 
-export const inputGroups: InputGroup[] = ${ts(inputGroups)}
-
 export const inputs: InputDef[] = ${ts(inputs)}
 
 export const stack: StackInfo = ${ts(stack)}
@@ -579,8 +567,6 @@ console.log(`gen-config-data: wrote ${outFile}`)
 // it), the committed file is kept and a warning printed.
 
 const caseBranchNames = ['no-egress', 'byo-vpc', 'single-tenant']
-const deltasFile = join(frontendDir, 'src', 'lib', 'case-deltas.gen.ts')
-
 const git = (...args) =>
   execFileSync('git', args, { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
 
@@ -596,11 +582,12 @@ const resolveRef = (...candidates) => {
   return null
 }
 
-// A diff line worth showing: not a comment, not blank, not a hunk header.
+// A diff line worth showing: not a comment, not blank, not a file header.
 const meaningful = (line) => {
   const body = line.slice(1).trim()
   return body !== '' && !body.startsWith('#')
 }
+const isFileHeader = (line) => /^(---|\+\+\+) (a\/|b\/|\/dev\/null)/.test(line)
 
 const caseBranches = {}
 let allResolved = true
@@ -612,14 +599,15 @@ for (const name of caseBranchNames) {
     console.warn(`gen-config-data: branch ${name} (or main) not found; keeping the committed case-deltas.gen.ts`)
     break
   }
-  const files = git('diff', '--name-status', `${base}...${ref}`)
+  // --no-renames keeps every status in {A, M, D}: a rename is one D and one A.
+  const files = git('diff', '--name-status', '--no-renames', `${base}...${ref}`)
     .split('\n')
     .filter(Boolean)
     .map((row) => {
       const [status, path] = row.split('\t')
       const hunks = git('diff', '-U0', `${base}...${ref}`, '--', path).split('\n')
-      const minus = hunks.filter((l) => l.startsWith('-') && !l.startsWith('---') && meaningful(l)).map((l) => l.slice(1))
-      const plus = hunks.filter((l) => l.startsWith('+') && !l.startsWith('+++') && meaningful(l)).map((l) => l.slice(1))
+      const minus = hunks.filter((l) => l.startsWith('-') && !isFileHeader(l) && meaningful(l)).map((l) => l.slice(1))
+      const plus = hunks.filter((l) => l.startsWith('+') && !isFileHeader(l) && meaningful(l)).map((l) => l.slice(1))
       return { path, status, minus, plus }
     })
   const branchToml = parse(git('show', `${ref}:branch.toml`))
@@ -648,7 +636,7 @@ import type { InstallGroup } from './config-data.gen'
 
 export interface DeltaFile {
   path: string
-  /** git name-status: M, A, D, or R. */
+  /** git name-status with --no-renames: M, A, or D. */
   status: string
   /** Removed and added lines, comments and blank lines dropped. */
   minus: string[]

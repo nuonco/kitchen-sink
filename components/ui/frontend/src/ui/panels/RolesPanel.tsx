@@ -15,13 +15,13 @@ const breakGlassRoles = roles.filter((r) => r.type === 'break-glass')
 
 const roleNotes: Record<string, string> = {
   provision:
-    'AdministratorAccess fenced by provision_boundary.json: the role that creates the VPC, the EKS cluster, and DNS.',
+    'AdministratorAccess fenced by provision_boundary.json: the role that provisions the sandbox, the EKS cluster and its DNS zones. The VPC comes from the CloudFormation stack the customer applies.',
   setup: 'Used once per install for first deploys, sharing the provision boundary.',
   maintenance:
     'The day-2 role: AdministratorAccess fenced by maintenance_boundary.json. Deploys and runbooks assume it.',
   'sandbox-updates': 'Sandbox reprovisions and upgrades, separated from app-level maintenance.',
   actions:
-    'One inline policy allowing eks:DescribeCluster, because actions run in-cluster.',
+    'One inline policy allowing eks:DescribeCluster: actions run on the runner and reach the cluster with kubectl.',
   deprovision: 'Teardown only. Routine operations can never delete the install.',
   'app-break-glass':
     'AdministratorAccess with secretsmanager:* explicitly denied, declared in break_glass.toml. Only the break_glass_remediation action assumes it, so every use is a recorded workflow.',

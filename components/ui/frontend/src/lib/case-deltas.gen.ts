@@ -7,7 +7,7 @@ import type { InstallGroup } from './config-data.gen'
 
 export interface DeltaFile {
   path: string
-  /** git name-status: M, A, D, or R. */
+  /** git name-status with --no-renames: M, A, or D. */
   status: string
   /** Removed and added lines, comments and blank lines dropped. */
   minus: string[]

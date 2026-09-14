@@ -1,4 +1,4 @@
-import { inputs, runner, sandbox, stack } from '../../lib/config-data.gen'
+import { branchName, inputs, runner, sandbox, stack } from '../../lib/config-data.gen'
 import type { PanelProps } from '../../lib/panels'
 import { CodeBlock, OutLink } from '../Primitives'
 import { PanelPrompts } from './shared'
@@ -25,7 +25,7 @@ export function StackInputsTile({ config }: PanelProps) {
         {config.vpc_id ? `vpc: created by the stack · ${config.vpc_id}` : 'vpc: created by the stack'}
       </span>
       <span className="ptile__label mono">
-        {stack.vpcTemplate.path} · {inputs.length} inputs
+        {stack.vpcTemplate.path} (stack.toml @ {branchName}) · {inputs.length} inputs
       </span>
     </>
   )

@@ -97,6 +97,7 @@ export const panels: Record<PanelId, ProofPanel> = {
   },
 }
 
+/** Every registered id, for the redirect test to check its targets against. */
 export const panelIds = Object.keys(panels) as PanelId[]
 
 export const panelById = (id: string): ProofPanel | undefined =>

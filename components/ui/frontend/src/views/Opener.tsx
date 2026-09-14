@@ -28,7 +28,8 @@ const APP_BRANCHES_DOCS = 'https://docs.nuon.co/concepts/app-branches'
 export function openerDone(): boolean {
   try {
     const value = window.localStorage.getItem(TOUR_KEY)
-    return value === 'done' || value === 'explore'
+    // 'explore', 'toggle' and 'day2' were the finish states of earlier builds.
+    return value === 'done' || value === 'explore' || value === 'toggle' || value === 'day2'
   } catch {
     return false
   }
@@ -82,9 +83,11 @@ export function Opener({
 }) {
   const [slide, setSlide] = useState<Slide>(fromStart ? 'source' : storedSlide)
 
+  // A replay from /intro keeps the stored marker as it is; only a first pass
+  // records its position.
   useEffect(() => {
-    rememberSlide(slide)
-  }, [slide])
+    if (!fromStart) rememberSlide(slide)
+  }, [slide, fromStart])
 
   const namespace = config.namespace ?? 'kitchen-sink'
   const ns = useIntrospectPoll<NamespaceResponse>(

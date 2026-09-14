@@ -224,13 +224,6 @@ body::before {
   letter-spacing: 0;
 }
 
-.lede {
-  font-size: var(--text-base);
-  line-height: 26px;
-  color: var(--text-secondary);
-  max-width: 68ch;
-}
-
 .muted {
   color: var(--text-tertiary);
 }
@@ -243,21 +236,6 @@ body::before {
 .subtext {
   font-size: var(--text-subtext);
   line-height: var(--text-subtext-line);
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 2px var(--space-2);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  background: var(--surface-card);
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: 0;
-  color: var(--text-secondary);
 }
 
 .badge {
@@ -362,12 +340,6 @@ body::before {
   color: var(--text-primary);
 }
 
-.btn--sm {
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-}
-
 .backlink {
   display: inline-flex;
   align-items: center;
@@ -389,14 +361,6 @@ body::before {
    "Kitchen sink / BYOC operations", each crumb a link back up. */
 
 /* Cards */
-
-.card {
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  padding: var(--space-6);
-  box-shadow: var(--shadow-01);
-}
 
 /* Page header */
 
@@ -452,15 +416,6 @@ body::before {
 
 /* The hub's finish state: every numbered step done. Sits above .choices,
    so it reads before the two ways back in. */
-
-.ending {
-  margin-top: var(--space-6);
-  padding: var(--space-5) var(--space-6);
-  border: 2px solid var(--border-default);
-  border-left: 2px solid var(--accent);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-}
 
 .facts {
   display: grid;
@@ -647,25 +602,7 @@ body::before {
 
 /* Staggered reveal for the live facts */
 
-@keyframes fact-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 /* The end-of-tour CTA block on the deployed step */
-
-.btn--xl {
-  padding: var(--space-4) var(--space-8);
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  border-radius: var(--radius-lg);
-}
 
 /* The live toggle switch (drawn, not interactive) */
 
@@ -698,27 +635,6 @@ body::before {
 /* ---------- The two ways to run a proof ---------- */
 
 /* Path cards */
-
-.path {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  text-align: left;
-  padding: var(--space-6);
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard),
-    transform var(--duration-base) var(--ease-standard);
-}
-
-.path:hover {
-  border-color: var(--accent-dim);
-  background: var(--surface-raised);
-  text-decoration: none;
-}
 
 /* ============================================================
    Data views
@@ -1191,7 +1107,7 @@ pre.raw {
   color: var(--accent);
 }
 
-/* The upsell shown at #/tictactoe while the component is disabled */
+/* The toggles drawer while a toggleable component is off */
 
 /* ============================================================
    Boot loading overlay (labs.nuon.co treatment)
@@ -1825,24 +1741,10 @@ h1 {
 
 /* The checklist row the moment its component flips on while on screen. */
 
-@keyframes action-flip {
-  0% {
-    box-shadow: 0 0 0 0 var(--accent-ring);
-    border-color: var(--accent);
-  }
-  60% {
-    box-shadow: 0 0 26px 2px var(--accent-ring);
-    border-color: var(--accent);
-  }
-  100% {
-    box-shadow: 0 0 0 0 transparent;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
 .ttt--just-unlocked,
   .ttt-unlocked-note,
-  .pathrow--flipped,
+
   .entstat__dot,
   .ttt-watch .badge--accent .badge__dot {
     animation: none;
@@ -1857,11 +1759,6 @@ h1 {
 
 /* Tour facts double as links: internal ones open the deep page, the install
    fact opens the dashboard. */
-
-a.fact {
-  color: inherit;
-  text-decoration: none;
-}
 
 /* ============================================================
    The hub's two ways in: agent prompt and CLI, as peer cards.
@@ -2220,29 +2117,7 @@ a.fact {
    The "Ask your agent" gallery: one card per MCP use case
    ============================================================ */
 
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: var(--space-4);
-}
-
 /* The hub's first choice shows the setup command inline */
-
-/* ============================================================
-   Progress strip: the wizard shell under the top bar. Sticks directly
-   beneath .topbar (position: sticky; top: var(--topbar-height)) at a lower
-   z-index so the two never fight for the same edge.
-   ============================================================ */
-
-/* The drawer: every step, click one to jump straight there. Always rendered,
-   toggled via the `hidden` attribute rather than conditional mounting (so
-   `aria-controls="pstrip-path"` always points at a real element) — the
-   `[hidden]` override below keeps that working since `display: flex` alone
-   would otherwise beat the UA's `[hidden] { display: none }`. */
-
-/* ============================================================
-   The opener: three slides, one diagram each (ui/RelationshipDiagram.tsx)
-   ============================================================ */
 
 .eyebrow--accent {
   color: var(--accent);

@@ -35,9 +35,8 @@ export function cliGroups(install: string, app: string): Array<{ name: string; r
           cmd: setup.claudeCode,
           note: (
             <>
-              Connects Nuon&rsquo;s MCP server to Claude Code through this CLI
-              (also <span className="mono">cursor</span>, <span className="mono">amp</span>).
-              Run it from your clone&rsquo;s root.
+              Registers Nuon&rsquo;s MCP server, the CLI&rsquo;s stdio proxy, with Claude Code. Amp:{' '}
+              <span className="mono">{setup.amp}</span>. Cursor: <span className="mono">~/.cursor/mcp.json</span>.
             </>
           ),
         },
@@ -229,7 +228,9 @@ export function Home({ config }: { config: UIConfig }) {
           <section className="home__card home__card--cli">
             <div className="home__card-head">
               <h2 className="home__card-title">Nuon CLI</h2>
-              <span className="mono home__aside">this install · ids filled in</span>
+              <span className="mono home__aside">
+                {config.install_id ? 'this install · ids filled in' : 'ids not served; placeholders shown'}
+              </span>
             </div>
             {headline.map((row) => (
               <CmdRow key={row.cmd} cmd={row.cmd} />

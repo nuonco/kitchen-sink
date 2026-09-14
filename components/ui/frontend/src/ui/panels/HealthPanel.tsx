@@ -10,6 +10,8 @@ import { PANEL_POLL_MS, PanelPrompts, installIdOf, useNamespacePoll } from './sh
    ============================================================ */
 
 const enabledBlocks = healthBlocks.filter((h) => h.enabled)
+const probeTotal = healthBlocks.reduce((n, h) => n + h.probes, 0)
+const probeOwners = healthBlocks.filter((h) => h.probes > 0).map((h) => h.component)
 const healthCheck = runbooks.find((rb) => rb.name === 'full-health-check')
 
 export function HealthTile({ config }: PanelProps) {
@@ -65,7 +67,8 @@ export function HealthDrawer({ config }: PanelProps) {
         After a deploy, Nuon assesses the component&rsquo;s deployments, pods, services and ingresses
         and records the result with the deploy step. With <span className="mono">block_deploy = false</span>{' '}
         the record is kept and nothing is held on it. Probes run on the runner, outside the cluster,
-        so the chart declares none; the one probe is the ALB&rsquo;s HTTP check of{' '}
+        so the chart declares none; {probeTotal} probe{probeTotal === 1 ? '' : 's'} declared
+        {probeOwners.length > 0 ? `, on ${probeOwners.join(' and ')}` : ''}: an HTTP check of{' '}
         <span className="mono">/livez</span> on the public domain.
       </p>
 

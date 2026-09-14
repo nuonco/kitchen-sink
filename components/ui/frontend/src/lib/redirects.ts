@@ -12,6 +12,7 @@ export const redirects: ReadonlyArray<{ from: string; to: string }> = [
   { from: '/customize/health', to: '/cases/single-tenant?panel=health' },
   { from: '/customize/runbooks', to: '/cases/single-tenant?panel=runbooks' },
   { from: '/customize/triggers', to: '/cases/single-tenant?panel=runbooks' },
+  { from: '/customize/actions', to: '/cases/single-tenant?panel=runbooks' },
   { from: '/customize/roles', to: '/cases/no-egress?panel=roles' },
   { from: '/customize/agent', to: '/home' },
   { from: '/customize', to: '/cases' },

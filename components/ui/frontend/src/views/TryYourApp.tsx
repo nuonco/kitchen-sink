@@ -61,7 +61,8 @@ export function TryYourApp() {
         paste into Claude Code, in the directory that holds your app · {prerequisites.join(' · ')}
       </div>
       <div className="mono try__source">
-        {pasteSource.repo} · {pasteSource.file} @ {pasteSource.commit.slice(0, 7)} · {pasteSource.date}
+        {pasteSource.repo} · {pasteSource.file} @ {pasteSource.commit.slice(0, 7)}
+        {pasteSource.pushed ? '' : ' (not yet pushed)'} · {pasteSource.date}
         {pasteSource.private && ' · private repo: the clone needs credentials with access'}
       </div>
 

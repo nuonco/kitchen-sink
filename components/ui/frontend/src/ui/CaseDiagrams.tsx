@@ -1,6 +1,6 @@
 import { APP_WORKLOADS, type PodSummary } from '../lib/api'
 import { caseBranch } from '../lib/cases'
-import { components, guardrails, installConfigs, stack } from '../lib/config-data.gen'
+import { branchName, components, guardrails, installConfigs, stack } from '../lib/config-data.gen'
 
 /* ============================================================
    Home's account diagram: this install, drawn from what the browser can
@@ -88,10 +88,10 @@ export function AccountDiagram({
     installId ? ` (${installId})` : '',
     '. Inside its VPC',
     vpcId ? ` ${vpcId}` : '',
-    `: a runner, an EKS cluster running ${present.length} pod${present.length === 1 ? '' : 's'} in ${namespace}`,
+    `: a runner, an EKS cluster running ${pods.length} pod${pods.length === 1 ? '' : 's'} in ${namespace}`,
     hasRDS ? ', RDS' : '',
     hasS3 ? ', S3' : '',
-    '. The runner makes the only outbound connection, to the Nuon control plane; nothing comes in.',
+    '. The runner\u2019s connection to the Nuon control plane is outbound only; the control plane opens no connection into the account.',
   ].join('')
 
   return (
@@ -128,7 +128,7 @@ export function AccountDiagram({
       {/* their VPC */}
       <rect x="242" y="48" width="354" height="224" rx="8" fill="none" stroke={T.borderSubtle} strokeDasharray="4 4" />
       <text x="262" y="66" fontFamily={T.mono} fontSize="10.5" fill={T.secondary}>
-        {vpcId ? `VPC · ${vpcId}` : `VPC · ${stack.vpcTemplate.path}`}
+        {vpcId ? `VPC · ${vpcId}` : `VPC · ${stack.vpcTemplate.path} (stack.toml @ ${branchName})`}
       </text>
       <Callout x={242} y={48} n={2} />
 
@@ -302,9 +302,9 @@ export function NoEgressDiagram() {
   const label = [
     'One customer AWS account.',
     ` Its VPC comes from the ${stack.vpcTemplate.path} template${nat ? `, which creates ${nat}` : ''}.`,
-    ' The runner makes the account’s only outbound connection, to the Nuon control plane; nothing comes in.',
+    ' The runner\u2019s connection to the Nuon control plane is outbound only; the control plane opens no connection into the account.',
     ' The EKS API endpoint is private.',
-    ` ${images} container images are synced into an in-account ECR at build time.`,
+    ` ${images} container images are synced into a registry in the account when released.`,
     ` The sandbox plan is checked by ${sandboxPolicies.length + addedPolicies.length} OPA policies, including ${addedPolicies.join(', ')} from this branch.`,
   ].join('')
   return (
@@ -343,7 +343,7 @@ export function NoEgressDiagram() {
         ECR
       </text>
       <text x="270" y="224" fontFamily={T.mono} fontSize="10.5" fill={T.tertiary}>
-        {images} images synced in at build · pulled in-account
+        {images} images synced in at release · pulled in-account
       </text>
 
       <rect x="252" y="256" width="308" height="108" rx="6" fill={T.card} stroke={T.border} />

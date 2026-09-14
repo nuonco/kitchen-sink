@@ -27,8 +27,9 @@ export interface CaseDef {
   title: string
   /** Proof panels mounted under the diagram, in strip order. */
   panels: PanelId[]
-  /** One sentence from docs.nuon.co, quoted under the diagram, with its page. */
-  quote: { text: string; url: string; label: string }
+  /** One sentence from docs.nuon.co under the diagram, with its page. Quotation
+      marks appear only when the text is the page's, character for character. */
+  quote: { text: string; url: string; label: string; verbatim: boolean }
   /** The one prompt for a coding agent, this install's ids filled in. */
   prompt: (config: UIConfig) => string
 }
@@ -47,6 +48,7 @@ export const cases: CaseDef[] = [
       text: 'The Control Plane cannot push commands or open connections into customer accounts.',
       url: 'https://docs.nuon.co/security',
       label: 'docs.nuon.co/security',
+      verbatim: true,
     },
     prompt: (c) => `${guardrails(installOf(c), appOf(c))}
 
@@ -61,9 +63,10 @@ config reaches. One line per path. Read-only.`,
     title: 'Existing VPC',
     panels: ['stack-inputs', 'workloads', 'rollout', 'components'],
     quote: {
-      text: 'Point vpc_nested_template_url at the byo-vpc/default template; it accepts existing VPC and subnet IDs as parameters instead of creating them.',
+      text: 'The byo-vpc/default template accepts existing VPC and subnet IDs as parameters instead of creating them.',
       url: 'https://docs.nuon.co/concepts/stacks/customer-vpc',
       label: 'docs.nuon.co/concepts/stacks/customer-vpc',
+      verbatim: false,
     },
     prompt: (c) => `${guardrails(installOf(c), appOf(c))}
 
@@ -82,10 +85,12 @@ as file edits. Apply nothing. Read-only.`,
       text: 'No cross-account access is required.',
       url: 'https://docs.nuon.co/architecture/platform',
       label: 'docs.nuon.co/architecture/platform',
+      verbatim: true,
     },
     prompt: (c) => `${guardrails(installOf(c), appOf(c))}
 
-Runbook runs have no MCP tool. After my "yes", run:
+run_runbook is a write tool, hidden unless the proxy runs with --allow-writes. If it is
+listed, call it for full-health-check after my "yes"; if not, after my "yes" run:
 nuon runbooks create-run --install-id ${installOf(c)} --runbook-id full-health-check --output agent
 Then call list_workflows for install ${installOf(c)}, find that run, and
 watch_workflow until it ends. Summarize the transcript: each of its ${healthSteps}
@@ -94,9 +99,6 @@ steps with its verdict, and the failing step if there is one.
 Budget: exactly one run.`,
   },
 ]
-
-export const caseByBranch = (branch: string): CaseDef | undefined =>
-  cases.find((c) => c.branch === branch)
 
 /** The branch's diff against main and its own install groups, from git. */
 export const caseBranch = (branch: string): CaseBranch | undefined => caseBranches[branch]

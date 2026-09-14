@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import type { UIConfig } from '../../lib/api'
 import { branchName, components, repoName } from '../../lib/config-data.gen'
 import { buildGraph } from '../../lib/graph'
 import type { PanelProps } from '../../lib/panels'
@@ -14,7 +15,8 @@ interface ComponentType {
   type: string
   purpose: string
   what: string
-  here: string
+  /** The instance in this app; a function when it names a live value. */
+  here: string | ((config: UIConfig) => string)
   file: string
   toml: string
 }
@@ -45,7 +47,7 @@ contents = "./chart/values.yaml"`,
     type: 'container_image',
     purpose: 'Sync an image your CI already built',
     what: 'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
-    here: 'img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to a public ECR gallery; Nuon pulls the tag the config pins.',
+    here: 'img_ui (this page) and img_api (the introspection API), built by CI from this repo and published to a public ECR gallery at the tag the config pins; action_curl and action_dns_check, the images two container actions run in.',
     file: 'components/images/ui.toml',
     toml: `name     = "img_ui"
 type     = "container_image"
@@ -59,8 +61,9 @@ tag       = "sha-…"`,
   {
     type: 'terraform_module',
     purpose: 'Run a Terraform module',
-    what: 'Runs a Terraform module. The runner holds the state and the credentials, so your customer keeps both.',
-    here: 'certificate: a DNS-validated wildcard ACM certificate for *.<install domain>, which the load balancer terminates HTTPS with.',
+    what: 'Runs a Terraform module on the runner with the install\u2019s IAM roles, so the credentials stay in the customer\u2019s account; the state is managed by the Nuon data plane (docs.nuon.co/guides/terraform-components).',
+    here: (c) =>
+      `certificate: a DNS-validated wildcard ACM certificate for *.${c.public_domain ?? '<install domain>'}, which the load balancer terminates HTTPS with.`,
     file: 'components/certificate.toml',
     toml: `name              = "certificate"
 type              = "terraform_module"
@@ -142,7 +145,7 @@ function FileCode({ file, code }: { file: string; code: string }) {
   )
 }
 
-function TypeMatrix() {
+function TypeMatrix({ config }: { config: UIConfig }) {
   const [open, setOpen] = useState<string | null>(null)
   return (
     <div className="typelist">
@@ -168,7 +171,7 @@ function TypeMatrix() {
                 <div className="typerow__body">
                   <p className="typerow__what">{t.what}</p>
                   <p className="typerow__here">
-                    <strong>In this app:</strong> {t.here}
+                    <strong>In this app:</strong> {typeof t.here === 'function' ? t.here(config) : t.here}
                   </p>
                   <FileCode file={t.file} code={t.toml} />
                 </div>
@@ -226,14 +229,14 @@ export function ComponentsTile(_: PanelProps) {
   )
 }
 
-export function ComponentsDrawer(_: PanelProps) {
+export function ComponentsDrawer({ config }: PanelProps) {
   return (
     <>
       <div className="section__head">
         <h3 className="section__title">{typeCount} component types</h3>
         <div className="subtext muted">components/*.toml</div>
       </div>
-      <TypeMatrix />
+      <TypeMatrix config={config} />
 
       <div className="section__head" style={{ marginTop: 24 }}>
         <h3 className="section__title">Deploy order</h3>

@@ -3,7 +3,7 @@
 Nuon's demo app config: a real web app (UI, API, and worker) plus the platform
 surface around it. Nuon deploys the whole thing into an AWS account as a
 [BYOC install](https://docs.nuon.co/get-started/introduction), and the UI it
-ships is a guided tour of that install from the inside, served at
+ships explains that install from the inside (an opener, three common enterprise requests as app branches, and the nuon-loop paste), served at
 `https://app.<install domain>`.
 
 ## How it ships
@@ -11,7 +11,7 @@ ships is a guided tour of that install from the inside, served at
 | | |
 |---|---|
 | **App branch** | Everything ships through [`branch.toml`](./branch.toml): a push to `main` rolls the config out group by group (staging, then customers, then enterprise) with a person approving each group's plan. Try it end to end in the [app-branches walkthrough](https://docs.nuon.co/get-started/app-branches-walkthrough). |
-| **Your coding agent** | `nuon agents mcp setup --platform claude-code` connects Nuon's MCP server to Claude Code (or `cursor`, `amp`) through the CLI; `nuon agents context` verifies it. The deployed UI's agent page has ten prompts, ids filled in. Docs: [agents overview](https://docs.nuon.co/guides/agents/overview). A project [`.mcp.json`](./.mcp.json) is checked in, so a clone of this repo offers the server on first open. |
+| **Your coding agent** | `claude mcp add --transport stdio nuon -- nuon agents mcp` registers Nuon's MCP server, the CLI's stdio proxy, with Claude Code (`amp mcp add nuon -- nuon agents mcp` for Amp; Cursor reads `~/.cursor/mcp.json`); `nuon agents context` verifies it. The deployed UI carries one prompt per case and the rest in the proof-panel drawers, ids filled in. Docs: [agents overview](https://docs.nuon.co/guides/agents/overview). A project [`.mcp.json`](./.mcp.json) is checked in, so a clone of this repo offers the server on first open. |
 
 ## What gets deployed
 

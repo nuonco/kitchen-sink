@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 /**
  * Hash routing, deliberately. The Go server embeds the built frontend and
- * serves it with a plain file server, so a real path like /day2/runbooks has to
+ * serves it with a plain file server, so a real path like /cases/no-egress has to
  * be handled by a fallback; a hash keeps every deep link working even if that
  * fallback is ever removed.
  */

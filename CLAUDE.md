@@ -4,8 +4,9 @@ Kitchen Sink is Nuon's demo app config: a real web app (UI + API + worker) plus
 the full surface of the Nuon platform (components, actions, runbooks, an app
 branch, triggers, policies, permissions, break-glass, component health). It is
 installed into AWS accounts via Nuon; `control-plane.md` is the install page's
-programmable readme, and `components/ui` is a guided tour of the platform that
-deploys as the app itself.
+programmable readme, and `components/ui` is the app itself: a three-slide
+opener, a home page, three common enterprise requests (each an app branch of
+this repo) with live proof panels, and the nuon-loop paste.
 
 ## Layout
 

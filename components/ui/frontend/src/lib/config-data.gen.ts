@@ -59,12 +59,6 @@ export interface InstallConfig {
   toggles: Record<string, boolean>
 }
 
-export interface InputGroup {
-  name: string
-  displayName: string
-  description: string
-}
-
 export interface InputDef {
   name: string
   displayName: string
@@ -645,19 +639,6 @@ export const installConfigs: InstallConfig[] = [
       "audit_log_exporter": false,
       "tictactoe": false
     }
-  }
-]
-
-export const inputGroups: InputGroup[] = [
-  {
-    "name": "compute",
-    "displayName": "compute",
-    "description": "compute"
-  },
-  {
-    "name": "dns",
-    "displayName": "dns",
-    "description": "dns"
   }
 ]
 

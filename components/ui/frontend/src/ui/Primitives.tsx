@@ -32,10 +32,6 @@ export function Icon({ name }: { name: string }) {
   )
 }
 
-export function Eyebrow({ children }: { children: ReactNode }) {
-  return <div className="eyebrow">{children}</div>
-}
-
 export function Mono({ children }: { children: ReactNode }) {
   return <span className="mono">{children}</span>
 }
@@ -124,28 +120,6 @@ export function OutLink({
   )
 }
 
-export function Section({
-  title,
-  aside,
-  children,
-  id,
-}: {
-  title: string
-  aside?: ReactNode
-  children: ReactNode
-  id?: string
-}) {
-  return (
-    <section className="section" id={id}>
-      <div className="section__head">
-        <h2 className="section__title">{title}</h2>
-        {aside && <div className="subtext muted">{aside}</div>}
-      </div>
-      {children}
-    </section>
-  )
-}
-
 export function Callout({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="callout">
@@ -177,14 +151,6 @@ export function Disclosure({
       </summary>
       <div className="disclosure__body">{children}</div>
     </details>
-  )
-}
-
-export function RawJSON({ value, label }: { value: unknown; label?: string }) {
-  return (
-    <Disclosure summary={label ?? 'Raw JSON response'}>
-      <pre className="raw">{JSON.stringify(value, null, 2)}</pre>
-    </Disclosure>
   )
 }
 
@@ -324,8 +290,4 @@ export function LoadState({
   }
 
   return null
-}
-
-export function EmptyState({ children }: { children: ReactNode }) {
-  return <div className="status">{children}</div>
 }

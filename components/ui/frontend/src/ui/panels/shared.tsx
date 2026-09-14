@@ -57,7 +57,8 @@ export function PanelPrompts({ panel, config }: { panel: string; config: UIConfi
       <div className="section__head">
         <h3 className="section__title">Agent prompts</h3>
         <div className="subtext muted">
-          {list.length} prompt{list.length === 1 ? '' : 's'} · ids filled in
+          {list.length} prompt{list.length === 1 ? '' : 's'} ·{' '}
+          {config.install_id ? 'ids filled in' : 'ids not served; placeholders shown'}
         </div>
       </div>
       <div className="promptlist">

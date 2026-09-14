@@ -9,23 +9,24 @@ import { branchName, runbooks } from './config-data.gen'
  * proxy (`nuon agents mcp`). They mirror two rules the CLI's own
  * `nuon agents context` prints: prefer MCP tools for reads and use
  * `--allow-writes` only when mutating; resolve names with list_* and get_*
- * tools, never invent ids. Where a step has no MCP tool (running a runbook,
- * syncing local config, config versions) the prompt says so and names the
- * CLI or API command instead.
+ * tools, never invent ids. Where a step has no MCP tool (syncing local config,
+ * config versions) the prompt says so and names the CLI command instead.
  */
 
 /* ---------- Setup ---------- */
 
 export const setup = {
-  /** Writes a project-scoped .mcp.json in the current directory. */
-  claudeCode: 'nuon agents mcp setup --platform claude-code',
-  cursor: 'nuon agents mcp setup --platform cursor',
-  amp: 'nuon agents mcp setup --platform amp',
-  /** The client-side equivalent, if you would rather not touch the repo. */
-  claudeMcpAdd: 'claude mcp add --transport stdio nuon -- nuon agents mcp',
-  /** Same, with writes visible to the agent. */
-  claudeMcpAddWrites:
-    'claude mcp add --transport stdio nuon -- nuon agents mcp --allow-writes',
+  /** Registers the CLI's stdio proxy with Claude Code (`nuon agents mcp --help`). */
+  claudeCode: 'claude mcp add --transport stdio nuon -- nuon agents mcp',
+  /** Same, with the write tools visible to the agent. */
+  claudeCodeWrites: 'claude mcp add --transport stdio nuon -- nuon agents mcp --allow-writes',
+  /** Cursor has no add command: this goes in ~/.cursor/mcp.json (or .cursor/mcp.json). */
+  cursor: `{
+  "mcpServers": {
+    "nuon": { "command": "nuon", "args": ["agents", "mcp"] }
+  }
+}`,
+  amp: 'amp mcp add nuon -- nuon agents mcp',
   verify: 'nuon agents context',
 } as const
 
@@ -196,8 +197,9 @@ then watch_workflow until it finishes. This needs the proxy started with
     answer:
       `${runbooks.length} procedures with their steps, split into read-only diagnostics and the ones that apply changes.`,
     prompt: (install, app) => `Call list_runbooks for app ${app}, then get_runbook for each one. Tell me which
-are read-only diagnostics and which apply changes, and what each step does. Running one
-has no MCP tool yet; if I want to, give me the CLI command:
+are read-only diagnostics and which apply changes, and what each step does. run_runbook
+is a write tool, hidden unless the proxy runs with --allow-writes; if it is not listed and I
+want to run one, give me the CLI command:
 nuon runbooks create-run --install-id ${install} --runbook-id <name> --output agent`,
   },
   {
@@ -212,9 +214,6 @@ nuon runbooks create-run --install-id ${install} --runbook-id <name> --output ag
 completes and, when it ends, whether it succeeded. Read-only.`,
   },
 ]
-
-export const useCaseById = (id: string): UseCase | undefined =>
-  useCases.find((u) => u.id === id)
 
 /** A single use case with the guardrails on top: what a card's Copy button hands over. */
 export function useCasePrompt(useCase: UseCase, install: string, app: string): string {

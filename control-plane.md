@@ -1,8 +1,8 @@
 # Kitchen Sink
 
-{{ $accountId := dig "account_id" "000000000000" .nuon.install_stack.outputs }}
+{{ $accountId := dig "account_id" "" .nuon.install_stack.outputs }}
 {{ $region := .nuon.cloud_account.aws.region }}
-{{ $vpcId := dig "vpc_id" "vpc-000000" .nuon.install_stack.outputs }}
+{{ $vpcId := dig "vpc_id" "" .nuon.install_stack.outputs }}
 {{- $comps := default dict .nuon.components -}}
 {{- $cR := 0 -}}{{- range $n, $c := $comps }}{{ if eq (dig "status" "" $c) "active" }}{{ $cR = add $cR 1 }}{{ end }}{{ end -}}
 {{- $cT := len $comps -}}
@@ -20,7 +20,7 @@
 </div>
 {{ end }}
 
-Deployed into AWS account `{{ $accountId }}` ({{ $region }}) by Nuon, from [nuonco/kitchen-sink](https://github.com/nuonco/kitchen-sink).
+Deployed{{ if $accountId }} into AWS account `{{ $accountId }}` ({{ $region }}){{ end }} by Nuon, from [nuonco/kitchen-sink](https://github.com/nuonco/kitchen-sink).
 
 <nuon-tabs>
 
@@ -56,7 +56,7 @@ Deployed into AWS account `{{ $accountId }}` ({{ $region }}) by Nuon, from [nuon
 {{ else -}}
 No health check has run yet; the `full-health-check` runbook populates this table.
 {{ end }}
-Provisioned cluster, VPC `{{ $vpcId }}`, DNS zones, a TLS certificate, and the runner in `{{ $accountId }}` ({{ $region }}), then built and deployed {{ $cT }} components ({{ $cR }} active) in dependency order behind a public HTTPS endpoint.
+Provisioned a cluster{{ if $vpcId }}, VPC `{{ $vpcId }}`{{ end }}, DNS zones, a TLS certificate, and the runner{{ if $accountId }} in `{{ $accountId }}` ({{ $region }}){{ end }}, then built and deployed {{ $cT }} components ({{ $cR }} active) in dependency order behind a public HTTPS endpoint.
 
 
 </nuon-tab>
@@ -67,11 +67,11 @@ Provisioned cluster, VPC `{{ $vpcId }}`, DNS zones, a TLS certificate, and the r
 
 ## Three parts of a Nuon app
 
-**A sandbox: where it runs.** One Terraform-provisioned foundation, created in each customer's account: here an EKS cluster and VPC `{{ $vpcId }}` in `{{ $accountId }}`. You pick a sandbox; you don't write one.
+**A sandbox: where it runs.** One Terraform-provisioned foundation, created in each customer's account: here an EKS cluster{{ if $vpcId }} in VPC `{{ $vpcId }}`{{ end }}{{ if $accountId }}, account `{{ $accountId }}`{{ end }}. You pick a sandbox; you don't write one.
 
 **At least one component: the thing you ship.** A piece of your software in a format you build: container image, Helm chart, Kubernetes manifests, Terraform module, Pulumi program. Declare what it needs, and Nuon works out build and deploy order. This install has {{ $cT }}{{ if gt $cT 0 }} ({{ $cR }} active){{ end }}.
 
-**The runner: what does the work.** An EKS managed node group inside the customer's account performs every build, deploy, and action itself. It authenticates outbound and polls for work, so **Nuon never needs inbound access to their account**.
+**The runner: what does the work.** An EC2 Auto Scaling group inside the customer's account (`stack.toml`: the `runner/asg` template) performs every build, deploy, and action itself. It authenticates outbound and polls for work, so **Nuon never needs inbound access to their account**.
 
 </nuon-tab>
 
@@ -81,9 +81,9 @@ Provisioned cluster, VPC `{{ $vpcId }}`, DNS zones, a TLS certificate, and the r
 
 ## Customer requests
 
-**"Can we try the new version first?"** Yes. This install ships through the `main` [app branch](https://github.com/nuonco/kitchen-sink/blob/main/branch.toml): `nuon sync --branch main` from a clone starts a branch run that rolls the config out group by group (staging, then customers, then enterprise), with a person approving each group's plan before it deploys. A push does the same once the rules in `triggers.toml.example` are enabled.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} [The groups and the commands that ship to them](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/customize/branches), inside the app.{{ end }}
+**"Can we try the new version first?"** Yes. This install ships through an [app branch](https://github.com/nuonco/kitchen-sink/blob/main/branch.toml): `nuon sync --branch <name>` from a clone checked out at that branch starts a branch run that rolls the config out to the branch's install groups in order, with a person approving each group's plan before it deploys. A push does the same once the rules in `triggers.toml.example` are enabled.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} [The groups and the commands that ship to them](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/cases/single-tenant?panel=rollout), inside the app.{{ end }}
 
-**"Can my coding agent do this?"** Yes. `nuon agents mcp setup --platform claude-code` connects Nuon's MCP server to Claude Code (or Cursor, or Amp) through the CLI; `nuon agents context` verifies it.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} [Prompts to ask it about this install](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/customize/agent), with the ids filled in.{{ end }}
+**"Can my coding agent do this?"** Yes. `claude mcp add --transport stdio nuon -- nuon agents mcp` registers Nuon's MCP server, the CLI's stdio proxy, with Claude Code (`amp mcp add nuon -- nuon agents mcp` for Amp); `nuon agents context` verifies it.{{ if and .nuon.sandbox.populated .nuon.sandbox.outputs }} [Prompts to ask it about this install](https://app.{{ .nuon.sandbox.outputs.nuon_dns.public_domain.name }}/#/home), with the ids filled in.{{ end }}
 
 <!-- Dashboard deep links below take the org id from the render state (nuon.org.id), so they work under whichever org this config is installed in. -->
 

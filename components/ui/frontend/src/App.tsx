@@ -4,7 +4,7 @@ import { redirectFor } from './lib/redirects'
 import { navigate, query, replace, segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
-import { Icon, NuonMark, OutLink } from './ui/Primitives'
+import { BackLink, Icon, NuonMark, OutLink } from './ui/Primitives'
 import { CaseDetail } from './views/CaseDetail'
 import { Cases } from './views/Cases'
 import { TryYourApp } from './views/TryYourApp'
@@ -81,6 +81,15 @@ export default function App() {
       <CaseDetail config={config} branch={parts[1]} panel={query(path).get('panel')} />
     ) : (
       <Cases />
+    )
+  } else if (parts.length > 0) {
+    view = (
+      <>
+        <BackLink to="/home">Home</BackLink>
+        <header className="page-header">
+          <h1>No page at /{parts.join('/')}.</h1>
+        </header>
+      </>
     )
   }
   if (redirect) view = null

@@ -35,7 +35,7 @@ export function RunbooksTile(_: PanelProps) {
         {runbooks.length} runbooks · {mutating.length} apply changes
       </span>
       <span className="ptile__label mono">
-        {postDeployRunbooks.length > 0 ? `${postDeployRunbooks.join(', ')} after each deploy · ` : ''}
+        {postDeployRunbooks.length > 0 ? `${postDeployRunbooks.join(', ')} after each branch-run deploy · ` : ''}
         {adhocActions.length} actions
       </span>
     </>

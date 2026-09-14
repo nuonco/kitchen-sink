@@ -6,6 +6,8 @@ export const pasteSource = {
   repo: 'nuonco/nuon-loop',
   file: 'PASTE.md',
   commit: 'a446c31443c6e40ba0c8c313562585abba5d856d',
+  /** On the local branch ms/readme-paste-flow; not on GitHub as of 2026-09-14. */
+  pushed: false,
   date: '2026-09-10',
   /** The repo is private; cloning it needs git or gh credentials with access. */
   private: true,

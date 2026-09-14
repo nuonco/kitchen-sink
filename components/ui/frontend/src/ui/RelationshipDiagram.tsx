@@ -335,7 +335,7 @@ export function InputsFlow() {
       <div className="opener__card">
         <div className="opener__card-head">
           <span className="eyebrow">What you have</span>
-          <span className="mono opener__card-aside">the defaults in inputs/ and components/</span>
+          <span className="mono opener__card-aside">the defaults in inputs/, components/ and install-configs/</span>
         </div>
         <pre className="opener__code">
           {rows.map((r) => `${r.key.padEnd(pad)} = ${r.value}`).join('\n')}
@@ -445,7 +445,7 @@ export function VersionTimeline({
     `Branch ${branchName}. Each push is a version.`,
     ...groups.map((g) => {
       const names = configsIn(g.name).map((c) => c.name)
-      return `Group ${g.name}, order ${g.order}, selector ${g.selector}${names.length ? `, install configs ${names.join(', ')}` : ''}.`
+      return `Group ${g.name}, order ${g.order}, selector ${g.selector}${names.length ? `, install config${names.length === 1 ? '' : 's'} ${names.join(', ')}` : ''}.`
     }),
     running ? `${who} runs ${running}.` : `${who}: no pod read yet.`,
   ].join(' ')
