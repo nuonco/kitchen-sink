@@ -45,7 +45,7 @@ export function TryYourApp() {
     <div className="try">
       <BackLink to="/home">Home</BackLink>
       <header className="page-header try__head">
-        <div className="eyebrow eyebrow--accent">Kitchen sink demo · doing path</div>
+        <div className="eyebrow eyebrow--accent">Kitchen sink demo · your app</div>
         <h1>Your app on Nuon. One paste.</h1>
       </header>
 
@@ -76,7 +76,7 @@ export function TryYourApp() {
             </div>
           ))}
           <div className="mono try__note">
-            TOML you own · one commit per plan item · pasting again resumes, never restarts
+            TOML you own · one commit per plan item · pasting again resumes
           </div>
         </section>
 

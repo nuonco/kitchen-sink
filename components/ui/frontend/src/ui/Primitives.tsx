@@ -305,16 +305,15 @@ export function LoadState({
         <div className="status__title">Could not read {what}.</div>
         {result.unreachable ? (
           <p className="small">
-            This app could not get an answer out of the introspection API at all.
-            The API runs as a single pod with a 256Mi memory limit, so the usual
-            causes are the pod restarting or a large introspection call
-            exhausting that limit. Everything else on this page still works.
+            The introspection API did not answer. The API runs as one pod with a
+            256Mi memory limit, so the usual causes are the pod restarting or an
+            introspection call exhausting that limit.
           </p>
         ) : (
           <p className="small">
             The introspection API answered with an error. Its handlers surface
-            the underlying failure directly, so the detail below is the real
-            cause, usually a missing Kubernetes permission.
+            the underlying failure directly, so the message is the cause,
+            usually a missing Kubernetes permission.
           </p>
         )}
         <p className="status__detail" style={{ marginTop: 8 }}>

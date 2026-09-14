@@ -34,9 +34,9 @@ export function useNamespacePoll(
 }
 
 export function podAge(ts?: string): string {
-  if (!ts) return '—'
+  if (!ts) return 'n/a'
   const ms = Date.now() - new Date(ts).getTime()
-  if (!Number.isFinite(ms) || ms < 0) return '—'
+  if (!Number.isFinite(ms) || ms < 0) return 'n/a'
   const minutes = Math.floor(ms / 60_000)
   if (minutes < 1) return '<1m'
   if (minutes < 60) return `${minutes}m`
@@ -55,7 +55,7 @@ export function PanelPrompts({ panel, config }: { panel: string; config: UIConfi
   return (
     <section className="section">
       <div className="section__head">
-        <h3 className="section__title">Ask your agent</h3>
+        <h3 className="section__title">Agent prompts</h3>
         <div className="subtext muted">
           {list.length} prompt{list.length === 1 ? '' : 's'} · ids filled in
         </div>

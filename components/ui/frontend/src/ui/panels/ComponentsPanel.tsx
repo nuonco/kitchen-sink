@@ -24,7 +24,7 @@ const types: ComponentType[] = [
     type: 'helm_chart',
     purpose: 'Deploy a Helm chart',
     what: 'Deploys a Helm chart into the install cluster. Nuon interpolates the values file first, so image tags and sandbox outputs are filled in per install.',
-    here: 'kitchen_sink: the API, the worker, and this UI. One chart, three deployments.',
+    here: 'kitchen_sink: one chart deploying the API, the worker, and this UI.',
     file: 'components/chart/nuon.toml',
     toml: `name = "kitchen_sink"
 type = "helm_chart"

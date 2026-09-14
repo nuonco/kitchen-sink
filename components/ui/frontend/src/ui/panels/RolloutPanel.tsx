@@ -36,9 +36,9 @@ export function RolloutTile({ config, caseBranch }: PanelProps) {
 function scenarios(install: string, app: string) {
   return [
     {
-      scenario: 'Ship one change to the whole fleet, in order, with an approval per group',
+      scenario: 'Ship one change to the fleet, in order, with an approval per group',
       how: `nuon sync --app-id ${app} --force --branch ${branchName} --no-wait --output agent`,
-      note: 'from your clone; watch with the runs command below',
+      note: 'from your clone',
     },
     {
       scenario: 'Preview a pull request against one install before it merges',
@@ -52,8 +52,8 @@ function scenarios(install: string, app: string) {
     },
     {
       scenario: 'Re-apply an earlier version',
-      how: 'version history in Nuon, plan first, then apply',
-      note: 'the old image tags reappear on your pods',
+      how: 'version history in Nuon',
+      note: 'plan, then apply; the old image tags reappear on your pods',
     },
     {
       scenario: 'A new customer joins a wave the moment its install is labelled',
@@ -99,8 +99,10 @@ export function RolloutDrawer({ config, caseBranch }: PanelProps) {
       <CodeBlock label="branch.toml (comments stripped)" code={branchConfigAbridged} />
 
       <div className="section__head" style={{ marginTop: 24 }}>
-        <h3 className="section__title">What a branch lets you do</h3>
-        <div className="subtext muted">ids filled in</div>
+        <h3 className="section__title">Operations on branch {branchName}</h3>
+        <div className="subtext muted">
+          install {install} · app {app}
+        </div>
       </div>
       <div className="table-wrap">
         <table className="data">
@@ -133,7 +135,7 @@ export function RolloutDrawer({ config, caseBranch }: PanelProps) {
       </div>
 
       <CommandBlock
-        label="edit any file in your clone, then sync and start the run"
+        label="sync your clone and start a branch run"
         command={`nuon sync --app-id ${app} --force --branch ${branchName} --no-wait --output agent`}
         note={
           <>
@@ -148,11 +150,10 @@ export function RolloutDrawer({ config, caseBranch }: PanelProps) {
         command={`nuon apps branches runs --app-id ${app} --branch-id ${branchName}`}
       />
       <CommandBlock
-        label="which group is this install in"
+        label="this install's group, by label"
         command={`nuon installs labels list --install-id ${install}`}
         note={
           <>
-            Groups select by label.{' '}
             {config.links.branches && (
               <OutLink href={config.links.branches} variant="plain">
                 Branch runs and approvals in Nuon

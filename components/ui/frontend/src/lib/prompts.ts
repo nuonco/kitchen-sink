@@ -1,4 +1,4 @@
-import { branchName } from './config-data.gen'
+import { branchName, runbooks } from './config-data.gen'
 
 /**
  * Everything the app hands to a visitor's coding agent (Claude Code, Cursor,
@@ -37,7 +37,7 @@ export function guardrails(install: string, app: string): string {
 this machine; do not ask me for, print, or export any token.
 
 Hard limits:
-- Only this app and install: app kitchen-sink (${app}), install ${install}.
+- Only this app and install: app ${app}, install ${install}.
 - Prefer MCP tools for reads. Tools whose description starts with "WRITE OPERATION:"
   are hidden unless the proxy runs with --allow-writes; if one is missing, say so
   instead of working around it.
@@ -75,7 +75,7 @@ export const useCases: UseCase[] = [
     tools: ['whoami', 'list_installs', 'get_install'],
     write: false,
     answer:
-      'Your org, every install in it, and this one’s sandbox, runner, and component status.',
+      'Your org, every install in it, and this one’s sandbox, runner, and component status, in three sentences.',
     prompt: (install) => `Call whoami, then list_installs, then get_install for install ${install}.
 Tell me which org I am in, which installs exist, and this install's sandbox, runner,
 and component status, in three sentences. Read-only.`,
@@ -166,11 +166,11 @@ failed, say so and show me the last successful one instead.`,
     tools: ['list_install_actions', 'get_action', 'run_action', 'watch_workflow'],
     write: true,
     answer:
-      'Pod state, warning events, and recent logs from inside the cluster, collected by the runner.',
+      'Pod state, warning events, and API logs from inside the cluster, collected by the runner.',
     prompt: (install) => `Call list_install_actions for install ${install} and find the action named
 "debug". Show me what it does (get_action). After my "yes", call run_action for it,
 follow with watch_workflow, and summarize the diagnostic bundle: pod state, warning
-events, recent API logs. It is read-only inside the cluster, but starting a run is a
+events, API logs. It is read-only inside the cluster, but starting a run is a
 write, so this needs the proxy started with --allow-writes.`,
   },
   {
@@ -182,7 +182,7 @@ write, so this needs the proxy started with --allow-writes.`,
     answer:
       'The current input values, one change applied, and the components that redeployed because of it.',
     prompt: (install) => `Call get_install_inputs for install ${install} and show me every input with its
-current value. Propose one small, reversible change and say which components it
+current value. Propose one reversible change and say which components it
 affects. Only after my "yes": update_install_inputs, then deploy_install_components,
 then watch_workflow until it finishes. This needs the proxy started with
 --allow-writes.`,
@@ -194,7 +194,7 @@ then watch_workflow until it finishes. This needs the proxy started with
     tools: ['list_runbooks', 'get_runbook'],
     write: false,
     answer:
-      'Four procedures with their steps, split into read-only diagnostics and the ones that apply changes.',
+      `${runbooks.length} procedures with their steps, split into read-only diagnostics and the ones that apply changes.`,
     prompt: (install, app) => `Call list_runbooks for app ${app}, then get_runbook for each one. Tell me which
 are read-only diagnostics and which apply changes, and what each step does. Running one
 has no MCP tool yet; if I want to, give me the CLI command:

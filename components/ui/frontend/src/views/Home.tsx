@@ -45,7 +45,7 @@ export function cliGroups(install: string, app: string): Array<{ name: string; r
       ],
     },
     {
-      name: 'Inspect this install',
+      name: 'This install',
       rows: [
         {
           cmd: `nuon installs get --install-id ${install}`,
@@ -54,7 +54,7 @@ export function cliGroups(install: string, app: string): Array<{ name: string; r
       ],
     },
     {
-      name: 'Check health',
+      name: 'Runbooks',
       rows: [
         {
           cmd: `nuon runbooks list --install-id ${install}`,
@@ -80,15 +80,15 @@ export function cliGroups(install: string, app: string): Array<{ name: string; r
       ],
     },
     {
-      name: 'Run actions',
+      name: 'Actions',
       rows: [
         {
           cmd: `nuon actions list --app-id ${app}`,
           note: (
             <>
-              Prints all {adhocActions.length} configured actions. Copy the
+              Prints the {adhocActions.length} configured actions. Copy the
               workflow id (
-              <span className="mono">actw&hellip;</span>) for the next two.
+              <span className="mono">actw&hellip;</span>) for create-run.
             </>
           ),
         },
@@ -103,7 +103,7 @@ export function cliGroups(install: string, app: string): Array<{ name: string; r
       ],
     },
     {
-      name: 'Ship a change',
+      name: 'Sync',
       rows: [
         {
           cmd: `nuon sync --app-id ${app} --force --branch ${branchName}`,
@@ -169,16 +169,16 @@ export function Home({ config }: { config: UIConfig }) {
   // The three rows the card shows before the expander: inspect, health, ship.
   const byName = (name: string) => groups.find((g) => g.name === name)?.rows ?? []
   const headline = [
-    ...byName('Inspect this install').slice(0, 1),
-    ...byName('Check health').slice(1, 2),
-    ...byName('Ship a change').slice(0, 1),
+    ...byName('This install').slice(0, 1),
+    ...byName('Runbooks').slice(1, 2),
+    ...byName('Sync').slice(0, 1),
   ]
 
   return (
     <div className="home">
       <header className="page-header home__head">
         <div className="eyebrow eyebrow--accent">Kitchen sink demo · home</div>
-        <h1>The whole Kitchen Sink.</h1>
+        <h1>Kitchen Sink: one install, {cases.length} requests.</h1>
       </header>
 
       <div className="home__wings">
@@ -207,7 +207,7 @@ export function Home({ config }: { config: UIConfig }) {
             ))}
           </div>
           <a className="btn btn--primary home__all" href="#/cases">
-            All {cases.length} cases <Icon name="arrow-right" />
+            {cases.length} cases <Icon name="arrow-right" />
           </a>
         </section>
 
@@ -254,7 +254,7 @@ export function Home({ config }: { config: UIConfig }) {
 
       <section className="home__exit">
         <div className="home__exit-lead">
-          <h2 className="home__card-title">Try with your app</h2>
+          <h2 className="home__card-title">Your app on Nuon</h2>
           <span className="mono home__aside">your repo → app config → first install</span>
         </div>
         <div className="home__cmd home__cmd--paste">

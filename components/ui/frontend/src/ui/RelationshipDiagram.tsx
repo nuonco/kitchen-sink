@@ -195,7 +195,7 @@ export function SourceFork() {
         <div className="opener__col">
           <div className="opener__col-head">
             <span className="eyebrow">Today · your cloud</span>
-            <span className="opener__col-title">One stack, many tenants inside it</span>
+            <span className="opener__col-title">One stack, every tenant inside it</span>
           </div>
           <div className="opener__stack">
             <div className="mono opener__stack-mono">one VPC · one cluster · one database</div>

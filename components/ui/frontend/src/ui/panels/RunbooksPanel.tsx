@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { adhocActions, lifecycleHooksToml, postDeployRunbooks, runbooks } from '../../lib/config-data.gen'
 import type { PanelProps } from '../../lib/panels'
-import { Badge, CodeBlock, CommandBlock, Icon, OutLink } from '../Primitives'
+import { CodeBlock, CommandBlock, Icon, OutLink } from '../Primitives'
 import { PanelPrompts, installIdOf } from './shared'
 
 /* ============================================================
@@ -26,18 +26,6 @@ function triggerSummary(): string {
     .sort((a, b) => b[1] - a[1])
     .map(([k, n]) => (k.startsWith('cron') || n === 1 ? k : `${k} ×${n}`))
     .join(' · ')
-}
-
-function ModeBadge({ mutates }: { mutates: boolean }) {
-  return mutates ? (
-    <Badge tone="warning" dot>
-      applies changes
-    </Badge>
-  ) : (
-    <Badge tone="positive" dot>
-      read-only
-    </Badge>
-  )
 }
 
 export function RunbooksTile(_: PanelProps) {
@@ -82,9 +70,6 @@ export function RunbooksDrawer({ config }: PanelProps) {
         <h3 className="section__title mono">{runbook.name}</h3>
         <div className="subtext muted">runbooks/{runbook.name}.toml</div>
       </div>
-      <div className="row" style={{ marginBottom: 12 }}>
-        <ModeBadge mutates={runbook.mutates} />
-      </div>
       <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
         {runbook.description}
       </p>
@@ -118,7 +103,7 @@ export function RunbooksDrawer({ config }: PanelProps) {
           runbook.mutates ? (
             <>Re-applies state or assumes elevated access.</>
           ) : (
-            <>Read-only diagnostics. Runbooks take their name directly, no id lookup.</>
+            <>--runbook-id takes the runbook name; no id lookup.</>
           )
         }
       />
@@ -134,7 +119,7 @@ export function RunbooksDrawer({ config }: PanelProps) {
       </p>
 
       <div className="section__head" style={{ marginTop: 24 }}>
-        <h3 className="section__title">When actions run</h3>
+        <h3 className="section__title">Action triggers</h3>
         <div className="subtext muted">actions/*/nuon.toml · [[triggers]]</div>
       </div>
       <p className="small muted" style={{ maxWidth: '72ch' }}>

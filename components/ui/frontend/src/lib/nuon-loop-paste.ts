@@ -27,7 +27,7 @@ export const prerequisites = [
 /** "What lands in your repo" and "Reading HANDOFF.md". */
 export const youGet = [
   { text: 'A Nuon app config in your repo', aside: 'nuon/<app>/' },
-  { text: 'A first install, ready to provision', aside: '<app>-first · inl…' },
+  { text: 'A first install, status awaiting-user-run', aside: '<app>-first · inl…' },
   { text: 'One CloudFormation Quick Create link to click', aside: 'HANDOFF.md' },
 ] as const
 
@@ -35,13 +35,13 @@ export const youGet = [
 export const youDo = [
   { text: 'Approve "always allow" once', aside: 'first run: the bootstrap git clone' },
   { text: 'Finish the browser login', aside: 'nuon auth login' },
-  { text: 'Click the link. In your AWS account.', aside: 'the only step that creates AWS resources' },
+  { text: 'Click the Quick Create link in your AWS account', aside: 'the CloudFormation stack' },
 ] as const
 
 /** The conditional rows of the same table. */
 export const conditionalStops = [
   { text: 'Install Python 3.11+ yourself', when: 'if your interpreter is older' },
-  { text: 'Say which directory is the app', when: 'only if two candidates are clearly different products' },
+  { text: 'Say which directory is the app', when: 'only if two candidates are different products' },
   { text: 'Supply a 12-digit AWS account ID', when: 'only if your Nuon org has phone-home auth enabled' },
   { text: 'Finish nuon orgs connect-github in the browser', when: 'only if the chart or manifests live in a private GitHub repo' },
   { text: 'Answer one gate-critical fact', when: 'only if intake could not infer it' },

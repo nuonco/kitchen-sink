@@ -4,7 +4,7 @@
  * A component sits one layer below its deepest dependency, which is exactly
  * the order Nuon deploys in. Edges naming a component that is not in the list
  * are dropped rather than drawn into nothing, and a cycle is broken rather
- * than allowed to hang the render — neither should occur in a valid config,
+ * than allowed to hang the render. Neither should occur in a valid config,
  * but a half-edited TOML must not blank the page.
  */
 import type { ComponentNode } from './config-data.gen'
@@ -42,7 +42,7 @@ export function buildGraph(components: ComponentNode[]): Graph {
 
   // Place a component one layer below the deepest thing it names. Kahn's
   // algorithm: repeatedly take everything whose dependencies are all placed.
-  // Anything still unplaced is in a cycle — place it at layer 0 rather than
+  // Anything still unplaced is in a cycle: place it at layer 0 rather than
   // invent a depth for it. Cycles should not occur in a valid config, but a
   // half-edited TOML must not blank the page or shift every other node.
   const layer = new Map<string, number>()

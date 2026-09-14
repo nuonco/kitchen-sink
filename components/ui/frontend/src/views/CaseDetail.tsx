@@ -179,7 +179,7 @@ export function CaseDetail({
 
       <section className="agentask">
         <div className="section__head">
-          <h2 className="section__title">Ask your agent</h2>
+          <h2 className="section__title">Agent prompt</h2>
           <div className="subtext muted">Nuon MCP server · read tools</div>
         </div>
         <div className="agent-prompt">

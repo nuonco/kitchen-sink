@@ -2,7 +2,7 @@ import { countReady } from '../../lib/api'
 import { healthBlocks, runbooks } from '../../lib/config-data.gen'
 import type { PanelProps } from '../../lib/panels'
 import { Badge, CommandBlock, LoadState, OutLink, PhaseBadge } from '../Primitives'
-import { PanelPrompts, installIdOf, useNamespacePoll } from './shared'
+import { PANEL_POLL_MS, PanelPrompts, installIdOf, useNamespacePoll } from './shared'
 
 /* ============================================================
    health: pod readiness read live, and the [health] blocks on the
@@ -21,7 +21,8 @@ export function HealthTile({ config }: PanelProps) {
         {ns.state === 'ok' ? `${countReady(pods)} of ${pods.length} pods ready` : 'reading pods…'}
       </span>
       <span className="ptile__label mono">
-        {enabledBlocks.length} of {healthBlocks.length} [health] blocks enabled · block_deploy = false
+        {enabledBlocks.length} of {healthBlocks.length} [health] blocks enabled ·{' '}
+        {healthBlocks.filter((h) => !h.blockDeploy).length} with block_deploy = false
       </span>
     </>
   )
@@ -53,7 +54,7 @@ export function HealthDrawer({ config }: PanelProps) {
                 <td className="mono">{h.component}</td>
                 <td className="mono subtext">{String(h.enabled)}</td>
                 <td className="mono subtext">{String(h.blockDeploy)}</td>
-                <td className="mono subtext">{h.stabilizationWindow ?? '—'}</td>
+                <td className="mono subtext">{h.stabilizationWindow ?? 'none'}</td>
                 <td className="mono subtext">{h.probes}</td>
               </tr>
             ))}
@@ -70,7 +71,9 @@ export function HealthDrawer({ config }: PanelProps) {
 
       <div className="section__head" style={{ marginTop: 24 }}>
         <h3 className="section__title">Pod readiness in {namespace}</h3>
-        <div className="subtext muted">GET /api/introspect/namespace/{namespace} · re-read every 10s</div>
+        <div className="subtext muted">
+          GET /api/introspect/namespace/{namespace} · re-read every {PANEL_POLL_MS / 1000}s
+        </div>
       </div>
       <LoadState result={ns} what="pod health" />
       {ns.state === 'ok' && (

@@ -117,7 +117,7 @@ export function LoadingOverlay() {
     <div
       className={fading ? 'loading loading--done' : 'loading'}
       role="status"
-      aria-label="Loading the install"
+      aria-label="Reading your install"
     >
       <div className="loading__glow" />
       <div className="loading__grain" />

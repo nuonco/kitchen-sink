@@ -331,7 +331,7 @@ export function hasAuditLogExporter(services: ServiceSummary[]): boolean {
 
 /** "sha-45200f2" from a full image reference; "latest" when untagged. */
 export function imageTag(image?: string): string {
-  if (!image) return '—'
+  if (!image) return 'n/a'
   const tail = image.split('/').pop() ?? image
   const i = tail.lastIndexOf(':')
   return i === -1 ? 'latest' : tail.slice(i + 1)
@@ -345,7 +345,7 @@ export function runningImageTags(pods: PodSummary[]): string[] {
         pod.spec?.containers?.[0]?.image,
     ),
   )
-  return Array.from(new Set(tags.filter((t) => t !== '—')))
+  return Array.from(new Set(tags.filter((t) => t !== 'n/a')))
 }
 
 export function countReady(pods: PodSummary[]): number {

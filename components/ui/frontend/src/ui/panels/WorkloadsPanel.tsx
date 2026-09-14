@@ -7,7 +7,7 @@ import {
 } from '../../lib/api'
 import type { PanelProps } from '../../lib/panels'
 import { Badge, LoadState, PhaseBadge } from '../Primitives'
-import { PanelPrompts, podAge, useNamespacePoll } from './shared'
+import { PANEL_POLL_MS, PanelPrompts, podAge, useNamespacePoll } from './shared'
 
 /* ============================================================
    workloads: what is running in this install's namespace, read live.
@@ -114,7 +114,7 @@ export function WorkloadsDrawer({ config }: PanelProps) {
           <div className="section__head">
             <h3 className="section__title">Pods in {namespace}</h3>
             <div className="subtext muted">
-              GET /api/introspect/namespace/{namespace} · re-read every 10s
+              GET /api/introspect/namespace/{namespace} · re-read every {PANEL_POLL_MS / 1000}s
             </div>
           </div>
           <div className="row" style={{ marginBottom: 12 }}>

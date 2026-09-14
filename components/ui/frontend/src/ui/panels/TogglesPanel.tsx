@@ -43,7 +43,7 @@ function SkuCard({
       {justOn && (
         <div className="ttt-unlocked-note">
           <Badge tone="positive" dot>
-            just deployed
+            deployed
           </Badge>
           <span>Its Service appeared in the namespace on the last poll.</span>
         </div>
@@ -65,7 +65,7 @@ function SkuCard({
             </Badge>
           ) : (
             <OutLink href={config.links.components} onClick={onDashboardOpen}>
-              Turn it on in Nuon
+              {name} in Nuon
             </OutLink>
           )}
           <span className="ent__facts mono">toggleable = true · default_enabled = false</span>
@@ -128,9 +128,9 @@ function HowItKnows({
 }
 
 function relativeTime(iso: string | null | undefined, now: number): string {
-  if (!iso) return '—'
+  if (!iso) return 'n/a'
   const t = Date.parse(iso)
-  if (Number.isNaN(t)) return '—'
+  if (Number.isNaN(t)) return 'n/a'
   const s = Math.max(0, Math.round((now - t) / 1000))
   if (s < 60) return `${s}s ago`
   const m = Math.floor(s / 60)
@@ -206,8 +206,8 @@ function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig
             return (
               <li key={key} className={cls}>
                 <span className="evt__time mono">{relativeTime(ev.lastTimestamp ?? ev.firstTimestamp, now)}</span>
-                <span className="evt__reason mono">{ev.reason || '—'}</span>
-                <span className="evt__obj mono">{obj || '—'}</span>
+                <span className="evt__reason mono">{ev.reason || 'n/a'}</span>
+                <span className="evt__obj mono">{obj || 'n/a'}</span>
                 <span className="evt__msg">
                   {ev.message}
                   {(ev.count ?? 1) > 1 && <span className="evt__count mono"> ×{ev.count}</span>}
@@ -218,7 +218,7 @@ function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig
         </ol>
       )}
       <p className="evtfeed__invite">
-        Toggle a component off and on in{' '}
+        A toggle off and on in{' '}
         {config.links.components ? (
           <OutLink href={config.links.components} variant="plain">
             the dashboard
@@ -226,7 +226,7 @@ function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig
         ) : (
           'the dashboard'
         )}{' '}
-        and the teardown and redeploy land here as they happen.
+        lands the teardown and the redeploy here as they happen.
       </p>
     </div>
   )
@@ -358,7 +358,7 @@ export function TogglesDrawer({ config }: PanelProps) {
         <div className="subtext muted">components/{'{'}audit_log_exporter,tictactoe{'}'}.toml</div>
       </div>
       <p className="small muted" style={{ maxWidth: '72ch' }}>
-        Both ship in every install&rsquo;s config, switched off. Flip one on for an install and Nuon
+        Each ships in every install&rsquo;s config, switched off. Flip one on for an install and Nuon
         deploys it there; flip it off and it is torn down. Off means not deployed: no pods, no Service,
         nothing for that feature in the customer&rsquo;s cloud. Here each deploys one marker Service.{' '}
         <OutLink href="https://docs.nuon.co/guides/toggleable-components" variant="plain">
@@ -370,7 +370,7 @@ export function TogglesDrawer({ config }: PanelProps) {
         <SkuCard
           plan="Enterprise plan"
           name="audit_log_exporter"
-          pitch="The stand-in for a feature sold per plan. It deploys one marker Service and nothing else."
+          pitch="The stand-in for a feature sold per plan."
           on={audit}
           justOn={auditJust}
           config={config}
@@ -390,7 +390,7 @@ export function TogglesDrawer({ config }: PanelProps) {
       {tictactoe && <CodeBlock label="tictactoe.toml (comments stripped)" code={tictactoe.toml} />}
 
       <div className="section__head" style={{ marginTop: 24 }}>
-        <h3 className="section__title">{bothOn ? 'What introspection sees' : 'Flip one on and watch'}</h3>
+        <h3 className="section__title">Marker Service detection</h3>
         <div className="subtext muted">
           {audit ? `GET /api/introspect/namespace/${namespace}/events` : `GET /api/introspect/namespace/${namespace}`}
         </div>
@@ -403,7 +403,7 @@ export function TogglesDrawer({ config }: PanelProps) {
               <Badge tone="warning" dot>
                 waiting for the deploy
               </Badge>
-              <span>Toggle a component on in the dashboard tab and deploy it; its card flips when the Service appears.</span>
+              <span>After the deploy in the dashboard tab, the card flips when the Service appears.</span>
             </>
           ) : (
             <>

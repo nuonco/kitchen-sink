@@ -70,7 +70,7 @@ config reaches. One line per path. Read-only.`,
 Call get_install for install ${installOf(c)} and get_install_inputs. The install
 stack created VPC ${c.vpc_id ?? '(read it from install_stack.outputs.vpc_id)'}. List
 what changes if this install moves into an existing VPC instead: the stack.toml
-template line (byo-vpc/default) and the four Quick Create parameters the customer
+template line (byo-vpc/default) and the Quick Create parameters the customer
 supplies (VpcID, PublicSubnetIDs, PrivateSubnetIDs, RunnerSubnetID). Show the plan
 as file edits. Apply nothing. Read-only.`,
   },
