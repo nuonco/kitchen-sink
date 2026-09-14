@@ -2,7 +2,16 @@ type        = "aws-cloudformation"
 name        = "nuon-kitchen-sink-{{.nuon.install.id}}"
 description = "CloudFormation stack for Kitchen Sink app: Install {{.nuon.install.id}}"
 
-vpc_nested_template_url    = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/vpc/eks/default/stack.yaml"
+# Existing VPC: the byo-vpc template creates no network. The customer enters
+# four parameters in the CloudFormation Quick Create form: VpcID,
+# PublicSubnetIDs, PrivateSubnetIDs, RunnerSubnetID (the runner subnet needs
+# outbound internet access, for example through a NAT gateway). The sandbox
+# module (nuonco/aws-eks-sandbox, data.tf) selects subnets inside that VPC by
+# three tags the customer's subnets must carry: install.nuon.co/id = the
+# install id; network.nuon.co/domain = public, internal, or runner;
+# visibility = public or private.
+# Reference: https://docs.nuon.co/concepts/stacks/customer-vpc
+vpc_nested_template_url    = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/byo-vpc/default/stack.yaml"
 runner_nested_template_url = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/runner/asg/stack.yaml"
 
 [[custom_nested_stacks]]
