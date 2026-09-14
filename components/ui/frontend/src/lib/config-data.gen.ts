@@ -40,8 +40,79 @@ export interface Role {
 
 export interface Guardrail {
   name: string
+  file: string
   type: string
   target: string
+  components: string[]
+  rego: string
+}
+
+export interface InstallConfig {
+  name: string
+  file: string
+  labels: Record<string, string>
+  /** The branch group whose selector these labels satisfy, or null. */
+  group: string | null
+  region: string | null
+  approvalOption: string | null
+  inputs: Record<string, string>
+  toggles: Record<string, boolean>
+}
+
+export interface InputGroup {
+  name: string
+  displayName: string
+  description: string
+}
+
+export interface InputDef {
+  name: string
+  displayName: string
+  description: string
+  group: string
+  type: string
+  default: string | null
+  required: boolean
+  sensitive: boolean
+  internal: boolean
+  userConfigurable: boolean
+  file: string
+}
+
+export interface TemplateVariant {
+  path: string
+  version: string
+}
+
+export interface StackInfo {
+  type: string
+  vpcTemplateUrl: string
+  vpcTemplate: TemplateVariant
+  runnerTemplateUrl: string
+  runnerTemplate: TemplateVariant
+  customNestedStacks: Array<{ name: string; index: number }>
+}
+
+export interface RunnerInfo {
+  type: string
+  helmDriver: string
+  initScriptUrl: string
+}
+
+export interface SandboxInfo {
+  repo: string
+  branch: string
+  terraformVersion: string
+  vars: Array<{ name: string; value: string }>
+  tfvars: string
+}
+
+export interface HealthBlock {
+  component: string
+  enabled: boolean
+  blockDeploy: boolean
+  stabilizationWindow: string | null
+  probes: number
 }
 
 export interface ToggleableComponent {
@@ -270,6 +341,16 @@ export const adhocActions: AdhocAction[] = [
     "breakGlass": false
   },
   {
+    "name": "db_seed",
+    "timeout": "5m",
+    "triggers": [
+      "manual",
+      "pre-deploy-component kitchen_sink"
+    ],
+    "labels": null,
+    "breakGlass": false
+  },
+  {
     "name": "dns_check",
     "timeout": "5m",
     "triggers": [
@@ -382,23 +463,39 @@ export const breakGlassToml = "[[role]]\nname         = \"{{.nuon.install.id}}-a
 export const guardrails: Guardrail[] = [
   {
     "name": "cluster-requirements",
+    "file": "policies/cluster-requirements.toml",
     "type": "sandbox",
-    "target": "the sandbox plan"
+    "target": "the sandbox plan",
+    "components": [],
+    "rego": "package nuon\n\ndeny contains msg if {\n\tnamespace := input.review.object.metadata.namespace\n\tnamespace == \"kube-system\"\n\tinput.review.kind.kind == \"Deployment\"\n\tmsg := \"Cannot deploy custom workloads to kube-system namespace\"\n}"
   },
   {
     "name": "deny-public-api-ingress",
+    "file": "policies/deny-public-api-ingress.toml",
     "type": "helm_chart",
-    "target": "kitchen_sink"
+    "target": "kitchen_sink",
+    "components": [
+      "kitchen_sink"
+    ],
+    "rego": "package nuon\n\ndeny contains msg if {\n    input.review.kind.kind == \"Ingress\"\n    input.review.object.metadata.name == \"kitchen-sink-api-public\"\n    msg := \"API ingress must not be publicly accessible. Use internal ingress only.\"\n}\n\ndeny contains msg if {\n    input.review.kind.kind == \"Ingress\"\n    contains(input.review.object.metadata.name, \"kitchen-sink-api\")\n    annotations := input.review.object.metadata.annotations\n    not annotations[\"kubernetes.io/ingress.class\"] == \"internal-nginx\"\n    contains(input.review.object.metadata.name, \"kitchen-sink-api\")\n    msg := \"API ingress must use internal-nginx ingress class.\"\n}"
   },
   {
     "name": "deny-public-s3-bucket",
+    "file": "policies/deny-public-s3-bucket.toml",
     "type": "terraform_module",
-    "target": "all components"
+    "target": "all components",
+    "components": [
+      "*"
+    ],
+    "rego": "package nuon\n\ndeny contains msg if {\n    resource := input.plan.resource_changes[_]\n    resource.type == \"aws_s3_bucket_public_access_block\"\n    resource.change.actions[_] in [\"create\", \"update\"]\n    resource.change.after.block_public_acls == false\n    msg := sprintf(\"S3 bucket '%s' must not allow public access\", [resource.address])\n}\n\ndeny contains msg if {\n    resource := input.plan.resource_changes[_]\n    resource.type == \"aws_s3_bucket_public_access_block\"\n    resource.change.actions[_] in [\"create\", \"update\"]\n    resource.change.after.block_public_policy == false\n    msg := sprintf(\"S3 bucket '%s' must block public policy\", [resource.address])\n}"
   },
   {
     "name": "sandbox-limits",
+    "file": "policies/sandbox-limits.toml",
     "type": "sandbox",
-    "target": "the sandbox plan"
+    "target": "the sandbox plan",
+    "components": [],
+    "rego": "package nuon\n\ndeny contains msg if {\n\tresource := input.plan.resource_changes[_]\n\tresource.type == \"aws_eks_cluster\"\n\tversion := resource.change.after.version\n\tnot startswith(version, \"1.\")\n\tmsg := sprintf(\"EKS cluster version '%s' must be 1.x\", [version])\n}"
   }
 ]
 
@@ -489,5 +586,215 @@ export const components: ComponentNode[] = [
     "dependencies": [
       "kitchen_sink"
     ]
+  }
+]
+
+export const installConfigs: InstallConfig[] = [
+  {
+    "name": "lenovo",
+    "file": "install-configs/lenovo.toml",
+    "labels": {
+      "env": "staging"
+    },
+    "group": "staging",
+    "region": "us-west-2",
+    "approvalOption": "approve-all",
+    "inputs": {
+      "debug_mode": "false",
+      "domain": "nuon.run"
+    },
+    "toggles": {
+      "audit_log_exporter": false,
+      "tictactoe": false
+    }
+  },
+  {
+    "name": "ramp",
+    "file": "install-configs/ramp.toml",
+    "labels": {
+      "env": "production",
+      "tier": "enterprise"
+    },
+    "group": "enterprise",
+    "region": "us-west-2",
+    "approvalOption": "approve-all",
+    "inputs": {
+      "debug_mode": "false",
+      "domain": "nuon.run"
+    },
+    "toggles": {
+      "audit_log_exporter": false,
+      "tictactoe": false
+    }
+  },
+  {
+    "name": "sony",
+    "file": "install-configs/sony.toml",
+    "labels": {
+      "env": "production",
+      "tier": "customer"
+    },
+    "group": "customers",
+    "region": "us-west-2",
+    "approvalOption": "approve-all",
+    "inputs": {
+      "debug_mode": "false",
+      "domain": "nuon.run"
+    },
+    "toggles": {
+      "audit_log_exporter": false,
+      "tictactoe": false
+    }
+  }
+]
+
+export const inputGroups: InputGroup[] = [
+  {
+    "name": "compute",
+    "displayName": "compute",
+    "description": "compute"
+  },
+  {
+    "name": "dns",
+    "displayName": "dns",
+    "description": "dns"
+  }
+]
+
+export const inputs: InputDef[] = [
+  {
+    "name": "api_token",
+    "displayName": "API Token",
+    "description": "Token for external API integration",
+    "group": "compute",
+    "type": "string",
+    "default": null,
+    "required": false,
+    "sensitive": true,
+    "internal": false,
+    "userConfigurable": false,
+    "file": "inputs/compute/api_token.toml"
+  },
+  {
+    "name": "debug_mode",
+    "displayName": "Debug Mode",
+    "description": "Enable verbose logging (internal only)",
+    "group": "compute",
+    "type": "bool",
+    "default": "false",
+    "required": false,
+    "sensitive": false,
+    "internal": true,
+    "userConfigurable": false,
+    "file": "inputs/compute/debug_mode.toml"
+  },
+  {
+    "name": "domain",
+    "displayName": "Root Domain",
+    "description": "Root domain for DNS records",
+    "group": "dns",
+    "type": "string",
+    "default": "nuon.run",
+    "required": true,
+    "sensitive": false,
+    "internal": false,
+    "userConfigurable": false,
+    "file": "inputs/dns/domain.toml"
+  },
+  {
+    "name": "instance_type",
+    "displayName": "Node Instance Size",
+    "description": "EC2 instance type for EKS worker nodes",
+    "group": "compute",
+    "type": "string",
+    "default": "t3a.medium",
+    "required": false,
+    "sensitive": false,
+    "internal": false,
+    "userConfigurable": true,
+    "file": "inputs/compute/instance_type.toml"
+  }
+]
+
+export const stack: StackInfo = {
+  "type": "aws-cloudformation",
+  "vpcTemplateUrl": "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/vpc/eks/default/stack.yaml",
+  "vpcTemplate": {
+    "path": "vpc/eks/default",
+    "version": "v0.4.0"
+  },
+  "runnerTemplateUrl": "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/runner/asg/stack.yaml",
+  "runnerTemplate": {
+    "path": "runner/asg",
+    "version": "v0.4.0"
+  },
+  "customNestedStacks": [
+    {
+      "name": "rds_subnets",
+      "index": 1
+    },
+    {
+      "name": "rds_instance",
+      "index": 2
+    }
+  ]
+}
+
+export const runner: RunnerInfo = {
+  "type": "aws",
+  "helmDriver": "configmap",
+  "initScriptUrl": "https://raw.githubusercontent.com/nuonco/runner/refs/tags/aws-v0.1.11/scripts/aws/init-mng.sh"
+}
+
+export const sandbox: SandboxInfo = {
+  "repo": "nuonco/aws-eks-sandbox",
+  "branch": "main",
+  "terraformVersion": "1.11.3",
+  "vars": [
+    {
+      "name": "cluster_name",
+      "value": "n-{{.nuon.install.id}}"
+    },
+    {
+      "name": "cluster_version",
+      "value": "1.34"
+    },
+    {
+      "name": "enable_nuon_dns",
+      "value": "true"
+    },
+    {
+      "name": "public_root_domain",
+      "value": "{{ .nuon.install.id }}.{{.nuon.inputs.inputs.domain}}"
+    },
+    {
+      "name": "internal_root_domain",
+      "value": "internal.{{ .nuon.install.id }}.{{.nuon.inputs.inputs.domain}}"
+    }
+  ],
+  "tfvars": "default_instance_type = \"t3a.medium\"\n\nmaintenance_role_eks_access_entry_policy_associations = {\n  cluster_admin = {\n    policy_arn = \"arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy\"\n    access_scope = {\n      type       = \"cluster\"\n      namespaces = []\n    }\n  }\n}"
+}
+
+export const healthBlocks: HealthBlock[] = [
+  {
+    "component": "application_load_balancer",
+    "enabled": true,
+    "blockDeploy": false,
+    "stabilizationWindow": "5m",
+    "probes": 1
+  },
+  {
+    "component": "kitchen_sink",
+    "enabled": true,
+    "blockDeploy": false,
+    "stabilizationWindow": "3m",
+    "probes": 0
+  },
+  {
+    "component": "kustomizeapp",
+    "enabled": false,
+    "blockDeploy": false,
+    "stabilizationWindow": null,
+    "probes": 0
   }
 ]

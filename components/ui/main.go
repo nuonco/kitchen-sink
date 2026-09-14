@@ -25,12 +25,14 @@ const defaultDashboardBaseURL = "https://app.nuon.co"
 // into the Nuon dashboard.
 type uiConfig struct {
 	InstallID    string            `json:"install_id,omitempty"`
+	InstallName  string            `json:"install_name,omitempty"`
 	OrgID        string            `json:"org_id,omitempty"`
 	AppID        string            `json:"app_id,omitempty"`
 	ClusterName  string            `json:"cluster_name,omitempty"`
 	Region       string            `json:"region,omitempty"`
 	PublicDomain string            `json:"public_domain,omitempty"`
 	Namespace    string            `json:"namespace,omitempty"`
+	VpcID        string            `json:"vpc_id,omitempty"`
 	Links        map[string]string `json:"links"`
 }
 
@@ -50,12 +52,14 @@ func resolvedEnv(key string) string {
 func buildUIConfig() uiConfig {
 	cfg := uiConfig{
 		InstallID:    resolvedEnv("NUON_INSTALL_ID"),
+		InstallName:  resolvedEnv("NUON_INSTALL_NAME"),
 		OrgID:        resolvedEnv("NUON_ORG_ID"),
 		AppID:        resolvedEnv("NUON_APP_ID"),
 		ClusterName:  resolvedEnv("NUON_CLUSTER_NAME"),
 		Region:       resolvedEnv("NUON_REGION"),
 		PublicDomain: resolvedEnv("NUON_PUBLIC_DOMAIN"),
 		Namespace:    resolvedEnv("NUON_NAMESPACE"),
+		VpcID:        resolvedEnv("NUON_VPC_ID"),
 		Links:        map[string]string{},
 	}
 	if cfg.Namespace == "" {

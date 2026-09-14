@@ -63,6 +63,13 @@ ui:
     NUON_PUBLIC_DOMAIN: "{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
     # Mirrors cluster_name in sandbox.toml.
     NUON_CLUSTER_NAME: "n-{{.nuon.install.id}}"
+    # The install's name (the `name` in its install config, e.g. "lenovo"),
+    # so the UI can place this install in its branch group.
+    NUON_INSTALL_NAME: "{{.nuon.install.name}}"
+    # The VPC the install stack created. dig-guarded like control-plane.md,
+    # because the render fails on a missing key and the output is absent
+    # until the stack has run; the server drops empty values.
+    NUON_VPC_ID: '{{ dig "vpc_id" "" (default dict .nuon.install_stack.outputs) }}'
     # The audit_log_exporter component's id, so the ops page can deep-link to
     # that component's page on this install (where its toggle lives). This
     # reads `component_id`, deliberately NOT `.outputs.`: Nuon only derives a

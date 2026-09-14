@@ -588,213 +588,12 @@ body::before {
 
 /* Golden path */
 
-.golden {
-  margin-top: var(--space-12);
-  border: 2px solid var(--border-subtle);
-  border-left: 2px solid var(--accent-dim);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(
-    100deg,
-    var(--accent-wash) 0%,
-    rgba(11, 18, 21, 0) 55%
-  );
-  padding: var(--space-6);
-}
-
-.golden__title {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-stronger);
-  margin: var(--space-2) 0 var(--space-5);
-}
-
-/* The three-part architecture diagram: the sandbox drawn as the containing
-   boundary, the components and the runner as nodes inside it. Each element is
-   a button; clicking one opens its detail panel below the diagram. */
-
-.arch__sandbox {
-  border: 1px dashed var(--accent-dim);
-  border-radius: var(--radius-lg);
-  background: rgba(2, 7, 8, 0.35);
-  padding: var(--space-3) var(--space-4) var(--space-4);
-  transition: border-color var(--duration-base) var(--ease-standard);
-}
-
-.arch__sandbox--active {
-  border-color: var(--accent);
-}
-
-.arch__boundary {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  background: none;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: var(--space-1) var(--space-2);
-  margin-left: calc(-1 * var(--space-2));
-  cursor: pointer;
-  transition: background var(--duration-fast) var(--ease-standard);
-}
-
-.arch__boundary:hover {
-  background: var(--surface-hover);
-}
-
 .arch__num {
   font-family: var(--font-mono);
   font-size: var(--text-tiny);
   line-height: var(--text-tiny-line);
   letter-spacing: var(--tracking-wide);
   color: var(--accent);
-}
-
-.arch__name {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  font-weight: var(--weight-strong);
-  color: var(--text-primary);
-}
-
-.arch__hint {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: 0;
-  color: var(--text-tertiary);
-}
-
-.arch__nodes {
-  margin-top: var(--space-3);
-  display: flex;
-  align-items: stretch;
-}
-
-.arch__node {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-1);
-  text-align: left;
-  padding: var(--space-4);
-  border: 2px solid var(--border-default);
-  border-radius: var(--radius-md);
-  background: var(--surface-card);
-  cursor: pointer;
-  transition: border-color var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard);
-}
-
-.arch__node:hover {
-  border-color: var(--accent-dim);
-  background: var(--surface-raised);
-}
-
-.arch__node--active {
-  border-color: var(--accent);
-  background: var(--accent-wash);
-}
-
-.arch__edge {
-  flex: none;
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: 96px;
-  padding: 0 var(--space-3);
-}
-
-.arch__edge-label {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.arch__edge-line {
-  position: relative;
-  width: 100%;
-  height: 1px;
-  background: var(--border-strong);
-}
-
-.arch__edge-line::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: -3px;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  border-right: 5px solid var(--border-strong);
-}
-
-.arch__panel {
-  margin-top: var(--space-4);
-  padding: var(--space-4) var(--space-5);
-  border: 2px solid var(--border-subtle);
-  border-left: 2px solid var(--accent-dim);
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-}
-
-.arch__panel-label {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  margin-bottom: var(--space-2);
-}
-
-.arch__panel-body {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  max-width: 72ch;
-}
-
-@media (max-width: 640px) {
-  .arch__nodes {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .arch__edge {
-    align-self: center;
-    min-width: 0;
-    padding: var(--space-2) 0;
-  }
-
-  .arch__edge-line {
-    width: 1px;
-    height: 24px;
-  }
-
-  .arch__edge-line::before {
-    left: -3px;
-    top: 0;
-    border-top: none;
-    border-left: 3.5px solid transparent;
-    border-right: 3.5px solid transparent;
-    border-bottom: 5px solid var(--border-strong);
-  }
-}
-
-.golden__aside {
-  margin-top: var(--space-5);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--border-subtle);
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  color: var(--text-secondary);
-  max-width: 76ch;
 }
 
 /* ============================================================
@@ -964,23 +763,6 @@ body::before {
   line-height: 26px;
   color: var(--text-secondary);
   max-width: 64ch;
-}
-
-/* Diagram parts the tour has not reached yet */
-
-.arch__node--ghost {
-  opacity: 0.35;
-  border-style: dashed;
-  cursor: default;
-}
-
-.arch__node--ghost:hover {
-  border-color: var(--border-default);
-  background: var(--surface-card);
-}
-
-.arch__edge--ghost {
-  opacity: 0.35;
 }
 
 /* Staggered reveal for the live facts */
@@ -3453,504 +3235,9 @@ a.encyc__row:hover .encyc__title {
   }
 }
 
-/* ============================================================
-   The fleet row under the sandbox: the app branch everything ships from
-   ============================================================ */
-
-.arch__fleet {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.arch__fleet .arch__edge {
-  align-self: center;
-  min-width: 0;
-  padding: var(--space-2) 0;
-}
-
-.arch__fleet .arch__edge-line {
-  width: 1px;
-  height: 24px;
-}
-
-.arch__fleet .arch__edge-line::before {
-  left: -3px;
-  top: 0;
-  border-top: none;
-  border-left: 3.5px solid transparent;
-  border-right: 3.5px solid transparent;
-  border-bottom: 5px solid var(--border-strong);
-}
-
-.arch__fleet--ghost .arch__edge {
-  opacity: 0.35;
-}
-
-.arch__node--fleet {
-  flex: none;
-}
-
-/* The Prezi: the part the tour is on leans forward */
-
-.arch__node,
-.arch__sandbox {
-  transition: border-color var(--duration-base) var(--ease-standard),
-    background var(--duration-base) var(--ease-standard),
-    transform var(--duration-base) var(--ease-standard);
-}
-
-.arch__node--active,
-.arch__sandbox--active {
-  transform: scale(1.02);
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .arch__node--active,
-  .arch__sandbox--active {
-    transform: none;
-  }
-
   .tour__step {
     animation: none;
-  }
-}
-
-/* ============================================================
-   The relationship diagram: repo -> Nuon -> customer clouds, drawn once
-   and driven through three states by the rel--stageN class. Bands never
-   unmount between stages — only their emphasis, and the stage-2 zoom
-   that nests the golden path inside the highlighted install.
-   ============================================================ */
-
-.rel {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-4);
-  margin-top: var(--space-2);
-}
-
-.rel__band {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  border: 2px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  background: var(--surface-card);
-  padding: var(--space-4);
-  transition: opacity var(--duration-base) var(--ease-standard),
-    flex-grow var(--duration-base) var(--ease-standard);
-}
-
-.rel__band--nuon {
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-}
-
-/* The clouds band carries four fan-out nodes (this install + every
-   rollout group) against the other bands' one line of text each, so it
-   gets more of the row by default, not only when stage 2 zooms it further. */
-.rel__band--clouds {
-  flex-grow: 2.2;
-}
-
-.rel__band-label {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.rel__band-name {
-  font-size: var(--text-heading);
-  line-height: var(--text-heading-line);
-  font-weight: var(--weight-strong);
-  color: var(--text-primary);
-  margin-top: var(--space-1);
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-.rel__band-sub {
-  font-size: var(--text-subtext);
-  line-height: var(--text-subtext-line);
-  color: var(--text-tertiary);
-  margin-top: 2px;
-}
-
-.rel__band-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-}
-
-.rel__groups {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  margin-top: var(--space-4);
-}
-
-.rel__group-type {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  margin-bottom: 2px;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-.rel__group-names {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  color: var(--text-secondary);
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-.rel__edge {
-  flex: none;
-  align-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: 64px;
-  padding: 0 var(--space-1);
-}
-
-.rel__edge-label {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-}
-
-.rel__edge-line {
-  position: relative;
-  width: 100%;
-  height: 1px;
-  background: var(--border-strong);
-}
-
-.rel__edge-line::before {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: -3px;
-  border-top: 3.5px solid transparent;
-  border-bottom: 3.5px solid transparent;
-  border-left: 5px solid var(--border-strong);
-}
-
-.rel__installs {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  gap: var(--space-3);
-  margin-top: var(--space-3);
-}
-
-.rel__install {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0;
-  min-width: 0;
-  border: 2px dashed var(--border-default);
-  border-radius: var(--radius-md);
-  padding: var(--space-3);
-  transition: flex-grow var(--duration-base) var(--ease-standard);
-}
-
-.rel__install--sibling {
-  opacity: 0.45;
-  padding: var(--space-2);
-  /* Content-sized and never squeezed, so a group name is not hyphenated
-     mid-word when the highlighted install widens on slide 2; the row wraps
-     instead. */
-  flex-basis: auto;
-  flex-shrink: 0;
-}
-
-.rel__install--sibling .rel__install-label {
-  display: block;
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  color: var(--text-secondary);
-  max-width: 100%;
-}
-
-.rel__install--this {
-  flex-grow: 1.6;
-  border-style: solid;
-  border-color: var(--accent-dim);
-  background: var(--accent-wash);
-  transition: border-color var(--duration-base) var(--ease-standard),
-    transform var(--duration-base) var(--ease-standard),
-    flex-grow var(--duration-base) var(--ease-standard);
-}
-
-.rel__install-top {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
-.rel__install-label {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-  font-weight: var(--weight-strong);
-  color: var(--text-primary);
-}
-
-.rel__install-tag {
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
-/* The dimmed rollout-group markers: "group" as its own line above the
-   name, so a group like "customers" never reads as a second install. */
-.rel__install-group-tag {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-  letter-spacing: var(--tracking-wide);
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  margin-bottom: 2px;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
-.rel__install-facts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1);
-  margin-top: var(--space-2);
-}
-
-.rel__zoom {
-  margin-top: var(--space-3);
-}
-
-/* Shrink the nested golden path to fit inside the zoomed install card.
-   Real property overrides, not a transform scale, so the box still
-   participates in ordinary layout at every width. */
-.rel__zoom .arch__sandbox {
-  padding: var(--space-2) var(--space-3) var(--space-3);
-}
-
-.rel__zoom .arch__node,
-.rel__zoom .arch__node--fleet {
-  padding: var(--space-2);
-  gap: 2px;
-}
-
-.rel__zoom .arch__name {
-  font-size: var(--text-tiny);
-  line-height: var(--text-tiny-line);
-}
-
-.rel__zoom .arch__hint {
-  font-size: 9px;
-  line-height: 12px;
-}
-
-.rel__zoom .arch__num {
-  font-size: 9px;
-}
-
-.rel__zoom .arch__edge {
-  min-width: 32px;
-  padding: 0 var(--space-1);
-}
-
-/* Nested purely as an illustration here — every part is already revealed,
-   and there is no step left for a click to jump to — so mouse affordance
-   is turned off rather than left implying a control that does nothing. */
-.rel__zoom .arch button {
-  cursor: default;
-  pointer-events: none;
-}
-
-/* ---------- Stage emphasis: the same three bands, three states ---------- */
-
-.rel--stage1 .rel__band--clouds {
-  opacity: 0.45;
-}
-
-.rel--stage2 .rel__band--repo,
-.rel--stage2 .rel__band--nuon {
-  flex-grow: 0.9;
-  opacity: 0.4;
-}
-
-.rel--stage2 .rel__band--repo .rel__band-name,
-.rel--stage2 .rel__band--nuon .rel__band-name {
-  font-size: var(--text-body);
-  line-height: var(--text-body-line);
-}
-
-.rel--stage2 .rel__band--repo .rel__group-type {
-  font-size: 10px;
-  line-height: 14px;
-}
-
-.rel--stage2 .rel__band--clouds {
-  flex-grow: 3.6;
-}
-
-.rel--stage2 .rel__install--sibling {
-  flex-grow: 0.5;
-}
-
-.rel--stage2 .rel__install--this {
-  flex-grow: 3;
-  /* The zoomed install takes the whole row so the nested golden path has
-     room; the group markers wrap onto the row beneath it. */
-  flex-basis: 100%;
-  border-color: var(--accent);
-  transform: scale(1.01);
-}
-
-.rel--stage3 .rel__band--repo,
-.rel--stage3 .rel__band--nuon,
-.rel--stage3 .rel__band--clouds {
-  opacity: 1;
-}
-
-/* The reconcile edge: repo through Nuon out to every install group, in
-   installGroups order — the push slide's animation. */
-.rel--stage3 .rel__edge-line {
-  animation: rel-flow 1.4s var(--ease-standard) infinite;
-}
-
-.rel--stage3 .rel__edge--nuon-clouds .rel__edge-line {
-  animation-delay: 0.2s;
-}
-
-@keyframes rel-flow {
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 1;
-  }
-}
-
-.rel--stage3 .rel__install--this,
-.rel--stage3 .rel__install--sibling {
-  animation: rel-reconcile 1.8s var(--ease-standard) 1;
-}
-
-.rel--stage3 .rel__install--this {
-  /* Same as stage 2: a real cluster name like n-<install id> plus the
-     region, pod and image chips need the whole row; the group markers
-     wrap beneath. */
-  flex-basis: 100%;
-  animation-delay: 0.3s;
-}
-
-.rel--stage3 .rel__installs .rel__install--sibling:nth-child(2) {
-  animation-delay: 0.6s;
-}
-
-.rel--stage3 .rel__installs .rel__install--sibling:nth-child(3) {
-  animation-delay: 0.9s;
-}
-
-.rel--stage3 .rel__installs .rel__install--sibling:nth-child(4) {
-  animation-delay: 1.2s;
-}
-
-@keyframes rel-reconcile {
-  0% {
-    box-shadow: 0 0 0 0 var(--accent-ring);
-  }
-  40% {
-    box-shadow: 0 0 0 4px var(--accent-ring);
-  }
-  100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-ring) 0%, transparent);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rel__band,
-  .rel__install,
-  .rel__install--this {
-    transition: none;
-  }
-
-  .rel--stage2 .rel__install--this {
-    transform: none;
-  }
-
-  .rel--stage3 .rel__edge-line,
-  .rel--stage3 .rel__install--this,
-  .rel--stage3 .rel__install--sibling {
-    animation: none;
-  }
-}
-
-@media (max-width: 860px) {
-  .rel {
-    flex-direction: column;
-  }
-
-  .rel__edge {
-    align-self: center;
-    min-width: 0;
-    padding: var(--space-2) 0;
-  }
-
-  .rel__edge-line {
-    width: 1px;
-    height: 24px;
-  }
-
-  .rel__edge-line::before {
-    right: auto;
-    left: -3px;
-    top: 0;
-    border-top: none;
-    border-left: 3.5px solid transparent;
-    border-right: 3.5px solid transparent;
-    border-bottom: 5px solid var(--border-strong);
-  }
-}
-
-@media (max-width: 640px) {
-  .rel__installs {
-    flex-direction: column;
-    flex-wrap: nowrap;
-  }
-
-  .rel__install--this,
-  .rel--stage2 .rel__install--this,
-  .rel--stage2 .rel__install--sibling {
-    flex-grow: 1;
-    flex-basis: auto;
   }
 }
 
@@ -4221,4 +3508,436 @@ a.encyc__row:hover .encyc__title {
 
 .pstrip__reset:hover {
   color: var(--text-primary);
+}
+
+/* ============================================================
+   The opener: three slides, one diagram each (ui/RelationshipDiagram.tsx)
+   ============================================================ */
+
+.eyebrow--accent {
+  color: var(--accent);
+}
+
+.opener__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.opener__card {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  background: var(--surface-card);
+  padding: var(--space-5) var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.opener__card--accent {
+  border-color: var(--accent-ring);
+  background: var(--accent-wash);
+}
+
+.opener__card-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.opener__card-aside {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-tertiary);
+}
+
+.opener__triad {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.opener__cell {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.opener__cell-title {
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  font-weight: var(--weight-strong);
+  color: var(--text-primary);
+}
+
+.opener__cell-mono {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.opener__cell-names {
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-tertiary);
+  overflow-wrap: anywhere;
+}
+
+/* SVG connectors and the timeline */
+
+.opener__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.opener__svg--short {
+  max-width: 100%;
+}
+
+.opener__line {
+  fill: none;
+  stroke: var(--text-tertiary);
+  stroke-width: 1.25;
+}
+
+.opener__line--accent {
+  stroke: var(--accent);
+}
+
+.opener__svg-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--text-secondary);
+}
+
+.opener__svg-mono--accent {
+  fill: var(--accent);
+}
+
+.opener__svg-mono--tertiary {
+  fill: var(--text-tertiary);
+}
+
+.opener__svg-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  fill: var(--text-tertiary);
+}
+
+/* The two columns: one stack today, one stack per customer with Nuon */
+
+.opener__columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.opener__col {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  background: var(--surface-card);
+  padding: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.opener__col--accent {
+  border-color: var(--accent-ring);
+}
+
+.opener__col-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.opener__col-title {
+  font-size: var(--text-heading);
+  line-height: var(--text-heading-line);
+  font-weight: var(--weight-strong);
+  color: var(--text-primary);
+}
+
+.opener__stack {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.opener__stack-mono {
+  font-size: var(--text-subtext);
+  line-height: var(--text-subtext-line);
+  color: var(--text-secondary);
+}
+
+.opener__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.opener__pill {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  padding: 5px 10px;
+}
+
+.opener__pill--ghost {
+  color: var(--text-tertiary);
+  border-style: dashed;
+}
+
+.opener__rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.opener__row {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: baseline;
+}
+
+.opener__row-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.opener__row-value {
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--text-secondary);
+}
+
+.opener__template {
+  border: 1px solid var(--accent-ring);
+  border-radius: var(--radius-lg);
+  background: var(--accent-wash);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.opener__template-line {
+  font-size: var(--text-body);
+  line-height: var(--text-body-line);
+  color: var(--text-primary);
+}
+
+.opener__var {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--accent);
+  border: 1px solid var(--accent-ring);
+  border-radius: var(--radius-sm);
+  padding: 4px 7px;
+  overflow-wrap: anywhere;
+}
+
+.opener__customers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.opener__customer {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.opener__customer-name {
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-primary);
+}
+
+.opener__customer-sub {
+  font-size: var(--text-tiny);
+  line-height: 15px;
+  color: var(--text-tertiary);
+}
+
+.opener__customer-mono {
+  font-size: 10px;
+  line-height: 15px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.opener__customer-mono--accent {
+  color: var(--accent);
+}
+
+/* Slide 2: the code blocks and the answers matrix */
+
+.opener__code {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 24px;
+  color: var(--text-secondary);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+.opener__code--chips {
+  line-height: 30px;
+}
+
+.opener__code-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: pre;
+}
+
+.opener__matrix {
+  display: grid;
+  gap: 1px;
+  background: var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.opener__matrix-cell {
+  background: var(--surface-card);
+  padding: 10px 12px;
+  font-size: var(--text-tiny);
+  line-height: var(--text-tiny-line);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.opener__matrix-cell--head {
+  background: var(--surface-raised);
+  color: var(--text-tertiary);
+}
+
+.opener__matrix-cell--name {
+  color: var(--text-primary);
+}
+
+.opener__matrix-cell--key {
+  color: var(--text-tertiary);
+}
+
+.opener__matrix-cell--accent {
+  color: var(--accent);
+}
+
+/* Slide 3: the branch line and the group rows */
+
+.opener__branch-line {
+  stroke: var(--border-strong);
+  stroke-width: 2;
+}
+
+.opener__branch-line--accent {
+  stroke: var(--accent);
+  opacity: 0.5;
+}
+
+.opener__node-halo {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  opacity: 0.4;
+}
+
+.opener__node {
+  fill: var(--accent);
+}
+
+.opener__node-title {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: var(--weight-stronger);
+  fill: var(--accent);
+}
+
+.opener__gate-line {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+}
+
+.opener__group {
+  fill: var(--surface-card);
+  stroke: var(--border-default);
+}
+
+.opener__group-name {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  font-weight: var(--weight-stronger);
+  letter-spacing: -0.4px;
+  fill: var(--text-primary);
+}
+
+.opener__leader {
+  stroke: var(--accent);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 4;
+}
+
+.opener__chip {
+  fill: var(--accent-wash-strong);
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.opener__chip-title {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: var(--weight-stronger);
+  letter-spacing: -0.5px;
+  fill: var(--accent);
+}
+
+@media (max-width: 860px) {
+  .opener__triad,
+  .opener__columns,
+  .opener__customers {
+    grid-template-columns: 1fr;
+  }
 }

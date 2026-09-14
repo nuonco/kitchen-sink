@@ -267,8 +267,129 @@ const guardrails = readdirSync(join(repoRoot, 'policies'))
         : (p.components ?? []).includes('*')
           ? 'all components'
           : (p.components ?? []).join(', ')
-    return { name: basename(f, '.toml'), type: p.type, target }
+    return {
+      name: basename(f, '.toml'),
+      file: `policies/${f}`,
+      type: p.type,
+      target,
+      components: p.components ?? [],
+      rego: read(`policies/${basename(p.contents ?? '')}`).trim(),
+    }
   })
+
+/* ---------- install-configs/*.toml ---------- */
+
+// An install config joins the first branch group whose selector its labels
+// satisfy, the same rule the control plane applies.
+const selectorMatches = (labels, selector) =>
+  Object.entries(selector ?? {}).every(([k, v]) => labels?.[k] === v)
+
+const groupOf = (labels) =>
+  (branch.install_groups ?? [])
+    .slice()
+    .sort((a, b) => a.order - b.order)
+    .find((g) => selectorMatches(labels, g.label_selector))?.name ?? null
+
+const installConfigs = readdirSync(join(repoRoot, 'install-configs'))
+  .filter((f) => f.endsWith('.toml'))
+  .sort()
+  .map((f) => {
+    const c = toml(`install-configs/${f}`)
+    const labels = c.labels ?? {}
+    return {
+      name: c.name,
+      file: `install-configs/${f}`,
+      labels,
+      group: groupOf(labels),
+      region: c.aws_account?.region ?? null,
+      approvalOption: c.approval_option ?? null,
+      inputs: Object.assign({}, ...(c.inputs ?? [])),
+      toggles: c.component_toggles ?? {},
+    }
+  })
+
+/* ---------- inputs/<group>/<name>.toml + input_groups/<group>.toml ---------- */
+
+const inputGroups = readdirSync(join(repoRoot, 'input_groups'))
+  .filter((f) => f.endsWith('.toml'))
+  .sort()
+  .map((f) => {
+    const g = toml(`input_groups/${f}`)
+    return { name: g.name, displayName: g.display_name ?? g.name, description: g.description ?? '' }
+  })
+
+const inputs = []
+for (const dir of readdirSync(join(repoRoot, 'inputs'), { withFileTypes: true })) {
+  if (!dir.isDirectory()) continue
+  for (const f of readdirSync(join(repoRoot, 'inputs', dir.name)).filter((n) => n.endsWith('.toml')).sort()) {
+    const i = toml(`inputs/${dir.name}/${f}`)
+    inputs.push({
+      name: i.name,
+      displayName: i.display_name ?? i.name,
+      description: i.description ?? '',
+      group: i.group ?? dir.name,
+      type: i.type ?? 'string',
+      default: i.default === undefined ? null : String(i.default),
+      required: Boolean(i.required),
+      sensitive: Boolean(i.sensitive),
+      internal: Boolean(i.internal),
+      userConfigurable: Boolean(i.user_configurable),
+      file: `inputs/${dir.name}/${f}`,
+    })
+  }
+}
+inputs.sort((a, b) => a.name.localeCompare(b.name))
+
+/* ---------- stack.toml, runner.toml, sandbox.toml ---------- */
+
+// { path: "vpc/eks/default", version: "v0.4.0" } from a published template URL.
+const templateVariant = (url) => {
+  const m = /aws-cloudformation-templates\/(v[\d.]+)\/(.+?)\/stack\.yaml$/.exec(url ?? '')
+  return m ? { path: m[2], version: m[1] } : { path: url ?? '', version: '' }
+}
+
+const stackCfg = toml('stack.toml')
+const stack = {
+  type: stackCfg.type ?? '',
+  vpcTemplateUrl: stackCfg.vpc_nested_template_url ?? '',
+  vpcTemplate: templateVariant(stackCfg.vpc_nested_template_url),
+  runnerTemplateUrl: stackCfg.runner_nested_template_url ?? '',
+  runnerTemplate: templateVariant(stackCfg.runner_nested_template_url),
+  customNestedStacks: (stackCfg.custom_nested_stacks ?? [])
+    .slice()
+    .sort((a, b) => a.index - b.index)
+    .map((s) => ({ name: s.name, index: s.index })),
+}
+
+const runnerCfg = toml('runner.toml')
+const runner = {
+  type: runnerCfg.runner_type ?? '',
+  helmDriver: runnerCfg.helm_driver ?? '',
+  initScriptUrl: runnerCfg.init_script_url ?? '',
+}
+
+const sandboxCfg = toml('sandbox.toml')
+const sandbox = {
+  repo: sandboxCfg.public_repo?.repo ?? sandboxCfg.connected_repo?.repo ?? '',
+  branch: sandboxCfg.public_repo?.branch ?? sandboxCfg.connected_repo?.branch ?? '',
+  terraformVersion: sandboxCfg.terraform_version ?? '',
+  vars: Object.entries(sandboxCfg.vars ?? {}).map(([name, value]) => ({ name, value: String(value) })),
+  tfvars: strippedToml('sandbox.tfvars'),
+}
+
+/* ---------- [health] blocks on components ---------- */
+
+const healthBlocks = componentFiles
+  .map((rel) => toml(rel))
+  .filter((cfg) => cfg.name && cfg.health)
+  .map((cfg) => ({
+    component: cfg.name,
+    enabled: cfg.health.enabled !== false,
+    blockDeploy: Boolean(cfg.health.block_deploy),
+    stabilizationWindow: cfg.health.stabilization_window ?? null,
+    probes: (cfg.health.probes ?? []).length,
+  }))
+  .sort((a, b) => a.component.localeCompare(b.component))
 
 /* ---------- emit ---------- */
 
@@ -316,8 +437,79 @@ export interface Role {
 
 export interface Guardrail {
   name: string
+  file: string
   type: string
   target: string
+  components: string[]
+  rego: string
+}
+
+export interface InstallConfig {
+  name: string
+  file: string
+  labels: Record<string, string>
+  /** The branch group whose selector these labels satisfy, or null. */
+  group: string | null
+  region: string | null
+  approvalOption: string | null
+  inputs: Record<string, string>
+  toggles: Record<string, boolean>
+}
+
+export interface InputGroup {
+  name: string
+  displayName: string
+  description: string
+}
+
+export interface InputDef {
+  name: string
+  displayName: string
+  description: string
+  group: string
+  type: string
+  default: string | null
+  required: boolean
+  sensitive: boolean
+  internal: boolean
+  userConfigurable: boolean
+  file: string
+}
+
+export interface TemplateVariant {
+  path: string
+  version: string
+}
+
+export interface StackInfo {
+  type: string
+  vpcTemplateUrl: string
+  vpcTemplate: TemplateVariant
+  runnerTemplateUrl: string
+  runnerTemplate: TemplateVariant
+  customNestedStacks: Array<{ name: string; index: number }>
+}
+
+export interface RunnerInfo {
+  type: string
+  helmDriver: string
+  initScriptUrl: string
+}
+
+export interface SandboxInfo {
+  repo: string
+  branch: string
+  terraformVersion: string
+  vars: Array<{ name: string; value: string }>
+  tfvars: string
+}
+
+export interface HealthBlock {
+  component: string
+  enabled: boolean
+  blockDeploy: boolean
+  stabilizationWindow: string | null
+  probes: number
 }
 
 export interface ToggleableComponent {
@@ -358,6 +550,20 @@ export const guardrails: Guardrail[] = ${ts(guardrails)}
 export const toggleableComponents: ToggleableComponent[] = ${ts(toggleableComponents)}
 
 export const components: ComponentNode[] = ${ts(components)}
+
+export const installConfigs: InstallConfig[] = ${ts(installConfigs)}
+
+export const inputGroups: InputGroup[] = ${ts(inputGroups)}
+
+export const inputs: InputDef[] = ${ts(inputs)}
+
+export const stack: StackInfo = ${ts(stack)}
+
+export const runner: RunnerInfo = ${ts(runner)}
+
+export const sandbox: SandboxInfo = ${ts(sandbox)}
+
+export const healthBlocks: HealthBlock[] = ${ts(healthBlocks)}
 `
 
 writeFileSync(outFile, out)

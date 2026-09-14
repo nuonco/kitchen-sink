@@ -1,8 +1,8 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useUIConfig } from './lib/api'
 import { branchName, installGroups } from './lib/config-data.gen'
 import { recordHub } from './lib/origin'
-import { segments, useNavigate, useRoute } from './lib/router'
+import { navigate, segments, useNavigate, useRoute } from './lib/router'
 import { AmbientMark } from './ui/AmbientMark'
 import { LoadingOverlay } from './ui/LoadingOverlay'
 import { Icon, NuonMark, OutLink } from './ui/Primitives'
@@ -13,6 +13,7 @@ import { Deployed } from './views/Deployed'
 import { Landing } from './views/Landing'
 import { Mapping } from './views/Mapping'
 import { Operations } from './views/Operations'
+import { markOpenerDone, Opener, openerDone } from './views/Opener'
 import { Ops } from './views/Ops'
 import { TicTacToe } from './views/TicTacToe'
 
@@ -81,8 +82,25 @@ export default function App() {
     recordHub(path)
   }, [path])
 
-  let view = <Landing config={config} />
-  if (parts[0] === 'deployed') {
+  // The opener shows until it has been passed or skipped once in this
+  // browser; after that "/" is Home. "/intro" replays it on request.
+  const [seenOpener, setSeenOpener] = useState(openerDone)
+  const finishOpener = () => {
+    markOpenerDone()
+    setSeenOpener(true)
+    navigate('/')
+  }
+
+  // Distinct keys so a hash change between "/" and "/intro" remounts the
+  // opener instead of carrying the current slide across.
+  let view = seenOpener ? (
+    <Landing config={config} />
+  ) : (
+    <Opener key="opener" config={config} onDone={finishOpener} />
+  )
+  if (parts[0] === 'intro') {
+    view = <Opener key="intro" config={config} onDone={finishOpener} fromStart />
+  } else if (parts[0] === 'deployed') {
     view = <Deployed config={config} />
   } else if (parts[0] === 'operations') {
     view = <Operations />

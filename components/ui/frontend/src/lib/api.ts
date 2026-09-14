@@ -261,12 +261,16 @@ export type DashboardLink =
 
 export interface UIConfig {
   install_id?: string
+  /** The `name` in this install's install config, e.g. "lenovo". */
+  install_name?: string
   org_id?: string
   app_id?: string
   cluster_name?: string
   region?: string
   public_domain?: string
   namespace?: string
+  /** The VPC the install stack created; absent until the stack has run. */
+  vpc_id?: string
   links: Partial<Record<DashboardLink, string>>
 }
 

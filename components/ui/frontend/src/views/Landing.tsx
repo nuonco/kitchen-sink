@@ -1,67 +1,18 @@
-import { useEffect, useState, type ReactNode } from 'react'
-import {
-  countReady,
-  runningImageTags,
-  useIntrospectPoll,
-  type NamespaceResponse,
-  type UIConfig,
-} from '../lib/api'
+import { useState, type ReactNode } from 'react'
+import type { UIConfig } from '../lib/api'
 import { adhocActions, branchName, repoName, runbooks, toggleableComponents } from '../lib/config-data.gen'
 import { completedCount, useCompletion } from '../lib/completion'
-import { seenSteps, TOUR_KEY } from '../lib/progress'
+import { seenSteps } from '../lib/progress'
 import { agentPrompt, setup, useCases } from '../lib/prompts'
 import { useNavigate } from '../lib/router'
 import { numberedSteps, pathSteps, stepNumber } from '../lib/taxonomy'
 import { PixelCheck } from '../ui/CapabilityGrid'
 import { CopyButton, Icon, OutLink } from '../ui/Primitives'
-import { RelationshipDiagram } from '../ui/RelationshipDiagram'
 
 /* ============================================================
-   The landing opens on arrival, then three slides put the reader's own
-   relationship to Nuon on screen against the same diagram: their repo is
-   a template, an install is a running instance of it, and a push is how
-   it changes. The tour ends on the push slide's big CTA into the
-   customize page ('explore'), which is also what returning visitors get:
-   progress is remembered in localStorage, and "Skip the tour" jumps
-   straight there.
+   The page after the opener (views/Opener.tsx), and what a returning
+   visitor lands on. Item 2 of the rebuild replaces it with Home.
    ============================================================ */
-
-const steps = ['arrive', 'template', 'instance', 'push', 'explore'] as const
-
-const WALKTHROUGH_URL =
-  'https://docs.nuon.co/get-started/app-branches-walkthrough'
-
-type Step = (typeof steps)[number]
-
-function storedStep(): Step {
-  try {
-    const value = window.localStorage.getItem(TOUR_KEY)
-    // Older tours had more steps than this one has; those beats now live
-    // elsewhere (or nowhere), so resume at the nearest surviving step.
-    if (value === 'toggle' || value === 'day2') return 'explore'
-    if (value === 'shipped' || value === 'deployed') return 'instance'
-    if (value === 'sandbox' || value === 'components' || value === 'runner') return 'instance'
-    if (value === 'branch') return 'push'
-    if (value && (steps as readonly string[]).includes(value)) {
-      return value as Step
-    }
-  } catch {
-    // Storage can be unavailable (private mode); the tour just starts over.
-  }
-  // No saved position, but a step page has already been opened: a deep-link
-  // visitor (the install readme links straight into #/customize/agent). For
-  // them "/" is the hub, not the opener.
-  if (seenSteps().size > 0) return 'explore'
-  return 'arrive'
-}
-
-function rememberStep(step: Step) {
-  try {
-    window.localStorage.setItem(TOUR_KEY, step)
-  } catch {
-    // Same story: without storage the tour still works, it just forgets.
-  }
-}
 
 /* ============================================================
    Internal navigation that behaves like navigate(): scrolls back to the
@@ -222,106 +173,10 @@ function CliPanel({ install, app }: { install: string; app: string }) {
    ============================================================ */
 
 export function Landing({ config }: { config: UIConfig }) {
-  const [step, setStep] = useState<Step>(storedStep)
+  const navigate = useNavigate()
   const [cliOpen, setCliOpen] = useState(false)
   const { map } = useCompletion()
 
-  useEffect(() => {
-    rememberStep(step)
-  }, [step])
-
-  const namespace = config.namespace ?? 'kitchen-sink'
-
-  // Active from the first slide on, not just on 'explore': the three tour
-  // slides read podSummary/imageTags below, so the poll has to be live the
-  // whole way through for those to be real values instead of placeholders.
-  // A returning visitor's stored step is already past 'arrive', so `active`
-  // is true from this hook's first mount and nothing changes for them. A
-  // first-time visitor who advances from 'arrive' inside boot's MIN_SHOW_MS
-  // (lib/boot.ts, 2400ms) flips `active` false -> true mid-lifetime, which
-  // re-runs this hook's effect and lets trackBoot catch one more fetch --
-  // one extra warm fetch inside the boot window, not a new cold wait.
-  const ns = useIntrospectPoll<NamespaceResponse>(
-    `/api/introspect/namespace/${namespace}`,
-    20_000,
-    step !== 'arrive',
-  )
-
-  const pods = ns.state === 'ok' ? (ns.value.response.pods ?? []) : []
-  const podSummary =
-    ns.state === 'ok' ? `${countReady(pods)} / ${pods.length}` : undefined
-  const imageTags = ns.state === 'ok' ? runningImageTags(pods) : []
-
-  const idx = steps.indexOf(step)
-  const go = (next: Step) => {
-    setStep(next)
-    window.scrollTo({ top: 0 })
-  }
-  const next = () => go(steps[Math.min(idx + 1, steps.length - 1)])
-  const back = () => go(steps[Math.max(idx - 1, 0)])
-  const skip = () => go('explore')
-
-  // Arrow keys page the tour, the way every tour library's users expect.
-  // The finish state is a real page, not a step, so it keeps its keys.
-  useEffect(() => {
-    if (step === 'explore') return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.metaKey || e.ctrlKey || e.altKey) return
-      const target = e.target as HTMLElement | null
-      if (target && /^(input|textarea|select)$/i.test(target.tagName)) return
-      if (e.key === 'ArrowRight') next()
-      if (e.key === 'ArrowLeft') back()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  })
-
-  /* ---------- Arrival ---------- */
-
-  if (step === 'arrive') {
-    return (
-      <div className="tour__step" key="arrive">
-        <div className="arrive">
-          <h1>You&rsquo;re inside a BYOC install.</h1>
-          <p className="arrive__lede">
-            This page is served by a container in an EKS cluster, in an AWS
-            account, that Nuon provisioned and deployed into when you
-            installed.
-          </p>
-          {(config.install_id || config.cluster_name) && (
-            <div className="row arrive__chips">
-              {config.install_id && (
-                <span className="chip">install {config.install_id}</span>
-              )}
-              {config.cluster_name && (
-                <span className="chip">cluster {config.cluster_name}</span>
-              )}
-            </div>
-          )}
-          {config.links.versions && (
-            <p className="arrive__versions">
-              Every config version it has ever run is on record.{' '}
-              <OutLink href={config.links.versions} variant="plain">
-                See its config versions
-              </OutLink>
-            </p>
-          )}
-          <div className="arrive__actions">
-            <button className="btn btn--primary" onClick={next}>
-              Show me around <Icon name="arrow-right" />
-            </button>
-            <button className="tour__skip" onClick={skip}>
-              Skip the tour <Icon name="arrow-right" />
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  /* ---------- Explore (the finish state, and the returning-visitor state) ---------- */
-
-  if (step === 'explore') {
     const install = config.install_id ?? '<your-install-id>'
     const app = config.app_id ?? '<your-app-id>'
     const seen = seenSteps()
@@ -335,7 +190,7 @@ export function Landing({ config }: { config: UIConfig }) {
     const tictactoe = pathSteps.find((s) => s.to === '/tictactoe')
     const indexSteps = complete || !tictactoe ? numberedSteps : [...numberedSteps, tictactoe]
     return (
-      <div className="tour__step" key="explore">
+      <div className="tour__step">
         <header className="hero">
           <h1 style={{ maxWidth: '28ch' }}>Customize the Kitchen Sink.</h1>
         </header>
@@ -468,153 +323,12 @@ export function Landing({ config }: { config: UIConfig }) {
             <button
               className="tour__skip"
               style={{ marginLeft: 0 }}
-              onClick={() => go('arrive')}
+              onClick={() => navigate('/intro')}
             >
-              <Icon name="arrow-left" /> Replay the tour
+              <Icon name="arrow-left" /> Opener
             </button>
           </div>
         </section>
       </div>
     )
-  }
-
-  /* ---------- The three slides between arrival and explore ---------- */
-
-  const tourSteps = steps.slice(1, -1) as Step[]
-  const tourIdx = tourSteps.indexOf(step)
-
-  const chrome = (
-    <div className="tour__topline">
-      <span className="tour__progress">
-        slide {tourIdx + 1} of {tourSteps.length}
-      </span>
-      <span className="tour__dots">
-        {tourSteps.map((s, i) => (
-          <button
-            key={s}
-            type="button"
-            className={
-              i === tourIdx
-                ? 'tour__dot tour__dot--active'
-                : i < tourIdx
-                  ? 'tour__dot tour__dot--done'
-                  : 'tour__dot'
-            }
-            disabled={i > tourIdx}
-            aria-label={`slide ${i + 1} of ${tourSteps.length}`}
-            {...(i === tourIdx ? { 'aria-current': 'step' as const } : {})}
-            onClick={() => go(s)}
-          />
-        ))}
-      </span>
-      <button className="tour__skip" onClick={skip}>
-        Skip the tour <Icon name="arrow-right" />
-      </button>
-    </div>
-  )
-
-  const stepActions = () => (
-    <div className="tour__actions">
-      <button className="btn btn--ghost" onClick={back}>
-        <Icon name="arrow-left" /> Back
-      </button>
-      <button className="btn btn--primary" onClick={next}>
-        Next <Icon name="arrow-right" />
-      </button>
-    </div>
-  )
-
-  const goldenHeader = (title: string, lede: ReactNode) => (
-    <header className="step-header">
-      <h2>{title}</h2>
-      <p className="step-header__lede">{lede}</p>
-    </header>
-  )
-
-  return (
-    <div className="tour__step" key={step}>
-      {chrome}
-
-      {step === 'template' && (
-        <>
-          {goldenHeader(
-            'Your app is a template.',
-            <>
-              A template is every component mapped to one TOML file. Nuon
-              reads them into a dependency graph and templatizes that graph
-              for every install.
-            </>,
-          )}
-          <RelationshipDiagram stage={1} imageTags={imageTags} />
-          {stepActions()}
-        </>
-      )}
-
-      {step === 'instance' && (
-        <>
-          {goldenHeader(
-            'An install is an instance of it, in a customer’s cloud.',
-            <>
-              An instance is a running copy of the template, in a
-              customer&rsquo;s AWS account: its own sandbox, its own
-              components, deployed from the same graph.
-            </>,
-          )}
-          <RelationshipDiagram
-            stage={2}
-            cluster={config.cluster_name}
-            region={config.region}
-            podsReady={podSummary}
-            imageTags={imageTags}
-          />
-          {stepActions()}
-        </>
-      )}
-
-      {step === 'push' && (
-        <>
-          {goldenHeader(
-            'To change it, you sync.',
-            <>
-              From a clone,{' '}
-              <span className="mono">nuon sync --branch {branchName}</span>{' '}
-              builds the config as it stands and starts a branch run. Nuon
-              rolls it out install group by install group, with an approval
-              before each one. The repo&rsquo;s expected state becomes
-              what&rsquo;s running. Push-to-deploy is the same run started by
-              a GitHub webhook; its rules ship disabled in{' '}
-              <span className="mono">triggers.toml.example</span>.
-            </>,
-          )}
-          <RelationshipDiagram
-            stage={3}
-            cluster={config.cluster_name}
-            region={config.region}
-            podsReady={podSummary}
-            imageTags={imageTags}
-          />
-          <div className="row" style={{ marginTop: 12 }}>
-            {config.links.branches && (
-              <OutLink href={config.links.branches} variant="plain">
-                This branch in Nuon
-              </OutLink>
-            )}
-            <OutLink href={WALKTHROUGH_URL} variant="plain">
-              App-branches walkthrough
-            </OutLink>
-          </div>
-          <div className="cta-block">
-            <button className="btn btn--primary btn--xl" onClick={next}>
-              Customize the Kitchen Sink <Icon name="arrow-right" />
-            </button>
-          </div>
-          <div className="tour__actions" style={{ marginTop: 24 }}>
-            <button className="btn btn--ghost" onClick={back}>
-              <Icon name="arrow-left" /> Back
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  )
 }
