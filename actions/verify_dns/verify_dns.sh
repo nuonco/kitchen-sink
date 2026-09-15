@@ -36,22 +36,6 @@ else
   echo "$observed" | sed 's/^/  /'
 fi
 
-echo "apex A"
-a_records=$(dig +short A "${DOMAIN}" "@${RESOLVER}" | grep -E '^[0-9.]+$' || true)
-if [ -z "$a_records" ]; then
-  echo "  <none>"
-else
-  echo "$a_records" | sed 's/^/  /'
-fi
-
-echo "apex AAAA"
-aaaa_records=$(dig +short AAAA "${DOMAIN}" "@${RESOLVER}" | grep -E ':' || true)
-if [ -z "$aaaa_records" ]; then
-  echo "  <none>"
-else
-  echo "$aaaa_records" | sed 's/^/  /'
-fi
-
 missing=""
 for ns in $expected; do
   if ! printf '%s\n' $observed | grep -qxF "$ns"; then
@@ -72,4 +56,13 @@ fi
 
 echo "RESULT: ${result}"
 echo "  ${message}"
+
+echo "app host ${APP_HOST}"
+app_addresses=$(dig +short A "${APP_HOST}" "@${RESOLVER}" | grep -E '^[0-9.]+$' || true)
+if [ -z "$app_addresses" ]; then
+  echo "  <none>"
+else
+  echo "$app_addresses" | sed 's/^/  /'
+fi
+
 echo "done"
