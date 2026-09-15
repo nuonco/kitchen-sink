@@ -1,0 +1,3 @@
+name        = "{{.nuon.install.id}}-alb-maintenance"
+description = "manage the kitchen-sink ALB tagged with this install id"
+contents    = "./alb-maintenance.json"
