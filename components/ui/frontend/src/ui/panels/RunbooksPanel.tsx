@@ -48,7 +48,7 @@ export function RunbooksDrawer({ config }: PanelProps) {
   const install = installIdOf(config)
   return (
     <>
-      <div className="tiles" style={{ marginBottom: 24 }}>
+      <div className="tiles" style={{ marginBottom: 16 }}>
         {runbooks.map((rb, i) => (
           <button
             key={rb.name}
@@ -70,9 +70,6 @@ export function RunbooksDrawer({ config }: PanelProps) {
         <h3 className="section__title mono">{runbook.name}</h3>
         <div className="subtext muted">runbooks/{runbook.name}.toml</div>
       </div>
-      <p className="small muted" style={{ marginBottom: 16, maxWidth: '72ch' }}>
-        {runbook.description}
-      </p>
       <div className="table-wrap">
         <table className="data">
           <thead>
@@ -99,13 +96,6 @@ export function RunbooksDrawer({ config }: PanelProps) {
       <CommandBlock
         label={`run ${runbook.name} against this install`}
         command={`nuon runbooks create-run --install-id ${install} --runbook-id ${runbook.name}`}
-        note={
-          runbook.mutates ? (
-            <>Re-applies state or assumes elevated access.</>
-          ) : (
-            <>--runbook-id takes the runbook name; no id lookup.</>
-          )
-        }
       />
       <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
         <span className="mono">branch.toml</span> runs{' '}

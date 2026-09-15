@@ -9,7 +9,7 @@ import {
 } from '../../lib/api'
 import { toggleableComponents } from '../../lib/config-data.gen'
 import type { PanelProps } from '../../lib/panels'
-import { Badge, CodeBlock, LoadState, OutLink } from '../Primitives'
+import { Badge, CodeBlock, Disclosure, LoadState, OutLink } from '../Primitives'
 import { PANEL_POLL_MS, useNamespacePoll } from './shared'
 
 /* ============================================================
@@ -355,16 +355,17 @@ export function TogglesDrawer({ config }: PanelProps) {
     <>
       <div className="section__head">
         <h3 className="section__title">{toggleableComponents.length} toggleable components</h3>
-        <div className="subtext muted">components/{'{'}audit_log_exporter,tictactoe{'}'}.toml</div>
       </div>
-      <p className="small muted" style={{ maxWidth: '72ch' }}>
-        Each ships in every install&rsquo;s config, switched off. Flip one on for an install and Nuon
-        deploys it there; flip it off and it is torn down. Off means not deployed: no pods, no Service,
-        nothing for that feature in the customer&rsquo;s cloud. Here each deploys one marker Service.{' '}
-        <OutLink href="https://docs.nuon.co/guides/toggleable-components" variant="plain">
-          Toggleable components docs
-        </OutLink>
-      </p>
+      <Disclosure summary="what a toggle changes in the install">
+        <p className="small muted" style={{ maxWidth: '72ch' }}>
+          Each ships in every install&rsquo;s config, switched off. Flip one on for an install and Nuon
+          deploys it there; flip it off and it is torn down. Off means not deployed: no pods, no Service,
+          nothing for that feature in the customer&rsquo;s cloud. Here each deploys one marker Service.{' '}
+          <OutLink href="https://docs.nuon.co/guides/toggleable-components" variant="plain">
+            Toggleable components docs
+          </OutLink>
+        </p>
+      </Disclosure>
       <LoadState result={ns} what={`the ${namespace} namespace`} />
       <div className="choices">
         <SkuCard
@@ -396,25 +397,12 @@ export function TogglesDrawer({ config }: PanelProps) {
         </div>
       </div>
       <HowItKnows config={config} namespace={namespace} live={audit} onDashboardOpen={() => setWaiting(true)} />
-      {!bothOn && (
+      {!bothOn && waiting && (
         <div className="ttt-watch">
-          {waiting ? (
-            <>
-              <Badge tone="warning" dot>
-                waiting for the deploy
-              </Badge>
-              <span>After the deploy in the dashboard tab, the card flips when the Service appears.</span>
-            </>
-          ) : (
-            <>
-              <Badge tone="accent" dot>
-                watching live
-              </Badge>
-              <span>
-                Checking {namespace} for the marker Services every {PANEL_POLL_MS / 1000} seconds.
-              </span>
-            </>
-          )}
+          <Badge tone="warning" dot>
+            waiting for the deploy
+          </Badge>
+          <span>After the deploy in the dashboard tab, the card flips when the Service appears.</span>
         </div>
       )}
       {audit && <EventsFeed namespace={namespace} config={config} />}

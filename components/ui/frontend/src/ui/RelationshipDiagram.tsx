@@ -115,16 +115,16 @@ function SvgDefs() {
 function ForkArrow({ left, right }: { left: string; right: string }) {
   return (
     <svg
-      className="opener__svg"
-      viewBox="0 0 1000 92"
+      className="opener__svg opener__svg--fork"
+      viewBox="0 0 1000 84"
       role="img"
       aria-label={`The source of truth forks: ${left}, or ${right}`}
     >
       <path d="M 500 0 V 30" className="opener__line" />
       <path d="M 240 30 H 760" className="opener__line" />
-      <path d="M 240 30 V 80" className="opener__line" markerEnd="url(#opener-arrow)" />
+      <path d="M 240 30 V 82" className="opener__line" markerEnd="url(#opener-arrow)" />
       <path
-        d="M 760 30 V 80"
+        d="M 760 30 V 82"
         className="opener__line opener__line--accent"
         markerEnd="url(#opener-arrow-accent)"
       />
@@ -145,7 +145,6 @@ function CustomerCard({ install }: { install: InstallConfig }) {
   return (
     <div className="opener__customer">
       <div className="mono opener__customer-name">{install.name}</div>
-      <div className="opener__customer-sub">their AWS account</div>
       <div className="mono opener__customer-mono">VPC · cluster · db</div>
       <div className="mono opener__customer-mono opener__customer-mono--accent">
         {install.region ?? 'region unset'}
@@ -176,7 +175,8 @@ export function SourceFork() {
           </div>
           <div className="opener__cell">
             <div className="opener__cell-title">Infrastructure definitions</div>
-            <div className="mono opener__cell-mono">{infra.map(softWrap).join(' · ')}</div>
+            {/* A no-break space before each dot keeps it on the line with the name it follows. */}
+            <div className="mono opener__cell-mono">{infra.map(softWrap).join('\u00a0· ')}</div>
             <div className="mono opener__cell-names">
               {components.length - images.length} components
             </div>
@@ -197,6 +197,7 @@ export function SourceFork() {
             <span className="eyebrow">Today · your cloud</span>
             <span className="opener__col-title">One stack, every tenant inside it</span>
           </div>
+          <div className="opener__col-body">
           <div className="opener__stack">
             <div className="mono opener__stack-mono">one VPC · one cluster · one database</div>
             <div className="opener__chips">
@@ -207,6 +208,7 @@ export function SourceFork() {
               ))}
               <span className="opener__pill opener__pill--ghost">… the rest</span>
             </div>
+          </div>
           </div>
           <div className="opener__rows">
             <Row label="Isolation">Application-level: rows, namespaces, claims</Row>
@@ -220,6 +222,7 @@ export function SourceFork() {
             <span className="eyebrow eyebrow--accent">With Nuon · your customers&rsquo; clouds</span>
             <span className="opener__col-title">One stack per customer, one tenant each</span>
           </div>
+          <div className="opener__col-body">
           <div className="opener__template">
             <div className="opener__card-head">
               <span className="eyebrow eyebrow--accent">The template</span>
@@ -237,8 +240,8 @@ export function SourceFork() {
             </div>
           </div>
           <svg
-            className="opener__svg"
-            viewBox="0 0 560 40"
+            className="opener__svg opener__svg--resolve"
+            viewBox="0 0 560 30"
             role="img"
             aria-label="The template resolves once per customer"
           >
@@ -247,7 +250,8 @@ export function SourceFork() {
               className="opener__line opener__line--accent"
               markerEnd="url(#opener-arrow-accent)"
             />
-            <text x="294" y="20" className="opener__svg-mono">
+            {/* This svg renders at about 0.8 scale, so 14 units keeps the label above 11px. */}
+            <text x="294" y="20" className="opener__svg-mono" style={{ fontSize: 14 }}>
               resolved once per customer
             </text>
           </svg>
@@ -255,6 +259,7 @@ export function SourceFork() {
             {installConfigs.map((c) => (
               <CustomerCard key={c.name} install={c} />
             ))}
+          </div>
           </div>
           <div className="opener__rows">
             <Row label="Isolation">Infrastructure-level: separate accounts</Row>
@@ -314,7 +319,7 @@ function valueRows(): ValueRow[] {
 
 function DownArrow({ label }: { label: string }) {
   return (
-    <svg className="opener__svg opener__svg--short" viewBox="0 0 1000 52" role="img" aria-label={label}>
+    <svg className="opener__svg opener__svg--short" viewBox="0 0 1000 40" role="img" aria-label={label}>
       <path
         d="M 500 0 V 40"
         className="opener__line opener__line--accent"
@@ -327,6 +332,9 @@ function DownArrow({ label }: { label: string }) {
 export function InputsFlow() {
   const rows = valueRows()
   const pad = Math.max(...rows.map((r) => r.key.length))
+  // Key column: the longest key at Hack's 6.65px per character (11px), the
+  // cell's 24px of side padding, and 8px so the last letter never wraps alone.
+  const keyColumnPx = Math.ceil(pad * 6.65) + 32
   const differs = (row: ValueRow) =>
     new Set(installConfigs.map((c) => row.answer(c))).size > 1
   return (
@@ -366,7 +374,7 @@ export function InputsFlow() {
           <span className="eyebrow">{installConfigs.length} install configs</span>
           <span className="mono opener__card-aside">install-configs/*.toml</span>
         </div>
-        <div className="opener__matrix" style={{ gridTemplateColumns: `140px repeat(${installConfigs.length}, minmax(0, 1fr))` }}>
+        <div className="opener__matrix" style={{ gridTemplateColumns: `${keyColumnPx}px repeat(${installConfigs.length}, minmax(0, 1fr))` }}>
           <div className="opener__matrix-cell opener__matrix-cell--head mono">value</div>
           {installConfigs.map((c) => (
             <div key={c.name} className="opener__matrix-cell opener__matrix-cell--head mono opener__matrix-cell--name">
@@ -405,12 +413,21 @@ export function InputsFlow() {
 /* ---------- 3 · versions across the install groups ---------- */
 
 const W = 1084
-const ROW_H = 132
+const ROW_H = 112
 const ROW_GAP = 22
 const ROW_TOP = 128
-const NODE_X = 860
-const CHIP_W = 156
-const CHIP_H = 88
+/** Where the running-version node sits unless the chip needs it further left. */
+const NODE_X_MAX = 860
+const CHIP_MIN_W = 156
+const CHIP_H = 72
+/** Kept clear on the right of the chip for the row's "order N" label. */
+const RIGHT_RESERVE = 100
+/** Hack's advance width as a fraction of the font size. */
+const MONO_EM = 0.6
+/** .opener__svg-mono font size, in viewBox units. */
+const LABEL_PX = 12
+/** Line step between stacked tags in the 15px node title. */
+const NODE_LINE = 18
 
 function groupsInOrder(): InstallGroup[] {
   return installGroups.slice().sort((a, b) => a.order - b.order)
@@ -434,12 +451,40 @@ export function VersionTimeline({
   runningTags: string[]
 }) {
   const groups = groupsInOrder()
-  const height = ROW_TOP + groups.length * (ROW_H + ROW_GAP)
   const thisGroup = installName
     ? installConfigs.find((c) => c.name === installName)?.group ?? null
     : null
-  const running = runningTags.length > 0 ? runningTags.join(' · ') : null
   const who = installName ?? installId ?? 'this install'
+  const tags = runningTags.length > 0 ? runningTags : ['…']
+  // More than one tag means a rollout in progress or images on different
+  // builds. Each tag gets its own line and everything below moves down.
+  const extra = tags.length - 1
+  const longest = Math.max(...tags.map((t) => t.length))
+
+  // The chip is sized from the longest tag. CI tags (sha-a4007f6) read at
+  // 22px; longer tags (a wip stamp is 30 characters) drop to 14px.
+  const chipFont = longest <= 12 ? 22 : 14
+  const chipLine = chipFont === 22 ? 26 : 18
+  const chipW = Math.ceil(
+    Math.max(
+      CHIP_MIN_W,
+      longest * MONO_EM * chipFont + 24,
+      who.length * MONO_EM * LABEL_PX + 24,
+    ),
+  )
+  const chipH = CHIP_H + extra * chipLine
+  const chipPad = (CHIP_H - (chipFont + 8 + LABEL_PX)) / 2
+  const titleOffset = chipPad + chipFont * 0.78
+  const subOffset = chipPad + chipFont + extra * chipLine + 8 + LABEL_PX * 0.78
+  // The node, its halo, the accent end of the branch line, the leader and the
+  // chip all hang off nodeX. It moves left only as far as the chip needs to
+  // stay inside the row and clear of the "order N" labels.
+  const nodeX = Math.min(NODE_X_MAX, W - RIGHT_RESERVE - chipW / 2)
+
+  const rowTop = ROW_TOP + extra * NODE_LINE
+  const rowH = thisGroup ? Math.max(ROW_H, chipH + 24) : ROW_H
+  const height = rowTop + groups.length * rowH + (groups.length - 1) * ROW_GAP
+  const running = runningTags.length > 0 ? runningTags.join(' · ') : null
 
   const describe = [
     `Branch ${branchName}. Each branch run is a version.`,
@@ -479,23 +524,32 @@ export function VersionTimeline({
       </text>
 
       <line x1="0" y1="52" x2={W} y2="52" className="opener__branch-line" />
-      <line x1={NODE_X} y1="52" x2={W} y2="52" className="opener__branch-line opener__branch-line--accent" />
+      <line x1={nodeX} y1="52" x2={W} y2="52" className="opener__branch-line opener__branch-line--accent" />
 
-      <circle cx={NODE_X} cy="52" r="16" className="opener__node-halo" />
-      <circle cx={NODE_X} cy="52" r="9" className="opener__node" />
-      <text x={NODE_X} y="88" textAnchor="middle" className="opener__node-title">
-        {running ?? '…'}
+      <circle cx={nodeX} cy="52" r="16" className="opener__node-halo" />
+      <circle cx={nodeX} cy="52" r="9" className="opener__node" />
+      <text x={nodeX} y="88" textAnchor="middle" className="opener__node-title">
+        {tags.map((t, n) => (
+          <tspan key={`${n}-${t}`} x={nodeX} dy={n === 0 ? 0 : NODE_LINE}>
+            {t}
+          </tspan>
+        ))}
       </text>
-      <text x={NODE_X} y="106" textAnchor="middle" className="opener__svg-mono opener__svg-mono--accent">
+      <text
+        x={nodeX}
+        y={106 + extra * NODE_LINE}
+        textAnchor="middle"
+        className="opener__svg-mono opener__svg-mono--accent"
+      >
         running on {who}
       </text>
 
       {groups.map((g, i) => {
-        const y = ROW_TOP + i * (ROW_H + ROW_GAP)
+        const y = rowTop + i * (rowH + ROW_GAP)
         const names = configsIn(g.name).map((c) => c.name)
         const regions = [...new Set(configsIn(g.name).map((c) => c.region).filter(Boolean))]
         const isThis = thisGroup === g.name
-        const chipY = y + (ROW_H - CHIP_H) / 2
+        const chipY = y + (rowH - chipH) / 2
         return (
           <g key={g.name}>
             {i > 0 && (
@@ -513,42 +567,52 @@ export function VersionTimeline({
                 </text>
               </>
             )}
-            <rect x="0" y={y} width={W} height={ROW_H} rx="10" className="opener__group" />
-            <text x="24" y={y + 50} className="opener__group-name">
+            <rect x="0" y={y} width={W} height={rowH} rx="10" className="opener__group" />
+            <text x="24" y={y + 42} className="opener__group-name">
               {capitalize(g.name)}
             </text>
-            <text x="24" y={y + 74} className="opener__svg-mono">
+            <text x="24" y={y + 64} className="opener__svg-mono">
               {g.selector}
             </text>
-            <text x="24" y={y + 96} className="opener__svg-mono opener__svg-mono--tertiary">
+            <text x="24" y={y + 86} className="opener__svg-mono opener__svg-mono--tertiary">
               {names.length > 0
                 ? `install config${names.length === 1 ? '' : 's'}: ${names.join(' · ')}${regions.length ? ` · ${regions.join(' · ')}` : ''}`
                 : 'no install config matches this selector'}
             </text>
-            <text x={W - 24} y={y + 50} textAnchor="end" className="opener__svg-mono opener__svg-mono--tertiary">
+            <text x={W - 24} y={y + 42} textAnchor="end" className="opener__svg-mono opener__svg-mono--tertiary">
               order {g.order}
             </text>
             {isThis && (
               <>
                 <line
-                  x1={NODE_X}
-                  y1="112"
-                  x2={NODE_X}
+                  x1={nodeX}
+                  y1={112 + extra * NODE_LINE}
+                  x2={nodeX}
                   y2={chipY}
                   className="opener__leader"
                 />
                 <rect
-                  x={NODE_X - CHIP_W / 2}
+                  x={nodeX - chipW / 2}
                   y={chipY}
-                  width={CHIP_W}
-                  height={CHIP_H}
+                  width={chipW}
+                  height={chipH}
                   rx="10"
                   className="opener__chip"
                 />
-                <text x={NODE_X} y={chipY + 48} textAnchor="middle" className="opener__chip-title">
-                  {running ?? '…'}
+                <text
+                  x={nodeX}
+                  y={chipY + titleOffset}
+                  textAnchor="middle"
+                  className="opener__chip-title"
+                  style={{ fontSize: chipFont }}
+                >
+                  {tags.map((t, n) => (
+                    <tspan key={`${n}-${t}`} x={nodeX} dy={n === 0 ? 0 : chipLine}>
+                      {t}
+                    </tspan>
+                  ))}
                 </text>
-                <text x={NODE_X} y={chipY + 72} textAnchor="middle" className="opener__svg-mono">
+                <text x={nodeX} y={chipY + subOffset} textAnchor="middle" className="opener__svg-mono">
                   {who}
                 </text>
               </>

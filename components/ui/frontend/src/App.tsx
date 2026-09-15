@@ -75,7 +75,7 @@ export default function App() {
   } else if (parts[0] === 'home') {
     view = <Home config={config} />
   } else if (parts[0] === 'try') {
-    view = <TryYourApp />
+    view = <TryYourApp config={config} />
   } else if (parts[0] === 'cases') {
     view = parts[1] ? (
       <CaseDetail config={config} branch={parts[1]} panel={query(path).get('panel')} />

@@ -38,7 +38,7 @@ function scenarios(install: string, app: string) {
     {
       scenario: 'Ship one change to the fleet, in order, with an approval per group',
       how: `nuon branches trigger --app-id ${app} --branch-id ${branchName} --no-wait --output agent`,
-      note: 'runs the branch at its head on GitHub',
+      note: 'runs the branch at its head on GitHub; nothing is uploaded from this machine, and --force rebuilds every component',
     },
     {
       scenario: 'Preview a pull request against one install before it merges',
@@ -73,7 +73,7 @@ export function RolloutDrawer({ config, caseBranch }: PanelProps) {
         <h3 className="section__title">
           {groups.length} install groups on branch {branchName}
         </h3>
-        <div className="subtext muted">branch.toml · [[install_groups]]</div>
+        <div className="subtext muted">[[install_groups]]</div>
       </div>
       <div className="groups">
         {groups.map((group) => (
@@ -85,15 +85,17 @@ export function RolloutDrawer({ config, caseBranch }: PanelProps) {
               <span className="group-card__num">0{group.order}</span>
               <span className="group-card__name">{group.name}</span>
             </div>
-            <div className="group-card__selector mono">{group.selector}</div>
+            <div className="group-card__selector mono">
+              {group.selector.split(' · ').map((pair, i) => (
+                <span key={pair}>
+                  {i > 0 && ' · '}
+                  <span className="nowrap">{pair}</span>
+                </span>
+              ))}
+            </div>
           </div>
         ))}
       </div>
-      <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-        A branch run builds the config at the branch&rsquo;s head commit on GitHub.{' '}
-        <span className="mono">nuon branches trigger --branch-id {branchName}</span> starts one. Each
-        group&rsquo;s plan holds for a person&rsquo;s approval before it deploys.
-      </p>
       <CodeBlock label="branch.toml (comments stripped)" code={branchConfigAbridged} />
 
       <div className="section__head" style={{ marginTop: 24 }}>
@@ -116,7 +118,14 @@ export function RolloutDrawer({ config, caseBranch }: PanelProps) {
                 <td>{row.scenario}</td>
                 <td>
                   {row.how.startsWith('nuon ') ? (
-                    <code className="mono">{row.how}</code>
+                    <code className="mono">
+                      {row.how.split(' ').flatMap((tok, i) => [
+                        i > 0 && ' ',
+                        <span key={i} className="nowrap">
+                          {tok}
+                        </span>,
+                      ])}
+                    </code>
                   ) : config.links.versions ? (
                     <OutLink href={config.links.versions} variant="plain">
                       {row.how}
@@ -132,17 +141,6 @@ export function RolloutDrawer({ config, caseBranch }: PanelProps) {
         </table>
       </div>
 
-      <CommandBlock
-        label="start a branch run"
-        command={`nuon branches trigger --app-id ${app} --branch-id ${branchName} --no-wait --output agent`}
-        note={
-          <>
-            Builds the config at the branch&rsquo;s head on GitHub and runs it through the groups above;
-            nothing is uploaded from this machine. <span className="mono">--force</span> rebuilds every
-            component.
-          </>
-        }
-      />
       <CommandBlock
         label="watch the rollout"
         command={`nuon branches runs --app-id ${app} --branch-id ${branchName}`}

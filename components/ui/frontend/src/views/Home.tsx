@@ -1,11 +1,11 @@
 import { useState, type ReactNode } from 'react'
 import { useIntrospectPoll, type NamespaceResponse, type UIConfig } from '../lib/api'
-import { cases } from '../lib/cases'
+import { cases, type CaseId } from '../lib/cases'
 import { adhocActions, branchName, runbooks } from '../lib/config-data.gen'
 import { paste } from '../lib/nuon-loop-paste'
 import { setup } from '../lib/prompts'
 import { AccountDiagram } from '../ui/CaseDiagrams'
-import { CopyButton, Icon } from '../ui/Primitives'
+import { CopyButton, Icon, NoBreakHyphens } from '../ui/Primitives'
 
 /* ============================================================
    Home: the page after the opener and the returning visitor's front door.
@@ -144,7 +144,16 @@ export function CliPanel({ install, app }: { install: string; app: string }) {
 function CmdRow({ cmd }: { cmd: string }) {
   return (
     <div className="home__cmd">
-      <code className="mono">{cmd}</code>
+      <code className="mono">
+        {/* Tokens never break inside, so a wrapped command splits at spaces
+            and keeps every id and --flag whole. */}
+        {cmd.split(' ').map((tok, i) => (
+          <span key={i}>
+            {i > 0 && ' '}
+            <span className="nowrap">{tok}</span>
+          </span>
+        ))}
+      </code>
       <CopyButton text={cmd} />
     </div>
   )
@@ -155,6 +164,9 @@ export function Home({ config }: { config: UIConfig }) {
   const app = config.app_id ?? '<your-app-id>'
   const namespace = config.namespace ?? 'kitchen-sink'
   const [cliOpen, setCliOpen] = useState(false)
+  // The request whose difference the account picture is showing.
+  const [focus, setFocus] = useState<CaseId | null>(null)
+  const focused = cases.find((c) => c.branch === focus)
 
   const ns = useIntrospectPoll<NamespaceResponse>(
     `/api/introspect/namespace/${namespace}`,
@@ -177,7 +189,11 @@ export function Home({ config }: { config: UIConfig }) {
     <div className="home">
       <header className="page-header home__head">
         <div className="eyebrow eyebrow--accent">Kitchen sink demo · home</div>
-        <h1>Kitchen Sink: one install, {cases.length} requests.</h1>
+        <h1>Solve for every enterprise BYOC customer demand</h1>
+        <p className="home__sub">
+          Use this app to explore Nuon&rsquo;s capabilities or skip to pointing{' '}
+          <a href="#/try">your agent at your repo</a>!
+        </p>
       </header>
 
       <div className="home__wings">
@@ -193,13 +209,35 @@ export function Home({ config }: { config: UIConfig }) {
             namespace={namespace}
             installId={config.install_id}
             vpcId={config.vpc_id}
+            focus={focus}
+            onFocus={setFocus}
           />
+          <p className={focused ? 'home__focus' : 'home__focus home__focus--idle mono'} aria-live="polite">
+            {focused ? focused.difference : 'hover a request to see what changes'}
+          </p>
           <div className="home__reqs">
             {cases.map((c, i) => (
-              <a key={c.branch} className="home__req" href={`#/cases/${c.branch}`}>
+              <a
+                key={c.branch}
+                className={
+                  focus === null
+                    ? 'home__req'
+                    : focus === c.branch
+                      ? 'home__req home__req--lit'
+                      : 'home__req home__req--dim'
+                }
+                href={`#/cases/${c.branch}`}
+                onMouseEnter={() => setFocus(c.branch)}
+                onMouseMove={() => focus !== c.branch && setFocus(c.branch)}
+                onMouseLeave={() => setFocus(null)}
+                onFocus={() => setFocus(c.branch)}
+                onBlur={() => setFocus(null)}
+              >
                 <span className="home__req-n mono">{i + 1}</span>
                 <span className="home__req-body">
-                  <span className="home__req-name">{c.title}</span>
+                  <span className="home__req-name">
+                    <NoBreakHyphens text={c.title} />
+                  </span>
                   <span className="mono home__req-branch">@{c.branch}</span>
                 </span>
               </a>
@@ -255,8 +293,8 @@ export function Home({ config }: { config: UIConfig }) {
 
       <section className="home__exit">
         <div className="home__exit-lead">
-          <h2 className="home__card-title">Your app on Nuon</h2>
-          <span className="mono home__aside">your repo → app config → first install</span>
+          <h2 className="home__card-title">Connect your app</h2>
+          <span className="mono home__aside">your agent, or your terminal</span>
         </div>
         <div className="home__cmd home__cmd--paste">
           <code className="mono">
@@ -266,7 +304,7 @@ export function Home({ config }: { config: UIConfig }) {
         </div>
         <CopyButton text={paste} label="Copy prompt" doneLabel="Copied" big />
         <a className="mono home__link" href="#/try">
-          The paste, in full <Icon name="arrow-right" />
+          Both paths, in full <Icon name="arrow-right" />
         </a>
       </section>
     </div>

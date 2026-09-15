@@ -17,6 +17,26 @@ import { BackLink, CommandBlock, CopyButton, Disclosure, OutLink } from '../ui/P
 /** How many removed and added lines a delta row shows before the fold. */
 const SHOWN = 2
 
+/** A diff line that may wrap after any "/" but nowhere inside a token, so a
+    template URL breaks at path boundaries instead of mid-word. */
+function Breakable({ line }: { line: string }) {
+  const parts = line.split('/')
+  return (
+    <>
+      {parts.map((part, i) => (
+        <span key={i}>
+          {i > 0 && (
+            <>
+              /<wbr />
+            </>
+          )}
+          <span className="nowrap">{part}</span>
+        </span>
+      ))}
+    </>
+  )
+}
+
 function DeltaRow({ file }: { file: DeltaFile }) {
   const shownMinus = file.minus.slice(0, SHOWN)
   const shownPlus = file.plus.slice(0, SHOWN)
@@ -29,12 +49,12 @@ function DeltaRow({ file }: { file: DeltaFile }) {
         <div className="delta__lines mono">
           {shownMinus.map((l, i) => (
             <div key={`m${i}`} className="delta__minus">
-              − {l}
+              − <Breakable line={l} />
             </div>
           ))}
           {shownPlus.map((l, i) => (
             <div key={`p${i}`} className="delta__plus">
-              + {l}
+              + <Breakable line={l} />
             </div>
           ))}
         </div>
@@ -117,8 +137,10 @@ export function CaseDetail({
   const previewCmd = `nuon branches preview --app-id ${app} --branch-id ${nuonBranch} --git-ref ${tracked} --install-id ${install} --mode plan-only`
   // The one command that creates the branch in the app, from its own branch.toml.
   const createCmd = `nuon branches sync --app-id ${app} --file branch.toml --confirm`
-  const groups = data?.groups ?? []
-  const approvals = groups.length === 1 ? 'one approval' : `${groups.length} approvals`
+  const createSummary =
+    nuonBranch === def.branch
+      ? `first time only: create ${nuonBranch} in the app, from a checkout of it`
+      : `first time only: create ${nuonBranch} in the app, from a checkout of ${def.branch}`
   // Only a panel this case mounts opens; a stale or hand-typed id is ignored.
   const openPanel = panel && (def.panels as string[]).includes(panel) ? panelById(panel) : undefined
   const closeDrawer = () => navigate(`/cases/${def.branch}`, { keepScroll: true })
@@ -149,7 +171,7 @@ export function CaseDetail({
         <section className="casedetail__card casedetail__card--picture">
           <CaseDiagram branch={def.branch} />
           <p className="casedetail__quote">
-            {def.quote.verbatim ? <>&ldquo;{def.quote.text}&rdquo;</> : def.quote.text}{' '}
+            {def.quote.verbatim && <>&ldquo;{def.quote.text}&rdquo; </>}
             <OutLink href={def.quote.url} variant="plain">
               <span className="mono">{def.quote.label}</span>
             </OutLink>
@@ -170,29 +192,19 @@ export function CaseDetail({
               <DeltaRow key={f.path} file={f} />
             ))}
           </div>
-          <div className="delta__foot">
-            <CommandBlock label="ship this branch to the app" command={shipCmd} />
-            <CommandBlock label="plan only, nothing applied" command={previewCmd} />
-            <p className="small muted">
-              If the app has no branch named <span className="mono">{nuonBranch}</span> yet:{' '}
-              <span className="mono">{createCmd}</span>, with that branch&rsquo;s branch.toml in the
-              working directory.
-            </p>
-            <div className="mono home__aside">
-              branch run: plan, {approvals}, then{' '}
-              {groups.map((g, i) => (
-                <span key={g.name}>
-                  {i > 0 && ', '}
-                  <span className="casedetail__lit">{g.name}</span> (order {g.order})
-                </span>
-              ))}
-            </div>
-            {(!config.app_id || !config.install_id) && (
-              <p className="small muted">Ids not served; the commands show placeholders.</p>
-            )}
-          </div>
         </section>
       </div>
+
+      <section className="casedetail__cmds">
+        <CommandBlock label="ship this branch to the app" command={shipCmd} />
+        <CommandBlock
+          label={config.app_id && config.install_id ? 'plan only, nothing applied' : 'plan only, nothing applied · ids not served, placeholders shown'}
+          command={previewCmd}
+        />
+        <Disclosure summary={createSummary}>
+          <CommandBlock command={createCmd} />
+        </Disclosure>
+      </section>
 
       <Strip def={def} config={config} open={panel} />
 

@@ -120,7 +120,24 @@ export function OutLink({
   )
 }
 
-export function Callout({ label, children }: { label: string; children: ReactNode }) {
+/** Text whose hyphenated words never break across lines ("vendor-run",
+    "awaiting-user-run"), with the string itself left intact for copy, find
+    and screen readers. */
+export function NoBreakHyphens({ text }: { text: string }) {
+  const words = text.split(' ')
+  return (
+    <>
+      {words.map((w, i) => (
+        <span key={i}>
+          {i > 0 && ' '}
+          {w.includes('-') ? <span className="nowrap">{w}</span> : w}
+        </span>
+      ))}
+    </>
+  )
+}
+
+export function Callout({ label, children }: { label: ReactNode; children: ReactNode }) {
   return (
     <div className="callout">
       <div className="callout__label">{label}</div>
@@ -235,7 +252,20 @@ export function CommandBlock({
         {label && <span className="cmd__label">{label}</span>}
         <CopyButton text={command} />
       </div>
-      <pre className="cmd__pre">{command}</pre>
+      <pre className="cmd__pre">
+        {/* Each token in its own no-wrap span, so a wrapped command breaks at
+            spaces and never inside an id or a --flag. Whitespace, newlines
+            included, passes through as it is. */}
+        {command.split(/(\s+)/).map((tok, i) =>
+          /^\s+$/.test(tok) ? (
+            tok
+          ) : (
+            <span className="cmd__tok" key={i}>
+              {tok}
+            </span>
+          ),
+        )}
+      </pre>
       {note && <div className="cmd__note">{note}</div>}
     </div>
   )

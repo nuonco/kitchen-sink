@@ -1,7 +1,7 @@
 import { countReady } from '../../lib/api'
 import { healthBlocks, runbooks } from '../../lib/config-data.gen'
 import type { PanelProps } from '../../lib/panels'
-import { Badge, CommandBlock, LoadState, OutLink, PhaseBadge } from '../Primitives'
+import { Badge, CommandBlock, Disclosure, LoadState, OutLink, PhaseBadge } from '../Primitives'
 import { PANEL_POLL_MS, PanelPrompts, installIdOf, useNamespacePoll } from './shared'
 
 /* ============================================================
@@ -63,14 +63,14 @@ export function HealthDrawer({ config }: PanelProps) {
           </tbody>
         </table>
       </div>
-      <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
+      <Disclosure summary="what the assessment checks">
         After a deploy, Nuon assesses the component&rsquo;s deployments, pods, services and ingresses
         and records the result with the deploy step. With <span className="mono">block_deploy = false</span>{' '}
         the record is kept and nothing is held on it. Probes run on the runner, outside the cluster,
         so the chart declares none; {probeTotal} probe{probeTotal === 1 ? '' : 's'} declared
         {probeOwners.length > 0 ? `, on ${probeOwners.join(' and ')}` : ''}: an HTTP check of{' '}
         <span className="mono">/livez</span> on the public domain.
-      </p>
+      </Disclosure>
 
       <div className="section__head" style={{ marginTop: 24 }}>
         <h3 className="section__title">Pod readiness in {namespace}</h3>
@@ -126,7 +126,6 @@ export function HealthDrawer({ config }: PanelProps) {
         note={
           <>
             {healthCheck ? `${healthCheck.steps.length} steps: ${healthCheck.description}` : null}{' '}
-            The install readme renders one row per step.{' '}
             {config.links.install && (
               <OutLink href={config.links.install} variant="plain">
                 Install readme

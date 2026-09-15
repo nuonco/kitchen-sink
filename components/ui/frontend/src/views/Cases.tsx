@@ -1,6 +1,7 @@
 import { branchName, repoName } from '../lib/config-data.gen'
 import { caseBranch, cases, shipsTo } from '../lib/cases'
 import { CaseDiagram } from '../ui/CaseDiagrams'
+import { NoBreakHyphens } from '../ui/Primitives'
 
 /* ============================================================
    The gallery: one tile per common request, each an app branch of this
@@ -18,8 +19,7 @@ export function Cases() {
           </h1>
         </div>
         <div className="mono cases__repo">
-          <span className="cases__repo-name">{repoName}</span> @{branchName}{' '}
-          <span className="cases__repo-accent">→ {cases.length} branches</span>
+          <span className="cases__repo-name">{repoName}</span> @{branchName}
         </div>
       </header>
 
@@ -31,7 +31,9 @@ export function Cases() {
             <a key={c.branch} className="casetile" href={`#/cases/${c.branch}`}>
               <div className="casetile__head">
                 <span className="casetile__n mono">{i + 1}</span>
-                <span className="casetile__name">{c.title}</span>
+                <span className="casetile__name">
+                  <NoBreakHyphens text={c.title} />
+                </span>
               </div>
               <span className="casetile__branch mono">@{c.branch}</span>
               <CaseDiagram branch={c.branch} />

@@ -32,6 +32,9 @@ export interface CaseDef {
   quote: { text: string; url: string; label: string; verbatim: boolean }
   /** The one prompt for a coding agent, this install's ids filled in. */
   prompt: (config: UIConfig) => string
+  /** What this request changes in the account picture; Home shows it while
+      the request's tile or number is hovered. */
+  difference: string
 }
 
 const installOf = (c: UIConfig) => c.install_id ?? '<your-install-id>'
@@ -50,13 +53,11 @@ export const cases: CaseDef[] = [
       label: 'docs.nuon.co/security',
       verbatim: true,
     },
+    difference:
+      'Outbound only: one HTTPS connection from the runner to Nuon, nothing inbound. The branch sets the EKS endpoint private and adds deny-nat.rego to the sandbox plan.',
     prompt: (c) => `${guardrails(installOf(c), appOf(c))}
 
-Call get_install for install ${installOf(c)}, then list_install_components and
-get_component for each component. List every network path out of this install's
-AWS account and name the component that owns it: the runner's outbound connection
-to the Nuon API, image pulls, the public load balancer, and any URL a component's
-config reaches. One line per path. Read-only.`,
+Call get_install for install ${installOf(c)}, then list_install_components and get_component for each component. List every network path out of this install's AWS account and name the component that owns it: the runner's outbound connection to the Nuon API, image pulls, the public load balancer, and any URL a component's config reaches. One line per path. Read-only.`,
   },
   {
     branch: 'byo-vpc',
@@ -68,14 +69,11 @@ config reaches. One line per path. Read-only.`,
       label: 'docs.nuon.co/concepts/stacks/customer-vpc',
       verbatim: false,
     },
+    difference:
+      'Their VPC: the stack takes VpcID and subnet ids from the customer and creates 0 VPCs. Runner and cluster land in their subnets, behind their routes and NAT.',
     prompt: (c) => `${guardrails(installOf(c), appOf(c))}
 
-Call get_install for install ${installOf(c)} and get_install_inputs. The install
-stack created VPC ${c.vpc_id ?? '(read it from install_stack.outputs.vpc_id)'}. List
-what changes if this install moves into an existing VPC instead: the stack.toml
-template line (byo-vpc/default) and the Quick Create parameters the customer
-supplies (VpcID, PublicSubnetIDs, PrivateSubnetIDs, RunnerSubnetID). Show the plan
-as file edits. Apply nothing. Read-only.`,
+Call get_install for install ${installOf(c)} and get_install_inputs. The install stack created VPC ${c.vpc_id ?? '(read it from install_stack.outputs.vpc_id)'}. List what changes if this install moves into an existing VPC instead: the stack.toml template line (byo-vpc/default) and the Quick Create parameters the customer supplies (VpcID, PublicSubnetIDs, PrivateSubnetIDs, RunnerSubnetID). Show the plan as file edits. Apply nothing. Read-only.`,
   },
   {
     branch: 'single-tenant',
@@ -87,14 +85,13 @@ as file edits. Apply nothing. Read-only.`,
       label: 'docs.nuon.co/architecture/platform',
       verbatim: true,
     },
+    difference:
+      'One AWS account per customer, one install each. You operate every install through runbooks and actions on its runner: no ssh, no kubeconfig, no credentials handed out.',
     prompt: (c) => `${guardrails(installOf(c), appOf(c))}
 
-run_runbook is a write tool, hidden unless the proxy runs with --allow-writes. If it is
-listed, call it for full-health-check after my "yes"; if not, after my "yes" run:
+run_runbook is a write tool, hidden unless the proxy runs with --allow-writes. If it is listed, call it for full-health-check after my "yes"; if not, after my "yes" run:
 nuon runbooks create-run --install-id ${installOf(c)} --runbook-id full-health-check --output agent
-Then call list_workflows for install ${installOf(c)}, find that run, and
-watch_workflow until it ends. Summarize the transcript: each of its ${healthSteps}
-steps with its verdict, and the failing step if there is one.
+Then call list_workflows for install ${installOf(c)}, find that run, and watch_workflow until it ends. Summarize the transcript: each of its ${healthSteps} steps with its verdict, and the failing step if there is one.
 
 Budget: exactly one run.`,
   },

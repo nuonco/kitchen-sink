@@ -94,6 +94,7 @@ export function WorkloadsDrawer({ config }: PanelProps) {
           label="This app’s namespace"
           value={kubeRows ? namespace : undefined}
           note={thisNs?.status?.phase ?? undefined}
+          numeric
         />
         <Fact
           label="Namespaces in the cluster"
@@ -114,23 +115,17 @@ export function WorkloadsDrawer({ config }: PanelProps) {
           <div className="section__head">
             <h3 className="section__title">Pods in {namespace}</h3>
             <div className="subtext muted">
-              GET /api/introspect/namespace/{namespace} · re-read every {PANEL_POLL_MS / 1000}s
+              GET /api/introspect/namespace/{namespace} · re-read every {PANEL_POLL_MS / 1000}s{' '}
+              <Badge tone="positive" dot>
+                live
+              </Badge>
             </div>
-          </div>
-          <div className="row" style={{ marginBottom: 12 }}>
-            <Badge tone="positive" dot>
-              live
-            </Badge>
-            <Badge tone="accent">
-              {countReady(pods)} of {pods.length} pods ready
-            </Badge>
           </div>
           <div className="table-wrap">
             <table className="data">
               <thead>
                 <tr>
-                  <th>Pod</th>
-                  <th>Image tag</th>
+                  <th>Pod · image tag</th>
                   <th>Age</th>
                   <th>Phase</th>
                   <th>Restarts</th>
@@ -143,9 +138,11 @@ export function WorkloadsDrawer({ config }: PanelProps) {
                   const restarts = statuses.reduce((sum, c) => sum + (c.restartCount ?? 0), 0)
                   return (
                     <tr key={pod.metadata?.name ?? i}>
-                      <td className="mono">{pod.metadata?.name}</td>
-                      <td className="mono subtext">{imageTag(image)}</td>
-                      <td className="mono subtext">{podAge(pod.metadata?.creationTimestamp)}</td>
+                      <td className="mono nowrap">
+                        {pod.metadata?.name}
+                        <div className="subtext muted">{imageTag(image)}</div>
+                      </td>
+                      <td className="mono subtext nowrap">{podAge(pod.metadata?.creationTimestamp)}</td>
                       <td>
                         <PhaseBadge phase={pod.status?.phase} />
                       </td>

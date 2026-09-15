@@ -234,7 +234,6 @@ export function ComponentsDrawer({ config }: PanelProps) {
     <>
       <div className="section__head">
         <h3 className="section__title">{typeCount} component types</h3>
-        <div className="subtext muted">components/*.toml</div>
       </div>
       <TypeMatrix config={config} />
 
@@ -242,11 +241,6 @@ export function ComponentsDrawer({ config }: PanelProps) {
         <h3 className="section__title">Deploy order</h3>
         <div className="subtext muted">dependencies · outputs</div>
       </div>
-      <p className="small muted" style={{ maxWidth: '72ch' }}>
-        Each component names its own <span className="mono">dependencies</span>; it deploys one wave
-        below the deepest one it names. Any component can interpolate another&rsquo;s outputs, the
-        way <span className="mono">values.yaml</span> does below.
-      </p>
       <DependencyGraph />
       <FileCode
         file="components/chart/values.yaml"

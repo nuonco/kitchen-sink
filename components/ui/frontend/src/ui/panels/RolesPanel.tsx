@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { breakGlassToml, roles } from '../../lib/config-data.gen'
 import type { PanelProps } from '../../lib/panels'
-import { Callout, CodeBlock, CommandBlock, OutLink } from '../Primitives'
+import { Callout, CodeBlock, CommandBlock, Disclosure, OutLink } from '../Primitives'
 import { PanelPrompts, appIdOf, installIdOf } from './shared'
 
 /* ============================================================
@@ -45,12 +45,8 @@ export function RolesDrawer({ config }: PanelProps) {
   const app = appIdOf(config)
   return (
     <>
-      <div className="section__head">
-        <h3 className="section__title">One role per operation</h3>
-        <div className="subtext muted">permissions/*.toml · break_glass.toml</div>
-      </div>
       <div className="table-wrap">
-        <table className="data">
+        <table className="data data--roles">
           <thead>
             <tr>
               <th>Role</th>
@@ -75,46 +71,53 @@ export function RolesDrawer({ config }: PanelProps) {
           </tbody>
         </table>
       </div>
-      <Callout label={`${role.name} · in this install: ${install}-${role.name}`}>
-        {roleNotes[role.name] ?? role.desc}
+      <Callout
+        label={
+          <>
+            {role.name} · in this install:{' '}
+            <span className="id">
+              {install}-{role.name}
+            </span>
+          </>
+        }
+      >
+        <Disclosure summary="boundary detail">{roleNotes[role.name] ?? role.desc}</Disclosure>
       </Callout>
       <CodeBlock label="break_glass.toml" code={breakGlassToml} />
 
-      <div className="section__head" style={{ marginTop: 24 }}>
-        <h3 className="section__title">The Secrets Manager Deny in a run transcript</h3>
-        <div className="subtext muted">the transcript prints the assumed role and the denied call</div>
-      </div>
-      <CommandBlock
-        label="1 · action workflows and their actw ids"
-        command={`nuon actions list --app-id ${app}`}
-        note="The actw id next to break_glass_remediation is the --action-workflow-id in step 2."
-      />
-      <CommandBlock
-        label="2 · run break_glass_remediation"
-        command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
-        note={
-          <>
-            The run ends by restarting the app&rsquo;s pods. In the transcript,{' '}
-            <span className="mono">aws sts get-caller-identity</span> resolves to{' '}
-            <span className="mono">{install}-app-break-glass</span>, and the Secrets Manager call that
-            follows is denied: the explicit Deny in break_glass.toml holding under
-            AdministratorAccess.{' '}
-            {config.links.actions && (
-              <OutLink href={config.links.actions} variant="plain">
-                Run history in Nuon
-              </OutLink>
-            )}
-          </>
-        }
-      />
-      <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-        Who may drive Nuon itself is governed by org API tokens.{' '}
-        {config.links.tokens && (
-          <OutLink href={config.links.tokens} variant="plain">
-            API tokens in Nuon
-          </OutLink>
-        )}
-      </p>
+      <section className="section">
+        <div className="section__head">
+          <h3 className="section__title">The Secrets Manager Deny in a run transcript</h3>
+          <div className="subtext muted">the transcript prints the assumed role and the denied call</div>
+        </div>
+        <CommandBlock
+          label="1 · action workflows and their actw ids"
+          command={`nuon actions list --app-id ${app}`}
+        />
+        <CommandBlock
+          label="2 · run break_glass_remediation"
+          command={`nuon actions create-run --install-id ${install} --action-workflow-id <actw-id>`}
+        />
+        <Disclosure summary="what the transcript shows">
+          The run ends by restarting the app&rsquo;s pods. In the transcript,{' '}
+          <span className="mono">aws sts get-caller-identity</span> resolves to{' '}
+          <span className="mono">{install}-app-break-glass</span>, and the Secrets Manager call that
+          follows is denied: the explicit Deny in break_glass.toml holding under AdministratorAccess.{' '}
+          {config.links.actions && (
+            <OutLink href={config.links.actions} variant="plain">
+              Run history in Nuon
+            </OutLink>
+          )}
+        </Disclosure>
+        <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
+          Who may drive Nuon itself is governed by org API tokens.{' '}
+          {config.links.tokens && (
+            <OutLink href={config.links.tokens} variant="plain">
+              API tokens in Nuon
+            </OutLink>
+          )}
+        </p>
+      </section>
 
       <PanelPrompts panel="roles" config={config} />
     </>

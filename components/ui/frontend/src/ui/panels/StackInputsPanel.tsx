@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { branchName, inputs, runner, sandbox, stack } from '../../lib/config-data.gen'
 import type { PanelProps } from '../../lib/panels'
 import { CodeBlock, OutLink } from '../Primitives'
@@ -9,7 +10,7 @@ import { PanelPrompts } from './shared'
    /api/ui-config once the stack has produced it.
    ============================================================ */
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({ label, value }: { label: string; value: ReactNode }) {
   return (
     <>
       <dt>{label}</dt>
@@ -22,7 +23,13 @@ export function StackInputsTile({ config }: PanelProps) {
   return (
     <>
       <span className="ptile__value">
-        {config.vpc_id ? `vpc: created by the stack · ${config.vpc_id}` : 'vpc: created by the stack'}
+        vpc: created by the stack
+        {config.vpc_id && (
+          <>
+            {' · '}
+            <span className="ptile__id">{config.vpc_id}</span>
+          </>
+        )}
       </span>
       <span className="ptile__label mono">
         {stack.vpcTemplate.path} (stack.toml @ {branchName}) · {inputs.length} inputs
@@ -36,7 +43,6 @@ export function StackInputsDrawer({ config }: PanelProps) {
     <>
       <div className="section__head">
         <h3 className="section__title">Install stack</h3>
-        <div className="subtext muted">stack.toml</div>
       </div>
       <dl className="kv">
         <Fact label="type" value={stack.type} />
@@ -74,7 +80,19 @@ export function StackInputsDrawer({ config }: PanelProps) {
       <dl className="kv">
         <Fact label="runner_type" value={runner.type} />
         <Fact label="helm_driver" value={runner.helmDriver} />
-        <Fact label="init_script_url" value={runner.initScriptUrl} />
+        <Fact
+          label="init_script_url"
+          value={runner.initScriptUrl.split('/').map((seg, i) => (
+            <span key={i}>
+              {i > 0 && (
+                <>
+                  /<wbr />
+                </>
+              )}
+              <span className="nowrap">{seg}</span>
+            </span>
+          ))}
+        />
       </dl>
 
       <div className="section__head" style={{ marginTop: 24 }}>
