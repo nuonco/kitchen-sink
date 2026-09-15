@@ -1,0 +1,18 @@
+name    = "db_debug"
+image   = "postgres:17-alpine"
+timeout = "5m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "debug database"
+inline_contents = "./db_debug/debug.sh"
+
+[steps.env_vars]
+PGHOST            = "{{.nuon.install_stack.outputs.custom_nested_stacks.rds_instance.outputs.DBEndpoint}}"
+PGPORT            = "{{.nuon.install_stack.outputs.custom_nested_stacks.rds_instance.outputs.DBPort}}"
+PGUSER            = "kitchensink"
+PGDATABASE        = "postgres"
+PGPASSWORD        = "temp-password-123"
+PGCONNECT_TIMEOUT = "10"
