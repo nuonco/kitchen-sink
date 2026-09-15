@@ -8,7 +8,7 @@
         },
         {
             "Effect": "Deny",
-            "Action": "secretsmanager:*",
+            "Action": "kms:*",
             "Resource": "*"
         },
         {
