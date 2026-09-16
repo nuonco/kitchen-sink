@@ -13,7 +13,7 @@ A test application showcasing all features of the Nuon platform including Helm c
 | **Policies** | OPA policies for security and compliance |
 | **Runbooks** | Multi-step operational procedures — see [`runbooks/`](./runbooks/README.md) |
 | **Component Health** | Live per-component health with probes — `[health]` in `components/chart/nuon.toml` and `components/alb.toml` |
-| **App Branch** | Staged fleet rollouts from a git push — [`branch.toml`](./branch.toml) |
+| **App Branches** | Staged fleet rollouts for push, tag-prefix, GitHub-label, and manual release cadences — [`branches/`](./branches/) |
 | **Triggers** | External events that start a rollout — opt-in, see [`triggers.toml.example`](./triggers.toml.example) |
 
 ## Sandbox

@@ -12,7 +12,7 @@ deploys as the app itself.
 - `components/*.toml` — component definitions; sources under `components/{api,ui,chart,pulumi}` and `src/components/{alb,certificate}`
 - `actions/` — scripts run on the install's runner (cron / manual / lifecycle triggers)
 - `runbooks/` — multi-step operational procedures (`.toml` + rendered `.md`)
-- `branch.toml`, `triggers.toml.example`, `installs.toml` — app branch with staged install groups, event trigger rules (shipped disabled — see the file header), install configs
+- `branches/`, `triggers.toml.example`, `installs.toml` — app branches with each run cadence, staged install groups, event trigger rules (shipped disabled — see the file header), install configs
 - `inputs/`, `input_groups/`, `secrets.toml` — per-install parameters
 - `policies/` (OPA), `permissions/` (per-operation IAM roles + boundaries), `break_glass.toml`
 - `sandbox.toml`, `stack.toml`, `runner.toml` — infrastructure foundation
@@ -36,11 +36,12 @@ deploys as the app itself.
    `*.svc.cluster.local` URLs fail with "no such host". Probe only
    runner-resolvable endpoints (e.g. the public ALB URL). In-cluster serving is
    covered by pod readiness via the automatic assessment.
-3. **`branch.toml` must declare the repo the same way components do** — this
-   repo resolves as public, so use `[public_repo]`. PR previews depend on the
-   org's GitHub App covering the repo owner, not on this block.
+3. **Branch configs must declare the repo the same way components do** — this
+   repo resolves as public, so use `[public_repo]` except for the GitHub-label
+   cadence, which requires `[connected_repo]` so Nuon can query PR labels.
+   PR previews depend on the org's GitHub App covering the repo owner.
 4. **Branch pinning:** `components/chart/nuon.toml`, the component tomls, and
-   `branch.toml` track `main`. If work moves to a feature branch, pin each
+   `branches/*.toml` track `main`. If work moves to a feature branch, pin each
    `branch =` to it and flip them all back to `"main"` when the branch merges.
 5. `nuon apps validate` requires an authenticated Nuon CLI and the app to exist.
    Without it, check TOML syntax and chart rendering only — note plain

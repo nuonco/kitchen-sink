@@ -66,11 +66,17 @@ if ! oid=$(jq -er '.data.createCommitOnBranch.commit.oid' <<<"$response"); then
 fi
 echo "created signed commit ${oid} on ${BRANCH}"
 
+gh label create "deploy-cadence-daily" \
+  --description "Deploy when this pull request merges" \
+  --color "0E8A16" \
+  --force
+
 gh pr create \
   --base "$BASE_BRANCH" \
   --head "$BRANCH" \
   --title "chore: stamp image tags to ${TAG}" \
-  --body "Pins \`${TAG}\` in \`components/images/*.toml\` and the chart's \`image_stamp\`, published by [run ${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}). Squash-merging this is what starts the staged rollout."
+  --body "Pins \`${TAG}\` in \`components/images/*.toml\` and the chart's \`image_stamp\`, published by [run ${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}). Squash-merging this is what starts the staged rollout." \
+  --label "deploy-cadence-daily"
 
 gh pr merge "$BRANCH" --auto --squash \
   || echo "::warning::could not enable auto-merge; merge ${BRANCH} manually to roll out ${TAG}"
