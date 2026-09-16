@@ -1,0 +1,13 @@
+name    = "describe_egress_ips"
+image   = "amazon/aws-cli:2.31.18"
+timeout = "5m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "describe egress ips"
+inline_contents = "./describe_egress_ips/describe_egress_ips.sh"
+
+[steps.env_vars]
+VPC_ID = "{{.nuon.install.sandbox.outputs.vpc.id}}"
