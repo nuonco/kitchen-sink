@@ -1,0 +1,13 @@
+name    = "describe_alb_details"
+image   = "amazon/aws-cli:2.31.18"
+timeout = "5m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "describe alb"
+inline_contents = "./describe_alb_details/describe_alb.sh"
+
+[steps.env_vars]
+INSTALL_ID = "{{.nuon.install.id}}"
