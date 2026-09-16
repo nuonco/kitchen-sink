@@ -1,0 +1,44 @@
+# Runs for every push to main and enables pull request previews.
+name = "main"
+post_deploy_runbooks = ["full-health-check"]
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "."
+branch    = "main"
+
+[run]
+mode = "all"
+
+[preview]
+mode = "plan-only"
+set_statuses = true
+comment = true
+ignore_drafts = true
+react = true
+
+[preview.label_selector]
+env = "staging"
+
+[[install_groups]]
+name  = "staging"
+order = 1
+
+[install_groups.label_selector]
+env = "staging"
+
+[[install_groups]]
+name  = "customers"
+order = 2
+
+[install_groups.label_selector]
+env  = "production"
+tier = "customer"
+
+[[install_groups]]
+name  = "enterprise"
+order = 3
+
+[install_groups.label_selector]
+env  = "production"
+tier = "enterprise"

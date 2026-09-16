@@ -1,0 +1,36 @@
+# Runs when a PR carrying this label is merged into main.
+name = "labeled-release"
+post_deploy_runbooks = ["full-health-check"]
+
+# Label matching requires the GitHub App connection so Nuon can query PR data.
+[connected_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "."
+branch    = "main"
+
+[run]
+mode         = "on_github_label"
+github_label = "deploy-cadence-daily"
+
+[[install_groups]]
+name  = "staging"
+order = 1
+
+[install_groups.label_selector]
+env = "staging"
+
+[[install_groups]]
+name  = "customers"
+order = 2
+
+[install_groups.label_selector]
+env  = "production"
+tier = "customer"
+
+[[install_groups]]
+name  = "enterprise"
+order = 3
+
+[install_groups.label_selector]
+env  = "production"
+tier = "enterprise"
