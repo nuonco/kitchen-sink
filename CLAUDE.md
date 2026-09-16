@@ -40,9 +40,9 @@ deploys as the app itself.
    repo resolves as public, so use `[public_repo]` except for the GitHub-label
    cadence, which requires `[connected_repo]` so Nuon can query PR labels.
    PR previews depend on the org's GitHub App covering the repo owner.
-4. **Branch pinning:** `components/chart/nuon.toml`, the component tomls, and
-   `branches/*.toml` track `main`. If work moves to a feature branch, pin each
-   `branch =` to it and flip them all back to `"main"` when the branch merges.
+4. **Branch pinning:** component sources track `main`. The app configs in
+   `branches/*.toml` temporarily track `jm/change-tests` while run modes are
+   tested; flip them back to `"main"` when that test is complete.
 5. `nuon apps validate` requires an authenticated Nuon CLI and the app to exist.
    Without it, check TOML syntax and chart rendering only — note plain
    `helm template` on `components/chart` fails without `--set` overrides

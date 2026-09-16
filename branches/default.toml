@@ -1,14 +1,14 @@
-# Runs for every push to main and enables pull request previews.
+# Runs for every push to jm/change-tests and enables pull request previews.
 name = "main"
 post_deploy_runbooks = ["full-health-check"]
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "main"
+branch    = "jm/change-tests"
 
 [run]
-mode = "all"
+mode = "push"
 
 [preview]
 mode = "plan-only"

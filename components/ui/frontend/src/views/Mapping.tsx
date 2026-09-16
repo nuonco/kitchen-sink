@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { UIConfig } from '../lib/api'
-import { branchName, repoName } from '../lib/config-data.gen'
+import { repoName, trackedBranch } from '../lib/config-data.gen'
 import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
@@ -148,7 +148,7 @@ enable_helm = false`,
 
 /** The file's home in the repo, at the branch this install tracks. */
 function repoFileURL(file: string): string {
-  return `https://github.com/${repoName}/blob/${branchName}/${file}`
+  return `https://github.com/${repoName}/blob/${trackedBranch}/${file}`
 }
 
 function FileCode({ file, code }: { file: string; code: string }) {
