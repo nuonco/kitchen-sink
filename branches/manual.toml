@@ -5,7 +5,7 @@ post_deploy_runbooks = ["full-health-check"]
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "main"
+branch    = "jm/change-tests"
 
 [run]
 mode = "manual_only"
@@ -16,19 +16,3 @@ order = 1
 
 [install_groups.label_selector]
 env = "staging"
-
-[[install_groups]]
-name  = "customers"
-order = 2
-
-[install_groups.label_selector]
-env  = "production"
-tier = "customer"
-
-[[install_groups]]
-name  = "enterprise"
-order = 3
-
-[install_groups.label_selector]
-env  = "production"
-tier = "enterprise"

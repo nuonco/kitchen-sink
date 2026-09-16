@@ -29,7 +29,7 @@
 # consults only the latest active config — the file has to stay enabled in
 # whatever tree you sync from, or the next sync retires the rules.
 #
-# All rules target the "main" app branch declared in branches/all.toml. NOTE (verified
+# All rules target the "main" app branch declared in branches/default.toml. NOTE (verified
 # Aug 14): a push to the tracked branch does NOT start a run by itself for a
 # [public_repo] branch — the branch-tracking push rule below is what makes
 # pushes roll out.

@@ -250,7 +250,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
       <PspSection
         kind="solution"
         title="One branch, a staged rollout"
-        aside="branches/all.toml · [[install_groups]]"
+        aside="branches/default.toml · [[install_groups]]"
       >
         <div className="groups">
           {installGroups.map((group) => (
@@ -275,7 +275,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           every install after its group deploys.
         </p>
         <CodeBlock
-          label="branches/all.toml (the real config, comments stripped)"
+          label="branches/default.toml (the real config, comments stripped)"
           code={branchConfigAbridged}
         />
         <Callout label="Create your own">
