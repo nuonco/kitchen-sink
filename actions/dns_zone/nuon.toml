@@ -1,0 +1,13 @@
+name    = "dns_zone"
+image   = "amazon/aws-cli:2.31.18"
+timeout = "5m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "list zone records"
+inline_contents = "./dns_zone/dns_zone.sh"
+
+[steps.env_vars]
+ROUTE53_ZONE_ID = "{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.zone_id}}"
