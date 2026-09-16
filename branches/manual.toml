@@ -1,0 +1,34 @@
+# Never runs automatically; an operator selects and submits a commit.
+name = "manual-release"
+post_deploy_runbooks = ["full-health-check"]
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "."
+branch    = "main"
+
+[run]
+mode = "manual_only"
+
+[[install_groups]]
+name  = "staging"
+order = 1
+
+[install_groups.label_selector]
+env = "staging"
+
+[[install_groups]]
+name  = "customers"
+order = 2
+
+[install_groups.label_selector]
+env  = "production"
+tier = "customer"
+
+[[install_groups]]
+name  = "enterprise"
+order = 3
+
+[install_groups.label_selector]
+env  = "production"
+tier = "enterprise"
