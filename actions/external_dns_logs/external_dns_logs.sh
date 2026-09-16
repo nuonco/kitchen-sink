@@ -4,7 +4,7 @@ set -eu
 echo "namespace ${NAMESPACE}"
 
 echo "deployments"
-kubectl get deployment -n "${NAMESPACE}" -l app.kubernetes.io/name=external-dns
+kubectl get deployment -n "${NAMESPACE}" -l app.kubernetes.io/name=external-dns -o wide
 
 deploy=$(kubectl get deployment -n "${NAMESPACE}" \
   -l app.kubernetes.io/name=external-dns \
@@ -23,7 +23,7 @@ replicas=$(kubectl get deployment "${deploy}" -n "${NAMESPACE}" -o jsonpath='{.s
 ready=$(kubectl get deployment "${deploy}" -n "${NAMESPACE}" -o jsonpath='{.status.readyReplicas}')
 
 echo "pods"
-kubectl get pods -n "${NAMESPACE}" -l app.kubernetes.io/name=external-dns
+kubectl get pods -n "${NAMESPACE}" -l app.kubernetes.io/name=external-dns -o wide
 
 pods=$(kubectl get pods -n "${NAMESPACE}" \
   -l app.kubernetes.io/name=external-dns \
