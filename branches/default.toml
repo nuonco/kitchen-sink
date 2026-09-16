@@ -1,11 +1,10 @@
-# Runs for every push to jm/change-tests and enables pull request previews.
-name = "main"
-post_deploy_runbooks = ["full-health-check"]
+# this is the default branch that is updated on every push to the repo.
+name = "default"
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "jm/change-tests"
+branch    = "main"
 
 [run]
 mode = "push"
@@ -18,27 +17,11 @@ ignore_drafts = true
 react = true
 
 [preview.label_selector]
-env = "staging"
+env = "preview"
 
 [[install_groups]]
-name  = "staging"
+name  = "default"
 order = 1
 
 [install_groups.label_selector]
-env = "staging"
-
-[[install_groups]]
-name  = "customers"
-order = 2
-
-[install_groups.label_selector]
-env  = "production"
-tier = "customer"
-
-[[install_groups]]
-name  = "enterprise"
-order = 3
-
-[install_groups.label_selector]
-env  = "production"
-tier = "enterprise"
+env = "default"

@@ -1,21 +1,19 @@
-# Runs when a PR carrying this label is merged into jm/change-tests.
-name = "labeled-release"
-post_deploy_runbooks = ["full-health-check"]
+# this branch is only executed when a PR is opened against the base branch with the label of `update-app-branch`
+name = "github-label-release"
 
 # Label matching requires the GitHub App connection so Nuon can query PR data.
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "jm/change-tests"
+branch    = "main"
 
 [run]
 mode         = "on_github_label"
-github_label = "deploy-cadence-daily"
+github_label = "update-app-branch"
 
 [[install_groups]]
-name  = "enterprise"
+name  = "default"
 order = 1
 
 [install_groups.label_selector]
-env  = "production"
-tier = "enterprise"
+env = "default"

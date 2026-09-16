@@ -1,5 +1,5 @@
-# Never runs automatically; an operator selects and submits a commit.
-name = "manual-release"
+# this branch is updated when a git tag is pushed with the provided prefix
+name = "tag-release"
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
@@ -7,7 +7,8 @@ directory = "."
 branch    = "main"
 
 [run]
-mode = "manual_only"
+mode = "on_tag_prefix"
+tag_prefix = "app-branch-release/"
 
 [[install_groups]]
 name  = "default"
