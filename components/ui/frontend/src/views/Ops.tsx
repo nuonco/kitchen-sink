@@ -44,7 +44,7 @@ export function Ops({ config }: { config: UIConfig }) {
         <p className="lede">Real commands against this install, ids filled in.</p>
       </header>
 
-      <Section title="App branches" aside="branch.toml">
+      <Section title="App branches" aside="branches/all.toml">
         <p className="small muted" style={{ maxWidth: '72ch' }}>
           Every push to <Mono>{branchName}</Mono> rolls out staging &rarr;
           customers &rarr; enterprise, holding for approval per group.

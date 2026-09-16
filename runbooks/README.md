@@ -38,6 +38,6 @@ infrastructure, and a runbook is exactly the wrong place to make that one click 
   independently of the last deploy. `full-health-check` is the on-demand version that
   produces one linkable transcript.
 - **App branches** can run a runbook automatically on each install after its deploy
-  succeeds — see `post_deploy_runbooks` in [`../branch.toml`](../branch.toml).
+  succeeds — see `post_deploy_runbooks` in [`../branches/`](../branches/).
 
 See the [Runbooks guide](https://docs.nuon.co/guides/runbooks) for the full schema.
