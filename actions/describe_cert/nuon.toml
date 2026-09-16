@@ -1,0 +1,13 @@
+name    = "describe_cert"
+image   = "amazon/aws-cli:2.31.18"
+timeout = "5m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "describe certificate"
+inline_contents = "./describe_cert/describe_cert.sh"
+
+[steps.env_vars]
+ACM_CERT_ARN = "{{.nuon.components.certificate.outputs.public_domain_certificate_arn}}"
