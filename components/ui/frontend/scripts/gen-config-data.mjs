@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Generates src/lib/config-data.gen.ts from the repo's real app config
-// (branch.toml, runbooks/, actions/, permissions/, break_glass.toml,
+// (branches/default.toml, runbooks/, actions/, permissions/, break_glass.toml,
 // policies/), so the customize views can never drift from the config.
 //
 // Runs automatically before `npm run dev` and `npm run build`. The generated
@@ -18,11 +18,11 @@ const outFile = join(frontendDir, 'src', 'lib', 'config-data.gen.ts')
 
 // Walk up from the frontend directory to find the repo root.
 let repoRoot = frontendDir
-while (repoRoot !== '/' && !existsSync(join(repoRoot, 'branch.toml'))) {
+while (repoRoot !== '/' && !existsSync(join(repoRoot, 'branches', 'default.toml'))) {
   repoRoot = dirname(repoRoot)
 }
 
-if (!existsSync(join(repoRoot, 'branch.toml'))) {
+if (!existsSync(join(repoRoot, 'branches', 'default.toml'))) {
   if (existsSync(outFile)) {
     console.log('gen-config-data: repo config not found (image build); keeping the committed config-data.gen.ts')
     process.exit(0)
@@ -34,9 +34,9 @@ if (!existsSync(join(repoRoot, 'branch.toml'))) {
 const read = (rel) => readFileSync(join(repoRoot, rel), 'utf8')
 const toml = (rel) => parse(read(rel))
 
-/* ---------- branch.toml ---------- */
+/* ---------- branches/default.toml ---------- */
 
-const branch = toml('branch.toml')
+const branch = toml('branches/default.toml')
 
 const selectorText = (sel) =>
   Object.entries(sel ?? {})
@@ -54,7 +54,7 @@ const installGroups = (branch.install_groups ?? [])
   }))
 
 // The real file with its comments stripped: still the real config, abridged.
-const branchConfigAbridged = read('branch.toml')
+const branchConfigAbridged = read('branches/default.toml')
   .split('\n')
   .filter((line) => !line.trim().startsWith('#'))
   .join('\n')
@@ -207,7 +207,7 @@ const breakGlassToml = read('break_glass.toml').trim()
 
 /* ---------- components/*.toml: toggleable components ---------- */
 
-// Comment-stripped real file, same treatment as branch.toml above.
+// Comment-stripped real file, same treatment as branches/default.toml above.
 const strippedToml = (rel) =>
   read(rel)
     .split('\n')
@@ -305,6 +305,8 @@ export interface ToggleableComponent {
 export const branchName = ${ts(branch.name)}
 
 export const repoName = ${ts(branch.public_repo?.repo ?? branch.connected_repo?.repo ?? '')}
+
+export const trackedBranch = ${ts(branch.public_repo?.branch ?? branch.connected_repo?.branch ?? '')}
 
 export const postDeployRunbooks: string[] = ${ts(branch.post_deploy_runbooks ?? [])}
 

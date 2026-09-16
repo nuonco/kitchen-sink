@@ -229,7 +229,7 @@ function LiveEvidence({ config, lead }: { config: UIConfig; lead: ReactNode }) {
 }
 
 /* ============================================================
-   Ship: app branches (branch.toml)
+   Ship: app branches (branches/*.toml)
    ============================================================ */
 
 const groupNotes: Record<string, string> = {
@@ -250,7 +250,7 @@ function BranchesFlow({ config }: { config: UIConfig }) {
       <PspSection
         kind="solution"
         title="One branch, a staged rollout"
-        aside="branch.toml · [[install_groups]]"
+        aside="branches/default.toml · [[install_groups]]"
       >
         <div className="groups">
           {installGroups.map((group) => (
@@ -275,15 +275,14 @@ function BranchesFlow({ config }: { config: UIConfig }) {
           every install after its group deploys.
         </p>
         <CodeBlock
-          label="branch.toml (the real config, comments stripped)"
+          label="branches/default.toml (the real config, comments stripped)"
           code={branchConfigAbridged}
         />
         <Callout label="Create your own">
-          Nothing to set up here — the app&rsquo;s first sync built this
-          branch from <span className="mono">branch.toml</span> (branches
-          upsert by name). In your own app, a{' '}
-          <span className="mono">branch.toml</span> and one sync is the whole
-          feature. Groups select installs by label, so a new customer joins a
+          Nothing to set up here — the app&rsquo;s first sync built these
+          branches from <span className="mono">branches/*.toml</span> (branches
+          upsert by name). In your own app, branch config files and one sync are
+          the whole feature. Groups select installs by label, so a new customer joins a
           wave the moment their install is labelled; customers who need a
           different configuration get their own branch, tracking a different
           git branch of the same repo.{' '}

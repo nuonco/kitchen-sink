@@ -56,6 +56,8 @@ export const branchName = "main"
 
 export const repoName = "nuonco/kitchen-sink"
 
+export const trackedBranch = "jm/change-tests"
+
 export const postDeployRunbooks: string[] = [
   "full-health-check"
 ]
@@ -65,7 +67,7 @@ export const installGroups: InstallGroup[] = [
     "name": "staging",
     "order": 1,
     "selector": "env = staging",
-    "preview": true
+    "preview": false
   },
   {
     "name": "customers",
@@ -81,7 +83,7 @@ export const installGroups: InstallGroup[] = [
   }
 ]
 
-export const branchConfigAbridged = "name = \"main\"\n\npost_deploy_runbooks = [\"full-health-check\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"main\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\nuse_for_previews = true\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
+export const branchConfigAbridged = "name = \"main\"\npost_deploy_runbooks = [\"full-health-check\"]\n\n[public_repo]\nrepo      = \"nuonco/kitchen-sink\"\ndirectory = \".\"\nbranch    = \"jm/change-tests\"\n\n[run]\nmode = \"push\"\n\n[preview]\nmode = \"plan-only\"\nset_statuses = true\ncomment = true\nignore_drafts = true\nreact = true\n\n[preview.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"staging\"\norder = 1\n\n[install_groups.label_selector]\nenv = \"staging\"\n\n[[install_groups]]\nname  = \"customers\"\norder = 2\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"customer\"\n\n[[install_groups]]\nname  = \"enterprise\"\norder = 3\n\n[install_groups.label_selector]\nenv  = \"production\"\ntier = \"enterprise\""
 
 export const runbooks: Runbook[] = [
   {
@@ -248,6 +250,80 @@ export const adhocActions: AdhocAction[] = [
     ],
     "labels": "is_break_glass = \"true\"",
     "breakGlass": true
+  },
+  {
+    "name": "app_healthcheck",
+    "timeout": "2m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": "runtime = \"container\" · sample = \"health-check\"",
+    "breakGlass": false
+  },
+  {
+    "name": "db_healthcheck",
+    "timeout": "5m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": null,
+    "breakGlass": false
+  },
+  {
+    "name": "db_indexes",
+    "timeout": "5m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": null,
+    "breakGlass": false
+  },
+  {
+    "name": "db_metrics",
+    "timeout": "5m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": "runtime = \"container\" · sample = \"db-metrics\"",
+    "breakGlass": false
+  },
+  {
+    "name": "db_schema",
+    "timeout": "5m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": null,
+    "breakGlass": false
+  },
+  {
+    "name": "db_seed",
+    "timeout": "5m",
+    "triggers": [
+      "manual",
+      "pre-deploy-component kitchen_sink"
+    ],
+    "labels": null,
+    "breakGlass": false
+  },
+  {
+    "name": "dns_check",
+    "timeout": "5m",
+    "triggers": [
+      "manual",
+      "pre-deploy-component certificate"
+    ],
+    "labels": "runtime = \"container\" · sample = \"dns-gate\"",
+    "breakGlass": false
+  },
+  {
+    "name": "rollout_status",
+    "timeout": "10m",
+    "triggers": [
+      "manual"
+    ],
+    "labels": "runtime = \"container\" · sample = \"kubectl\"",
+    "breakGlass": false
   }
 ]
 
