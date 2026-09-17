@@ -1,3 +1,4 @@
+# permission
 type                 = "deprovision"
 name                 = "{{.nuon.install.id}}-deprovision"
 description          = "deprovision the sandbox and components."

@@ -1,3 +1,4 @@
+# permission
 type                 = "custom"
 name                 = "{{.nuon.install.id}}-sandbox-updates"
 description          = "update and maintain sandbox infrastructure"

@@ -1,3 +1,4 @@
+# permission
 type                 = "custom"
 name                 = "{{.nuon.install.id}}-setup"
 description          = "initial component deployment and configuration"

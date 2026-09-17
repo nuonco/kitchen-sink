@@ -1,3 +1,4 @@
+# permission
 type         = "custom"
 name         = "{{.nuon.install.id}}-actions"
 description  = "execute actions (healthchecks, debug, cron jobs)"
