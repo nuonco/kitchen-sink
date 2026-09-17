@@ -1,5 +1,6 @@
 # Kitchen Sink
 
+
 A test application showcasing all features of the Nuon platform including Helm charts, Pulumi infrastructure, container images, actions, roles, and policies.
 
 ## What Gets Deployed
