@@ -1,3 +1,4 @@
+# input
 name         = "api_token"
 display_name = "API Token"
 description  = "Token for external API integration"

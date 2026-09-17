@@ -1,3 +1,4 @@
+# stack
 type        = "aws-cloudformation"
 name        = "nuon-kitchen-sink-{{.nuon.install.id}}"
 description = "CloudFormation stack for Kitchen Sink app: Install {{.nuon.install.id}}"

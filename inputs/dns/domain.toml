@@ -1,3 +1,4 @@
+# input
 name         = "domain"
 display_name = "Root Domain"
 description  = "Root domain for DNS records"

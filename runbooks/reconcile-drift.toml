@@ -1,3 +1,4 @@
+# runbook
 name        = "reconcile-drift"
 description = "Re-apply desired state after out-of-band changes: plan the chart, reprovision the sandbox, then roll the infrastructure and app components forward."
 readme      = "./runbooks/reconcile-drift.md"

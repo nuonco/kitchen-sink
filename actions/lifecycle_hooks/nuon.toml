@@ -1,3 +1,4 @@
+# action
 name         = "lifecycle_hooks"
 timeout      = "1m"
 dependencies = ["kitchen_sink"]

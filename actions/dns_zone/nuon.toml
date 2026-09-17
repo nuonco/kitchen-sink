@@ -1,3 +1,4 @@
+# action
 name    = "dns_zone"
 image   = "amazon/aws-cli:2.31.18"
 timeout = "5m"

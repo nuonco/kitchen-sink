@@ -1,3 +1,4 @@
+# runbook
 name        = "break-glass"
 description = "Emergency, elevated-access remediation run as a recorded procedure instead of ad-hoc console access."
 readme      = "./runbooks/break-glass.md"

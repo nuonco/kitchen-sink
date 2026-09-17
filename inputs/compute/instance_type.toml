@@ -1,3 +1,4 @@
+# input
 name              = "instance_type"
 display_name      = "Node Instance Size"
 description       = "EC2 instance type for EKS worker nodes"

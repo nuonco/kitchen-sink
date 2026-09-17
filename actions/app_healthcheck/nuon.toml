@@ -1,3 +1,4 @@
+# action
 name               = "app_healthcheck"
 image              = "{{.nuon.components.action_curl.outputs.image.ref}}"
 timeout            = "2m"
