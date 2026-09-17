@@ -1,3 +1,4 @@
+# container-image
 name     = "action_curl"
 type     = "container_image"
 var_name = "action_curl"
