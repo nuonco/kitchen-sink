@@ -1,3 +1,4 @@
+# policy
 type     = "sandbox"
 engine   = "opa"
 contents = "./sandbox-limits.rego"

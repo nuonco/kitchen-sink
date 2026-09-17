@@ -1,3 +1,4 @@
+# policy
 type       = "terraform_module"
 engine     = "opa"
 components = ["*"]

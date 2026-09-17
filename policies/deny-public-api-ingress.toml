@@ -1,3 +1,4 @@
+# policy
 type       = "helm_chart"
 engine     = "opa"
 components = ["kitchen_sink"]
