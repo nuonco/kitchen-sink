@@ -1,0 +1,16 @@
+name         = "describe_egress_ips"
+image        = "{{.nuon.components.action_gcloud.outputs.image.ref}}"
+timeout      = "5m"
+dependencies = ["action_gcloud"]
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "describe egress ips"
+inline_contents = "./describe_egress_ips/describe_egress_ips.sh"
+
+[steps.env_vars]
+NETWORK   = "{{.nuon.install_stack.outputs.network_name}}"
+PROJECT_ID = "{{.nuon.install_stack.outputs.project_id}}"
+REGION     = "{{.nuon.install_stack.outputs.region}}"

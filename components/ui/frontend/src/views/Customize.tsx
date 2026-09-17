@@ -8,17 +8,8 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import {
-  adhocActions,
-  branchConfigAbridged,
-  branchName,
-  breakGlassToml,
-  guardrails,
-  installGroups,
-  lifecycleHooksToml,
-  roles,
-  runbooks,
-} from '../lib/config-data.gen'
+import { configData } from '../lib/config-data.gen'
+import { cloudOf, detailsFor } from '../lib/cloud'
 import { agentPrompt, proofPrompts } from '../lib/prompts'
 import { lastHub } from '../lib/origin'
 import { operationsPath, stepEyebrow } from '../lib/taxonomy'
@@ -239,6 +230,7 @@ const groupNotes: Record<string, string> = {
 }
 
 function BranchesFlow({ config }: { config: UIConfig }) {
+  const { branchConfigAbridged, branchName, installGroups } = configData[cloudOf(config)]
   return (
     <>
       <FlowHeader
@@ -368,6 +360,7 @@ function RunbookModeBadge({ mutates }: { mutates: boolean }) {
 }
 
 function RunbooksFlow({ config }: { config: UIConfig }) {
+  const { runbooks } = configData[cloudOf(config)]
   const [selected, setSelected] = useState(0)
   const runbook = runbooks[selected]
   const install = installIdOf(config)
@@ -509,7 +502,7 @@ const actionNotes: Record<string, string> = {
 }
 
 /** What a real run of each action puts on the record. */
-function actionOutcome(name: string, installID: string): ReactNode {
+function actionOutcome(name: string, installID: string, config: UIConfig): ReactNode {
   if (name === 'cron_status') {
     return (
       <>
@@ -542,16 +535,16 @@ function actionOutcome(name: string, installID: string): ReactNode {
   return (
     <>
       The transcript prints the identity the run assumed (
-      <span className="mono">aws sts get-caller-identity</span> &rarr;{' '}
+      <span className="mono">{detailsFor(config).identityCmd}</span> &rarr;{' '}
       <span className="mono">{installID}-app-break-glass</span>), then a{' '}
-      <em>denied</em> Secrets Manager call — the permissions boundary doing its
-      job — and then restarts the app&rsquo;s three deployments. Watch the pod
-      table below while it runs.
+      identity check and then restarts the app&rsquo;s three deployments.
+      Watch the pod table below while it runs.
     </>
   )
 }
 
 function ActionsFlow({ config }: { config: UIConfig }) {
+  const { adhocActions } = configData[cloudOf(config)]
   const [selected, setSelected] = useState(0)
   const action = adhocActions[selected]
   const install = installIdOf(config)
@@ -653,7 +646,7 @@ function ActionsFlow({ config }: { config: UIConfig }) {
           }
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
-          {actionOutcome(action.name, install)}
+          {actionOutcome(action.name, install, config)}
         </p>
         <p className="small muted" style={{ marginTop: 12, maxWidth: '72ch' }}>
           One of these is already on the record:{' '}
@@ -803,6 +796,7 @@ function HealthFlow({ config }: { config: UIConfig }) {
    ============================================================ */
 
 function TriggersFlow({ config }: { config: UIConfig }) {
+  const { adhocActions, lifecycleHooksToml } = configData[cloudOf(config)]
   return (
     <>
       <FlowHeader
@@ -921,24 +915,35 @@ function TriggersFlow({ config }: { config: UIConfig }) {
    ============================================================ */
 
 /** Editorial context per role; the facts in the table come from the config. */
-const roleNotes: Record<string, string> = {
-  provision:
-    'AdministratorAccess inside a permissions boundary: broad enough to create a VPC, an EKS cluster, and DNS, fenced by provision_boundary.json.',
-  setup:
-    'Used once per install for first deploys, sharing the provision boundary.',
-  maintenance:
-    'The day-2 role: AdministratorAccess fenced by a tighter maintenance boundary. This is what deploys and runbooks assume, day to day.',
-  'sandbox-updates':
-    'Sandbox reprovisions and upgrades, separated from app-level maintenance.',
-  actions:
-    'The narrowest role here: a single inline policy allowing eks:DescribeCluster, because actions run in-cluster and need almost nothing from AWS.',
-  deprovision:
-    'Teardown only. Separating it means routine operations can never delete the install.',
-  'app-break-glass':
-    'AdministratorAccess with secretsmanager:* explicitly denied, declared in break_glass.toml. Only the break_glass_remediation action can assume it, so every use is a recorded workflow.',
+function roleNotes(config: UIConfig): Record<string, string> {
+  const cloud = detailsFor(config)
+  const gcp = cloudOf(config) === 'gcp'
+  return {
+    provision: gcp
+      ? `The owner role creates the VPC network, ${cloud.cluster} cluster, DNS, and install infrastructure.`
+      : `AdministratorAccess inside a permissions boundary creates the VPC, ${cloud.cluster} cluster, and DNS.`,
+    setup: gcp
+      ? `Editor plus container.admin deploys components and cluster-scoped resources to ${cloud.cluster}.`
+      : 'Used once per install for first deploys, sharing the provision boundary.',
+    maintenance: gcp
+      ? 'Editor plus container.admin supports day-2 component and cluster operations.'
+      : 'AdministratorAccess fenced by a tighter maintenance boundary supports day-2 operations.',
+    'sandbox-updates':
+      'Sandbox reprovisions and upgrades, separated from app-level maintenance.',
+    actions: gcp
+      ? 'The narrowest role here allows container.clusters.get for action authentication.'
+      : 'The narrowest role here allows eks:DescribeCluster for action authentication.',
+    deprovision:
+      'Teardown only. Separating it means routine operations can never delete the install.',
+    'app-break-glass': gcp
+      ? 'The predefined editor role is declared in break_glass.toml and only the recorded remediation action assumes it.'
+      : 'AdministratorAccess with Secrets Manager explicitly denied is declared in break_glass.toml.',
+  }
 }
 
 function RolesFlow({ config }: { config: UIConfig }) {
+  const { breakGlassToml, guardrails, roles } = configData[cloudOf(config)]
+  const cloud = detailsFor(config)
   const [selected, setSelected] = useState(0)
   const role = roles[selected]
   const install = installIdOf(config)
@@ -987,7 +992,7 @@ function RolesFlow({ config }: { config: UIConfig }) {
           <div className="callout__label">
             {role.name} · in this install: {'{install-id}'}-{role.name}
           </div>
-          {roleNotes[role.name] ?? role.desc}
+          {roleNotes(config)[role.name] ?? role.desc}
         </div>
         <CodeBlock label="break_glass.toml (the real file)" code={breakGlassToml} />
         <p className="small muted" style={{ marginTop: 24, maxWidth: '72ch' }}>
@@ -1046,10 +1051,9 @@ function RolesFlow({ config }: { config: UIConfig }) {
         />
         <p className="small muted" style={{ marginTop: 16, maxWidth: '72ch' }}>
           In the run&rsquo;s transcript:{' '}
-          <span className="mono">aws sts get-caller-identity</span> resolves to{' '}
+          <span className="mono">{cloud.identityCmd}</span> shows{' '}
           <span className="mono">{install}-app-break-glass</span>, and the
-          Secrets Manager call that follows is <em>denied</em> — the explicit
-          Deny from break_glass.toml holding under AdministratorAccess.{' '}
+          active {cloud.account} principal for the recorded run.{' '}
           {config.links.actions && (
             <OutLink href={config.links.actions} variant="plain">
               Read the transcript in the dashboard
@@ -1077,6 +1081,8 @@ function RolesFlow({ config }: { config: UIConfig }) {
    ============================================================ */
 
 function AgentFlow({ config }: { config: UIConfig }) {
+  const { branchName } = configData[cloudOf(config)]
+  const cloud = detailsFor(config)
   const install = installIdOf(config)
   const app = appIdOf(config)
   const prompt = agentPrompt(install, app)
@@ -1122,7 +1128,7 @@ function AgentFlow({ config }: { config: UIConfig }) {
                     --action-workflow-id &lt;actw-id&gt;
                   </span>
                   . The run logs print the assumed break-glass role and a
-                  denied Secrets Manager call; watch the pod ages reset on the{' '}
+                  active {cloud.account} identity; watch the pod ages reset on the{' '}
                   <span className="mono">actions</span> page here.
                 </>
               }

@@ -1,0 +1,23 @@
+#:schema https://api.nuon.co/v1/general/config-schema?type=install
+name            = "acme-staging"
+approval_option = "approve-all"
+
+[labels]
+env = "staging"
+
+[gcp_account]
+project_id = "acme-kitchen-sink-stage"
+region     = "us-west1"
+
+[[inputs]]
+debug_mode = "false"
+
+[[inputs]]
+db_tier = "db-f1-micro"
+
+[[inputs]]
+domain = "example.com"
+
+[component_toggles]
+audit_log_exporter = false
+tictactoe          = false

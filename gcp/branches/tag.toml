@@ -1,0 +1,19 @@
+# branch
+# this branch is updated when a git tag is pushed with the provided prefix
+name = "tag-release"
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "gcp"
+branch    = "main"
+
+[run]
+mode = "on_tag_prefix"
+tag_prefix = "app-branch-release/"
+
+[[install_groups]]
+name  = "default"
+order = 1
+
+[install_groups.label_selector]
+env = "default"

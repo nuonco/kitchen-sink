@@ -1,0 +1,9 @@
+type           = "custom"
+name           = "{{.nuon.install.id}}-actions"
+description    = "execute actions (healthchecks, debug, cron jobs)"
+display_name   = "actions role"
+cloud_platform = "gcp"
+
+[[policies]]
+name            = "{{.nuon.install.id}}-actions-gke-access"
+gcp_permissions = ["container.clusters.get"]

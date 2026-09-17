@@ -6,8 +6,8 @@ A test application showcasing all features of the Nuon platform including Helm c
 
 | Feature | Description |
 |---------|-------------|
-| **Helm Chart** | Deploys API, UI, and Worker pods to EKS |
-| **Pulumi Infrastructure** | Creates an S3 bucket with encryption and versioning |
+| **Helm Chart** | Deploys API, UI, and Worker pods to EKS or GKE |
+| **Pulumi Infrastructure** | Creates a versioned object storage bucket |
 | **Container Images** | CI-built images from public ECR and GAR, including semver update policies |
 | **Actions** | Script and container-based health checks, debugging, DNS gates, and lifecycle hooks |
 | **Policies** | OPA policies for security and compliance |
@@ -18,7 +18,10 @@ A test application showcasing all features of the Nuon platform including Helm c
 
 ## Sandbox
 
-Deploys to AWS EKS using the [`aws-eks-sandbox`](https://github.com/nuonco/aws-eks-sandbox).
+The root app deploys to AWS EKS using
+[`aws-eks-sandbox`](https://github.com/nuonco/aws-eks-sandbox). The
+[`gcp/`](./gcp/) app root deploys to GKE using
+[`gcp-gke-sandbox`](https://github.com/nuonco/gcp-gke-sandbox).
 
 ## Resources
 

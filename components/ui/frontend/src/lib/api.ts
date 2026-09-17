@@ -265,6 +265,8 @@ export interface UIConfig {
   app_id?: string
   cluster_name?: string
   region?: string
+  cloud?: 'aws' | 'gcp'
+  sandbox?: string
   public_domain?: string
   namespace?: string
   links: Partial<Record<DashboardLink, string>>

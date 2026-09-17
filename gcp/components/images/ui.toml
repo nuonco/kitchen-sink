@@ -1,0 +1,17 @@
+# container-image
+# Pre-built image from Nuon's public Artifact Registry. Source lives in
+# components/ui; pushes touching it are built and published by
+# .github/workflows/build-images.yaml, which then stamps the tag below — that
+# stamp commit is what starts the staged rollout.
+name     = "img_ui"
+type     = "container_image"
+var_name = "img_ui"
+
+max_auto_retries = 5
+
+[public]
+image_url = "us-west1-docker.pkg.dev/nuon-public/kitchen-sink/ui"
+tag       = "sha-17194a0"
+
+[labels]
+is_image = "true"

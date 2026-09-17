@@ -25,6 +25,8 @@ spec:
           env:
             - name: LISTEN_ADDR
               value: ":{{ .Values.ui.port }}"
+            - name: NUON_CLOUD
+              value: {{ .Values.cloud | default "aws" | quote }}
             # Everything under ui.env, so adding a value there is enough to get
             # it into the container. API_URL comes through here; the NUON_* vars
             # are what /api/ui-config serves to the frontend.

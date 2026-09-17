@@ -1,0 +1,9 @@
+[[role]]
+name           = "{{.nuon.install.id}}-app-break-glass"
+display_name   = "Break Glass Admin"
+description    = "grants elevated access for emergencies"
+cloud_platform = "gcp"
+
+[[role.policies]]
+name                = "editor"
+gcp_predefined_role = "roles/editor"

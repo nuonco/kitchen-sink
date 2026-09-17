@@ -1,0 +1,19 @@
+# container-image
+# Pre-built image from Nuon's public Artifact Registry, containing BOTH /bin/api and
+# /bin/worker (the api and worker deployments run different entrypoints out of
+# this one image). Source lives in components/api; pushes touching it are built
+# and published by .github/workflows/build-images.yaml, which then stamps the
+# tag below — that stamp commit is what starts the staged rollout.
+#
+name     = "img_api"
+type     = "container_image"
+var_name = "img_api"
+
+max_auto_retries = 5
+
+[public]
+image_url = "us-west1-docker.pkg.dev/nuon-public/kitchen-sink/app"
+tag       = "sha-17194a0"
+
+[labels]
+is_image = "true"

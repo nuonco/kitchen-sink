@@ -1,0 +1,7 @@
+name     = "action_gcloud"
+type     = "container_image"
+var_name = "action_gcloud"
+
+[public]
+image_url = "google/cloud-sdk"
+tag       = "539.0.0-slim"

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { UIConfig } from '../lib/api'
-import { repoName, trackedBranch } from '../lib/config-data.gen'
+import { configData } from '../lib/config-data.gen'
+import { cloudOf, detailsFor } from '../lib/cloud'
 import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
@@ -31,7 +32,10 @@ interface ComponentType {
  * from the repo, so what a visitor reads here is the config that produced the
  * install they are reading it in.
  */
-const types: ComponentType[] = [
+function componentTypes(config: UIConfig): ComponentType[] {
+  const cloud = detailsFor(config)
+  const prefix = cloudOf(config) === 'gcp' ? 'gcp/' : ''
+  return [
   {
     type: 'helm_chart',
     purpose: 'Deploy a Helm chart',
@@ -40,7 +44,7 @@ const types: ComponentType[] = [
       'Deploys a Helm chart into the install cluster. Nuon interpolates your values file first, so image tags and sandbox outputs are filled in per install.',
     here:
       'kitchen_sink: the API, the worker, and this UI. One chart, three deployments.',
-    file: 'components/chart/nuon.toml',
+    file: `${prefix}components/${cloudOf(config) === 'gcp' ? 'chart.toml' : 'chart/nuon.toml'}`,
     toml: `name = "kitchen_sink"
 type = "helm_chart"
 chart_name = "kitchen-sink"
@@ -63,14 +67,14 @@ contents = "./chart/values.yaml"`,
     what:
       'Copies an image you have already built into the install. Use it when your CI publishes images and you only want Nuon to deploy them.',
     here:
-      'img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to a public ECR gallery; Nuon only pulls the tag the config pins. img_api_two shows the private-registry variant, pulled with an IAM role Nuon assumes.',
-    file: 'components/images/ui.toml',
+      `img_ui (this page) and img_api (the introspection API). CI builds both from this repo and publishes them to ${cloud.registry}; Nuon only pulls the tag the config pins.`,
+    file: `${prefix}components/images/ui.toml`,
     toml: `name     = "img_ui"
 type     = "container_image"
 var_name = "img_ui"
 
 [public]
-image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-ui"
+image_url = "${cloud.registry}/${cloudOf(config) === 'gcp' ? 'ui' : 'kitchen-sink-ui'}"
 # CI stamps the pinned tag on every image build
 tag       = "sha-…"`,
   },
@@ -81,8 +85,8 @@ tag       = "sha-…"`,
     what:
       'Runs a Terraform module. The runner holds the state and the credentials, so your customer keeps both.',
     here:
-      'certificate: a DNS-validated wildcard ACM certificate for *.<install domain>, which the load balancer then terminates HTTPS with.',
-    file: 'components/certificate.toml',
+      `certificate: a DNS-validated wildcard ${cloud.certificate} certificate for *.<install domain>, which the load balancer then terminates HTTPS with.`,
+    file: `${prefix}components/certificate.toml`,
     toml: `name              = "certificate"
 type              = "terraform_module"
 terraform_version = "1.11.3"
@@ -105,8 +109,8 @@ domain_name = "*.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}
     what:
       'Runs a Pulumi program in Go, TypeScript or Python. Same contract as Terraform: your code, the customer’s account, the runner in between.',
     here:
-      'pulumi_infra: an S3 bucket with encryption and versioning, named from the install id.',
-    file: 'components/pulumi/nuon.toml',
+      `pulumi_infra: a ${cloud.storage} bucket with access controls and versioning, named from the install id.`,
+    file: `${prefix}components/${cloudOf(config) === 'gcp' ? 'pulumi.toml' : 'pulumi/nuon.toml'}`,
     toml: `name    = "pulumi_infra"
 type    = "pulumi"
 runtime = "go"
@@ -117,7 +121,7 @@ directory = "components/pulumi"
 branch    = "main"
 
 [config]
-"aws:region"              = "{{.nuon.install_stack.outputs.region}}"
+"${cloud.pulumiKey}" = "{{.nuon.install_stack.outputs.${cloudOf(config) === 'gcp' ? 'project_id' : 'region'}}}"
 "kitchen-sink:install_id" = "{{.nuon.install.id}}"`,
   },
   {
@@ -144,19 +148,21 @@ branch    = "master"
 path        = "./kustomize-guestbook"
 enable_helm = false`,
   },
-]
-
-/** The file's home in the repo, at the branch this install tracks. */
-function repoFileURL(file: string): string {
-  return `https://github.com/${repoName}/blob/${trackedBranch}/${file}`
+  ]
 }
 
-function FileCode({ file, code }: { file: string; code: string }) {
+/** The file's home in the repo, at the branch this install tracks. */
+function repoFileURL(file: string, config: UIConfig): string {
+  const appConfig = configData[cloudOf(config)]
+  return `https://github.com/${appConfig.repoName}/blob/${appConfig.trackedBranch}/${file}`
+}
+
+function FileCode({ file, code, config }: { file: string; code: string; config: UIConfig }) {
   return (
     <div className="filecode">
       <a
         className="filecode__name mono"
-        href={repoFileURL(file)}
+        href={repoFileURL(file, config)}
         target="_blank"
         rel="noreferrer"
       >
@@ -168,8 +174,9 @@ function FileCode({ file, code }: { file: string; code: string }) {
 }
 
 /** The matrix: one row per type, one row open at a time. */
-function TypeMatrix() {
+function TypeMatrix({ config }: { config: UIConfig }) {
   const [open, setOpen] = useState<string | null>(null)
+  const types = componentTypes(config)
 
   return (
     <div className="typelist">
@@ -195,7 +202,7 @@ function TypeMatrix() {
                 <p className="typerow__here">
                   <strong>In this app:</strong> {t.here}
                 </p>
-                <FileCode file={t.file} code={t.toml} />
+                <FileCode file={t.file} code={t.toml} config={config} />
               </div>
             )}
           </div>
@@ -209,7 +216,9 @@ function TypeMatrix() {
  * The dependency order of this app's core pieces, copied from each
  * component's own `dependencies` line.
  */
-const deployOrder = [
+function deployOrder(config: UIConfig) {
+  const loadBalancer = cloudOf(config) === 'gcp' ? 'gateway' : 'application_load_balancer'
+  return [
   {
     label: 'img_api · img_ui',
     detail: 'container_image — nothing to wait for',
@@ -219,10 +228,11 @@ const deployOrder = [
     detail: 'dependencies = ["img_api", "img_ui"]',
   },
   {
-    label: 'application_load_balancer',
+    label: loadBalancer,
     detail: 'dependencies = ["certificate", "kitchen_sink"]',
   },
-]
+  ]
+}
 
 export function Mapping({ config }: { config: UIConfig }) {
   useMarkStepSeen('/map')
@@ -239,7 +249,7 @@ export function Mapping({ config }: { config: UIConfig }) {
       </header>
 
       <Section title="The component types" aside="Five of them, in this app">
-        <TypeMatrix />
+        <TypeMatrix config={config} />
         <Callout label="A first config needs one, not five">
           Pick the type that matches how you already ship — a chart, a prebuilt
           image, a Terraform module. The other four are here because this app
@@ -260,7 +270,7 @@ export function Mapping({ config }: { config: UIConfig }) {
           component can interpolate another&rsquo;s outputs.
         </p>
         <div className="ship">
-          {deployOrder.map((beat, i) => (
+          {deployOrder(config).map((beat, i) => (
             <span key={beat.label} className="ship__beat">
               <span className="ship__num">0{i + 1}</span>
               <span className="ship__label">{beat.label}</span>
@@ -269,7 +279,8 @@ export function Mapping({ config }: { config: UIConfig }) {
           ))}
         </div>
         <FileCode
-          file="components/chart/values.yaml"
+          file={cloudOf(config) === 'gcp' ? 'gcp/components/chart-values.yaml' : 'components/chart/values.yaml'}
+          config={config}
           code={`api:
   image: "{{.nuon.components.img_api.outputs.image.repository}}:{{.nuon.components.img_api.outputs.image.tag}}"`}
         />

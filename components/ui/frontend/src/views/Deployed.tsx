@@ -8,6 +8,7 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
+import { detailsFor } from '../lib/cloud'
 import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
@@ -123,7 +124,7 @@ function Glance({
    shows. Four patterns, all real, each worked for real elsewhere in the app.
    ============================================================ */
 
-function Patterns({ namespace }: { namespace: string }) {
+function Patterns({ namespace, loadBalancer }: { namespace: string; loadBalancer: string }) {
   const patterns: Array<{ name: string; note: ReactNode }> = [
     {
       name: 'One chart, one namespace',
@@ -140,7 +141,7 @@ function Patterns({ namespace }: { namespace: string }) {
       note: (
         <>
           A Terraform module issues the certificate, a second chart runs the
-          ALB in front of every service, deployed in dependency order.
+          {loadBalancer} in front of every service, deployed in dependency order.
         </>
       ),
     },
@@ -182,6 +183,7 @@ function Patterns({ namespace }: { namespace: string }) {
 }
 
 export function Deployed({ config }: { config: UIConfig }) {
+  const cloud = detailsFor(config)
   const namespace = config.namespace ?? 'kitchen-sink'
   const kube = useIntrospect<KubeResponse>('/api/introspect/kube')
   const ns = useIntrospect<NamespaceResponse>(
@@ -208,7 +210,7 @@ export function Deployed({ config }: { config: UIConfig }) {
         <LoadState result={ns} what={`the ${namespace} namespace`} />
       )}
 
-      <Patterns namespace={namespace} />
+      <Patterns namespace={namespace} loadBalancer={cloud.lb} />
       <StepNav current="/deployed" />
     </>
   )
