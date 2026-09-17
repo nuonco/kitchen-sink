@@ -4,7 +4,7 @@ name = "manual-release"
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "main"
+branch    = "jm/app-branch-tests-20260917"
 
 [run]
 mode = "manual_only"

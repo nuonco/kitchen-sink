@@ -5,7 +5,7 @@ name = "tag-release"
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "main"
+branch    = "jm/app-branch-tests-20260917"
 
 [run]
 mode = "on_tag"
