@@ -1,3 +1,4 @@
+# runbook
 name        = "debug-bundle"
 description = "Something's gone wrong — collect a read-only diagnostic bundle: pod state, events, logs, restart reasons, and a verbose endpoint probe."
 readme      = "./runbooks/debug-bundle.md"

@@ -1,3 +1,4 @@
+# runbook
 name        = "full-health-check"
 description = "Check an install end to end: nodes, the kitchen-sink workloads, the ALB ingress, and the public HTTPS endpoint."
 readme      = "./runbooks/full-health-check.md"
