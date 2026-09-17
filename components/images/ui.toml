@@ -7,8 +7,6 @@ name     = "img_ui"
 type     = "container_image"
 var_name = "img_ui"
 
-max_auto_retries = 5
-
 [public]
 image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-ui"
 tag       = "sha-17194a0"
