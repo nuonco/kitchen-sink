@@ -1,3 +1,4 @@
+# branch
 # this branch is only executed when a PR is opened against the base branch with the label of `update-app-branch`
 name = "github-label-release"
 
