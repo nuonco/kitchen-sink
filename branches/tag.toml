@@ -8,7 +8,7 @@ directory = "."
 branch    = "main"
 
 [run]
-mode = "on_tag"
+mode = "on_tag_prefix"
 tag_prefix = "app-branch-release/"
 
 [[install_groups]]
