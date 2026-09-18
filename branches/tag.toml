@@ -12,8 +12,8 @@ mode = "on_tag_prefix"
 tag_prefix = "app-branch-release/"
 
 [[install_groups]]
-name  = "default"
+name  = "tag"
 order = 1
 
 [install_groups.label_selector]
-env = "default"
+mode = "on_tag_prefix"

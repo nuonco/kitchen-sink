@@ -13,8 +13,8 @@ mode         = "on_github_label"
 github_label = "update-app-branch"
 
 [[install_groups]]
-name  = "default"
+name  = "github-label"
 order = 1
 
 [install_groups.label_selector]
-env = "default"
+mode = "on_github_label"

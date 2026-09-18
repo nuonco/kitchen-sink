@@ -21,8 +21,8 @@ react = true
 env = "preview"
 
 [[install_groups]]
-name  = "default"
+name  = "push"
 order = 1
 
 [install_groups.label_selector]
-env = "default"
+mode = "push"
