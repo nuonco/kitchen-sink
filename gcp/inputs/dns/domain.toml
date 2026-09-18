@@ -1,0 +1,7 @@
+name         = "domain"
+display_name = "Root Domain"
+description  = "Root domain for DNS records"
+group        = "dns"
+default      = "nuon.run"
+type         = "string"
+required     = true

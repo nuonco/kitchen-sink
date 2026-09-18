@@ -1,10 +1,6 @@
 import type { UIConfig } from '../lib/api'
-import {
-  adhocActions,
-  branchName,
-  roles,
-  runbooks,
-} from '../lib/config-data.gen'
+import { configData } from '../lib/config-data.gen'
+import { cloudOf, detailsFor } from '../lib/cloud'
 import {
   BackLink,
   CommandBlock,
@@ -29,6 +25,8 @@ function nameList(items: Array<{ name: string; mutates?: boolean }>) {
 }
 
 export function Ops({ config }: { config: UIConfig }) {
+  const { adhocActions, branchName, roles, runbooks } = configData[cloudOf(config)]
+  const cloud = detailsFor(config)
   const install = installIdOf(config)
   const app = appIdOf(config)
   // Straight to the component's own page on this install (its toggle lives
@@ -165,9 +163,8 @@ export function Ops({ config }: { config: UIConfig }) {
             <>
               Roles: {nameList(roles)}.{' '}
               <Mono>break_glass_remediation</Mono> runs as{' '}
-              <Mono>app-break-glass</Mono>: AdministratorAccess minus an
-              explicit Secrets Manager Deny &mdash; the transcript shows the
-              denial.
+              <Mono>app-break-glass</Mono> and the transcript shows the active{' '}
+              {cloud.account} identity.
             </>
           }
         />

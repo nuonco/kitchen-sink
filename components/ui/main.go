@@ -29,6 +29,8 @@ type uiConfig struct {
 	AppID        string            `json:"app_id,omitempty"`
 	ClusterName  string            `json:"cluster_name,omitempty"`
 	Region       string            `json:"region,omitempty"`
+	Cloud        string            `json:"cloud"`
+	Sandbox      string            `json:"sandbox,omitempty"`
 	PublicDomain string            `json:"public_domain,omitempty"`
 	Namespace    string            `json:"namespace,omitempty"`
 	Links        map[string]string `json:"links"`
@@ -54,12 +56,17 @@ func buildUIConfig() uiConfig {
 		AppID:        resolvedEnv("NUON_APP_ID"),
 		ClusterName:  resolvedEnv("NUON_CLUSTER_NAME"),
 		Region:       resolvedEnv("NUON_REGION"),
+		Cloud:        resolvedEnv("NUON_CLOUD"),
+		Sandbox:      resolvedEnv("NUON_SANDBOX"),
 		PublicDomain: resolvedEnv("NUON_PUBLIC_DOMAIN"),
 		Namespace:    resolvedEnv("NUON_NAMESPACE"),
 		Links:        map[string]string{},
 	}
 	if cfg.Namespace == "" {
 		cfg.Namespace = "kitchen-sink"
+	}
+	if cfg.Cloud == "" {
+		cfg.Cloud = "aws"
 	}
 
 	base := resolvedEnv("NUON_DASHBOARD_URL")

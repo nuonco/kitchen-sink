@@ -1,0 +1,15 @@
+name         = "dns_zone"
+image        = "{{.nuon.components.action_gcloud.outputs.image.ref}}"
+timeout      = "5m"
+dependencies = ["action_gcloud"]
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "list zone records"
+inline_contents = "./dns_zone/dns_zone.sh"
+
+[steps.env_vars]
+DNS_ZONE   = "{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.zone_id}}"
+PROJECT_ID = "{{.nuon.install_stack.outputs.project_id}}"

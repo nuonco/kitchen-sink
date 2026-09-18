@@ -1,0 +1,13 @@
+type           = "maintenance"
+name           = "{{.nuon.install.id}}-maintenance"
+description    = "operate and remediate components"
+display_name   = "maintenance role"
+cloud_platform = "gcp"
+
+[[policies]]
+name                = "editor"
+gcp_predefined_role = "roles/editor"
+
+[[policies]]
+name                = "gke-admin"
+gcp_predefined_role = "roles/container.admin"

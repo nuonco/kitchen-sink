@@ -1,0 +1,15 @@
+name    = "verify_dns"
+image   = "nicolaka/netshoot:v0.16"
+timeout = "5m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "verify public delegation"
+inline_contents = "./verify_dns/verify_dns.sh"
+
+[steps.env_vars]
+DOMAIN      = "{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
+APP_HOST    = "app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}"
+EXPECTED_NS = "{{ range $ns := .nuon.install.sandbox.outputs.nuon_dns.public_domain.nameservers }}{{ $ns }} {{ end }}"

@@ -1,0 +1,16 @@
+name               = "describe_gateway"
+image              = "{{.nuon.components.action_gcloud.outputs.image.ref}}"
+timeout            = "5m"
+enable_kube_config = true
+dependencies       = ["action_gcloud", "gateway"]
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "describe gateway"
+inline_contents = "./describe_gateway/describe_gateway.sh"
+
+[steps.env_vars]
+INSTALL_ID = "{{.nuon.install.id}}"
+PROJECT_ID = "{{.nuon.install_stack.outputs.project_id}}"
