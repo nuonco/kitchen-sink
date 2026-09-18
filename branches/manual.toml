@@ -11,8 +11,8 @@ branch    = "main"
 mode = "manual_only"
 
 [[install_groups]]
-name  = "default"
+name  = "manual"
 order = 1
 
 [install_groups.label_selector]
-env = "default"
+mode = "manual_only"
