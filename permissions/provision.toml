@@ -5,5 +5,8 @@ description          = "provision the sandbox and components; trigger actions."
 display_name         = "provision role"
 permissions_boundary = "./provision_boundary.json"
 
+[[named_policies]]
+name = "{{.nuon.install.id}}-alb-create"
+
 [[policies]]
 managed_policy_name = "AdministratorAccess"

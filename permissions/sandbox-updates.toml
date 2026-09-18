@@ -5,5 +5,5 @@ description          = "update and maintain sandbox infrastructure"
 display_name         = "sandbox updates"
 permissions_boundary = "./provision_boundary.json"
 
-[[policies]]
-managed_policy_name = "AdministratorAccess"
+[[named_policies]]
+name = "{{.nuon.install.id}}-eks-upgrade"
