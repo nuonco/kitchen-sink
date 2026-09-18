@@ -1,0 +1,50 @@
+name: Sync app branches
+
+# Keep Nuon app-branch config in sync with branches/*.toml.
+# When this runs it creates/updates each branch file from the repo in Nuon,
+# and removes Nuon branches that no longer have a matching file.
+# This is branch-config only — not a full `nuon apps sync`.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "branches/**"
+  workflow_dispatch:
+
+concurrency:
+  group: nuon-branches-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  sync-stage:
+    runs-on: ubuntu-latest
+    name: Sync branches (stage)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Sync app branches
+        uses: nuonco/actions-nuon@v0.4.3
+        with:
+          org_id: ${{ vars.nuon_org_id_stage }}
+          app_id: ${{ vars.nuon_app_id_stage }}
+          command: "branches sync --file branches --confirm"
+
+  sync-prod:
+    runs-on: ubuntu-latest
+    name: Sync branches (prod)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Sync app branches
+        uses: nuonco/actions-nuon@v0.4.3
+        with:
+          org_id: ${{ vars.nuon_org_id_prod }}
+          app_id: ${{ vars.nuon_app_id_prod }}
+          command: "branches sync --file branches --confirm"
