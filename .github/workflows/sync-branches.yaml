@@ -31,6 +31,7 @@ jobs:
       - name: Sync app branches
         uses: nuonco/actions-nuon@v0.4.3
         with:
+          api_url: https://api.stage.nuon.co
           org_id: ${{ vars.nuon_org_id_stage }}
           app_id: ${{ vars.nuon_app_id_stage }}
           command: "branches sync --file branches --confirm"
