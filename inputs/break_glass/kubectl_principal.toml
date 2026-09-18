@@ -1,0 +1,8 @@
+name              = "kubectl_principal"
+display_name      = "Kubectl Principal ARN"
+description       = "IAM principal granted kubectl access while break glass is enabled"
+group             = "break_glass"
+default           = ""
+type              = "string"
+required          = false
+user_configurable = true
