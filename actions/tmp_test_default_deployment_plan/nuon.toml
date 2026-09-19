@@ -1,0 +1,10 @@
+# action
+name    = "tmp_test_default_deployment_plan"
+timeout = "1m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "print-test-message"
+inline_contents = "./tmp_test_default_deployment_plan/script.sh"
