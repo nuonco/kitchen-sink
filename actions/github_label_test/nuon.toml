@@ -1,0 +1,10 @@
+# action
+name    = "github_label_test"
+timeout = "1m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "print-test-message"
+inline_contents = "./github_label_test/script.sh"
