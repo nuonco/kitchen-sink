@@ -22,7 +22,14 @@ set -euo pipefail
 : "${TAG:?}" "${BASE_OID:?}" "${BASE_BRANCH:?}" "${GITHUB_REPOSITORY:?}" "${GH_TOKEN:?}"
 
 BRANCH="ci/stamp-${TAG}"
-FILES=(components/images/api.toml components/images/ui.toml components/chart/nuon.toml)
+FILES=(
+  components/images/api.toml
+  components/images/ui.toml
+  components/chart/nuon.toml
+  gcp/components/images/api.toml
+  gcp/components/images/ui.toml
+  gcp/components/chart.toml
+)
 
 if gh api "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" >/dev/null 2>&1; then
   gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" >/dev/null
@@ -75,7 +82,7 @@ gh pr create \
   --base "$BASE_BRANCH" \
   --head "$BRANCH" \
   --title "chore: stamp image tags to ${TAG}" \
-  --body "Pins \`${TAG}\` in \`components/images/*.toml\` and the chart's \`image_stamp\`, published by [run ${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}). Squash-merging this is what starts the staged rollout." \
+  --body "Pins \`${TAG}\` in both app roots' image configs and chart stamps, published by [run ${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}). Squash-merging this is what starts the staged rollout." \
   --label "deploy-cadence-daily"
 
 gh pr merge "$BRANCH" --auto --squash \

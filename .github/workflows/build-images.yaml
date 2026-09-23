@@ -3,15 +3,14 @@ name: Build and publish images
 # Same pattern as nuonco/uptime-monitor's build-images.yaml: build on source
 # changes, publish to Nuon's public ECR gallery via the shared org OIDC role.
 # One addition: a stamp job pins the new immutable tag in
-# components/images/*.toml — plus the chart's `image_stamp` value, so the
+# both app roots' image configs — plus each chart's `image_stamp` value, so the
 # chart component's config changes too and the rollout redeploys it (the
 # chart bakes image tags at render time; without this it's classified
 # "unchanged" and skipped, serving stale images) — and lands that commit on
 # the tracked branch, which is what triggers the staged Nuon rollout (via the
 # push rule in triggers.toml.example, when enabled in the org — see its
-# header). The stamp commit only touches components/images/ and
-# components/chart/nuon.toml, both outside this workflow's path filters, so it
-# cannot retrigger this workflow.
+# header). The stamp commit only touches image and chart configs outside this
+# workflow's path filters, so it cannot retrigger this workflow.
 #
 # The stamp cannot push to main directly: the branch requires signed commits
 # (no bypass list exists for that rule) and requires changes to arrive through
@@ -115,8 +114,14 @@ jobs:
         id: pin
         run: |
           TAG="sha-${GITHUB_SHA::7}"
-          sed -i "s/^tag       = \".*\"/tag       = \"${TAG}\"/" components/images/api.toml components/images/ui.toml
-          sed -i "s/^image_stamp = \".*\"/image_stamp = \"${TAG}\"/" components/chart/nuon.toml
+          sed -i "s/^tag       = \".*\"/tag       = \"${TAG}\"/" \
+            components/images/api.toml \
+            components/images/ui.toml \
+            gcp/components/images/api.toml \
+            gcp/components/images/ui.toml
+          sed -i "s/^image_stamp = \".*\"/image_stamp = \"${TAG}\"/" \
+            components/chart/nuon.toml \
+            gcp/components/chart.toml
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           if git diff --quiet; then
             echo "tags unchanged"

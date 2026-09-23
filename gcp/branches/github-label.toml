@@ -1,0 +1,19 @@
+# this branch is only executed when a PR is opened against the base branch with the label of `update-app-branch`
+name = "github-label-release"
+
+# Label matching requires the GitHub App connection so Nuon can query PR data.
+[connected_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "gcp"
+branch    = "main"
+
+[run]
+mode         = "on_github_label"
+github_label = "update-app-branch"
+
+[[install_groups]]
+name  = "default"
+order = 1
+
+[install_groups.label_selector]
+env = "default"

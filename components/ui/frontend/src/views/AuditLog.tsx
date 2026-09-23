@@ -8,7 +8,8 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import { toggleableComponents } from '../lib/config-data.gen'
+import { configData } from '../lib/config-data.gen'
+import { cloudOf } from '../lib/cloud'
 import { stepEyebrow } from '../lib/taxonomy'
 import { useMarkStepSeen } from '../lib/progress'
 import { StepNav } from '../ui/CapabilityGrid'
@@ -291,6 +292,7 @@ function EventsFeed({ namespace, config }: { namespace: string; config: UIConfig
 }
 
 export function AuditLog({ config }: { config: UIConfig }) {
+  const { toggleableComponents } = configData[cloudOf(config)]
   useMarkStepSeen('/audit-log')
   const namespace = config.namespace ?? 'kitchen-sink'
   const [audit, setAudit] = useState(false)

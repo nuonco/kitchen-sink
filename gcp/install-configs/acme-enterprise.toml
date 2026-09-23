@@ -1,0 +1,24 @@
+#:schema https://api.nuon.co/v1/general/config-schema?type=install
+name            = "acme-enterprise"
+approval_option = "approve-all"
+
+[labels]
+env  = "production"
+tier = "enterprise"
+
+[gcp_account]
+project_id = "acme-kitchen-sink-enterprise"
+region     = "us-west1"
+
+[[inputs]]
+debug_mode = "false"
+
+[[inputs]]
+db_tier = "db-custom-2-7680"
+
+[[inputs]]
+domain = "example.com"
+
+[component_toggles]
+audit_log_exporter = false
+tictactoe          = false

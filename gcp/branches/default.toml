@@ -1,0 +1,27 @@
+# this is the default branch that is updated on every push to the repo.
+name = "default"
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "gcp"
+branch    = "main"
+
+[run]
+mode = "push"
+
+[preview]
+mode = "plan-only"
+set_statuses = true
+comment = true
+ignore_drafts = true
+react = true
+
+[preview.label_selector]
+env = "preview"
+
+[[install_groups]]
+name  = "default"
+order = 1
+
+[install_groups.label_selector]
+env = "default"

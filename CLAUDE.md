@@ -3,7 +3,7 @@
 Kitchen Sink is Nuon's demo app config: a real web app (UI + API + worker) plus
 the full surface of the Nuon platform (components, actions, runbooks, an app
 branch, triggers, policies, permissions, break-glass, component health). It is
-installed into AWS accounts via Nuon; `control-plane.md` is the install page's
+installed into AWS accounts or GCP projects via Nuon; `control-plane.md` is the AWS install page's
 programmable readme, and `components/ui` is a guided tour of the platform that
 deploys as the app itself.
 
@@ -16,6 +16,7 @@ deploys as the app itself.
 - `inputs/`, `input_groups/`, `secrets.toml` — per-install parameters
 - `policies/` (OPA), `permissions/` (per-operation IAM roles + boundaries), `break_glass.toml`
 - `sandbox.toml`, `stack.toml`, `runner.toml` — infrastructure foundation
+- `gcp/` — complete GCP app root; shared chart, API, and UI sources remain at the repository root
 
 ## Hard-won rules (violations fail at sync time, not validate time)
 

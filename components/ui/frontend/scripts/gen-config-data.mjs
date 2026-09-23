@@ -1,22 +1,13 @@
 #!/usr/bin/env node
-// Generates src/lib/config-data.gen.ts from the repo's real app config
-// (branches/default.toml, runbooks/, actions/, permissions/, break_glass.toml,
-// policies/), so the customize views can never drift from the config.
-//
-// Runs automatically before `npm run dev` and `npm run build`. The generated
-// file is committed because the Docker image build's context is components/ui
-// only: inside that build the repo root does not exist, so this script keeps
-// the committed file and exits. From a repo checkout it always regenerates.
 
-import { readFileSync, readdirSync, writeFileSync, existsSync } from 'node:fs'
-import { dirname, join, basename, resolve } from 'node:path'
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { parse } from 'smol-toml'
 
 const frontendDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const outFile = join(frontendDir, 'src', 'lib', 'config-data.gen.ts')
 
-// Walk up from the frontend directory to find the repo root.
 let repoRoot = frontendDir
 while (repoRoot !== '/' && !existsSync(join(repoRoot, 'branches', 'default.toml'))) {
   repoRoot = dirname(repoRoot)
@@ -24,85 +15,33 @@ while (repoRoot !== '/' && !existsSync(join(repoRoot, 'branches', 'default.toml'
 
 if (!existsSync(join(repoRoot, 'branches', 'default.toml'))) {
   if (existsSync(outFile)) {
-    console.log('gen-config-data: repo config not found (image build); keeping the committed config-data.gen.ts')
+    console.log('gen-config-data: repo config not found; keeping config-data.gen.ts')
     process.exit(0)
   }
-  console.error('gen-config-data: repo config not found and no committed config-data.gen.ts to fall back to')
+  console.error('gen-config-data: repo config not found and no generated fallback exists')
   process.exit(1)
 }
 
-const read = (rel) => readFileSync(join(repoRoot, rel), 'utf8')
-const toml = (rel) => parse(read(rel))
-
-/* ---------- branches/default.toml ---------- */
-
-const branch = toml('branches/default.toml')
-
-const selectorText = (sel) =>
-  Object.entries(sel ?? {})
-    .map(([k, v]) => `${k} = ${v}`)
+const selectorText = (selector) =>
+  Object.entries(selector ?? {})
+    .map(([key, value]) => `${key} = ${value}`)
     .join(' · ')
 
-const installGroups = (branch.install_groups ?? [])
-  .slice()
-  .sort((a, b) => a.order - b.order)
-  .map((g) => ({
-    name: g.name,
-    order: g.order,
-    selector: selectorText(g.label_selector),
-    preview: Boolean(g.use_for_previews),
-  }))
-
-// The real file with its comments stripped: still the real config, abridged.
-const branchConfigAbridged = read('branches/default.toml')
-  .split('\n')
-  .filter((line) => !line.trim().startsWith('#'))
-  .join('\n')
-  .replace(/\n{3,}/g, '\n\n')
-  .trim()
-
-/* ---------- actions (one nuon.toml per directory) ---------- */
-
-const triggerText = (t) => {
-  if (t.type === 'cron') return `cron ${t.cron_schedule}`
-  return t.component_name ? `${t.type} ${t.component_name}` : t.type
+const triggerText = (trigger) => {
+  if (trigger.type === 'cron') return `cron ${trigger.cron_schedule}`
+  return trigger.component_name
+    ? `${trigger.type} ${trigger.component_name}`
+    : trigger.type
 }
 
-const actionOrder = ['cron_status', 'debug', 'lifecycle_hooks', 'break_glass_remediation']
-const actionDirs = readdirSync(join(repoRoot, 'actions'), { withFileTypes: true })
-  .filter((e) => e.isDirectory())
-  .map((e) => e.name)
-  .sort((a, b) => {
-    const ia = actionOrder.indexOf(a)
-    const ib = actionOrder.indexOf(b)
-    return (ia === -1 ? actionOrder.length : ia) - (ib === -1 ? actionOrder.length : ib)
-  })
+const stripped = (contents) =>
+  contents
+    .split('\n')
+    .filter((line) => !line.trim().startsWith('#'))
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 
-const actionsByName = {}
-const adhocActions = actionDirs.map((dir) => {
-  const a = toml(`actions/${dir}/nuon.toml`)
-  actionsByName[a.name] = a
-  return {
-    name: a.name,
-    timeout: a.timeout,
-    triggers: (a.triggers ?? []).map(triggerText).sort((x, y) => {
-      // cron and manual first, matching how the flow presents them.
-      const rank = (s) => (s.startsWith('cron') ? 0 : s === 'manual' ? 1 : 2)
-      return rank(x) - rank(y)
-    }),
-    labels: Object.entries(a.labels ?? {})
-      .map(([k, v]) => `${k} = "${v}"`)
-      .join(' · ') || null,
-    breakGlass: Boolean(a.break_glass_role),
-  }
-})
-
-const lifecycleHooksToml = read('actions/lifecycle_hooks/nuon.toml').trim()
-
-/* ---------- runbooks/*.toml ---------- */
-
-// A step summary from the step's real fields. Inline scripts are summarized by
-// their "=== heading ===" echo lines.
 const stepDetail = (step) => {
   const suffix = step.timeout ? ` · ${step.timeout}` : ''
   if (step.action_name) return `runs the ${step.action_name} action`
@@ -117,217 +56,219 @@ const stepDetail = (step) => {
   }
   if (step.inline_contents) {
     const headings = [...step.inline_contents.matchAll(/^\s*echo "=== (.+?) ==="/gm)]
-      .map((m) => m[1].replace(/ \(.*\)$/, '').replace(/\s*:\s*\$\w+$/, ''))
-      .filter((h, i, all) => all.indexOf(h) === i)
-    if (headings.length) return `${headings.join(', ')}${suffix}`
-    return `inline script${suffix}`
+      .map((match) => match[1].replace(/ \(.*\)$/, '').replace(/\s*:\s*\$\w+$/, ''))
+      .filter((heading, index, all) => all.indexOf(heading) === index)
+    return `${headings.length ? headings.join(', ') : 'inline script'}${suffix}`
   }
   if (step.command) {
-    if (step.command.includes('curl')) return `probe the public HTTPS endpoint${suffix}`
-    return `command${suffix}`
+    return `${step.command.includes('curl') ? 'probe the public HTTPS endpoint' : 'command'}${suffix}`
   }
   return step.type + suffix
 }
 
-const mutatingStepTypes = new Set([
-  'component_deploy',
-  'sandbox_reprovision',
-  'component_tear_down',
-  'sandbox_deprovision',
-])
+function buildConfig(root) {
+  const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8')
+  const toml = (relativePath) => parse(read(relativePath))
+  const branch = toml('branches/default.toml')
 
-const runbookOrder = ['full-health-check', 'debug-bundle', 'reconcile-drift', 'break-glass']
-const runbookFiles = readdirSync(join(repoRoot, 'runbooks'))
-  .filter((f) => f.endsWith('.toml'))
-  .sort((a, b) => {
-    const ia = runbookOrder.indexOf(basename(a, '.toml'))
-    const ib = runbookOrder.indexOf(basename(b, '.toml'))
-    return (ia === -1 ? runbookOrder.length : ia) - (ib === -1 ? runbookOrder.length : ib)
+  const installGroups = (branch.install_groups ?? [])
+    .slice()
+    .sort((a, b) => a.order - b.order)
+    .map((group) => ({
+      name: group.name,
+      order: group.order,
+      selector: selectorText(group.label_selector),
+      preview: Boolean(group.use_for_previews),
+    }))
+
+  const actionOrder = ['cron_status', 'debug', 'lifecycle_hooks', 'break_glass_remediation']
+  const actionDirs = readdirSync(join(root, 'actions'), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(root, 'actions', entry.name, 'nuon.toml')))
+    .map((entry) => entry.name)
+    .sort((a, b) => {
+      const left = actionOrder.indexOf(a)
+      const right = actionOrder.indexOf(b)
+      return (left === -1 ? actionOrder.length : left) -
+        (right === -1 ? actionOrder.length : right)
+    })
+
+  const actionsByName = {}
+  const adhocActions = actionDirs.map((directory) => {
+    const action = toml(`actions/${directory}/nuon.toml`)
+    actionsByName[action.name] = action
+    return {
+      name: action.name,
+      timeout: action.timeout,
+      triggers: (action.triggers ?? []).map(triggerText).sort((a, b) => {
+        const rank = (value) => value.startsWith('cron') ? 0 : value === 'manual' ? 1 : 2
+        return rank(a) - rank(b)
+      }),
+      labels: Object.entries(action.labels ?? {})
+        .map(([key, value]) => `${key} = "${value}"`)
+        .join(' · ') || null,
+      breakGlass: Boolean(action.break_glass_role),
+    }
   })
 
-const runbooks = runbookFiles.map((f) => {
-  const rb = toml(`runbooks/${f}`)
-  const steps = (rb.steps ?? []).map((s) => ({
-    name: s.name,
-    type: s.type,
-    detail: stepDetail(s),
-  }))
-  const mutates = (rb.steps ?? []).some(
-    (s) =>
-      mutatingStepTypes.has(s.type) ||
-      (s.action_name && actionsByName[s.action_name]?.break_glass_role),
-  )
-  return {
-    name: rb.name,
-    description: rb.description,
-    kind: rb.labels?.kind ?? '',
-    mutates,
-    steps,
+  const mutatingStepTypes = new Set([
+    'component_deploy',
+    'sandbox_reprovision',
+    'component_tear_down',
+    'sandbox_deprovision',
+  ])
+  const runbookOrder = ['full-health-check', 'debug-bundle', 'reconcile-drift', 'break-glass']
+  const runbooks = readdirSync(join(root, 'runbooks'))
+    .filter((file) => file.endsWith('.toml'))
+    .sort((a, b) => {
+      const left = runbookOrder.indexOf(basename(a, '.toml'))
+      const right = runbookOrder.indexOf(basename(b, '.toml'))
+      return (left === -1 ? runbookOrder.length : left) -
+        (right === -1 ? runbookOrder.length : right)
+    })
+    .map((file) => {
+      const runbook = toml(`runbooks/${file}`)
+      return {
+        name: runbook.name,
+        description: runbook.description,
+        kind: runbook.labels?.kind ?? '',
+        mutates: (runbook.steps ?? []).some((step) =>
+          mutatingStepTypes.has(step.type) ||
+          (step.action_name && actionsByName[step.action_name]?.break_glass_role),
+        ),
+        steps: (runbook.steps ?? []).map((step) => ({
+          name: step.name,
+          type: step.type,
+          detail: stepDetail(step),
+        })),
+      }
+    })
+
+  const stripInstallID = (name) => name.replace(/^\{\{\.nuon\.install\.id\}\}-/, '')
+  const sentence = (value) => {
+    const text = value.trim().replace(/\.$/, '')
+    return text.charAt(0).toUpperCase() + text.slice(1) + '.'
   }
-})
+  const roleOrder = ['provision', 'setup', 'maintenance', 'sandbox-updates', 'actions', 'deprovision']
+  const roles = readdirSync(join(root, 'permissions'))
+    .filter((file) => file.endsWith('.toml'))
+    .sort((a, b) => {
+      const left = roleOrder.indexOf(basename(a, '.toml'))
+      const right = roleOrder.indexOf(basename(b, '.toml'))
+      return (left === -1 ? roleOrder.length : left) -
+        (right === -1 ? roleOrder.length : right)
+    })
+    .map((file) => {
+      const role = toml(`permissions/${file}`)
+      return {
+        name: stripInstallID(role.name),
+        type: role.type,
+        boundary: role.permissions_boundary ? basename(role.permissions_boundary) : 'inline policy',
+        desc: sentence(role.description),
+      }
+    })
 
-/* ---------- permissions/*.toml + break_glass.toml ---------- */
-
-const stripInstallID = (name) => name.replace(/^\{\{\.nuon\.install\.id\}\}-/, '')
-const sentence = (s) => {
-  const t = s.trim().replace(/\.$/, '')
-  return t.charAt(0).toUpperCase() + t.slice(1) + '.'
-}
-
-const roleOrder = ['provision', 'setup', 'maintenance', 'sandbox-updates', 'actions', 'deprovision']
-const roleFiles = readdirSync(join(repoRoot, 'permissions'))
-  .filter((f) => f.endsWith('.toml'))
-  .sort((a, b) => {
-    const ia = roleOrder.indexOf(basename(a, '.toml'))
-    const ib = roleOrder.indexOf(basename(b, '.toml'))
-    return (ia === -1 ? roleOrder.length : ia) - (ib === -1 ? roleOrder.length : ib)
-  })
-
-const roles = roleFiles.map((f) => {
-  const r = toml(`permissions/${f}`)
-  return {
-    name: stripInstallID(r.name),
-    type: r.type,
-    boundary: r.permissions_boundary ? basename(r.permissions_boundary) : 'inline policy',
-    desc: sentence(r.description),
+  const breakGlass = toml('break_glass.toml')
+  for (const role of breakGlass.role ?? []) {
+    roles.push({
+      name: stripInstallID(role.name),
+      type: 'break-glass',
+      boundary: role.cloud_platform === 'gcp' ? 'predefined role' : 'explicit Deny',
+      desc: sentence(role.description),
+    })
   }
-})
 
-const breakGlass = toml('break_glass.toml')
-for (const role of breakGlass.role ?? []) {
-  roles.push({
-    name: stripInstallID(role.name),
-    type: 'break-glass',
-    boundary: 'explicit Deny',
-    desc: sentence(role.description),
-  })
-}
+  const toggleableComponents = readdirSync(join(root, 'components'))
+    .filter((file) => file.endsWith('.toml'))
+    .map((file) => ({ file, config: toml(`components/${file}`) }))
+    .filter(({ config }) => config.toggleable === true)
+    .sort((a, b) => a.config.name.localeCompare(b.config.name))
+    .map(({ file, config }) => ({
+      name: config.name,
+      type: config.type,
+      defaultEnabled: Boolean(config.default_enabled),
+      toml: stripped(read(`components/${file}`)),
+    }))
 
-const breakGlassToml = read('break_glass.toml').trim()
-
-/* ---------- components/*.toml: toggleable components ---------- */
-
-// Comment-stripped real file, same treatment as branches/default.toml above.
-const strippedToml = (rel) =>
-  read(rel)
-    .split('\n')
-    .filter((line) => !line.trim().startsWith('#'))
-    .join('\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim()
-
-const toggleableComponents = readdirSync(join(repoRoot, 'components'))
-  .filter((f) => f.endsWith('.toml'))
-  .map((f) => ({ file: f, cfg: toml(`components/${f}`) }))
-  .filter(({ cfg }) => cfg.toggleable === true)
-  .sort((a, b) => a.cfg.name.localeCompare(b.cfg.name))
-  .map(({ file, cfg }) => ({
-    name: cfg.name,
-    type: cfg.type,
-    defaultEnabled: Boolean(cfg.default_enabled),
-    toml: strippedToml(`components/${file}`),
-  }))
-
-/* ---------- policies/*.toml ---------- */
-
-const guardrails = readdirSync(join(repoRoot, 'policies'))
-  .filter((f) => f.endsWith('.toml'))
-  .sort()
-  .map((f) => {
-    const p = toml(`policies/${f}`)
-    const target =
-      p.type === 'sandbox'
+  const guardrails = readdirSync(join(root, 'policies'))
+    .filter((file) => file.endsWith('.toml'))
+    .sort()
+    .map((file) => {
+      const policy = toml(`policies/${file}`)
+      const target = policy.type === 'sandbox'
         ? 'the sandbox plan'
-        : (p.components ?? []).includes('*')
+        : (policy.components ?? []).includes('*')
           ? 'all components'
-          : (p.components ?? []).join(', ')
-    return { name: basename(f, '.toml'), type: p.type, target }
-  })
+          : (policy.components ?? []).join(', ')
+      return { name: basename(file, '.toml'), type: policy.type, target }
+    })
 
-/* ---------- emit ---------- */
-
-const ts = (v) => JSON.stringify(v, null, 2)
-
-const out = `// GENERATED by scripts/gen-config-data.mjs from the repo's app config.
-// Do not edit; run \`npm run build\` (or the script directly) to regenerate.
-// Committed because the image build's context is components/ui only, so the
-// script cannot see the repo config there and keeps this file as built.
-
-export interface InstallGroup {
-  name: string
-  order: number
-  selector: string
-  preview: boolean
+  return {
+    branchName: branch.name,
+    repoName: branch.public_repo?.repo ?? branch.connected_repo?.repo ?? '',
+    trackedBranch: branch.public_repo?.branch ?? branch.connected_repo?.branch ?? '',
+    postDeployRunbooks: branch.post_deploy_runbooks ?? [],
+    installGroups,
+    branchConfigAbridged: stripped(read('branches/default.toml')),
+    runbooks,
+    adhocActions,
+    lifecycleHooksToml: read('actions/lifecycle_hooks/nuon.toml').trim(),
+    roles,
+    breakGlassToml: read('break_glass.toml').trim(),
+    guardrails,
+    toggleableComponents,
+  }
 }
 
-export interface RunbookStep {
-  name: string
-  type: string
-  detail: string
+const ts = (value) => JSON.stringify(value, null, 2)
+const datasets = {
+  aws: buildConfig(repoRoot),
+  gcp: buildConfig(join(repoRoot, 'gcp')),
 }
 
-export interface Runbook {
-  name: string
-  description: string
-  kind: string
-  mutates: boolean
-  steps: RunbookStep[]
+const output = `// GENERATED by scripts/gen-config-data.mjs from both app roots.
+// Do not edit; run \`npm run build\` to regenerate.
+
+export interface InstallGroup { name: string; order: number; selector: string; preview: boolean }
+export interface RunbookStep { name: string; type: string; detail: string }
+export interface Runbook { name: string; description: string; kind: string; mutates: boolean; steps: RunbookStep[] }
+export interface AdhocAction { name: string; timeout: string; triggers: string[]; labels: string | null; breakGlass: boolean }
+export interface Role { name: string; type: string; boundary: string; desc: string }
+export interface Guardrail { name: string; type: string; target: string }
+export interface ToggleableComponent { name: string; type: string; defaultEnabled: boolean; toml: string }
+export interface ConfigData {
+  branchName: string
+  repoName: string
+  trackedBranch: string
+  postDeployRunbooks: string[]
+  installGroups: InstallGroup[]
+  branchConfigAbridged: string
+  runbooks: Runbook[]
+  adhocActions: AdhocAction[]
+  lifecycleHooksToml: string
+  roles: Role[]
+  breakGlassToml: string
+  guardrails: Guardrail[]
+  toggleableComponents: ToggleableComponent[]
 }
 
-export interface AdhocAction {
-  name: string
-  timeout: string
-  triggers: string[]
-  labels: string | null
-  breakGlass: boolean
-}
+export const configData: Record<'aws' | 'gcp', ConfigData> = ${ts(datasets)}
 
-export interface Role {
-  name: string
-  type: string
-  boundary: string
-  desc: string
-}
-
-export interface Guardrail {
-  name: string
-  type: string
-  target: string
-}
-
-export interface ToggleableComponent {
-  name: string
-  type: string
-  defaultEnabled: boolean
-  toml: string
-}
-
-export const branchName = ${ts(branch.name)}
-
-export const repoName = ${ts(branch.public_repo?.repo ?? branch.connected_repo?.repo ?? '')}
-
-export const trackedBranch = ${ts(branch.public_repo?.branch ?? branch.connected_repo?.branch ?? '')}
-
-export const postDeployRunbooks: string[] = ${ts(branch.post_deploy_runbooks ?? [])}
-
-export const installGroups: InstallGroup[] = ${ts(installGroups)}
-
-export const branchConfigAbridged = ${ts(branchConfigAbridged)}
-
-export const runbooks: Runbook[] = ${ts(runbooks)}
-
-export const adhocActions: AdhocAction[] = ${ts(adhocActions)}
-
-export const lifecycleHooksToml = ${ts(lifecycleHooksToml)}
-
-export const roles: Role[] = ${ts(roles)}
-
-export const breakGlassToml = ${ts(breakGlassToml)}
-
-export const guardrails: Guardrail[] = ${ts(guardrails)}
-
-export const toggleableComponents: ToggleableComponent[] = ${ts(toggleableComponents)}
+export const {
+  branchName,
+  repoName,
+  trackedBranch,
+  postDeployRunbooks,
+  installGroups,
+  branchConfigAbridged,
+  runbooks,
+  adhocActions,
+  lifecycleHooksToml,
+  roles,
+  breakGlassToml,
+  guardrails,
+  toggleableComponents,
+} = configData.aws
 `
 
-writeFileSync(outFile, out)
+writeFileSync(outFile, output)
 console.log(`gen-config-data: wrote ${outFile}`)

@@ -1,0 +1,17 @@
+# Never runs automatically; an operator selects and submits a commit.
+name = "manual-release"
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "gcp"
+branch    = "main"
+
+[run]
+mode = "manual_only"
+
+[[install_groups]]
+name  = "default"
+order = 1
+
+[install_groups.label_selector]
+env = "default"

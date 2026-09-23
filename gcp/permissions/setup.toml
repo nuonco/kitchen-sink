@@ -1,0 +1,13 @@
+type           = "custom"
+name           = "{{.nuon.install.id}}-setup"
+description    = "initial component deployment and configuration"
+display_name   = "setup role"
+cloud_platform = "gcp"
+
+[[policies]]
+name                = "editor"
+gcp_predefined_role = "roles/editor"
+
+[[policies]]
+name                = "gke-admin"
+gcp_predefined_role = "roles/container.admin"

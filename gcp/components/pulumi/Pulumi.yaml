@@ -1,0 +1,3 @@
+name: kitchen-sink-gcs
+runtime: go
+description: A GCS bucket managed by Pulumi
