@@ -18,5 +18,5 @@ PGHOST            = "{{.nuon.install_stack.outputs.custom_nested_stacks.cloudsql
 PGPORT            = "{{.nuon.install_stack.outputs.custom_nested_stacks.cloudsql_instance.outputs.DBPort}}"
 PGUSER            = "kitchensink"
 PGDATABASE        = "postgres"
-PGPASSWORD        = "temp-password-123"
+GCP_DB_SECRET     = "{{.nuon.install_stack.outputs.secret_names.db_password_secret_name}}"
 PGCONNECT_TIMEOUT = "10"
