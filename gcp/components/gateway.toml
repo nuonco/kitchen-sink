@@ -9,7 +9,7 @@ max_auto_retries = 5
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "gcp/src/components/gateway"
-branch    = "main"
+branch    = "am/kitchen-sink-gcp"
 
 [values]
 install_name = "{{ .nuon.install.id }}"
