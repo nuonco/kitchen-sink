@@ -1,8 +1,9 @@
 # action
 name               = "db_metrics"
-image              = "postgres:17-alpine"
+image              = "{{.nuon.components.action_db_tools.outputs.image.ref}}"
 timeout            = "5m"
 enable_kube_config = false
+dependencies       = ["action_db_tools"]
 
 [[triggers]]
 type = "manual"
