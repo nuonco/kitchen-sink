@@ -1,0 +1,8 @@
+name         = "ia"
+display_name = "Information Architecture"
+description  = "Enable the information architecture feature flag to show a new view"
+group        = "dns"
+default      = "nuon.run"
+type         = "string"
+required     = true
+
