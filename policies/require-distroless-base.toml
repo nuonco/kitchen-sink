@@ -1,0 +1,4 @@
+type = "container_image"
+engine = "opa"
+components = ["img_api", "img_ui"]
+contents = "./require-distroless-base.rego"
