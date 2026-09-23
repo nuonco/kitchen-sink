@@ -7,7 +7,7 @@ name         = "application_load_balancer"
 type         = "helm_chart"
 chart_name   = "application-load-balancer"
 dependencies = ["certificate", "kitchen_sink"]
-max_auto_retries = 5
+max_auto_retries = 7
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
@@ -36,3 +36,6 @@ block_deploy         = false
 [[health.probes]]
 type = "http"
 url  = "https://app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}/livez"
+
+
+

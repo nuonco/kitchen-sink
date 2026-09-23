@@ -13,7 +13,7 @@ branch    = "main"
 "kitchen-sink:install_id"    = "{{.nuon.install.id}}"
 
 [env_vars]
-PULUMI_SKIP_UPDATE_CHECK = "true"
+PULUMI_SKIP_UPDATE_CHECK = "true1"
 
 [labels]
 custom_component_type = "pulumi"
