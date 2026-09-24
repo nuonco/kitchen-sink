@@ -9,7 +9,7 @@ var_name = "img_ui"
 
 [public]
 image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-ui"
-tag       = "sha-17194a0"
+tag       = "sha-266283f"
 
 [labels]
 is_image = "true"
