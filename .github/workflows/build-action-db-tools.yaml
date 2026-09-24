@@ -18,7 +18,7 @@ permissions:
 env:
   AWS_REGION: us-west-2
   ROLE_ARN: ${{ vars.ROLE_ARN }}
-  IMAGE: 431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-components
+  IMAGE: 949309607565.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-components
 
 jobs:
   build:
