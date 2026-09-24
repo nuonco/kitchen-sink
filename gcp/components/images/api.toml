@@ -13,7 +13,7 @@ max_auto_retries = 5
 
 [public]
 image_url = "us-west1-docker.pkg.dev/nuon-public/kitchen-sink/app"
-tag       = "sha-17194a0"
+tag       = "sha-266283f"
 
 [labels]
 is_image = "true"

@@ -15,7 +15,7 @@ contents = "./chart-values.yaml"
 
 [values]
 cloud       = "gcp"
-image_stamp = "sha-17194a0"
+image_stamp = "sha-266283f"
 
 [[operation_roles]]
 operation = "deploy"
