@@ -4,7 +4,7 @@ type     = "container_image"
 var_name = "action_db_tools"
 
 [aws_ecr]
-image_url    = "431927561584.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-components"
+image_url    = "949309607565.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-components"
 update_policy = "~1.0.0"
 region       = "us-west-2"
 iam_role_arn = "arn:aws:iam::431927561584:role/kitchen-sink-ecr-access"
