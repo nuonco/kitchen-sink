@@ -17,7 +17,7 @@ default_enabled = false
 [public_repo]
 directory = "."
 repo      = "nuonco/kitchen-sink"
-branch = "am/kitchen-sink-gcp"
+branch = "main"
 
 [kustomize]
 path        = "./src/components/audit-log-exporter"

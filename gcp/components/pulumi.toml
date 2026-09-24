@@ -6,7 +6,7 @@ max_auto_retries = 5
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "gcp/components/pulumi"
-branch    = "am/kitchen-sink-gcp"
+branch    = "main"
 
 [config]
 "gcp:project" = "{{.nuon.install_stack.outputs.project_id}}"
