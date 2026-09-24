@@ -1,0 +1,18 @@
+name    = "db_healthcheck"
+image   = "postgres:17-alpine"
+timeout = "5m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "check database health"
+inline_contents = "./db_healthcheck/healthcheck.sh"
+
+[steps.env_vars]
+PGHOST            = "{{.nuon.install_stack.outputs.custom_nested_stacks.cloudsql_instance.outputs.DBEndpoint}}"
+PGPORT            = "{{.nuon.install_stack.outputs.custom_nested_stacks.cloudsql_instance.outputs.DBPort}}"
+PGUSER            = "kitchensink"
+PGDATABASE        = "postgres"
+GCP_DB_SECRET     = "{{.nuon.install_stack.outputs.db_password_secret_name}}"
+PGCONNECT_TIMEOUT = "10"

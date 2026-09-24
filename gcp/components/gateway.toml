@@ -1,0 +1,29 @@
+name             = "gateway"
+type             = "helm_chart"
+chart_name       = "gateway"
+storage_driver   = "configmap"
+namespace        = "kitchen-sink"
+dependencies     = ["certificate", "external_dns", "kitchen_sink"]
+max_auto_retries = 5
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "gcp/src/components/gateway"
+branch    = "main"
+
+[values]
+install_name = "{{ .nuon.install.id }}"
+namespace    = "kitchen-sink"
+domain       = "app.{{ .nuon.install.sandbox.outputs.nuon_dns.public_domain.name }}"
+cert_map     = "{{ .nuon.components.certificate.outputs.cert_map_name }}"
+service_name = "kitchen-sink-ui"
+service_port = "3000"
+
+[health]
+enabled              = true
+stabilization_window = "8m"
+block_deploy         = false
+
+[[health.probes]]
+type = "http"
+url  = "https://app.{{.nuon.install.sandbox.outputs.nuon_dns.public_domain.name}}/livez"

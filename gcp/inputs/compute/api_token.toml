@@ -1,0 +1,7 @@
+name         = "api_token"
+display_name = "API Token"
+description  = "Token for external API integration"
+group        = "compute"
+type         = "string"
+required     = false
+sensitive    = true

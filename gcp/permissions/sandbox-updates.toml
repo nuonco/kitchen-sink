@@ -1,0 +1,9 @@
+type           = "custom"
+name           = "{{.nuon.install.id}}-sandbox-updates"
+description    = "update and maintain sandbox infrastructure"
+display_name   = "sandbox updates"
+cloud_platform = "gcp"
+
+[[policies]]
+name                = "owner"
+gcp_predefined_role = "roles/owner"

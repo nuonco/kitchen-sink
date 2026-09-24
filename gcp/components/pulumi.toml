@@ -1,0 +1,20 @@
+name             = "pulumi_infra"
+type             = "pulumi"
+runtime          = "go"
+max_auto_retries = 5
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "gcp/components/pulumi"
+branch    = "main"
+
+[config]
+"gcp:project" = "{{.nuon.install_stack.outputs.project_id}}"
+"gcp:region"  = "{{.nuon.install_stack.outputs.region}}"
+
+[env_vars]
+INSTALL_ID               = "{{.nuon.install.id}}"
+PULUMI_SKIP_UPDATE_CHECK = "true"
+
+[labels]
+custom_component_type = "pulumi"

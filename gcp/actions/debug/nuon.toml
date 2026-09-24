@@ -1,0 +1,10 @@
+# action
+name    = "debug"
+timeout = "2m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "debug-info"
+inline_contents = "./debug/script.sh"

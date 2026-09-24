@@ -1,0 +1,34 @@
+name           = "kitchen_sink"
+type           = "helm_chart"
+chart_name     = "kitchen-sink"
+namespace      = "kitchen-sink"
+storage_driver = "configmap"
+dependencies   = ["img_api", "img_ui"]
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "components/chart"
+branch    = "main"
+
+[[values_file]]
+contents = "./chart-values.yaml"
+
+[values]
+cloud       = "gcp"
+image_stamp = "sha-17194a0"
+
+[[operation_roles]]
+operation = "deploy"
+role      = "setup"
+
+[[operation_roles]]
+operation = "teardown"
+role      = "maintenance"
+
+[labels]
+helm = "true"
+
+[health]
+enabled              = true
+stabilization_window = "3m"
+block_deploy         = false

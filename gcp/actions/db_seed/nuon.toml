@@ -1,0 +1,22 @@
+name    = "db_seed"
+image   = "postgres:17-alpine"
+timeout = "5m"
+
+[[triggers]]
+type           = "pre-deploy-component"
+component_name = "kitchen_sink"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name    = "seed database"
+inline_contents = "./db_seed/seed.sh"
+
+[steps.env_vars]
+PGHOST            = "{{.nuon.install_stack.outputs.custom_nested_stacks.cloudsql_instance.outputs.DBEndpoint}}"
+PGPORT            = "{{.nuon.install_stack.outputs.custom_nested_stacks.cloudsql_instance.outputs.DBPort}}"
+PGUSER            = "kitchensink"
+PGDATABASE        = "postgres"
+GCP_DB_SECRET     = "{{.nuon.install_stack.outputs.db_password_secret_name}}"
+PGCONNECT_TIMEOUT = "10"

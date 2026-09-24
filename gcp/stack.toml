@@ -1,0 +1,17 @@
+type        = "gcp-terraform"
+name        = "nuon-kitchen-sink-{{.nuon.install.id}}"
+description = "GCP install stack for Kitchen Sink: Install {{.nuon.install.id}}"
+
+[[custom_nested_stacks]]
+name         = "cloudsql_instance"
+template_url = "github.com/nuonco/install-stacks//gcp/modules/cloudsql"
+index        = 1
+
+[custom_nested_stacks.parameters]
+tier                = "{{.nuon.install.inputs.db_tier}}"
+database_version    = "POSTGRES_16"
+disk_size           = "20"
+db_name             = "postgres"
+db_user             = "kitchensink"
+deletion_protection = "false"
+availability_type   = "ZONAL"

@@ -1,0 +1,5 @@
+version = "v2"
+
+display_name = "Kitchen Sink (GCP)"
+description  = "A test application showcasing Nuon on GCP"
+readme       = "./control-plane.md"

@@ -6,7 +6,8 @@ import {
   type NamespaceResponse,
   type UIConfig,
 } from '../lib/api'
-import { branchName, installGroups } from '../lib/config-data.gen'
+import { configData } from '../lib/config-data.gen'
+import { cloudOf, detailsFor } from '../lib/cloud'
 import { seenSteps } from '../lib/progress'
 import { agentPrompt } from '../lib/prompts'
 import { useNavigate } from '../lib/router'
@@ -74,9 +75,11 @@ const partOrder: PartKey[] = ['sandbox', 'components', 'runner']
 function GoldenPath({
   stage,
   onPick,
+  cluster,
 }: {
   stage: PartKey
   onPick: (part: PartKey) => void
+  cluster: string
 }) {
   const revealed = partOrder.indexOf(stage)
 
@@ -101,7 +104,7 @@ function GoldenPath({
         >
           <span className="arch__num">01</span>
           <span className="arch__name">Sandbox</span>
-          <span className="arch__hint">VPC · EKS · DNS</span>
+          <span className="arch__hint">VPC · {cluster} · DNS</span>
         </button>
         <div className="arch__nodes">
           <button
@@ -177,7 +180,7 @@ interface CliRow {
   note?: ReactNode
 }
 
-function cliGroups(install: string, app: string): Array<{ name: string; rows: CliRow[] }> {
+function cliGroups(install: string, app: string, branchName: string): Array<{ name: string; rows: CliRow[] }> {
   return [
     {
       name: 'Once',
@@ -255,10 +258,10 @@ function cliGroups(install: string, app: string): Array<{ name: string; rows: Cl
   ]
 }
 
-function CliPanel({ install, app }: { install: string; app: string }) {
+function CliPanel({ install, app, branchName }: { install: string; app: string; branchName: string }) {
   return (
     <div className="clipanel" id="cli-commands">
-      {cliGroups(install, app).map((group) => (
+      {cliGroups(install, app, branchName).map((group) => (
         <section className="clipanel__group" key={group.name}>
           <div className="clipanel__label">{group.name}</div>
           {group.rows.map((row) => (
@@ -283,6 +286,8 @@ function CliPanel({ install, app }: { install: string; app: string }) {
    ============================================================ */
 
 export function Landing({ config }: { config: UIConfig }) {
+  const appConfig = configData[cloudOf(config)]
+  const cloud = detailsFor(config)
   const [step, setStep] = useState<Step>(storedStep)
   const [cliOpen, setCliOpen] = useState(false)
 
@@ -345,8 +350,8 @@ export function Landing({ config }: { config: UIConfig }) {
         <div className="arrive">
           <h1>You&rsquo;re inside a BYOC install.</h1>
           <p className="arrive__lede">
-            This page is served by a container in an EKS cluster, in an AWS
-            account, that Nuon provisioned and deployed into when you
+            This page is served by a container in a {cloud.cluster} cluster, in a{' '}
+            {cloud.account}, that Nuon provisioned and deployed into when you
             installed.
           </p>
           {(config.install_id || config.cluster_name) && (
@@ -446,7 +451,7 @@ export function Landing({ config }: { config: UIConfig }) {
           </button>
         </div>
 
-        {cliOpen && <CliPanel install={install} app={app} />}
+        {cliOpen && <CliPanel install={install} app={app} branchName={appConfig.branchName} />}
 
         <section className="section section--hub">
           <div className="section__head">
@@ -459,7 +464,7 @@ export function Landing({ config }: { config: UIConfig }) {
               </span>
               <span className="nod__desc">
                 One push deploys the whole fleet:{' '}
-                {installGroups.map((g) => g.name).join(' → ')}, an approval
+                {appConfig.installGroups.map((g) => g.name).join(' → ')}, an approval
                 before each group.
               </span>
             </GoLink>
@@ -614,11 +619,11 @@ export function Landing({ config }: { config: UIConfig }) {
             <>
               The footprint Nuon creates in your customer&rsquo;s cloud
               account. Here it&rsquo;s{' '}
-              <span className="mono">aws-eks-sandbox</span>: a VPC, an EKS
+              <span className="mono">{config.sandbox ?? cloud.sandbox}</span>: a VPC, a {cloud.cluster}
               cluster, and a public DNS zone.
             </>,
           )}
-          <GoldenPath stage="sandbox" onPick={(p) => go(p)} />
+          <GoldenPath stage="sandbox" onPick={(p) => go(p)} cluster={cloud.cluster} />
           {config.cluster_name && (
             <div className="row" style={{ marginTop: 16 }}>
               <span className="chip">cluster {config.cluster_name}</span>
@@ -639,7 +644,7 @@ export function Landing({ config }: { config: UIConfig }) {
               API, the worker, and the UI you&rsquo;re reading.
             </>,
           )}
-          <GoldenPath stage="components" onPick={(p) => go(p)} />
+          <GoldenPath stage="components" onPick={(p) => go(p)} cluster={cloud.cluster} />
           {podSummary && (
             <div className="row" style={{ marginTop: 16 }}>
               <span className="chip">
@@ -661,7 +666,7 @@ export function Landing({ config }: { config: UIConfig }) {
               leave their cloud.
             </>,
           )}
-          <GoldenPath stage="runner" onPick={(p) => go(p)} />
+          <GoldenPath stage="runner" onPick={(p) => go(p)} cluster={cloud.cluster} />
           {stepActions()}
         </>
       )}
@@ -672,7 +677,7 @@ export function Landing({ config }: { config: UIConfig }) {
             <h2>Here&rsquo;s what Nuon deployed.</h2>
             <p className="step-header__lede">
               One config deployed this entire app &mdash; the API, the worker,
-              the page you&rsquo;re reading &mdash; into this AWS account, and
+              the page you&rsquo;re reading &mdash; into this {cloud.account}, and
               Nuon operates it from inside. Your app runs in any
               customer&rsquo;s cloud the same way.
             </p>
