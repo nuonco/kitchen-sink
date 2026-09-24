@@ -1,9 +1,12 @@
 #!/usr/bin/env sh
 set -eu
 
-token_json=$(wget -qO- --header='Metadata-Flavor: Google' \
-  http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token)
-access=$(printf '%s' "$token_json" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+access="${GOOGLE_OAUTH_ACCESS_TOKEN:-}"
+if [ -z "$access" ]; then
+  token_json=$(wget -qO- --header='Metadata-Flavor: Google' \
+    http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token)
+  access=$(printf '%s' "$token_json" | sed -n 's/.*"access_token":"\([^"]*\)".*/\1/p')
+fi
 : "${GCP_DB_SECRET:?}" "${access:?}"
 body=$(wget -qO- --header="Authorization: Bearer ${access}" \
   "https://secretmanager.googleapis.com/v1/${GCP_DB_SECRET}:access")
