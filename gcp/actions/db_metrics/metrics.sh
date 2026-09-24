@@ -13,7 +13,7 @@ fi
 : "${GCP_DB_SECRET:?}" "${access:?}"
 body=$(wget -qO- --header="Authorization: Bearer ${access}" \
   "https://secretmanager.googleapis.com/v1/${GCP_DB_SECRET}:access")
-PGPASSWORD=$(printf '%s' "$body" | sed -n 's/.*"data":"\([^"]*\)".*/\1/p' | base64 -d)
+PGPASSWORD=$(printf '%s' "$body" | sed -n 's/.*"data": *"\([^"]*\)".*/\1/p' | base64 -d)
 export PGPASSWORD
 unset token_json access body
 
