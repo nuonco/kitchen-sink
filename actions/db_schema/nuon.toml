@@ -1,7 +1,8 @@
 # action
-name    = "db_schema"
-image   = "postgres:17-alpine"
-timeout = "5m"
+name         = "db_schema"
+image        = "{{.nuon.components.action_db_tools.outputs.image.ref}}"
+timeout      = "5m"
+dependencies = ["action_db_tools"]
 
 [[triggers]]
 type = "manual"
