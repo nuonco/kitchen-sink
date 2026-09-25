@@ -9,6 +9,14 @@ update_policy = "~1.0.0"
 region       = "us-west-2"
 iam_role_arn = "arn:aws:iam::949309607565:role/kitchen-sink-ecr-access"
 
+[verification]
+require_signature = true
+
+[[verification.authorities]]
+type             = "keyless"
+issuer           = "https://token.actions.githubusercontent.com"
+subject_regexp   = '^https://github\.com/nuonco/kitchen-sink/\.github/workflows/build-action-db-tools\.yaml@refs/(heads/main|tags/action-db-tools/v.+)$'
+
 [labels]
 is_image = "true"
 purpose  = "container-action"
