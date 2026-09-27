@@ -1,0 +1,5 @@
+# policy
+type       = "container_image"
+engine     = "opa"
+components = ["action_db_tools"]
+contents   = "./require-sbom.rego"
