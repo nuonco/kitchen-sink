@@ -33,3 +33,8 @@ order = 2
 
 [install_groups.label_selector]
 mode = "push"
+
+[[install_groups]]
+name    = "default"
+order   = 3
+default = true
