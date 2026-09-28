@@ -1,5 +1,5 @@
 # branch
-# this is the default branch that is updated on every push to the repo.
+# Catch-all branch: installs land in the default group when nothing else claims them.
 name = "default"
 
 [public_repo]
@@ -8,28 +8,9 @@ directory = "."
 branch    = "main"
 
 [run]
-mode = "push"
-
-[preview]
-mode = "plan-only"
-set_statuses = true
-comment = true
-ignore_drafts = true
-react = true
-
-[preview.label_selector]
-env = "preview"
+mode = "manual_only"
 
 [[install_groups]]
-name  = "preview"
-order = 1
-
-[install_groups.label_selector]
-env = "preview"
-
-[[install_groups]]
-name  = "push"
-order = 2
-
-[install_groups.label_selector]
-mode = "push"
+name    = "default"
+order   = 1
+default = true

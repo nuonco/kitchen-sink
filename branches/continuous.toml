@@ -1,0 +1,35 @@
+# branch
+# this is the preview and push branch that is updated on every push to the repo.
+name = "continuous-release"
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "."
+branch    = "main"
+
+[run]
+mode = "push"
+
+[preview]
+mode = "plan-only"
+set_statuses = true
+comment = true
+ignore_drafts = true
+react = true
+
+[preview.label_selector]
+env = "preview"
+
+[[install_groups]]
+name  = "preview"
+order = 1
+
+[install_groups.label_selector]
+env = "preview"
+
+[[install_groups]]
+name  = "push"
+order = 2
+
+[install_groups.label_selector]
+mode = "push"
