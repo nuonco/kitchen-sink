@@ -18,3 +18,8 @@ order = 1
 
 [install_groups.label_selector]
 mode = "on_github_label"
+
+[[install_groups]]
+name    = "default"
+order   = 2
+default = true

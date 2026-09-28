@@ -17,3 +17,8 @@ order = 1
 
 [install_groups.label_selector]
 mode = "on_tag_prefix"
+
+[[install_groups]]
+name    = "default"
+order   = 2
+default = true
