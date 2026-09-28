@@ -1,0 +1,10 @@
+# action
+name    = "label_ping"
+timeout = "1m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "ping"
+inline_contents = "./label_ping/script.sh"
