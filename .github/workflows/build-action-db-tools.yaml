@@ -82,11 +82,13 @@ jobs:
           upload-release-assets: false
 
       - name: Attest SBOM
-        run: |
-          cosign attest --yes \
-            --type spdxjson \
-            --predicate action-db-tools.spdx.json \
-            "${{ env.IMAGE }}@${{ steps.build.outputs.digest }}"
+        uses: actions/attest@v2
+        with:
+          subject-name: ${{ env.IMAGE }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          predicate-type: https://spdx.dev/Document
+          predicate-path: action-db-tools.spdx.json
+          push-to-registry: true
 
       - name: Attest build provenance
         uses: actions/attest-build-provenance@v2
