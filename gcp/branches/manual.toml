@@ -1,3 +1,4 @@
+# branch
 # Never runs automatically; an operator selects and submits a commit.
 name = "manual-release"
 
@@ -10,8 +11,13 @@ branch    = "main"
 mode = "manual_only"
 
 [[install_groups]]
-name  = "default"
+name  = "manual"
 order = 1
 
 [install_groups.label_selector]
-env = "default"
+mode = "manual_only"
+
+[[install_groups]]
+name    = "default"
+order   = 2
+default = true
