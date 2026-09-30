@@ -1,5 +1,6 @@
-# this is the default branch that is updated on every push to the repo.
-name = "default"
+# branch
+# this is the preview and push branch that is updated on every push to the repo.
+name = "continuous-release"
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
@@ -20,8 +21,20 @@ react = true
 env = "preview"
 
 [[install_groups]]
-name  = "default"
+name  = "preview"
 order = 1
 
 [install_groups.label_selector]
-env = "default"
+env = "preview"
+
+[[install_groups]]
+name  = "push"
+order = 2
+
+[install_groups.label_selector]
+mode = "push"
+
+[[install_groups]]
+name    = "default"
+order   = 3
+default = true
