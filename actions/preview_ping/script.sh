@@ -11,6 +11,7 @@ echo "=== preview_ping ==="
 echo "timestamp   ${ts}"
 echo "install_id  ${install_id}"
 echo "trigger     ${trigger}"
+echo "purpose     continuous-release preview smoke"
 echo "uname       $(uname -a)"
 echo "done"
 
@@ -18,4 +19,5 @@ echo "done"
   printf 'status=ok\n'
   printf 'timestamp=%s\n' "$ts"
   printf 'install_id=%s\n' "$install_id"
+  printf 'purpose=continuous-release-preview-smoke\n'
 } >> "$NUON_ACTIONS_OUTPUT_FILEPATH"
