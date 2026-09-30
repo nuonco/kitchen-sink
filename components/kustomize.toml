@@ -7,7 +7,7 @@ dependencies = ["kustomize_namespace"]
 
 [public_repo]
 directory = "."
-repo      = "argoproj/argocd-example-apps"
+repo      = "nuonco/argocd-guestbook-demo"
 branch    = "master"
 
 [kustomize]
