@@ -1,9 +1,10 @@
 # install
-name = "lenovo"
+name = "Customer E"
+app_branch = "tag-release"
 approval_option = "approve-all"
 
 [labels]
-env = "staging"
+mode = "on_tag_prefix"
 
 [aws_account]
 region = "us-west-2"
@@ -12,7 +13,7 @@ region = "us-west-2"
 debug_mode = "false"
 
 [[inputs]]
-domain = "nuon.run"
+domain = "stage.nuon.run"
 
 [component_toggles]
 audit_log_exporter = false

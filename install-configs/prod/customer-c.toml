@@ -1,10 +1,10 @@
 # install
-name = "sony"
+name = "Customer C"
+app_branch = "github-label-release"
 approval_option = "approve-all"
 
 [labels]
-env = "production"
-tier = "customer"
+mode = "on_github_label"
 
 [aws_account]
 region = "us-west-2"

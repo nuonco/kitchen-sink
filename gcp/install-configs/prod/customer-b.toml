@@ -1,12 +1,13 @@
-#:schema https://api.nuon.co/v1/general/config-schema?type=install
-name            = "acme-staging"
+# install
+name = "Customer B"
+app_branch = "continuous-release"
 approval_option = "approve-all"
 
 [labels]
-env = "staging"
+mode = "push"
 
 [gcp_account]
-project_id = "acme-kitchen-sink-stage"
+project_id = "acme-kitchen-sink-prod"
 region     = "us-west1"
 
 [[inputs]]
@@ -16,7 +17,7 @@ debug_mode = "false"
 db_tier = "db-f1-micro"
 
 [[inputs]]
-domain = "example.com"
+domain = "nuon.run"
 
 [component_toggles]
 audit_log_exporter = false
