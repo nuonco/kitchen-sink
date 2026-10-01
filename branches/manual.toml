@@ -5,7 +5,7 @@ name = "manual-release"
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "main"
+branch    = "ey/access-entries-break-glass"
 
 [run]
 mode = "manual_only"
