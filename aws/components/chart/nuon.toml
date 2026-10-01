@@ -15,7 +15,7 @@ branch = "main"
 # Path resolves relative to the `components/` directory. This is the chart's
 # own values.yaml — Nuon interpolates it (img_api/img_ui outputs, sandbox DNS)
 # and layers it over the chart defaults, so there's a single values file.
-contents = "../shared/components/chart/values.yaml"
+contents = "../../shared/components/chart/values.yaml"
 
 [values]
 # CI's stamp commit (build-images.yaml) bumps this in the same commit that

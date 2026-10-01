@@ -16,7 +16,7 @@ toggleable      = true
 default_enabled = false
 
 [public_repo]
-directory = "."
+directory = "aws"
 repo      = "nuonco/kitchen-sink"
 branch = "main"
 

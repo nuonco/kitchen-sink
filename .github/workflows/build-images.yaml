@@ -115,12 +115,12 @@ jobs:
         run: |
           TAG="sha-${GITHUB_SHA::7}"
           sed -i "s/^tag       = \".*\"/tag       = \"${TAG}\"/" \
-            components/images/api.toml \
-            components/images/ui.toml \
+            aws/components/images/api.toml \
+            aws/components/images/ui.toml \
             gcp/components/images/api.toml \
             gcp/components/images/ui.toml
           sed -i "s/^image_stamp = \".*\"/image_stamp = \"${TAG}\"/" \
-            components/chart/nuon.toml \
+            aws/components/chart/nuon.toml \
             gcp/components/chart.toml
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           if git diff --quiet; then

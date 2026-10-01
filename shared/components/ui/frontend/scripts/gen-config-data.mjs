@@ -9,11 +9,11 @@ const frontendDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const outFile = join(frontendDir, 'src', 'lib', 'config-data.gen.ts')
 
 let repoRoot = frontendDir
-while (repoRoot !== '/' && !existsSync(join(repoRoot, 'branches', 'default.toml'))) {
+while (repoRoot !== '/' && !existsSync(join(repoRoot, 'aws', 'branches', 'continuous.toml'))) {
   repoRoot = dirname(repoRoot)
 }
 
-if (!existsSync(join(repoRoot, 'branches', 'default.toml'))) {
+if (!existsSync(join(repoRoot, 'aws', 'branches', 'continuous.toml'))) {
   if (existsSync(outFile)) {
     console.log('gen-config-data: repo config not found; keeping config-data.gen.ts')
     process.exit(0)
@@ -69,7 +69,7 @@ const stepDetail = (step) => {
 function buildConfig(root) {
   const read = (relativePath) => readFileSync(join(root, relativePath), 'utf8')
   const toml = (relativePath) => parse(read(relativePath))
-  const branch = toml('branches/default.toml')
+  const branch = toml('branches/continuous.toml')
 
   const installGroups = (branch.install_groups ?? [])
     .slice()
@@ -208,7 +208,7 @@ function buildConfig(root) {
     trackedBranch: branch.public_repo?.branch ?? branch.connected_repo?.branch ?? '',
     postDeployRunbooks: branch.post_deploy_runbooks ?? [],
     installGroups,
-    branchConfigAbridged: stripped(read('branches/default.toml')),
+    branchConfigAbridged: stripped(read('branches/continuous.toml')),
     runbooks,
     adhocActions,
     lifecycleHooksToml: read('actions/lifecycle_hooks/nuon.toml').trim(),
@@ -221,7 +221,7 @@ function buildConfig(root) {
 
 const ts = (value) => JSON.stringify(value, null, 2)
 const datasets = {
-  aws: buildConfig(repoRoot),
+  aws: buildConfig(join(repoRoot, 'aws')),
   gcp: buildConfig(join(repoRoot, 'gcp')),
 }
 
