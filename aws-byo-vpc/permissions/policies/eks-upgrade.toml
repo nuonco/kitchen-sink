@@ -1,0 +1,3 @@
+name        = "{{.nuon.install.id}}-eks-upgrade"
+description = "upgrade the EKS cluster tagged with this install id"
+contents    = "./eks-upgrade.json"

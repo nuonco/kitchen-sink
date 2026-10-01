@@ -1,0 +1,10 @@
+# action
+name    = "release_check"
+timeout = "1m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "check"
+inline_contents = "./release_check/script.sh"

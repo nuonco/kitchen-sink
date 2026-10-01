@@ -1,0 +1,12 @@
+# permission
+type                 = "deprovision"
+name                 = "{{.nuon.install.id}}-deprovision"
+description          = "deprovision the sandbox and components."
+display_name         = "deprovision role"
+permissions_boundary = "./deprovision_boundary.json"
+
+[[named_policies]]
+name = "{{.nuon.install.id}}-alb-teardown"
+
+[[policies]]
+managed_policy_name = "AdministratorAccess"

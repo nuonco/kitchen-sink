@@ -1,0 +1,5 @@
+# policy
+type       = "terraform_module"
+engine     = "opa"
+components = ["*"]
+contents   = "./deny-public-s3-bucket.rego"

@@ -1,0 +1,20 @@
+# install
+name = "Customer C"
+app_branch = "github-label-release"
+approval_option = "approve-all"
+
+[labels]
+mode = "on_github_label"
+
+[aws_account]
+region = "us-west-2"
+
+[[inputs]]
+debug_mode = "false"
+
+[[inputs]]
+domain = "stage.nuon.run"
+
+[component_toggles]
+audit_log_exporter = false
+tictactoe = false
