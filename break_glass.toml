@@ -21,3 +21,39 @@ contents = """
     ]
 }
 """
+
+[[role]]
+name             = "{{.nuon.install.id}}-access-entries-break-glass"
+display_name     = "Access Entries Break Glass"
+description      = "Creates and deletes the install's EKS access entries. Enable before a release, run remove-access-entries, then disable."
+enabled_in_stack = false
+
+[[role.policies]]
+name     = "eks-access-entries"
+contents = """
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": "sts:GetCallerIdentity",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "eks:CreateAccessEntry",
+            "Resource": "arn:aws:eks:*:*:cluster/*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "eks:DescribeAccessEntry",
+                "eks:DeleteAccessEntry",
+                "eks:AssociateAccessPolicy",
+                "eks:ListAssociatedAccessPolicies"
+            ],
+            "Resource": "arn:aws:eks:*:*:access-entry/*"
+        }
+    ]
+}
+"""
