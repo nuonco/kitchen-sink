@@ -6,7 +6,7 @@ runtime = "go"
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "components/pulumi"
-branch    = "main"
+branch    = "ey/access-entries-break-glass"
 
 [config]
 "aws:region"                 = "{{.nuon.install_stack.outputs.region}}"

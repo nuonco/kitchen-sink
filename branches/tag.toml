@@ -5,7 +5,7 @@ name = "tag-release"
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "main"
+branch    = "ey/access-entries-break-glass"
 
 [run]
 mode = "on_tag"

@@ -10,7 +10,7 @@ max_auto_retries = 5
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "src/components/certificate"
-branch    = "main"
+branch    = "ey/access-entries-break-glass"
 
 [vars]
 install_id  = "{{ .nuon.install.id }}"

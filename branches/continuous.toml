@@ -5,13 +5,13 @@ name = "continuous-release"
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "main"
+branch    = "ey/access-entries-break-glass"
 
 [run]
 mode = "push"
 
 [preview]
-mode = "plan-only"
+mode = "none"
 set_statuses = true
 comment = true
 ignore_drafts = true

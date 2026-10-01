@@ -6,7 +6,7 @@ name = "github-label-release"
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "."
-branch    = "main"
+branch    = "ey/access-entries-break-glass"
 
 [run]
 mode         = "on_github_label"

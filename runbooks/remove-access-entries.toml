@@ -1,0 +1,13 @@
+# runbook
+name        = "remove-access-entries"
+description = "Deletes the EKS access entries for the provision, deprovision, and app break-glass roles."
+readme      = "./runbooks/remove-access-entries.md"
+
+[labels]
+team = "platform"
+kind = "break-glass"
+
+[[steps]]
+name        = "remove-access-entries"
+type        = "action"
+action_name = "remove_access_entries"
