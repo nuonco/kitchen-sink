@@ -5,7 +5,7 @@ name = "github-label-release"
 # Label matching requires the GitHub App connection so Nuon can query PR data.
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
-directory = "aws"
+directory = "aws-byo-vpc"
 branch    = "main"
 
 [run]
