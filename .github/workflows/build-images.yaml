@@ -23,7 +23,7 @@ on:
     branches:
       - main
     paths:
-      - components/api/**
+      - shared/components/api/**
       - components/ui/**
       - .github/workflows/build-images.yaml
   workflow_dispatch:
@@ -48,7 +48,7 @@ jobs:
       matrix:
         include:
           - service: app
-            context: components/api
+            context: shared/components/api
           - service: ui
             context: components/ui
     steps:
