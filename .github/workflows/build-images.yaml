@@ -24,7 +24,7 @@ on:
       - main
     paths:
       - shared/components/api/**
-      - components/ui/**
+      - shared/components/ui/**
       - .github/workflows/build-images.yaml
   workflow_dispatch:
 
@@ -50,7 +50,7 @@ jobs:
           - service: app
             context: shared/components/api
           - service: ui
-            context: components/ui
+            context: shared/components/ui
     steps:
       - uses: actions/checkout@v4
 
