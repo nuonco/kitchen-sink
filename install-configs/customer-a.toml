@@ -1,10 +1,9 @@
 # install
-name = "ramp"
+name = "Customer A"
 approval_option = "approve-all"
 
 [labels]
-env = "production"
-tier = "enterprise"
+env = "preview"
 
 [aws_account]
 region = "us-west-2"
