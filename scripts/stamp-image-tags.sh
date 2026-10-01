@@ -23,9 +23,9 @@ set -euo pipefail
 
 BRANCH="ci/stamp-${TAG}"
 FILES=(
-  components/images/api.toml
-  components/images/ui.toml
-  components/chart/nuon.toml
+  aws/components/images/api.toml
+  aws/components/images/ui.toml
+  aws/components/chart/nuon.toml
   gcp/components/images/api.toml
   gcp/components/images/ui.toml
   gcp/components/chart.toml

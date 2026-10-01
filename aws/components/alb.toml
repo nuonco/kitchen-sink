@@ -11,7 +11,7 @@ max_auto_retries = 5
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
-directory = "src/components/alb"
+directory = "aws/src/components/alb"
 branch    = "main"
 
 [values]
