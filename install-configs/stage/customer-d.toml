@@ -1,5 +1,6 @@
 # install
 name = "Customer D"
+app_branch = "manual-release"
 approval_option = "approve-all"
 
 [labels]

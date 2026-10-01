@@ -1,5 +1,6 @@
 # install
 name = "Customer E"
+app_branch = "tag-release"
 approval_option = "approve-all"
 
 [labels]

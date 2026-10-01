@@ -1,5 +1,6 @@
 # install
 name = "Customer C"
+app_branch = "github-label-release"
 approval_option = "approve-all"
 
 [labels]

@@ -1,5 +1,6 @@
 # install
 name = "Customer B"
+app_branch = "continuous-release"
 approval_option = "approve-all"
 
 [labels]
