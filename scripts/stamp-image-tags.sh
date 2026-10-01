@@ -26,6 +26,9 @@ FILES=(
   aws/components/images/api.toml
   aws/components/images/ui.toml
   aws/components/chart/nuon.toml
+  aws-byo-vpc/components/images/api.toml
+  aws-byo-vpc/components/images/ui.toml
+  aws-byo-vpc/components/chart/nuon.toml
   gcp/components/images/api.toml
   gcp/components/images/ui.toml
   gcp/components/chart.toml
