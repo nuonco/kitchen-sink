@@ -1,0 +1,5 @@
+# policy
+type       = "helm_chart"
+engine     = "opa"
+components = ["kitchen_sink"]
+contents   = "./deny-public-api-ingress.rego"

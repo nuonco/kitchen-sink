@@ -1,0 +1,17 @@
+# action
+name    = "cron_status"
+timeout = "1m"
+
+[[triggers]]
+type          = "cron"
+cron_schedule = "0 * * * *"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "collect-status"
+inline_contents = "./cron_status/script.sh"
+
+[labels]
+is_health_check = "true"

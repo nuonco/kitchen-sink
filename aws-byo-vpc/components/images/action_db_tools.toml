@@ -1,0 +1,22 @@
+# container-image
+name     = "action_db_tools"
+type     = "container_image"
+var_name = "action_db_tools"
+
+[aws_ecr]
+image_url    = "949309607565.dkr.ecr.us-west-2.amazonaws.com/kitchen-sink-components"
+tag = "1.0.1"
+region       = "us-west-2"
+iam_role_arn = "arn:aws:iam::949309607565:role/kitchen-sink-ecr-access"
+
+[verification]
+require_signature = true
+
+[[verification.authorities]]
+type             = "keyless"
+issuer           = "https://token.actions.githubusercontent.com"
+subject_regexp   = '^https://github\.com/nuonco/kitchen-sink/\.github/workflows/build-action-db-tools\.yaml@refs/(heads/main|tags/action-db-tools/v.+)$'
+
+[labels]
+is_image = "true"
+purpose  = "container-action"
