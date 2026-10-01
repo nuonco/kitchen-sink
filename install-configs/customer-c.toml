@@ -1,9 +1,9 @@
 # install
-name = "lenovo"
+name = "Customer C"
 approval_option = "approve-all"
 
 [labels]
-env = "staging"
+mode = "on_github_label"
 
 [aws_account]
 region = "us-west-2"
