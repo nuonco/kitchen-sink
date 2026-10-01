@@ -1,0 +1,31 @@
+# action
+# Grants — and revokes — kubectl access to the cluster for the principal named
+# by the kubectl_principal input, via an EKS access entry. Fires automatically
+# on the role-enabled / role-disabled hooks when the customer toggles the
+# break-glass role in their install stack; a manual run only reports current
+# state. Runs under the default maintenance role, NOT the break-glass role, so
+# revocation still works after the role is disabled.
+name    = "break_glass_kubectl"
+timeout = "2m"
+
+[[triggers]]
+type = "manual"
+
+[[triggers]]
+type = "role-enabled"
+
+[[triggers]]
+type = "role-disabled"
+
+[[steps]]
+name            = "sync-eks-access"
+inline_contents = "./break_glass_kubectl/script.sh"
+
+[steps.env_vars]
+CLUSTER_NAME          = "n-{{.nuon.install.id}}"
+REGION                = "{{.nuon.install_stack.outputs.region}}"
+BREAK_GLASS_ROLE_NAME = "{{.nuon.install.id}}-app-break-glass"
+PRINCIPAL_ARN         = "{{.nuon.inputs.inputs.kubectl_principal}}"
+
+[labels]
+is_break_glass = "true"
