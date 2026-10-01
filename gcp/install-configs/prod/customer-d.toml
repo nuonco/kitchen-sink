@@ -1,10 +1,10 @@
-#:schema https://api.nuon.co/v1/general/config-schema?type=install
-name            = "acme-production"
+# install
+name = "Customer D"
+app_branch = "manual-release"
 approval_option = "approve-all"
 
 [labels]
-env  = "production"
-tier = "customer"
+mode = "manual_only"
 
 [gcp_account]
 project_id = "acme-kitchen-sink-prod"
@@ -14,10 +14,10 @@ region     = "us-west1"
 debug_mode = "false"
 
 [[inputs]]
-db_tier = "db-custom-1-3840"
+db_tier = "db-f1-micro"
 
 [[inputs]]
-domain = "example.com"
+domain = "nuon.run"
 
 [component_toggles]
 audit_log_exporter = false
