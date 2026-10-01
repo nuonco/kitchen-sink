@@ -1,0 +1,19 @@
+# install
+name = "Customer E"
+approval_option = "approve-all"
+
+[labels]
+mode = "on_tag_prefix"
+
+[aws_account]
+region = "us-west-2"
+
+[[inputs]]
+debug_mode = "false"
+
+[[inputs]]
+domain = "nuon.run"
+
+[component_toggles]
+audit_log_exporter = false
+tictactoe = false
