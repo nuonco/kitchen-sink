@@ -11,7 +11,7 @@ branch    = "main"
 mode = "push"
 
 [preview]
-mode = "plan-only"
+mode = "none"
 set_statuses = true
 comment = true
 ignore_drafts = true
