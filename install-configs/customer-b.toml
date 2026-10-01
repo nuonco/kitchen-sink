@@ -1,10 +1,9 @@
 # install
-name = "sony"
+name = "Customer B"
 approval_option = "approve-all"
 
 [labels]
-env = "production"
-tier = "customer"
+mode = "push"
 
 [aws_account]
 region = "us-west-2"
