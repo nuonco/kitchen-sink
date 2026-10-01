@@ -1,0 +1,19 @@
+# install
+name = "Customer B"
+approval_option = "approve-all"
+
+[labels]
+mode = "push"
+
+[aws_account]
+region = "us-west-2"
+
+[[inputs]]
+debug_mode = "false"
+
+[[inputs]]
+domain = "stage.nuon.run"
+
+[component_toggles]
+audit_log_exporter = false
+tictactoe = false
