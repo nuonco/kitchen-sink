@@ -13,7 +13,8 @@ cluster_version = "1.34"
 region = "{{.nuon.install_stack.outputs.region}}"
 vpc_id = "{{.nuon.install_stack.outputs.vpc_id}}"
 
-enable_nuon_dns      = "true"
+enable_irsa     = "true"
+enable_nuon_dns = "true"
 public_root_domain   = "{{ .nuon.install.id }}.{{.nuon.inputs.inputs.domain}}"
 internal_root_domain = "internal.{{ .nuon.install.id }}.{{.nuon.inputs.inputs.domain}}"
 
