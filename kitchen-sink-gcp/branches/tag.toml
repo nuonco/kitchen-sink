@@ -4,7 +4,7 @@ name = "tag-release"
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
-directory = "gcp"
+directory = "kitchen-sink-gcp"
 branch    = "main"
 
 [run]
