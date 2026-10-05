@@ -9,7 +9,7 @@ deploys as the app itself.
 
 ## Layout
 
-- `components/*.toml` — component definitions; sources under `components/{api,ui,chart,pulumi}` and `src/components/{alb,certificate}`
+- `components/*.toml` — component definitions; sources under `components/{api,ui,chart,pulumi}` and `src/components/{alb,certificate}`; OTel collector values (install telemetry) under `components/otel/`
 - `actions/` — scripts run on the install's runner (cron / manual / lifecycle triggers)
 - `runbooks/` — multi-step operational procedures (`.toml` + rendered `.md`)
 - `branches/`, `triggers.toml.example`, `installs.toml` — app branches with each run cadence, staged install groups, event trigger rules (shipped disabled — see the file header), install configs

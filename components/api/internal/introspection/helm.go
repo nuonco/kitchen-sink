@@ -5,6 +5,8 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/release"
@@ -29,12 +31,12 @@ func (s *svc) GetHelmHandler(ctx *gin.Context) {
 }
 
 type helmChartResponse struct {
-	Name          string           `json:"name,omitempty"`
-	Info          *release.Info    `json:"info,omitempty"`
-	ChartMetadata *chart.Metadata  `json:"chart_metadata,omitempty"`
-	Hooks         []*release.Hook  `json:"hooks,omitempty"`
-	Version       int              `json:"version,omitempty"`
-	Namespace     string           `json:"namespace,omitempty"`
+	Name          string            `json:"name,omitempty"`
+	Info          *release.Info     `json:"info,omitempty"`
+	ChartMetadata *chart.Metadata   `json:"chart_metadata,omitempty"`
+	Hooks         []*release.Hook   `json:"hooks,omitempty"`
+	Version       int               `json:"version,omitempty"`
+	Namespace     string            `json:"namespace,omitempty"`
 	Labels        map[string]string `json:"-"`
 }
 
@@ -56,10 +58,18 @@ func (s *svc) getHelmHandler(ctx context.Context) (*helmResponse, error) {
 	client.All = true
 	client.AllNamespaces = true
 
+	// Helm's storage driver does not take a context, so its Kubernetes calls
+	// cannot join this trace; this span stands in for the whole listing.
+	_, span := s.tracer.Start(ctx, "helm.list_releases")
 	listResp, err := client.Run()
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "unable to list releases")
+		span.End()
 		return nil, fmt.Errorf("unable to get list response: %w", err)
 	}
+	span.SetAttributes(attribute.Int("helm.release.count", len(listResp)))
+	span.End()
 	for _, rel := range listResp {
 		k := fmt.Sprintf("%s.%s", rel.Namespace, rel.Name)
 		resp.Charts[k] = &helmChartResponse{

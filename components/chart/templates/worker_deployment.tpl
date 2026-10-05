@@ -23,6 +23,13 @@ spec:
           env:
             - name: HEALTH_ADDR
               value: ":{{ .Values.worker.port }}"
+            - name: API_URL
+              value: "http://{{ include "kitchen-sink.api.name" . }}:{{ .Values.api.port }}"
+            - name: DEMO_PROFILE
+              value: {{ (.Values.telemetry).demoProfile | default "steady" | quote }}
+            {{- with include "kitchen-sink.telemetry.env" (dict "root" . "service" "kitchen-sink-worker") }}
+            {{- . | nindent 12 }}
+            {{- end }}
           ports:
             - name: health
               containerPort: {{ .Values.worker.port }}

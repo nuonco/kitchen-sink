@@ -1,0 +1,115 @@
+{{- /*
+Values for the otel_collector component (upstream opentelemetry-collector
+chart, deployment mode). Nuon renders this file before Helm sees it.
+
+The gateway the app talks to: the api and worker send OTLP/HTTP to the
+otel-collector Service; this collector adds Kubernetes metadata, collects
+cluster-level metrics and Kubernetes events, and forwards everything to the
+install's private telemetry endpoint. From there the runner's collector
+relays it to the vendor's backend, stamped with verified nuon.* identity.
+
+telemetry_endpoint is read with dig: on a stack that predates telemetry
+ingress (or has it disabled) the output is missing or empty, and the collector
+then runs with only the debug exporter instead of failing to render.
+*/ -}}
+{{- $endpoint := dig "telemetry_endpoint" "" .nuon.install_stack.outputs -}}
+mode: deployment
+replicaCount: 1
+fullnameOverride: otel-collector
+
+image:
+  repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
+command:
+  name: otelcol-k8s
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+presets:
+  # k8s.pod.name, k8s.deployment.name, ... on the app's telemetry.
+  kubernetesAttributes:
+    enabled: true
+  # k8s_cluster receiver: node conditions, deployment/pod phase, restarts.
+  clusterMetrics:
+    enabled: true
+  # Kubernetes events as logs, cluster-wide.
+  kubernetesEvents:
+    enabled: true
+
+ports:
+  jaeger-compact:
+    enabled: false
+  jaeger-thrift:
+    enabled: false
+  jaeger-grpc:
+    enabled: false
+  zipkin:
+    enabled: false
+
+# alternateConfig replaces the chart's default config (jaeger, zipkin and a
+# self-scrape we do not want) instead of merging with it. The presets above
+# are still injected into it.
+alternateConfig:
+  extensions:
+    health_check:
+      endpoint: ${env:MY_POD_IP}:13133
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: ${env:MY_POD_IP}:4317
+        http:
+          endpoint: ${env:MY_POD_IP}:4318
+  processors:
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 80
+      spike_limit_percentage: 25
+    resource:
+      attributes:
+        - key: k8s.cluster.name
+          value: "n-{{ .nuon.install.id }}"
+          action: upsert
+        - key: cloud.provider
+          value: aws
+          action: upsert
+        - key: cloud.region
+          value: "{{ .nuon.install_stack.outputs.region }}"
+          action: upsert
+    batch: {}
+  exporters:
+    # One line per batch in `kubectl logs`, handy to show data flowing.
+    debug:
+      verbosity: basic
+{{- if $endpoint }}
+    otlp_http/nuon:
+      endpoint: "{{ $endpoint }}"
+      compression: gzip
+      sending_queue:
+        enabled: true
+        queue_size: 5000
+      retry_on_failure:
+        enabled: true
+        max_elapsed_time: 10m
+{{- end }}
+  service:
+    extensions:
+      - health_check
+    pipelines:
+      traces:
+        receivers: [otlp]
+        processors: [memory_limiter, resource, batch]
+        exporters: [{{ if $endpoint }}otlp_http/nuon, {{ end }}debug]
+      metrics:
+        receivers: [otlp]
+        processors: [memory_limiter, resource, batch]
+        exporters: [{{ if $endpoint }}otlp_http/nuon, {{ end }}debug]
+      logs:
+        receivers: [otlp]
+        processors: [memory_limiter, resource, batch]
+        exporters: [{{ if $endpoint }}otlp_http/nuon, {{ end }}debug]

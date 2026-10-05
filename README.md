@@ -15,6 +15,13 @@ A test application showcasing all features of the Nuon platform including Helm c
 | **Component Health** | Live per-component health with probes — `[health]` in `components/chart/nuon.toml` and `components/alb.toml` |
 | **App Branches** | Staged fleet rollouts for push, tag-prefix, GitHub-label, and manual release cadences — [`branches/`](./branches/) |
 | **Triggers** | External events that start a rollout — opt-in, see [`triggers.toml.example`](./triggers.toml.example) |
+| **Install Telemetry** | OpenTelemetry collectors and an instrumented API and worker — knobs [below](#install-telemetry) |
+
+## Install Telemetry
+
+- `telemetry_demo_profile` input: `steady`, `noisy`, or `incident`
+- `otel_collector` / `otel_agent` component toggles
+- `[telemetry] enabled` in `install-configs/*.toml`
 
 ## Sandbox
 

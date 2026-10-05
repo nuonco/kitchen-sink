@@ -7,7 +7,7 @@
 # and the image silently ships a stale tree. The defence is to wipe the caches a
 # step depends on before it runs, and to rebuild rather than trust a cache.
 
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 RUN apk add --no-cache git
 
