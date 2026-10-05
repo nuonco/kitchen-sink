@@ -60,8 +60,8 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          context: ./aws/components/action-dns-check
-          file: ./aws/components/action-dns-check/Dockerfile
+          context: ./kitchen-sink-aws/components/action-dns-check
+          file: ./kitchen-sink-aws/components/action-dns-check/Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ env.IMAGE }}:${{ steps.version.outputs.version }}

@@ -57,8 +57,8 @@ jobs:
       - uses: docker/build-push-action@v6
         id: build
         with:
-          context: ./aws/components/action-db-tools
-          file: ./aws/components/action-db-tools/Dockerfile
+          context: ./kitchen-sink-aws/components/action-db-tools
+          file: ./kitchen-sink-aws/components/action-db-tools/Dockerfile
           platforms: linux/amd64
           push: true
           tags: ${{ env.IMAGE }}:${{ steps.version.outputs.version }}
