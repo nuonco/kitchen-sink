@@ -14,7 +14,7 @@ toggleable      = true
 default_enabled = false
 
 [public_repo]
-directory = "aws-byo-vpc"
+directory = "kitchen-sink-aws-byo-vpc"
 repo      = "nuonco/kitchen-sink"
 branch = "main"
 
