@@ -5,7 +5,7 @@ runtime = "go"
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
-directory = "aws/components/pulumi"
+directory = "kitchen-sink-aws/components/pulumi"
 branch    = "main"
 
 [config]
