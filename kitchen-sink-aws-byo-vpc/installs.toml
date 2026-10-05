@@ -6,4 +6,4 @@
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
 branch    = "main"
-directory = "aws-byo-vpc/install-configs"
+directory = "kitchen-sink-aws-byo-vpc/install-configs"
