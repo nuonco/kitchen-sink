@@ -4,7 +4,7 @@ name = "manual-release"
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
-directory = "aws"
+directory = "kitchen-sink-aws"
 branch    = "main"
 
 [run]
