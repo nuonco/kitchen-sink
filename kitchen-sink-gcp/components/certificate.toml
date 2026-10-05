@@ -5,7 +5,7 @@ max_auto_retries  = 5
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
-directory = "gcp/src/components/certificate"
+directory = "kitchen-sink-gcp/src/components/certificate"
 branch    = "main"
 
 [vars]
