@@ -29,6 +29,6 @@ Usage: include "kitchen-sink.telemetry.env" (dict "root" . "service" "kitchen-si
 - name: OTEL_EXPORTER_OTLP_PROTOCOL
   value: "http/protobuf"
 - name: OTEL_RESOURCE_ATTRIBUTES
-  value: "service.namespace=kitchen-sink,service.version={{ $t.serviceVersion }},k8s.namespace.name=$(POD_NAMESPACE),k8s.pod.name=$(POD_NAME),k8s.pod.uid=$(POD_UID),k8s.node.name=$(NODE_NAME)"
+  value: "service.namespace=kitchen-sink,service.version={{ $t.serviceVersion }},service.instance.id=$(POD_UID),k8s.namespace.name=$(POD_NAMESPACE),k8s.pod.name=$(POD_NAME),k8s.pod.uid=$(POD_UID),k8s.node.name=$(NODE_NAME)"
 {{- end }}
 {{- end }}
