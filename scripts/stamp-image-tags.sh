@@ -23,15 +23,15 @@ set -euo pipefail
 
 BRANCH="ci/stamp-${TAG}"
 FILES=(
-  aws/components/images/api.toml
-  aws/components/images/ui.toml
-  aws/components/chart/nuon.toml
-  aws-byo-vpc/components/images/api.toml
-  aws-byo-vpc/components/images/ui.toml
-  aws-byo-vpc/components/chart/nuon.toml
-  gcp/components/images/api.toml
-  gcp/components/images/ui.toml
-  gcp/components/chart.toml
+  kitchen-sink-aws/components/images/api.toml
+  kitchen-sink-aws/components/images/ui.toml
+  kitchen-sink-aws/components/chart/nuon.toml
+  kitchen-sink-aws-byo-vpc/components/images/api.toml
+  kitchen-sink-aws-byo-vpc/components/images/ui.toml
+  kitchen-sink-aws-byo-vpc/components/chart/nuon.toml
+  kitchen-sink-gcp/components/images/api.toml
+  kitchen-sink-gcp/components/images/ui.toml
+  kitchen-sink-gcp/components/chart.toml
 )
 
 if gh api "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH}" >/dev/null 2>&1; then

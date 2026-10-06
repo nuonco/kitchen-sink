@@ -25,10 +25,10 @@ fi
 
 echo "==> api image"
 "${SCRIPT_DIR}/build-image.sh" "$@"
-"${SCRIPT_DIR}/push-image.sh" "$@" --stamp-config "${REPO_ROOT}/aws/components/images/api.toml"
+"${SCRIPT_DIR}/push-image.sh" "$@" --stamp-config "${REPO_ROOT}/kitchen-sink-aws/components/images/api.toml"
 
 echo "==> ui image"
 "${SCRIPT_DIR}/build-ui-image.sh" "$@"
-"${SCRIPT_DIR}/push-ui-image.sh" "$@" --stamp-config "${REPO_ROOT}/aws/components/images/ui.toml"
+"${SCRIPT_DIR}/push-ui-image.sh" "$@" --stamp-config "${REPO_ROOT}/kitchen-sink-aws/components/images/ui.toml"
 
 echo "All images built and pushed."
