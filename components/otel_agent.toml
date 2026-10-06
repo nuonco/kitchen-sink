@@ -1,0 +1,35 @@
+# helm
+# Node-level OpenTelemetry Collector (DaemonSet) for install telemetry: node,
+# pod and container resource usage from each kubelet, and container logs from
+# the kitchen-sink namespace. Exports straight to the install stack's private
+# telemetry_endpoint, so it toggles independently of otel_collector.
+#
+# Toggleable, on by default; see otel_collector.toml for how the component
+# toggle and the install's telemetry setting combine.
+name           = "otel_agent"
+type           = "helm_chart"
+chart_name     = "otel-agent"
+namespace      = "kitchen-sink"
+storage_driver = "configmap"
+# Same namespace-ownership ordering as otel_collector.
+dependencies   = ["kitchen_sink"]
+
+toggleable      = true
+default_enabled = true
+
+[helm_repo]
+repo_url = "https://open-telemetry.github.io/opentelemetry-helm-charts"
+chart    = "opentelemetry-collector"
+version  = "0.174.1"
+
+[[values_file]]
+contents = "./otel/agent-values.yaml"
+
+[labels]
+telemetry  = "true"
+toggleable = "true"
+
+[health]
+enabled              = true
+stabilization_window = "3m"
+block_deploy         = false

@@ -1,0 +1,40 @@
+# helm
+# In-cluster OpenTelemetry Collector (gateway) for install telemetry. The api
+# and worker send OTLP to its Service; it adds Kubernetes metadata, collects
+# cluster metrics and Kubernetes events, and forwards everything to the
+# install stack's private telemetry_endpoint. The runner's collector relays it
+# from there to the vendor's backend, with verified nuon.* identity attached.
+#
+# Toggleable, on by default. Two switches decide whether data flows: this
+# component (is a collector deployed?) and the install's telemetry setting
+# (`[telemetry]` in install-configs/*.toml: does the runner forward?).
+# Nothing always-enabled may depend on this component: the chart reaches it by
+# Service DNS name, never through `.outputs.`.
+name           = "otel_collector"
+type           = "helm_chart"
+chart_name     = "otel-collector"
+namespace      = "kitchen-sink"
+storage_driver = "configmap"
+# The kitchen_sink chart owns the kitchen-sink namespace; deploying first
+# would have Helm create it unowned and the chart's install would then fail.
+dependencies   = ["kitchen_sink"]
+
+toggleable      = true
+default_enabled = true
+
+[helm_repo]
+repo_url = "https://open-telemetry.github.io/opentelemetry-helm-charts"
+chart    = "opentelemetry-collector"
+version  = "0.174.1"
+
+[[values_file]]
+contents = "./otel/collector-values.yaml"
+
+[labels]
+telemetry  = "true"
+toggleable = "true"
+
+[health]
+enabled              = true
+stabilization_window = "3m"
+block_deploy         = false

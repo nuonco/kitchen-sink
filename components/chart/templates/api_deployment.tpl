@@ -20,6 +20,10 @@ spec:
         - name: api
           image: {{ .Values.api.image }}
           command: ["/bin/api"]
+          {{- with include "kitchen-sink.telemetry.env" (dict "root" . "service" "kitchen-sink-api") }}
+          env:
+            {{- . | nindent 12 }}
+          {{- end }}
           ports:
             - containerPort: {{ .Values.api.port }}
               protocol: TCP

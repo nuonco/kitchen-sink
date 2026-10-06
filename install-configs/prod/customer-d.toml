@@ -6,6 +6,9 @@ approval_option = "approve-all"
 [labels]
 mode = "manual_only"
 
+[telemetry]
+enabled = true
+
 [aws_account]
 region = "us-west-2"
 
