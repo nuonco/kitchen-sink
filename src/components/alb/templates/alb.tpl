@@ -1,6 +1,6 @@
 ---
 apiVersion: networking.k8s.io/v1
-kind: Ingress-a
+kind: Ingress-abc
 metadata:
   name: kitchen-sink-alb
   namespace: {{ .Values.namespace }}
