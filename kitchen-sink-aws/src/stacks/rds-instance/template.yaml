@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: RDS PostgreSQL instance
+
+Parameters:
+  NuonInstallID:
+    Type: String
+  DBSubnetGroupName:
+    Type: String
+  DBSecurityGroupId:
+    Type: String
+
+Resources:
+  RDSInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub 'kitchen-sink-${NuonInstallID}-db'
+      Engine: postgres
+      EngineVersion: '16.14'
+      DBInstanceClass: db.t3.micro
+      AllocatedStorage: 20
+      MasterUsername: kitchensink
+      MasterUserPassword: temp-password-123
+      DBSubnetGroupName: !Ref DBSubnetGroupName
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroupId
+      Tags:
+        - Key: nuon:install-id
+          Value: !Ref NuonInstallID
+
+Outputs:
+  DBEndpoint:
+    Value: !GetAtt RDSInstance.Endpoint.Address
+  DBPort:
+    Value: !GetAtt RDSInstance.Endpoint.Port

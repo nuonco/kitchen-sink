@@ -1,0 +1,101 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DescribeEKSForUpgrade",
+      "Effect": "Allow",
+      "Action": [
+        "eks:Describe*",
+        "eks:List*",
+        "ec2:Describe*",
+        "autoscaling:Describe*",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListInstanceProfilesForRole",
+        "iam:GetInstanceProfile",
+        "iam:GetOpenIDConnectProvider",
+        "iam:ListOpenIDConnectProviders",
+        "iam:ListOpenIDConnectProviderTags",
+        "iam:GetPolicy",
+        "iam:GetPolicyVersion",
+        "kms:DescribeKey",
+        "kms:GetKeyPolicy",
+        "kms:ListAliases",
+        "kms:ListResourceTags",
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "UpgradeInstallScopedEKS",
+      "Effect": "Allow",
+      "Action": [
+        "eks:UpdateClusterVersion",
+        "eks:UpdateClusterConfig",
+        "eks:CancelUpdate",
+        "eks:UpdateNodegroupVersion",
+        "eks:UpdateNodegroupConfig",
+        "eks:CreateNodegroup",
+        "eks:DeleteNodegroup",
+        "eks:CreateAddon",
+        "eks:UpdateAddon",
+        "eks:DeleteAddon",
+        "eks:UntagResource"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/install.nuon.co/id": "{{.nuon.install.id}}"
+        }
+      }
+    },
+    {
+      "Sid": "TagInstallScopedEKS",
+      "Effect": "Allow",
+      "Action": "eks:TagResource",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/install.nuon.co/id": "{{.nuon.install.id}}"
+        }
+      }
+    },
+    {
+      "Sid": "PassInstallScopedRolesForEKSUpgrade",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/install.nuon.co/id": "{{.nuon.install.id}}",
+          "iam:PassedToService": [
+            "eks.amazonaws.com",
+            "ec2.amazonaws.com"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ManageInstallScopedNodeInfrastructure",
+      "Effect": "Allow",
+      "Action": [
+        "autoscaling:UpdateAutoScalingGroup",
+        "autoscaling:CreateOrUpdateTags",
+        "autoscaling:DeleteTags",
+        "ec2:CreateLaunchTemplateVersion",
+        "ec2:ModifyLaunchTemplate",
+        "ec2:DeleteLaunchTemplateVersions",
+        "ec2:CreateTags",
+        "ec2:DeleteTags"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/install.nuon.co/id": "{{.nuon.install.id}}"
+        }
+      }
+    }
+  ]
+}

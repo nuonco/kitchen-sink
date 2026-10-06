@@ -1,0 +1,9 @@
+# permission
+type                 = "custom"
+name                 = "{{.nuon.install.id}}-sandbox-updates"
+description          = "update and maintain sandbox infrastructure"
+display_name         = "sandbox updates"
+permissions_boundary = "./provision_boundary.json"
+
+[[named_policies]]
+name = "{{.nuon.install.id}}-eks-upgrade"

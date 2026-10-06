@@ -10,5 +10,5 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 exec "${SCRIPT_DIR}/build-image.sh" \
   --repo-name kitchen-sink-ui \
-  --context "${REPO_ROOT}/components/ui" \
+  --context "${REPO_ROOT}/shared/components/ui" \
   "$@"

@@ -22,4 +22,4 @@ if [[ " $* " != *" --tag "* ]]; then
 fi
 
 "${SCRIPT_DIR}/build-image.sh" "$@"
-"${SCRIPT_DIR}/push-image.sh" "$@" --stamp-config "${REPO_ROOT}/components/images/api.toml"
+"${SCRIPT_DIR}/push-image.sh" "$@" --stamp-config "${REPO_ROOT}/kitchen-sink-aws/components/images/api.toml"

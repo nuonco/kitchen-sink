@@ -1,0 +1,10 @@
+# action
+name    = "uptime_check"
+timeout = "1m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "check"
+inline_contents = "./uptime_check/script.sh"

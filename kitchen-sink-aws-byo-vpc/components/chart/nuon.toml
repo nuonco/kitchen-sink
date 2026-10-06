@@ -1,0 +1,57 @@
+# helm
+name = "kitchen_sink"
+type = "helm_chart"
+chart_name = "kitchen-sink"
+namespace = "kitchen-sink"
+storage_driver = "configmap"
+dependencies = ["img_api", "img_ui"]
+
+[public_repo]
+repo = "nuonco/kitchen-sink"
+directory = "shared/components/chart"
+branch = "main"
+
+[[values_file]]
+# Path resolves relative to the `components/` directory. This is the chart's
+# own values.yaml — Nuon interpolates it (img_api/img_ui outputs, sandbox DNS)
+# and layers it over the chart defaults, so there's a single values file.
+contents = "../../shared/components/chart/values.yaml"
+
+[values]
+# CI's stamp commit (build-images.yaml) bumps this in the same commit that
+# stamps components/images/*.toml, so an image-tag bump changes THIS
+# component's config too and the rollout redeploys the chart. Without it the
+# chart is classified "unchanged" and skipped, leaving installs on the old
+# baked-in tags — `dependencies` above only orders deploys, it never cascades
+# them. Surfaced as the nuon.co/image-stamp annotation on the ConfigMap.
+image_stamp = "sha-266283f"
+
+[[operation_roles]]
+operation = "deploy"
+role = "setup"
+
+[[operation_roles]]
+operation = "teardown"
+role = "maintenance"
+
+[labels]
+helm = "true"
+
+# Live health, independent of deploy status. Deployments, pods, services,
+# ingresses and the Helm release itself are assessed automatically; this block
+# tunes that assessment.
+#
+# No probes here on purpose: the probe executor runs on the RUNNER, outside the
+# cluster, and the VPC resolver cannot resolve *.svc.cluster.local names —
+# in-cluster HTTP/TCP probes fail with "no such host" (confirmed on install
+# inlf71nem1j…, Aug 2026). In-cluster serving is asserted by the pods' own
+# readiness probes (values.yaml `probes:`), which the automatic assessment
+# already rolls up; the public endpoint is probed on application_load_balancer.
+#
+# `block_deploy` is off, so the deploy step records what health did without
+# gating on it. Flip it to `true` once health is confirmed green on a real
+# install and every kitchen_sink deploy grows a `verify health` step.
+[health]
+enabled              = true
+stabilization_window = "3m"
+block_deploy         = false

@@ -1,0 +1,10 @@
+# action
+name    = "runner_ping"
+timeout = "1m"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "ping"
+inline_contents = "./runner_ping/script.sh"
