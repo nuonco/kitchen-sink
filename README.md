@@ -23,6 +23,8 @@ A test application showcasing all features of the Nuon platform including Helm c
 - `otel_collector` / `otel_agent` component toggles
 - `[telemetry] enabled` in `install-configs/*.toml`
 
+Grafana dashboards (fleet and per-install views) live in [`dashboards/`](./dashboards/).
+
 ## Sandbox
 
 The root app deploys to AWS EKS using
