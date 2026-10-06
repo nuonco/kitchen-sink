@@ -1,0 +1,14 @@
+# container-image
+# Public Docker Hub image (library/nginx). Nuon resolves the highest matching
+# patch release each time this component builds; it does not poll the registry
+# in the background. ~1.30.0 stays on the stable line.
+name     = "img_nginx"
+type     = "container_image"
+var_name = "img_nginx"
+
+[public]
+image_url     = "nginx"
+update_policy = "~1.30.0"
+
+[labels]
+is_image = "true"
