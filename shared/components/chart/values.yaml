@@ -95,6 +95,23 @@ worker:
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
 
+# Install telemetry. The api and worker export traces, metrics and logs over
+# OTLP/HTTP to the in-cluster otel_collector component, which forwards them to
+# the install's private telemetry endpoint (the install stack's
+# telemetry_endpoint output) and on to the vendor's backend via the Nuon relay.
+# The collector is addressed by its Service name, never through `.outputs.`:
+# it is toggleable, and nothing always-enabled may depend on a toggleable
+# component. With the collector toggled off, exports fail quietly (the SDK
+# logs one warning a minute) and the app is otherwise unaffected.
+telemetry:
+  enabled: true
+  endpoint: "http://otel-collector.kitchen-sink.svc.cluster.local:4318"
+  serviceVersion: "{{.nuon.components.img_api.outputs.image.tag}}"
+  # Shape of the worker's synthetic workload: steady | noisy | incident. Set
+  # per install with the telemetry_demo_profile input. Guarded with dig so an
+  # install whose inputs predate the input still renders (missingkey=error).
+  demoProfile: '{{ dig "telemetry_demo_profile" "steady" .nuon.inputs.inputs }}'
+
 probes:
   liveness: /livez
   readiness: /readyz
