@@ -12,7 +12,7 @@ var_name = "img_api"
 
 [public]
 image_url = "public.ecr.aws/p7e3r5y0/kitchen-sink-app"
-tag       = "sha-a60fab5"
+tag       = "sha-f544f7c"
 
 [labels]
 is_image = "true"
