@@ -1,0 +1,3 @@
+name        = "{{.nuon.install.id}}-alb-create"
+description = "create the kitchen-sink internet-facing ALB"
+contents    = "./alb-create.json"

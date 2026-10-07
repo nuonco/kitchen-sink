@@ -15,7 +15,7 @@ PROFILE="${PROFILE:-infra-shared-prod.NuonAdmin}"
 TAG="${TAG:-}"
 REPO_NAME="${REPO_NAME:-kitchen-sink-app}"
 LOCAL_IMAGE="${LOCAL_IMAGE:-}"     # defaults to REPO_NAME
-BUILD_CONTEXT="${BUILD_CONTEXT:-}" # defaults to components/api
+BUILD_CONTEXT="${BUILD_CONTEXT:-}" # defaults to shared/components/api
 STAMP_CONFIG="${STAMP_CONFIG:-}"   # optional img component toml to update with TAG
 
 # Repo layout.
@@ -41,7 +41,7 @@ parse_common_flags() {
 # the repo name, and the build context defaults to the api component.
 finalize_defaults() {
   LOCAL_IMAGE="${LOCAL_IMAGE:-$REPO_NAME}"
-  BUILD_CONTEXT="${BUILD_CONTEXT:-${REPO_ROOT}/components/api}"
+  BUILD_CONTEXT="${BUILD_CONTEXT:-${REPO_ROOT}/shared/components/api}"
   TAG="${TAG:-$(default_image_tag)}"
 }
 

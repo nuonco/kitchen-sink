@@ -1,4 +1,0 @@
-[connected_repo]
-repo      = "nuonco/kitchen-sink"
-branch    = "main"
-directory = "gcp/install-configs"

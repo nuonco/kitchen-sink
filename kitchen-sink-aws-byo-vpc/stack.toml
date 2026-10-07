@@ -1,0 +1,17 @@
+# stack
+type        = "aws-cloudformation"
+name        = "nuon-kitchen-sink-{{.nuon.install.id}}"
+description = "CloudFormation stack for Kitchen Sink app: Install {{.nuon.install.id}}"
+
+vpc_nested_template_url    = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/byo-vpc/default/stack.yaml"
+runner_nested_template_url = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/runner/asg/stack.yaml"
+
+[[custom_nested_stacks]]
+name = "rds_subnets"
+template_url = "https://kitchen-sink-cloudformation-templates.s3.us-east-1.amazonaws.com/rds-subnets/template.yaml"
+index = 1
+
+[[custom_nested_stacks]]
+name = "rds_instance"
+template_url = "https://kitchen-sink-cloudformation-templates.s3.us-east-1.amazonaws.com/rds-instance/template.yaml"
+index = 2

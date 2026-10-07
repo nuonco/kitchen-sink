@@ -23,8 +23,8 @@ on:
     branches:
       - main
     paths:
-      - components/api/**
-      - components/ui/**
+      - shared/components/api/**
+      - shared/components/ui/**
       - .github/workflows/build-images.yaml
   workflow_dispatch:
 
@@ -48,9 +48,9 @@ jobs:
       matrix:
         include:
           - service: app
-            context: components/api
+            context: shared/components/api
           - service: ui
-            context: components/ui
+            context: shared/components/ui
     steps:
       - uses: actions/checkout@v4
 
@@ -115,13 +115,16 @@ jobs:
         run: |
           TAG="sha-${GITHUB_SHA::7}"
           sed -i "s/^tag       = \".*\"/tag       = \"${TAG}\"/" \
-            components/images/api.toml \
-            components/images/ui.toml \
-            gcp/components/images/api.toml \
-            gcp/components/images/ui.toml
+            kitchen-sink-aws/components/images/api.toml \
+            kitchen-sink-aws/components/images/ui.toml \
+            kitchen-sink-aws-byo-vpc/components/images/api.toml \
+            kitchen-sink-aws-byo-vpc/components/images/ui.toml \
+            kitchen-sink-gcp/components/images/api.toml \
+            kitchen-sink-gcp/components/images/ui.toml
           sed -i "s/^image_stamp = \".*\"/image_stamp = \"${TAG}\"/" \
-            components/chart/nuon.toml \
-            gcp/components/chart.toml
+            kitchen-sink-aws/components/chart/nuon.toml \
+            kitchen-sink-aws-byo-vpc/components/chart/nuon.toml \
+            kitchen-sink-gcp/components/chart.toml
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           if git diff --quiet; then
             echo "tags unchanged"

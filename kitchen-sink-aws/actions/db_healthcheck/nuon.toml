@@ -1,0 +1,20 @@
+# action
+name         = "db_healthcheck"
+image        = "{{.nuon.components.action_db_tools.outputs.image.ref}}"
+timeout      = "5m"
+dependencies = ["action_db_tools"]
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "check database health"
+inline_contents = "./db_healthcheck/healthcheck.sh"
+
+[steps.env_vars]
+PGHOST            = "{{.nuon.install_stack.outputs.custom_nested_stacks.rds_instance.outputs.DBEndpoint}}"
+PGPORT            = "{{.nuon.install_stack.outputs.custom_nested_stacks.rds_instance.outputs.DBPort}}"
+PGUSER            = "kitchensink"
+PGDATABASE        = "postgres"
+PGPASSWORD        = "temp-password-123"
+PGCONNECT_TIMEOUT = "10"
