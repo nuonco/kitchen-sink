@@ -1,0 +1,4 @@
+# input-group
+name         = "telemetry"
+description  = "Install telemetry demo settings"
+display_name = "telemetry"
