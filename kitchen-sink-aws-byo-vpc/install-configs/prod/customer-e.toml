@@ -6,6 +6,9 @@ approval_option = "approve-all"
 [labels]
 mode = "on_tag_prefix"
 
+[telemetry]
+enabled = false
+
 [aws_account]
 region = "us-west-2"
 
@@ -18,3 +21,5 @@ domain = "nuon.run"
 [component_toggles]
 audit_log_exporter = false
 tictactoe = false
+otel_collector = false
+otel_agent = false
