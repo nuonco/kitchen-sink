@@ -6,6 +6,9 @@ approval_option = "approve-all"
 [labels]
 mode = "push"
 
+[telemetry]
+enabled = true
+
 [aws_account]
 region = "us-west-2"
 
@@ -14,6 +17,9 @@ debug_mode = "false"
 
 [[inputs]]
 domain = "stage.nuon.run"
+
+[[inputs]]
+telemetry_demo_profile = "noisy"
 
 [component_toggles]
 audit_log_exporter = false

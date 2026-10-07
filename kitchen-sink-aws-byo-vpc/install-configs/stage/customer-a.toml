@@ -5,6 +5,9 @@ approval_option = "approve-all"
 [labels]
 env = "preview"
 
+[telemetry]
+enabled = true
+
 [aws_account]
 region = "us-west-2"
 

@@ -6,6 +6,9 @@ approval_option = "approve-all"
 [labels]
 mode = "on_github_label"
 
+[telemetry]
+enabled = true
+
 [aws_account]
 region = "us-west-2"
 
