@@ -93,6 +93,12 @@ worker:
     targetCPUUtilizationPercentage: 50
     targetMemoryUtilizationPercentage: 50
 
+# Install telemetry is AWS-only for now (the GCP app has no otel_collector
+# component yet). This overrides the `telemetry.enabled: true` default the
+# shared chart's values.yaml would otherwise supply.
+telemetry:
+  enabled: false
+
 probes:
   liveness: /livez
   readiness: /readyz
