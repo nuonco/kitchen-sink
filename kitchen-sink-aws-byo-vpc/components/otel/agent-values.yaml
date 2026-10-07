@@ -1,0 +1,121 @@
+{{- /*
+Values for the otel_agent component (upstream opentelemetry-collector chart,
+daemonset mode). Nuon renders this file before Helm sees it.
+
+One agent per node collects what only a node-local process can see: node, pod
+and container resource usage from the kubelet, and container stdout/stderr
+from /var/log/pods. It exports straight to the install's private telemetry
+endpoint, not through otel_collector, so the two components toggle
+independently and the gateway's pod-IP association never mislabels node data.
+
+telemetry_endpoint is read with dig, as in collector-values.yaml: without it
+the agent runs with only the debug exporter.
+*/ -}}
+{{- $endpoint := dig "telemetry_endpoint" "" .nuon.install_stack.outputs -}}
+mode: daemonset
+fullnameOverride: otel-agent
+
+image:
+  repository: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-k8s
+command:
+  name: otelcol-k8s
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+presets:
+  # file_log receiver over /var/log/pods. storeCheckpoints keeps read offsets
+  # on the host so a restarted agent does not resend or skip lines; it also
+  # runs the agent as root, which reading the kubelet's 0640 log files needs.
+  logsCollection:
+    enabled: true
+    storeCheckpoints: true
+  # kubeletstats receiver: CPU, memory, filesystem and network per node, pod
+  # and container.
+  kubeletMetrics:
+    enabled: true
+  kubernetesAttributes:
+    enabled: true
+
+# The agent only reads node-local sources; it receives nothing, so no ports
+# (and no hostPorts) are opened.
+ports:
+  otlp:
+    enabled: false
+  otlp-http:
+    enabled: false
+  jaeger-compact:
+    enabled: false
+  jaeger-thrift:
+    enabled: false
+  jaeger-grpc:
+    enabled: false
+  zipkin:
+    enabled: false
+
+alternateConfig:
+  extensions:
+    health_check:
+      endpoint: ${env:MY_POD_IP}:13133
+  receivers:
+    kubeletstats:
+      # EKS kubelets serve a self-signed certificate.
+      insecure_skip_verify: true
+    file_log:
+      # The app's own namespace only. The api and worker are excluded because
+      # they already send their logs over OTLP (with trace correlation), and
+      # the collectors are excluded so their output can never loop back in.
+      include:
+        - /var/log/pods/kitchen-sink_*/*/*.log
+      exclude:
+        - /var/log/pods/kitchen-sink_kitchen-sink-api-*/api/*.log
+        - /var/log/pods/kitchen-sink_kitchen-sink-worker-*/worker/*.log
+        - /var/log/pods/kitchen-sink_otel-*/*/*.log
+  processors:
+    memory_limiter:
+      check_interval: 5s
+      limit_percentage: 80
+      spike_limit_percentage: 25
+    resource:
+      attributes:
+        - key: k8s.cluster.name
+          value: "n-{{ .nuon.install.id }}"
+          action: upsert
+        - key: cloud.provider
+          value: aws
+          action: upsert
+        - key: cloud.region
+          value: "{{ .nuon.install_stack.outputs.region }}"
+          action: upsert
+    batch: {}
+  exporters:
+    debug:
+      verbosity: basic
+{{- if $endpoint }}
+    otlp_http/nuon:
+      endpoint: "{{ $endpoint }}"
+      compression: gzip
+      sending_queue:
+        enabled: true
+        queue_size: 5000
+      retry_on_failure:
+        enabled: true
+        max_elapsed_time: 10m
+{{- end }}
+  service:
+    extensions:
+      - health_check
+    pipelines:
+      metrics:
+        receivers: []
+        processors: [memory_limiter, resource, batch]
+        exporters: [{{ if $endpoint }}otlp_http/nuon{{ else }}debug{{ end }}]
+      logs:
+        receivers: []
+        processors: [memory_limiter, resource, batch]
+        exporters: [{{ if $endpoint }}otlp_http/nuon{{ else }}debug{{ end }}]
