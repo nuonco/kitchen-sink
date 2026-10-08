@@ -1,0 +1,25 @@
+# action
+# Deletes the EKS access entries for ROLES. Runs as the access-entries
+# break-glass role, so run it before that role is disabled.
+name         = "remove_access_entries"
+image        = "{{.nuon.components.action_k8s_tools.outputs.image.ref}}"
+dependencies = ["action_k8s_tools"]
+timeout      = "2m"
+role         = "{{.nuon.install.id}}-access-entries-break-glass"
+
+[[triggers]]
+type = "manual"
+
+[[steps]]
+name            = "remove_access_entries"
+inline_contents = "./remove_access_entries/script.sh"
+
+[steps.env_vars]
+ACCOUNT_ID         = "{{.nuon.install_stack.outputs.account_id}}"
+AWS_REGION         = "{{.nuon.install_stack.outputs.region}}"
+AWS_DEFAULT_REGION = "{{.nuon.install_stack.outputs.region}}"
+CLUSTER_NAME       = "{{.nuon.install.sandbox.outputs.cluster.name}}"
+ROLES              = "{{.nuon.install.id}}-provision,{{.nuon.install.id}}-deprovision,{{.nuon.install.id}}-app-break-glass"
+
+[labels]
+is_break_glass = "true"
