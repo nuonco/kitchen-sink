@@ -1,0 +1,13 @@
+# runbook
+name        = "add-access-entries"
+description = "Creates cluster-admin EKS access entries for the provision, deprovision, and app break-glass roles."
+readme      = "./runbooks/add-access-entries.md"
+
+[labels]
+team = "platform"
+kind = "break-glass"
+
+[[steps]]
+name        = "install-access-entries"
+type        = "action"
+action_name = "install_access_entries"

@@ -15,6 +15,8 @@ actions `cron_status`, `debug`, `break_glass_remediation`.
 | [`debug-bundle`](./debug-bundle.md) | **Debug** — something's gone wrong, read-only | `debug` → pod/restart detail → ingress + synced secrets → endpoint probe |
 | [`reconcile-drift`](./reconcile-drift.md) | **Drift** — re-apply desired state (applies changes) | `plan_only` chart plan → `sandbox_reprovision` → `pulumi_infra` → `certificate` → `kitchen_sink` + dependents → verify |
 | [`break-glass`](./break-glass.md) | **Break glass** — recorded emergency with elevated access | capture state → `break_glass_remediation` (assumes the break-glass role) → verify |
+| [`add-access-entries`](./add-access-entries.md) | **Break glass** — restore EKS access before a release | `install_access_entries` (assumes the access-entries break-glass role) |
+| [`remove-access-entries`](./remove-access-entries.md) | **Break glass** — strip EKS access after a release | `remove_access_entries` (run before the role is disabled) |
 
 ## Step types used
 

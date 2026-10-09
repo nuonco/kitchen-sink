@@ -1,0 +1,11 @@
+# container-image
+name     = "action_k8s_tools"
+type     = "container_image"
+var_name = "action_k8s_tools"
+
+[public]
+image_url = "alpine/k8s"
+tag       = "1.34.1"
+
+[labels]
+is_image = "true"
