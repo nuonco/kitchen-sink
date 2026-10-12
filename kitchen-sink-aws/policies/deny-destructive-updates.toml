@@ -1,0 +1,6 @@
+# policy
+type = "terraform_module"
+engine = "opa"
+components = ["*"]
+operations = ["reprovision"]
+contents = "./deny-destructive-updates.rego"
