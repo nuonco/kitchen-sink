@@ -21,11 +21,11 @@ image_stamp = "sha-f544f7c"
 
 [[operation_roles]]
 operation = "deploy"
-role = "maintenance"
+role = "{{.nuon.install.id}}-maintenance"
 
 [[operation_roles]]
 operation = "teardown"
-role = "maintenance"
+role = "{{.nuon.install.id}}-maintenance"
 
 [labels]
 helm = "true"
