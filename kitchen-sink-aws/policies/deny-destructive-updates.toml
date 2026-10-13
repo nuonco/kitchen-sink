@@ -2,5 +2,5 @@
 type = "terraform_module"
 engine = "opa"
 components = ["*"]
-operations = ["reprovision"]
+operations = ["update"]
 contents = "./deny-destructive-updates.rego"

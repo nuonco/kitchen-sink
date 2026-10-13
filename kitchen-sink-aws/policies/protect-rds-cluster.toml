@@ -1,0 +1,6 @@
+# policy
+type       = "terraform_module"
+engine     = "opa"
+components = ["rds_*"]
+operations = ["!destroy"]
+contents   = "./protect-rds-cluster.rego"
