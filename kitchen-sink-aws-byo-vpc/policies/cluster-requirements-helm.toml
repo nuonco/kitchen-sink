@@ -1,0 +1,5 @@
+# policy
+type       = "helm_chart"
+engine     = "opa"
+components = ["*"]
+contents   = "./cluster-requirements.rego"

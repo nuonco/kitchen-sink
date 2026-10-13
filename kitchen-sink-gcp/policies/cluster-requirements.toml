@@ -1,3 +1,0 @@
-type     = "sandbox"
-engine   = "opa"
-contents = "./cluster-requirements.rego"

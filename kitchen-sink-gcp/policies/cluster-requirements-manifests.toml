@@ -1,0 +1,4 @@
+type       = "kubernetes_manifest"
+engine     = "opa"
+components = ["*"]
+contents   = "./cluster-requirements.rego"
