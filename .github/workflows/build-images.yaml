@@ -119,11 +119,14 @@ jobs:
             kitchen-sink-aws/components/images/ui.toml \
             kitchen-sink-aws-byo-vpc/components/images/api.toml \
             kitchen-sink-aws-byo-vpc/components/images/ui.toml \
+            kitchen-sink-aws-byo-eks/components/images/api.toml \
+            kitchen-sink-aws-byo-eks/components/images/ui.toml \
             kitchen-sink-gcp/components/images/api.toml \
             kitchen-sink-gcp/components/images/ui.toml
           sed -i "s/^image_stamp = \".*\"/image_stamp = \"${TAG}\"/" \
             kitchen-sink-aws/components/chart/nuon.toml \
             kitchen-sink-aws-byo-vpc/components/chart/nuon.toml \
+            kitchen-sink-aws-byo-eks/components/chart/nuon.toml \
             kitchen-sink-gcp/components/chart.toml
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           if git diff --quiet; then

@@ -32,6 +32,11 @@ The root app deploys to AWS EKS using
 [`gcp/`](./gcp/) app root deploys to GKE using
 [`gcp-gke-sandbox`](https://github.com/nuonco/gcp-gke-sandbox).
 
+[`kitchen-sink-aws-byo-eks/`](./kitchen-sink-aws-byo-eks/) is a lightweight
+variant for an existing EKS cluster. It runs the shared API, UI, and worker
+without DNS or database infrastructure, and sends OTLP directly to a separately
+deployed Nuon telemetry agent.
+
 ## Resources
 
 For more information on Nuon platform features, see the [documentation](https://docs.nuon.co/get-started/introduction).

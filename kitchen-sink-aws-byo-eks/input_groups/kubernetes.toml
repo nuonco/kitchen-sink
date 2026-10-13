@@ -1,0 +1,4 @@
+# input-group
+name = "kubernetes"
+display_name = "Existing EKS cluster"
+description = "Cluster to install Kitchen Sink into"
