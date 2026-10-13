@@ -1,0 +1,8 @@
+# input
+name = "telemetry_demo_profile"
+display_name = "Telemetry demo profile"
+description = "Synthetic worker workload: steady, noisy, or incident"
+group = "telemetry"
+type = "string"
+default = "steady"
+internal = true

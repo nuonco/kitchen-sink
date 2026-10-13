@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Allow the Nuon runner to reach the existing EKS API over HTTPS
+
+Parameters:
+  NuonInstallID:
+    Type: String
+  ClusterName:
+    Type: String
+
+Resources:
+  DiscoveryRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:${AWS::Partition}:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DiscoverSecurityGroups
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: eks:DescribeCluster
+                Resource: !Sub arn:${AWS::Partition}:eks:${AWS::Region}:${AWS::AccountId}:cluster/${ClusterName}
+              - Effect: Allow
+                Action: ec2:DescribeSecurityGroups
+                Resource: "*"
+
+  DiscoveryFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.12
+      Handler: index.handler
+      Timeout: 120
+      Role: !GetAtt DiscoveryRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import urllib3
+
+          def handler(event, context):
+              status, data, reason = "SUCCESS", {}, ""
+              try:
+                  if event["RequestType"] != "Delete":
+                      props = event["ResourceProperties"]
+                      cluster = boto3.client("eks").describe_cluster(
+                          name=props["ClusterName"]
+                      )["cluster"]
+                      groups = boto3.client("ec2").describe_security_groups(Filters=[
+                          {"Name": "tag:network.nuon.co/domain", "Values": ["runner"]},
+                          {"Name": "tag:install.nuon.co/id", "Values": [props["NuonInstallID"]]},
+                      ])["SecurityGroups"]
+                      if len(groups) != 1:
+                          raise ValueError("Expected exactly one runner security group")
+                      if groups[0]["VpcId"] != cluster["resourcesVpcConfig"]["vpcId"]:
+                          raise ValueError("The runner and EKS cluster must use the same VPC")
+                      data = {
+                          "ClusterSecurityGroupId": cluster["resourcesVpcConfig"]["clusterSecurityGroupId"],
+                          "RunnerSecurityGroupId": groups[0]["GroupId"],
+                      }
+              except Exception as exc:
+                  status, reason = "FAILED", str(exc)
+              body = json.dumps({
+                  "Status": status,
+                  "Reason": reason or f"See CloudWatch log stream: {context.log_stream_name}",
+                  "PhysicalResourceId": event.get("PhysicalResourceId", context.log_stream_name),
+                  "StackId": event["StackId"],
+                  "RequestId": event["RequestId"],
+                  "LogicalResourceId": event["LogicalResourceId"],
+                  "Data": data,
+              })
+              urllib3.PoolManager().request(
+                  "PUT", event["ResponseURL"], body=body, headers={"Content-Type": ""}
+              )
+
+  SecurityGroups:
+    Type: Custom::EksSecurityGroups
+    Properties:
+      ServiceToken: !GetAtt DiscoveryFunction.Arn
+      NuonInstallID: !Ref NuonInstallID
+      ClusterName: !Ref ClusterName
+
+  RunnerIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: !Sub Nuon runner ${NuonInstallID} EKS API access
+      GroupId: !GetAtt SecurityGroups.ClusterSecurityGroupId
+      SourceSecurityGroupId: !GetAtt SecurityGroups.RunnerSecurityGroupId
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+
+Outputs:
+  RunnerSecurityGroupId:
+    Value: !GetAtt SecurityGroups.RunnerSecurityGroupId

@@ -1,0 +1,23 @@
+# stack
+type = "aws-cloudformation"
+name = "nuon-kitchen-sink-byo-eks-{{.nuon.install.id}}"
+description = "Kitchen Sink on an existing EKS cluster: Install {{.nuon.install.id}}"
+
+vpc_nested_template_url = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/byo-vpc/default/stack.yaml"
+runner_nested_template_url = "https://nuon-artifacts.s3.us-west-2.amazonaws.com/aws-cloudformation-templates/v0.4.0/runner/asg/stack.yaml"
+
+[[custom_nested_stacks]]
+name = "runner_sg_eks_access"
+template_url = "./cloudformation/runner-sg-eks-access.yaml"
+index = 0
+
+[custom_nested_stacks.parameters]
+ClusterName = "{{.nuon.install.inputs.cluster_name}}"
+
+[[custom_nested_stacks]]
+name = "eks_access_entries"
+template_url = "./cloudformation/runner-eks-access-entries.yaml"
+index = 1
+
+[custom_nested_stacks.parameters]
+ClusterName = "{{.nuon.install.inputs.cluster_name}}"

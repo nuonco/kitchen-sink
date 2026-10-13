@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Grant the Kitchen Sink maintenance role access to the existing EKS cluster
+
+Parameters:
+  NuonInstallID:
+    Type: String
+  EnableRunnerMaintenance:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "true"
+  ClusterName:
+    Type: String
+
+Conditions:
+  MaintenanceEnabled: !Equals [!Ref EnableRunnerMaintenance, "true"]
+
+Resources:
+  MaintenanceAccessEntry:
+    Type: AWS::EKS::AccessEntry
+    Condition: MaintenanceEnabled
+    Properties:
+      ClusterName: !Ref ClusterName
+      PrincipalArn: !Sub arn:${AWS::Partition}:iam::${AWS::AccountId}:role/${NuonInstallID}-maintenance
+      Type: STANDARD
+      # The shared demo chart creates ClusterRole/ClusterRoleBinding resources.
+      AccessPolicies:
+        - PolicyArn: !Sub arn:${AWS::Partition}:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy
+          AccessScope:
+            Type: cluster
