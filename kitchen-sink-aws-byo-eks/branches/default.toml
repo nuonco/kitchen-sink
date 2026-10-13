@@ -4,7 +4,7 @@ name = "default"
 [public_repo]
 repo = "nuonco/kitchen-sink"
 directory = "kitchen-sink-aws-byo-eks"
-branch = "ms/kitchen-sink-byo-eks"
+branch = "ps/kitchen-sink-byo-eks"
 
 [run]
 mode = "manual_only"
