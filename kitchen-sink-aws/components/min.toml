@@ -4,7 +4,7 @@
 # different diff from a change to the values below.
 name           = "min"
 type           = "helm_chart"
-chart_name     = "min"
+chart_name     = "min-helm"
 namespace      = "kitchen-sink"
 storage_driver = "configmap"
 # The kitchen_sink chart owns the kitchen-sink namespace. Deploying first
