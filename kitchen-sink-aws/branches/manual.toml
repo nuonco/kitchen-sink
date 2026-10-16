@@ -2,6 +2,9 @@
 # Never runs automatically; an operator selects and submits a commit.
 name = "manual-release"
 
+ignore_changes_regex    = "^(kitchen-sink-gcp/|kitchen-sink-aws-byo-vpc/)"
+send_statuses_on_ignore = true
+
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "kitchen-sink-aws"

@@ -2,6 +2,9 @@
 # this branch is updated when a git tag is pushed with the provided prefix
 name = "tag-release"
 
+ignore_changes_regex    = "^(kitchen-sink-gcp/|kitchen-sink-aws-byo-vpc/)"
+send_statuses_on_ignore = true
+
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "kitchen-sink-aws"

@@ -2,6 +2,9 @@
 # this is the preview and push branch that is updated on every push to the repo.
 name = "continuous-release"
 
+ignore_changes_regex    = "^(kitchen-sink-gcp/|kitchen-sink-aws-byo-vpc/)"
+send_statuses_on_ignore = true
+
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "kitchen-sink-aws"
