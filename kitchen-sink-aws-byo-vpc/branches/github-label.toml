@@ -2,6 +2,9 @@
 # this branch is only executed when a PR is opened against the base branch with the label of `update-app-branch`
 name = "github-label-release"
 
+ignore_changes_regex    = "^(kitchen-sink-gcp/|kitchen-sink-aws/)"
+send_statuses_on_ignore = true
+
 # Label matching requires the GitHub App connection so Nuon can query PR data.
 [connected_repo]
 repo      = "nuonco/kitchen-sink"
