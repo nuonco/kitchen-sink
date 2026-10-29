@@ -1,0 +1,6 @@
+# policy
+# Warning-only legacy policy for comparison with named-check reports.
+type              = "sandbox"
+engine            = "opa"
+contents          = "./sandbox-legacy-warn-test.rego"
+apply_on_teardown = false
