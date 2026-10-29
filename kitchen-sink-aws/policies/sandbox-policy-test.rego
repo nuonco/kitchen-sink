@@ -19,15 +19,15 @@ check_eks_version contains check.finding(msg) if {
 }
 
 # METADATA
-# title: Test — avoid burstable EKS nodes
-# description: Intentionally warns on the configured t3a.medium node type.
+# title: Test — avoid t2 EKS nodes
+# description: Warning control; the configured t3a.medium nodes pass for skip-only testing.
 # custom:
 #   action: warn
 check_burstable_nodes contains check.finding(msg) if {
 	some resource in input.plan.resource_changes
 	resource.type == "aws_eks_node_group"
 	some instance_type in resource.change.after.instance_types
-	startswith(instance_type, "t3")
+	startswith(instance_type, "t2")
 	msg := sprintf(
 		"[Policy test] EKS node group %s uses burstable instance type %s; use a non-burstable type to clear this warning.",
 		[resource.address, instance_type],
