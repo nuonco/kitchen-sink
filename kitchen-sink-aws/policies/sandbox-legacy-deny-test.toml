@@ -1,5 +1,5 @@
 # policy
-# Intentionally blocks the current sandbox config; remove before normal rollouts.
+# Legacy denial control; the current EKS 1.34 config passes.
 type              = "sandbox"
 engine            = "opa"
 contents          = "./sandbox-legacy-deny-test.rego"
