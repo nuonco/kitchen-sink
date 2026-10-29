@@ -1,6 +1,10 @@
-package nuon
+package nuon.checks
 
-deny contains msg if {
+import data.nuon.lib.check
+
+# METADATA
+# title: Protect the kube-system namespace
+check_system_namespace contains check.finding(msg) if {
 	namespace := input.review.object.metadata.namespace
 	namespace == "kube-system"
 	input.review.kind.kind == "Deployment"
