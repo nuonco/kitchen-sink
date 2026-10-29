@@ -1,0 +1,6 @@
+# Intentionally blocks the current sandbox config to exercise named-check reports.
+# Remove this policy before normal rollouts; teardown remains available.
+type              = "sandbox"
+engine            = "opa"
+contents          = "./sandbox-policy-test.rego"
+apply_on_teardown = false
