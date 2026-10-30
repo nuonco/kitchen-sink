@@ -11,16 +11,16 @@ check_system_namespace contains check.finding(msg) if {
 	msg := "Cannot deploy custom workloads to kube-system namespace"
 }
 
-manifest_test_mode := "warn"
+manifest_test_mode := "deny"
 
 test_update if {
 	input.review.kind.kind == "Namespace"
-	input.review.object.metadata.annotations["policy.nuon.co/test-stage"] == "update-1"
+	input.review.object.metadata.annotations["policy.nuon.co/test-stage"] == "update-2"
 }
 
 test_update if {
 	input.review.kind.kind == "ConfigMap"
-	input.review.object.data.message == "policy-e2e-update-1"
+	input.review.object.data.message == "policy-e2e-update-2"
 }
 
 # METADATA

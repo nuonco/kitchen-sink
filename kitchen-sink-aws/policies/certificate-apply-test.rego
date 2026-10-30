@@ -2,7 +2,7 @@ package nuon.checks
 
 import data.nuon.lib.check
 
-certificate_test_mode := "warn-skip"
+certificate_test_mode := "deny-skip"
 
 # METADATA
 # title: Defer certificate tag update

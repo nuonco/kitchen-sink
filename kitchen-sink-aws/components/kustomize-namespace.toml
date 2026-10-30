@@ -15,7 +15,7 @@ kind: Namespace
 metadata:
   name: {{.nuon.install.id}}-dne
   annotations:
-    policy.nuon.co/test-stage: update-1
+    policy.nuon.co/test-stage: update-2
 """
 
 [labels]
