@@ -1,0 +1,6 @@
+# policy
+# Passing legacy policy for comparison with named-check reports.
+type              = "sandbox"
+engine            = "opa"
+contents          = "./sandbox-legacy-pass-test.rego"
+apply_on_teardown = false

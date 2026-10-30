@@ -17,7 +17,7 @@ directory = "charts/min"
 branch    = "main"
 
 [values]
-message = "hello"
+message = "policy-e2e-update-2"
 owner   = "{{.nuon.install.id}}"
 
 # External-repo differ fixture, not part of the product path. Opt out so it

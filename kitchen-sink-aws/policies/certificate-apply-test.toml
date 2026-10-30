@@ -1,0 +1,6 @@
+# policy
+type              = "terraform_module"
+engine            = "opa"
+components        = ["certificate"]
+contents          = "./certificate-apply-test.rego"
+apply_on_teardown = false

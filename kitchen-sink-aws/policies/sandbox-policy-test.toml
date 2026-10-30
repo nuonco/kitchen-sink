@@ -1,0 +1,7 @@
+# policy
+# Exercises named-check reports alongside sandbox skip_apply decisions.
+# Remove this policy before normal rollouts; teardown remains available.
+type              = "sandbox"
+engine            = "opa"
+contents          = "./sandbox-policy-test.rego"
+apply_on_teardown = false

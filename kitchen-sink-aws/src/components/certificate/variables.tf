@@ -13,3 +13,8 @@ variable "domain_name" {
 variable "zone_id" {
   type = string
 }
+
+variable "policy_test_stage" {
+  type    = string
+  default = "baseline"
+}

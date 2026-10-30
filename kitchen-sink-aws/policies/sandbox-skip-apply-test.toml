@@ -1,0 +1,5 @@
+# policy
+type              = "sandbox"
+engine            = "opa"
+contents          = "./sandbox-skip-apply-test.rego"
+apply_on_teardown = false
