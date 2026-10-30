@@ -6,4 +6,7 @@ module "certificate" {
   zone_id             = var.zone_id
   validation_method   = "DNS"
   wait_for_validation = false
+  tags = {
+    "policy.nuon.co/test-stage" = var.policy_test_stage
+  }
 }

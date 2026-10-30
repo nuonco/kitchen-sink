@@ -5,22 +5,22 @@ package nuon.checks
 import data.nuon.lib.check
 
 # METADATA
-# title: Test — require EKS 1.35 or newer
-# description: Deny the configured EKS version alongside a matching apply-skip check.
+# title: Test — require EKS 1.34 or newer
+# description: Allow the configured EKS version for the real update control.
 check_eks_version contains check.finding(msg) if {
 	some resource in input.plan.resource_changes
 	resource.type == "aws_eks_cluster"
 	version := resource.change.after.version
-	semver.compare(sprintf("%s.0", [version]), "1.35.0") < 0
+	semver.compare(sprintf("%s.0", [version]), "1.34.0") < 0
 	msg := sprintf(
-		"[Policy test] EKS cluster %s uses version %s; this test requires 1.35 or newer.",
+		"[Policy test] EKS cluster %s uses version %s; this test requires 1.34 or newer.",
 		[resource.address, version],
 	)
 }
 
 # METADATA
 # title: Test — review burstable EKS nodes
-# description: Warn alongside the deferred sandbox log retention update.
+# description: Warn on burstable EKS nodes during the update control.
 # custom:
 #   action: warn
 check_burstable_nodes contains check.finding(msg) if {
