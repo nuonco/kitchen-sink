@@ -1,4 +1,5 @@
 default_instance_type = "t3a.medium"
+cloudwatch_log_group_retention_in_days = 400
 
 # Grant the maintenance role cluster-scoped Kubernetes access. Component deploys
 # run as the maintenance role (the deploy->setup mapping falls back to it, since
