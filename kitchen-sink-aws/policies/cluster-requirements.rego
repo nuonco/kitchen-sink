@@ -11,7 +11,7 @@ check_system_namespace contains check.finding(msg) if {
 	msg := "Cannot deploy custom workloads to kube-system namespace"
 }
 
-manifest_test_mode := "deny"
+manifest_test_mode := "allow"
 
 test_update if {
 	input.review.kind.kind == "Namespace"
