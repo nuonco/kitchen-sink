@@ -29,6 +29,9 @@ FILES=(
   kitchen-sink-aws-byo-vpc/components/images/api.toml
   kitchen-sink-aws-byo-vpc/components/images/ui.toml
   kitchen-sink-aws-byo-vpc/components/chart/nuon.toml
+  kitchen-sink-aws-byo-eks/components/images/api.toml
+  kitchen-sink-aws-byo-eks/components/images/ui.toml
+  kitchen-sink-aws-byo-eks/components/chart/nuon.toml
   kitchen-sink-gcp/components/images/api.toml
   kitchen-sink-gcp/components/images/ui.toml
   kitchen-sink-gcp/components/chart.toml

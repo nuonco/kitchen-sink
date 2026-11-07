@@ -1,0 +1,7 @@
+# input
+name = "telemetry_otlp_endpoint"
+display_name = "OTLP HTTP endpoint"
+description = "Cluster-local OTLP HTTP endpoint of the independently deployed telemetry agent"
+group = "telemetry"
+type = "string"
+default = "http://nuon-telemetry-agent.telemetry.svc.cluster.local:4318"

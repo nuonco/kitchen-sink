@@ -1,0 +1,8 @@
+# permission
+type = "deprovision"
+name = "{{.nuon.install.id}}-deprovision"
+display_name = "Deprovision role"
+description = "Remove the BYO-EKS sandbox's install-owned resources"
+
+[[policies]]
+managed_policy_name = "AdministratorAccess"

@@ -1,0 +1,7 @@
+# input
+name = "cluster_name"
+display_name = "EKS cluster name"
+description = "Existing EKS cluster in the install's AWS account, region, and VPC. Requires EKS access entries."
+group = "kubernetes"
+type = "string"
+required = true

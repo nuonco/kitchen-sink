@@ -1,0 +1,36 @@
+# helm
+name = "kitchen_sink"
+type = "helm_chart"
+chart_name = "kitchen-sink"
+namespace = "kitchen-sink"
+storage_driver = "configmap"
+dependencies = ["img_api", "img_ui"]
+
+[public_repo]
+repo = "nuonco/kitchen-sink"
+directory = "shared/components/chart"
+branch = "main"
+
+[[values_file]]
+contents = "../../shared/components/chart/values.yaml"
+
+[values]
+image_stamp = "sha-f544f7c"
+"ui.env.NUON_CLUSTER_NAME" = "{{.nuon.inputs.inputs.cluster_name}}"
+"telemetry.endpoint" = "{{.nuon.inputs.inputs.telemetry_otlp_endpoint}}"
+
+[[operation_roles]]
+operation = "deploy"
+role = "{{.nuon.install.id}}-maintenance"
+
+[[operation_roles]]
+operation = "teardown"
+role = "{{.nuon.install.id}}-maintenance"
+
+[labels]
+helm = "true"
+
+[health]
+enabled = true
+stabilization_window = "3m"
+block_deploy = false

@@ -1,0 +1,8 @@
+# permission
+type = "maintenance"
+name = "{{.nuon.install.id}}-maintenance"
+display_name = "Maintenance role"
+description = "Deploy and operate Kitchen Sink in the existing cluster"
+
+[[policies]]
+managed_policy_name = "AdministratorAccess"

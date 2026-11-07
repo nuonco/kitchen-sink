@@ -1,0 +1,4 @@
+# input-group
+name = "telemetry"
+display_name = "Telemetry"
+description = "OTLP destination and synthetic workload"

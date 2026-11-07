@@ -1,0 +1,23 @@
+# install
+name = "Example BYO EKS"
+app_branch = "default"
+approval_option = "approve-all"
+
+[labels]
+env = "preview"
+
+[telemetry]
+enabled = true
+
+[aws_account]
+region = "us-west-2"
+
+# Replace with an existing cluster before syncing this install config.
+[[inputs]]
+cluster_name = "example-byo-eks"
+
+[[inputs]]
+telemetry_otlp_endpoint = "http://nuon-telemetry-agent.telemetry.svc.cluster.local:4318"
+
+[[inputs]]
+telemetry_demo_profile = "steady"
