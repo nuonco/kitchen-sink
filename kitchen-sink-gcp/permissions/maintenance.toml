@@ -13,6 +13,10 @@ name                = "gke-admin"
 gcp_predefined_role = "roles/container.admin"
 
 [[policies]]
+name                = "secret-accessor"
+gcp_predefined_role = "roles/secretmanager.secretAccessor"
+
+[[policies]]
 name = "artifact-registry"
 gcp_permissions = [
   "artifactregistry.repositories.downloadArtifacts",
