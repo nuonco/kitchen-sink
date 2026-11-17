@@ -4,5 +4,5 @@ display_name = "Debug Mode"
 description  = "Enable verbose logging (internal only)"
 group        = "compute"
 type         = "bool"
-default      = "false"
+default      = "true"
 internal     = true
