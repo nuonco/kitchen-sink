@@ -1,6 +1,6 @@
 # branch
 # dev branch that tracks rb/kitchen-sink-rb-dev for testing install groups.
-name = "rb-dev"
+name = "rb-dev-config"
 
 [public_repo]
 repo      = "nuonco/kitchen-sink"
