@@ -24,20 +24,28 @@ react = true
 env = "preview"
 
 [[install_groups]]
+name            = "auto-approve"
+order           = 1
+approval_option = "approve-all"
+
+[install_groups.label_selector]
+mode = "auto_approve"
+
+[[install_groups]]
 name  = "preview"
-order = 1
+order = 2
 
 [install_groups.label_selector]
 env = "preview"
 
 [[install_groups]]
 name  = "push"
-order = 2
+order = 3
 
 [install_groups.label_selector]
 mode = "push"
 
 [[install_groups]]
 name    = "default"
-order   = 3
+order   = 4
 default = true
