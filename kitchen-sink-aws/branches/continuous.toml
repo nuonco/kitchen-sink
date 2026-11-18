@@ -8,7 +8,7 @@ send_statuses_on_ignore = true
 [public_repo]
 repo      = "nuonco/kitchen-sink"
 directory = "kitchen-sink-aws"
-branch    = "main"
+branch    = "rb/kitchen-sink-rb-dev"
 
 [run]
 mode = "push"
