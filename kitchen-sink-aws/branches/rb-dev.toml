@@ -1,0 +1,24 @@
+# branch
+# dev branch that tracks rb/kitchen-sink-rb-dev for testing install groups.
+name = "rb-dev"
+
+[public_repo]
+repo      = "nuonco/kitchen-sink"
+directory = "kitchen-sink-aws"
+branch    = "rb/kitchen-sink-rb-dev"
+
+[run]
+mode = "push"
+
+[[install_groups]]
+name            = "auto-approve"
+order           = 1
+approval_option = "approve-all"
+
+[install_groups.label_selector]
+mode = "auto_approve"
+
+[[install_groups]]
+name    = "default"
+order   = 2
+default = true
