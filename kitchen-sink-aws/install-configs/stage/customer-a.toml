@@ -9,7 +9,7 @@ env = "preview"
 enabled = true
 
 [aws_account]
-region = "us-west-2"
+region = "us-east-1"
 
 [[inputs]]
 debug_mode = "false"
